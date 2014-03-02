@@ -1,9 +1,27 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #ifndef GLOBAL_H
 #define GLOBAL_H
-
-#include "finalizer.h"
-#include "lpfhpfilter.h"
-#include "sequencer.h"
 
 // audio engine variables
 
@@ -11,11 +29,9 @@ const float MAX_PHASE = 1.0;
 
 namespace audio_engine
 {
-    const int INPUT_CHANNELS        = 0;
-    const int OUTPUT_CHANNELS       = 1;    // currently mono output
-    const int SAMPLES_PER_CHANNEL   = 64;
-    const int BYTES_PER_SAMPLE      = 8;
-    const int AMOUNT_OF_VOICES      = 1;    // in case we feel adventurous and extend this...
+    const int INPUT_CHANNELS  = 1;
+    const int OUTPUT_CHANNELS = 1;
+    const bool USE_CACHING    = false; // whether to cache audio channels and their processing chains
 
     extern int SAMPLE_RATE;         // initialized on engine start == device specific
     extern int BUFFER_SIZE;         // initialized on engine start == device specific
@@ -34,12 +50,14 @@ extern int max_buffer_position;
 extern int min_step_position;
 extern int max_step_position;
 extern bool playing;
-extern bool recording;
+extern bool recordOutput;
 extern bool haltRecording;
 extern bool bouncing;
 extern int recordingIterator;
 extern int recordingMaxIterations;
 extern int recordingFileName;
+extern bool recordFromDevice;
+extern bool monitorRecording;
 
 /* buffer read/write pointers */
 

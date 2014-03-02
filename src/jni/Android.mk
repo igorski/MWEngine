@@ -7,16 +7,13 @@ LOCAL_C_INCLUDES  := $(LOCAL_PATH)
 LOCAL_CFLAGS      := -O3
 LOCAL_CPPFLAGS    := $(LOCAL_CFLAGS)
 LOCAL_SRC_FILES   := \
-chunkware/SimpleEnvelope.cpp \
-chunkware/SimpleGate.cpp \
-chunkware/SimpleComp.cpp \
-chunkware/SimpleLimit.cpp \
 java_interface_wrap.cpp \
 global.cpp \
 utils.cpp \
 native_audio_engine.cpp \
 java_bridge.cpp \
 opensl_io.c \
+audiobuffer.cpp \
 audiochannel.cpp \
 baseaudioevent.cpp \
 basecacheableaudioevent.cpp \

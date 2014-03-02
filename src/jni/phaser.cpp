@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "phaser.h"
 #include "global.h"
 #include <math.h>
@@ -80,36 +102,49 @@ void Phaser::setDepth( float depth )
     _depth = depth;
 }
 
-void Phaser::process( float* sampleBuffer, int bufferLength )
+void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    float maxPhase = 3.14159f * 2.f;
-    int i = 0;
-    int j;
+    int bufferSize = sampleBuffer->bufferSize;
 
-    for ( i; i < bufferLength; ++i )
+    for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        // calculate and update phaser sweep LFO...
-        float d   = _dmin + ( _dmax - _dmin ) * (( sin( _lfoPhase ) + 1.0 ) / 2.0 );
-        _lfoPhase += _lfoInc;
+        float* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        if ( _lfoPhase >= maxPhase )
-            _lfoPhase -= maxPhase;
+        float maxPhase = 3.14159f * 2.f;
+        int i = 0;
+        int j;
 
-        // update filter coeffs
-        for ( j = 0; j < 6; ++j )
-            _alps[ j ]->delay( d );
+        for ( i; i < bufferSize; ++i )
+        {
+            // calculate and update phaser sweep LFO...
+            float d   = _dmin + ( _dmax - _dmin ) * (( sin( _lfoPhase ) + 1.0 ) / 2.0 );
+            _lfoPhase += _lfoInc;
 
-        // calculate output
-        float y = _alps[ 0 ]->update(
-                   _alps[ 1 ]->update(
-                   _alps[ 2 ]->update(
-                   _alps[ 3 ]->update(
-                   _alps[ 4 ]->update(
-                   _alps[ 5 ]->update( sampleBuffer[ i ] + _zm1 * _fb ))))));
+            if ( _lfoPhase >= maxPhase )
+                _lfoPhase -= maxPhase;
 
-        _zm1 = y;
+            // update filter coeffs
+            for ( j = 0; j < 6; ++j )
+                _alps[ j ]->delay( d );
 
-        sampleBuffer[ i ] += ( y * _depth );
+            // calculate output
+            float y = _alps[ 0 ]->update(
+                      _alps[ 1 ]->update(
+                      _alps[ 2 ]->update(
+                      _alps[ 3 ]->update(
+                      _alps[ 4 ]->update(
+                      _alps[ 5 ]->update( channelBuffer[ i ] + _zm1 * _fb ))))));
+
+            _zm1 = y;
+
+            channelBuffer[ i ] += ( y * _depth );
+        }
+        // save CPU cycles when mono source
+        if ( isMonoSource )
+        {
+            sampleBuffer->applyMonoSource();
+            break;
+        }
     }
 }
 

@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "sequencer_api.h"
 #include "global.h"
 #include "utils.h"
@@ -89,17 +111,17 @@ void SequencerAPI::setPlaying( bool aIsPlaying )
     playing = aIsPlaying;
 }
 
+void SequencerAPI::setActiveDrumPattern( int activePattern )
+{
+    sequencer::activeDrumPattern = activePattern;
+}
+
 void SequencerAPI::rewind()
 {
     bufferPosition = min_buffer_position;
     stepPosition   = min_step_position;
 
     broadcastStepPosition();
-}
-
-void SequencerAPI::setActiveDrumPattern( int activePattern )
-{
-    sequencer::activeDrumPattern = activePattern;
 }
 
 /**
@@ -116,7 +138,7 @@ void SequencerAPI::cacheAudioEventsForMeasure( int aMeasure )
     std::vector<BaseCacheableAudioEvent*>* list = collectCacheableSequencerEvents( startBufferPos, endBufferPos );
     getBulkCacher()->addToQueue( list );
 
-    delete list; // free allocated memory
+    delete list; // free memory
 
     if ( getBulkCacher()->hasQueue())
         getBulkCacher()->cacheQueue();
@@ -153,11 +175,52 @@ void SequencerAPI::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOut
  */
 void SequencerAPI::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
-    bool wasRecording = recording;
-    recording         = aRecording;
+    bool wasRecording = recordOutput;
+    recordOutput      = aRecording;
 
-    if ( recording )
+    if ( recordOutput )
     {
+        DiskWriter::prepareOutput( std::string( aOutputDirectory ), aMaxBuffers );
+    }
+    else
+    {
+        if ( wasRecording )
+        {
+            if ( !playing )
+            {
+                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS, true );
+            }
+            else {
+                // apparently renderer is stopped before cycle completes next Disk Writing query... =/
+                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS, true );
+                haltRecording = true;
+            }
+        }
+    }
+    recordingFileName = 0;  // write existing buffers using previous iteration before resetting this counter!!
+}
+
+/**
+ * record audio from the Androids input
+ *
+ * aRecording        {bool} toggles the recording state
+ * aMaxBuffers        {int} the maximum amount of buffers (each will hold BUFFER_SIZE in length) to store
+ *                          before broadcasting the RECORDING_UPDATE message back via the JNI
+ * aOutputDirectory {char*} name of the folder to write int
+ */
+void SequencerAPI::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
+{
+    bool wasRecording = recordFromDevice;
+    recordFromDevice  = aRecording;
+
+    if ( recordFromDevice )
+    {
+        // we have only one diskwriter currently (see Java CacheWriter/Readers), so we
+        // must halt recording of live output when recording from the Android device
+        if ( recordOutput )
+        {
+            setRecordingState( false, 0, "" );
+        }
         DiskWriter::prepareOutput( std::string( aOutputDirectory ), aMaxBuffers );
     }
     else

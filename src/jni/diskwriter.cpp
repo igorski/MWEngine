@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "diskwriter.h"
 #include "wavewriter.h"
 #include "utils.h"
@@ -36,18 +58,22 @@ namespace DiskWriter
         DiskWriter::outputWriterIndex = 0;
     }
 
-    void appendBuffer( float* aBuffer, int aBufferLength )
+    void appendBuffer( AudioBuffer* aBuffer )
     {
+        int bufferSize = aBuffer->bufferSize;
+
         if ( DiskWriter::cachedBuffer == 0 )
             generateOutputBuffer();
 
-        int writerIndex = DiskWriter::outputWriterIndex;
-        int MAX_VALUE   = 32767; // convert floats to shorts
+        // TODO: currently MONO ONLY !!
+        float* channelBuffer = aBuffer->getBufferForChannel( 0 );
+        int writerIndex       = DiskWriter::outputWriterIndex;
+        int MAX_VALUE         = 32767; // convert floats to shorts
 
         // write floats as short values
-        for ( int i = 0; i < aBufferLength; ++i )
+        for ( int i = 0; i < bufferSize; ++i )
         {
-            short int sample = ( short int )( aBuffer[ i ] * MAX_VALUE );
+            short int sample = ( short int )( channelBuffer[ i ] * MAX_VALUE );
 
             if ( sample > MAX_VALUE )
                 sample = MAX_VALUE;
@@ -57,7 +83,7 @@ namespace DiskWriter
 
             DiskWriter::cachedBuffer[ writerIndex + i ] = sample;
         }
-        DiskWriter::outputWriterIndex = writerIndex + aBufferLength;
+        DiskWriter::outputWriterIndex = writerIndex + bufferSize;
     }
 
     bool bufferFull()
@@ -81,9 +107,11 @@ namespace DiskWriter
         if ( DiskWriter::cachedBuffer == 0 )
             return;
 
+        aNumChannels = 1;   // TODO : currently MONO only (see appendBuffer above)
+
         // we improve the use of the CPU resources
         // by creating a small local thread
-        // TODO: do it ? (this non-threading blocks the renderer, but nicely omits issue w/ continous writes ;) )
+        // TODO: do it ? (this non-threading blocks the renderer, but nicely omits issue w/ continuous writes ;) )
 
         //pthread_t t1;
         //pthread_create( &t1, NULL, &print_message, NULL );

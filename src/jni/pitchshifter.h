@@ -17,7 +17,8 @@ class PitchShifter : public BaseProcessor
     public:
         PitchShifter( float shiftAmount, long osampAmount );
         ~PitchShifter();
-        void process( float* sampleBuffer, int bufferLength );
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+        bool isCacheable();
         float pitchShift;
 
     private:

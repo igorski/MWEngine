@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "bitcrusher.h"
 #include "utils.h"
 
@@ -13,17 +35,34 @@ BitCrusher::BitCrusher( float amount, float level )
 
 /* public methods */
 
-void BitCrusher::process( float* sampleBuffer, int bufferLength )
+void BitCrusher::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int i;
+    int bufferSize = sampleBuffer->bufferSize;
 
-    for ( i = 0; i < bufferLength; ++i )
+    for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
-        short input = ( short ) ( sampleBuffer[ i ] * 32767 );
-        short prevent_offset = ( short )( -1 >> _bits + 1 );
-        input &= ( -1 << ( 16 - _bits ));
-        sampleBuffer[ i ] = ((( input + prevent_offset ) * _levelCorrection ) / 32767 );
+        float* channelBuffer = sampleBuffer->getBufferForChannel( i );
+
+        for ( int j = 0; j < bufferSize; ++j )
+        {
+            short input = ( short ) ( channelBuffer[ j ] * 32767 );
+            short prevent_offset = ( short )( -1 >> _bits + 1 );
+            input &= ( -1 << ( 16 - _bits ));
+            channelBuffer[ j ] = ((( input + prevent_offset ) * _levelCorrection ) / 32767 );
+        }
+
+        // omit unnecessary cycles by copying the mono content
+        if ( isMonoSource )
+        {
+            sampleBuffer->applyMonoSource();
+            break;
+        }
     }
+}
+
+bool BitCrusher::isCacheable()
+{
+    return true;
 }
 
 /* getters / setters */

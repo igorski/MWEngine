@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "utils.h"
 #include "global.h"
 #include <android/log.h>
@@ -28,7 +50,7 @@ float scale( float value, float maxValue, float maxCompareValue )
 //
 // Generate a random number between 0 and 1
 // return a uniform number in [0,1].
-float randomfloat()
+float randomFloat()
 {
     return rand() / float( RAND_MAX );
 }
@@ -84,41 +106,12 @@ namespace BufferUtil
     }
 
     /**
-     * duplicate the contents of an existing buffer
-     *
-     * @param aInputBuffer {float*} the existing buffer to copy
-     * @param aBufferSize {int} the length of the buffer
+     * calculate the amount of samples necessary for
+     * writing the given amount in milliseconds
      */
-    float* copyBuffer( float* aInputBuffer, int aBufferSize )
+    int calculateBufferLength( int milliSeconds )
     {
-        // TODO memory copy ?
-        float* out = new float[ aBufferSize ];
-
-        for ( int i = 0; i < aBufferSize; ++i )
-            out[ i ] = aInputBuffer[ i ];
-
-        return out;
-    }
-
-    /**
-     * merges the content of aBufferToMerge with the content
-     * of aInputBuffer (adds values) note that the buffer size
-     * must exist for both buffers
-     *
-     * @param aOutputBuffer {float*} the buffer to merge into
-     * @param aBufferToMerge {float*} the buffer to merge from
-     * @param aBufferSize {int} length of the buffer we're duplicating into the aOutputBuffer
-     * @param aOffset {int} the offset in aInputBuffer where the merged buffer will be written to
-     *                      this can be 0 for equal length buffers / merging at the beginning of aOutputBuffer
-     */
-    void mergeBuffer( float* aOutputBuffer, float* aBufferToMerge, int aBufferSize, int aOffset )
-    {
-        int l = aOffset + aBufferSize;
-        int j = 0;
-
-        for ( int i = aOffset; i < l; ++i, ++j ) {
-            aOutputBuffer[ i ] += aBufferToMerge[ j ];
-        }
+        return milliSeconds * ( audio_engine::SAMPLE_RATE * .001 );
     }
 }
 
@@ -135,6 +128,16 @@ namespace DebugTool
         __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, "%s", aMessage );
     }
 
+    /**
+     * same as above, but traces contents of an char const*
+     * @param aValue {char const*} optional numerical value
+     *
+     * to trace char values pass "%s" in aMessage to show aValue
+     */
+    void log( char const* aMessage, char const* aValue )
+    {
+        __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, aMessage, aValue );
+    }
     /**
      * same as above, but traces contents of an int
      * @param aValue {int} optional numerical value

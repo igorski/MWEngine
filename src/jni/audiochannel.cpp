@@ -1,10 +1,32 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "audiochannel.h"
 
 #include "utils.h"
 
 /* constructor / destructor */
 
-AudioChannel::AudioChannel( ProcessingChain *aChain, double aMixVolume )
+AudioChannel::AudioChannel( ProcessingChain *aChain, float aMixVolume )
 {
     processingChain   = aChain;
     mixVolume         = aMixVolume;
@@ -13,7 +35,7 @@ AudioChannel::AudioChannel( ProcessingChain *aChain, double aMixVolume )
     init();
 }
 
-AudioChannel::AudioChannel( ProcessingChain *aChain, double aMixVolume, int aMaxBufferPosition )
+AudioChannel::AudioChannel( ProcessingChain *aChain, float aMixVolume, int aMaxBufferPosition )
 {
     processingChain   = aChain;
     mixVolume         = aMixVolume;
@@ -29,7 +51,7 @@ AudioChannel::~AudioChannel()
 
 /* public methods */
 
-void AudioChannel::addEvent( SampleEvent* aEvent )
+void AudioChannel::addEvent( BaseAudioEvent* aEvent )
 {
     audioEvents.push_back( aEvent );
 }
@@ -44,7 +66,7 @@ AudioBuffer* AudioChannel::readCachedBuffer( AudioBuffer* aOutputBuffer, int aRe
 {
     if ( aReadOffset >= _cacheStartOffset && aReadOffset <= _cacheEndOffset )
     {
-        aOutputBuffer->mergeBuffers( _cachedBuffer, _cacheReadPointer, 0 );
+        aOutputBuffer->mergeBuffers( _cachedBuffer, _cacheReadPointer, 0, 1.0f );
         _cacheReadPointer += aOutputBuffer->bufferSize;
     }
 }
@@ -82,7 +104,7 @@ void AudioChannel::canCache( bool value, int aBufferSize, int aCacheStartOffset,
  */
 void AudioChannel::writeCache( AudioBuffer* aBuffer, int aReadOffset )
 {
-    int mergedSamples   = _cachedBuffer->mergeBuffers( aBuffer, aReadOffset, _cacheWritePointer );
+    int mergedSamples   = _cachedBuffer->mergeBuffers( aBuffer, aReadOffset, _cacheWritePointer, 1.0f );
     _cacheWritePointer += mergedSamples;
 
     // caching completed ?

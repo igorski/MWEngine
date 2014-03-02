@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 /*
     Native Audio Engine
     Android audio engine using OpenSL for hardware output
@@ -57,7 +79,8 @@ void start( JNIEnv* env, jobject jobj )
 
     OPENSL_STREAM *p;
 
-    p = android_OpenAudioDevice( audio_engine::SAMPLE_RATE, audio_engine::INPUT_CHANNELS, audio_engine::OUTPUT_CHANNELS, audio_engine::BUFFER_SIZE );
+    p = android_OpenAudioDevice( audio_engine::SAMPLE_RATE,     audio_engine::INPUT_CHANNELS,
+                                 audio_engine::OUTPUT_CHANNELS, audio_engine::BUFFER_SIZE );
 
     // hardware unavailable ? halt thread, trigger JNI callback for error handler
     if ( p == NULL )
@@ -68,32 +91,33 @@ void start( JNIEnv* env, jobject jobj )
     // audio hardware available, start render thread
 
     int buffer_size, i, c, ci;
-    buffer_size = audio_engine::BUFFER_SIZE;    //audio_engine::SAMPLES_PER_CHANNEL; // in-buffer size
-
-    std::vector<AudioChannel*> channels;
-    std::vector<AudioChannel*> channels2;       // used when loop starts for gathering events at the start range
+    buffer_size        = audio_engine::BUFFER_SIZE;
+    int outputChannels = audio_engine::OUTPUT_CHANNELS;
+    bool isMono        = outputChannels == 1;
     bool loopStarted = false;   // whether the current buffer will exceed the end offset of the loop (read remaining samples from the start)
     int loopOffset = 0;         // the offset within the current buffer where we start reading from the current loops start offset
     int loopAmount = 0;         // amount of samples we must read from the current loops start offset
+    std::vector<AudioChannel*> channels;
+    std::vector<AudioChannel*> channels2;       // used when loop starts for gathering events at the start range
 
-    float recbuffer[ buffer_size ];                                   // used for recording
-    float inbuffer [ buffer_size ];                                   // temporary buffer accumulating all audio events
-    float  outbuffer[ buffer_size * audio_engine::OUTPUT_CHANNELS ];   // the output buffer rendered by the hardware
+    float recbufferIn   [ buffer_size ];                  // used for recording from device input
+    float outbuffer     [ buffer_size * outputChannels ]; // the output buffer rendered by the hardware
+
+    // generate buffers for temporary channel buffer writes
+    AudioBuffer* channelBuffer = new AudioBuffer( outputChannels, buffer_size );
+    AudioBuffer* inbuffer      = new AudioBuffer( outputChannels, buffer_size ); // accumulates all channels ("master strip")
+    AudioBuffer* recbuffer     = new AudioBuffer( audio_engine::INPUT_CHANNELS, buffer_size );
 
     thread = 1;
 
-    // generate a pointer for temporary channel buffer writes
-    float* channelBuffer = new float[ audio_engine::BUFFER_SIZE ];
-    
     // signal processors
-    Finalizer* limiter = new Finalizer( 2, 500, audio_engine::SAMPLE_RATE );
-    LPFHPFilter* hpf   = new LPFHPFilter(( float ) audio_engine::SAMPLE_RATE, 200 );
+    Finalizer* limiter = new Finalizer  ( 2, 500, audio_engine::SAMPLE_RATE, outputChannels );
+    LPFHPFilter* hpf   = new LPFHPFilter(( float ) audio_engine::SAMPLE_RATE, 200, outputChannels );
 
     while ( thread )
     {
-        // generate a silent buffer (TODO: memcpy from a silent buffer?)
-        for ( i = 0; i < buffer_size; i++ )
-            inbuffer[ i ] = 0.0;
+        // erase previous buffer contents
+        inbuffer->silenceBuffers();
 
         // gather the audio events by the buffer range currently being processed
         int endPosition = bufferPosition + buffer_size;
@@ -128,15 +152,25 @@ void start( JNIEnv* env, jobject jobj )
                 channels2.clear();  // would clear on next "getAudioEvents"-query... but why wait ?
             }
         }
+
         // record audio from Android device ?
-        /*
-        // TODO: find solution for floats
-        if ( audio_engine::INPUT_CHANNELS > 0 )
+        if ( recordFromDevice && audio_engine::INPUT_CHANNELS > 0 )
         {
-            int recSamps = android_AudioIn( p, recbuffer, audio_engine::SAMPLES_PER_CHANNEL );
-            memcpy( inbuffer, recbuffer, sizeof( recbuffer ));
+            int recSamps            = android_AudioIn( p, recbufferIn, audio_engine::BUFFER_SIZE );
+            float* recBufferChannel = recbuffer->getBufferForChannel( 0 );
+
+            for ( int j = 0; j < recSamps; ++j )
+            {
+                recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
+
+                // merge recording into current input buffer for instant monitoring
+                if ( monitorRecording )
+                {
+                    for ( int k = 0; k < outputChannels; ++k )
+                        inbuffer->getBufferForChannel( k )[ j ] = recBufferChannel[ j ];
+                }
+            }
         }
-        */
 
         // channel loop
         int j = 0;
@@ -145,13 +179,16 @@ void start( JNIEnv* env, jobject jobj )
         for ( j; j < channelAmount; ++j )
         {
             AudioChannel* channel = channels[ j ];
+            bool isCached         = channel->hasCache;                // whether this channel has a fully cached buffer
+            bool mustCache        = audio_engine::USE_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
+            bool gotBuffer        = false;
+            int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
             int amount                               = audioEvents.size();
 
-            // create empty channel buffer, also clears previous buffers
-            for ( i = 0; i < buffer_size; i++ )
-                channelBuffer[ i ] = 0.0;
+            // clear previous channel buffer content
+            channelBuffer->silenceBuffers();
 
             bool useChannelRange = ( channel->maxBufferPosition != 0 ); // channel has its own buffer range (i.e. drumloops)
             int maxBufferPosition = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
@@ -168,64 +205,85 @@ void start( JNIEnv* env, jobject jobj )
             // note that live instruments are ALWAYS rendered
             if ( playing && amount > 0 )
             {
-                // write the audioEvent buffers into the main output buffer
-                int k = 0;
-                for ( k; k < amount; ++k )
+                if ( !isCached )
                 {
-                    BaseAudioEvent* vo = audioEvents[ k ];
-
-                    if ( !vo->isLocked())   // make sure we are allowed to query the contents
+                    // write the audioEvent buffers into the main output buffer
+                    for ( int k = 0; k < amount; ++k )
                     {
-                        vo->lock();         // prevent buffer mutations during this read cycle
+                        BaseAudioEvent* vo = audioEvents[ k ];
 
-                        // read from a pre-cached buffer for sequenced notes
-                        // first we cache references to the AudioEvents properties
-                        float* buffer   = vo->getBuffer();
-                        int startOffset  = vo->getSampleStart();
-                        int endOffset    = vo->getSampleEnd();
-                        int sampleLength = vo->getSampleLength();
-
-                        for ( i = 0; i < buffer_size; ++i )
+                        if ( !vo->isLocked())   // make sure we are allowed to query the contents
                         {
-                            int readPointer = i + bufferPos;
+                            vo->lock();         // prevent buffer mutations during this read cycle
 
-                            // over the max position ? read from the start ( sequence has started loop )
-                            if ( readPointer >= maxBufferPosition )
-                            {
-                                if ( useChannelRange )  // TODO: channels use a min buffer position too ? (currently drumloop only)
-                                    readPointer -= maxBufferPosition;
+                            // read from a pre-cached buffer for sequenced notes
+                            // first we cache references to the AudioEvents properties
+                            AudioBuffer* buffer = vo->getBuffer();
+                            int startOffset     = vo->getSampleStart();
+                            int endOffset       = vo->getSampleEnd();
+                            int sampleLength    = vo->getSampleLength();
 
-                                else if ( !loopStarted )
-                                    readPointer -= ( maxBufferPosition - min_buffer_position );
-                            }
-                            if ( readPointer >= startOffset && readPointer <= endOffset )
+                            for ( i = 0; i < buffer_size; ++i )
                             {
-                                // mind the offset ! ( cached buffer starts at 0 while
-                                // the startOffset defines where the event is positioned in the sequencer )
-                                readPointer -= startOffset;
-                                channelBuffer[ i ] += buffer[ readPointer ];
-                            }
-                            else
-                            {
-                                if ( loopStarted )
+                                int readPointer = i + bufferPos;
+
+                                // over the max position ? read from the start ( sequence has started loop )
+                                if ( readPointer >= maxBufferPosition )
                                 {
-                                    if ( i >= loopOffset )
-                                    {
-                                        readPointer = min_buffer_position + ( i - loopOffset );
+                                    if ( useChannelRange )  // TODO: channels use a min buffer position too ? (currently drumloop only)
+                                        readPointer -= maxBufferPosition;
 
-                                        if ( readPointer >= startOffset && readPointer <= endOffset )
+                                    else if ( !loopStarted )
+                                        readPointer -= ( maxBufferPosition - min_buffer_position );
+                                }
+                                if ( readPointer >= startOffset && readPointer <= endOffset )
+                                {
+                                    // mind the offset ! ( cached buffer starts at 0 while
+                                    // the startOffset defines where the event is positioned in the sequencer )
+                                    readPointer -= startOffset;
+
+                                    for ( int c = 0, ca = buffer->amountOfChannels; c < ca; ++c )
+                                    {
+                                        float* srcBuffer = buffer->getBufferForChannel( c );
+                                        float* tgtBuffer = channelBuffer->getBufferForChannel( c );
+
+                                        tgtBuffer[ i ] += srcBuffer[ readPointer ];
+                                    }
+                                }
+                                else
+                                {
+                                    if ( loopStarted )
+                                    {
+                                        if ( i >= loopOffset )
                                         {
-                                            readPointer -= startOffset;
-                                            channelBuffer[ i ] += buffer[ readPointer ];
+                                            readPointer = min_buffer_position + ( i - loopOffset );
+
+                                            if ( readPointer >= startOffset && readPointer <= endOffset )
+                                            {
+                                                readPointer -= startOffset;
+
+                                                for ( int c = 0, ca = buffer->amountOfChannels; c < ca; ++c )
+                                                {
+                                                    float* srcBuffer = buffer->getBufferForChannel( c );
+                                                    float* tgtBuffer = channelBuffer->getBufferForChannel( c );
+
+                                                    tgtBuffer[ i ] += srcBuffer[ readPointer ];
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
+                            vo->unlock();   // release lock
                         }
-                        vo->unlock();   // release lock
                     }
                 }
+                else
+                {
+                    channel->readCachedBuffer( channelBuffer, bufferPos );
+                }
             }
+
             // perform live rendering for this instrument
             if ( channel->hasLiveEvents )
             {
@@ -236,35 +294,43 @@ void start( JNIEnv* env, jobject jobj )
                 //float lAmp = ( lAmount == 1 ) ? 1 / channel->mixVolume : ( 1.0 / ( lAmount - 1.0 )) * ( 1 / channel->mixVolume ); // legacy
                 float lAmp = 1.0 / channel->mixVolume; // no normalization when multiple notes sound
 
-                int k = 0;
-                for ( k; k < lAmount; ++k )
+                for ( int k = 0; k < lAmount; ++k )
                 {
                     BaseAudioEvent* vo = channel->liveEvents[ k ];
 
-                    float* buffer = vo->synthesize( buffer_size );
-
-                    for ( i = 0; i < buffer_size; ++i )
-                    {
-                        channelBuffer[ i ] += ( buffer[ i ] * lAmp );
-                    }
+                    channelBuffer->mergeBuffers( vo->synthesize( buffer_size ), 0, 0, lAmp );
                 }
             }
-            // apply the processing chain
-            ProcessingChain *chain = channel->processingChain;
 
-            // apply processors / modulators
+            // apply the processing chains processors / modulators
+            ProcessingChain* chain = channel->processingChain;
             std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
 
-            int k = 0;
-            for ( k; k < processors.size(); k++ )
+            for ( int k = 0; k < processors.size(); k++ )
             {
-                processors[ k ]->process( channelBuffer, buffer_size );
+                BaseProcessor* processor = processors[ k ];
+                bool canCacheProcessor   = processor->isCacheable();
+
+                // only apply processor when we're not caching or cannot cache its output
+                if ( !isCached || !canCacheProcessor )
+                {
+                    // cannot cache this processor and we're caching ? write all contents
+                    // of the channelBuffer into the channels cache
+                    if ( mustCache && !canCacheProcessor )
+                        mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
+
+                    processors[ k ]->process( channelBuffer, channel->isMono );
+                }
             }
+
+            // write cache if it didn't happen yet ;) (bus processors are (currently) non-cacheable)
+            if ( mustCache )
+                mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
 
             // apply bus processors
             std::vector<BaseBusProcessor*> bus = chain->getActiveBusProcessors();
 
-            for ( k = 0; k < bus.size(); k++ )
+            for ( int k = 0; k < bus.size(); k++ )
             {
                 bus[ k ]->apply( channelBuffer, buffer_size );
             }
@@ -272,9 +338,15 @@ void start( JNIEnv* env, jobject jobj )
             // write the channel buffer into the combined output buffer, apply channel volume
             float channelVolume = channel->mixVolume;
 
-            for ( i = 0; i < buffer_size; ++i )
+            for ( ci = 0; ci < outputChannels; ++ci )
             {
-                inbuffer[ i ] += ( channelBuffer[ i ] * channelVolume );
+                float* buffer    = inbuffer->getBufferForChannel( ci );
+                float* srcBuffer = channelBuffer->getBufferForChannel( ci );
+
+                for ( i = 0; i < buffer_size; ++i )
+                {
+                    buffer[ i ] += ( srcBuffer[ i ] * channelVolume );
+                }
             }
         }
 
@@ -290,16 +362,14 @@ void start( JNIEnv* env, jobject jobj )
         }
         */
         // limit the audio to prevent clipping
-        limiter->limitfloats( inbuffer, buffer_size );
+        limiter->process( inbuffer, isMono );
 
-        // write the input buffer into the output buffers
-        int oc = audio_engine::OUTPUT_CHANNELS; // amount of output channels
-
-        for ( i = 0, c = 0; i < buffer_size; i++, c += oc )
+        // write the accumulated buffers into the output buffer
+        for ( i = 0, c = 0; i < buffer_size; i++, c += outputChannels )
         {
-            for ( ci = 0; ci < oc; ci++ )
+            for ( ci = 0; ci < outputChannels; ci++ )
             {
-                float sample = ( float ) inbuffer[ i ] * volume; // apply master volume
+                float sample = ( float ) inbuffer->getBufferForChannel( ci )[ i ] * volume; // apply master volume
 
                 // extreme limiting (still above the thresholds?)
                 if ( sample < -MAX_PHASE )
@@ -310,6 +380,7 @@ void start( JNIEnv* env, jobject jobj )
 
                 outbuffer[ c + ci ] = sample;
             }
+
             // update the buffer pointers and sequencer position
             if ( playing )
             {
@@ -326,14 +397,18 @@ void start( JNIEnv* env, jobject jobj )
             android_AudioOut( p, outbuffer, buffer_size * audio_engine::OUTPUT_CHANNELS );
 
         // record the output if recording state is active
-        if ( playing && recording )
+        if ( playing && ( recordOutput || recordFromDevice ))
         {
-            DiskWriter::appendBuffer( inbuffer, buffer_size );
+            if ( recordFromDevice ) // recording from device input ? > write the record buffer
+                DiskWriter::appendBuffer( recbuffer );
+            else                    // recording global output ? > write the combined buffer
+                DiskWriter::appendBuffer( inbuffer );
 
             // exceeded maximum recording buffer amount ? > write current recording
             if ( DiskWriter::bufferFull() || haltRecording )
             {
-                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS, true );
+                int amountOfChannels = recordFromDevice ? audio_engine::INPUT_CHANNELS : outputChannels;
+                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, amountOfChannels, true );
 
                 if ( !haltRecording )
                 {
@@ -345,6 +420,7 @@ void start( JNIEnv* env, jobject jobj )
                 }
             }
         }
+
         // tempo update queued ?
         if ( queuedTempo != tempo )
             handleTempoUpdate( queuedTempo, true );
@@ -352,6 +428,7 @@ void start( JNIEnv* env, jobject jobj )
     android_CloseAudioDevice( p );
 
     // clear heap memory allocated before thread loop
+    delete inbuffer;
     delete channelBuffer;
     delete limiter;
     delete hpf;
@@ -373,10 +450,11 @@ void reset()
 
     sequencer::clearEvents();
 
-    bufferPosition = 0;
-    stepPosition   = 0;
-    recording      = false;
-    bouncing       = false;
+    bufferPosition   = 0;
+    stepPosition     = 0;
+    recordOutput     = false;
+    recordFromDevice = false;
+    bouncing         = false;
 }
 
 /* private methods */
@@ -465,6 +543,17 @@ void handleHardwareUnavailable()
         if ( env != 0 )
         env->CallStaticVoidMethod( getJavaInterface(), native_method_id );
     }
+}
+
+bool writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )
+{
+    // must cache isn't the same as IS caching (likely sequencer is waiting for start offset ;))
+    if ( channel->isCaching )
+        channel->writeCache( channelBuffer, cacheReadPos );
+    else
+        return false;
+
+    return true; // indicates we have written the buffer to the cache
 }
 
 void handleBounceComplete( int aIdentifier )

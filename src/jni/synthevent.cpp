@@ -1,3 +1,26 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+#include "sequencer.h"
 #include "synthevent.h"
 #include "utils.h"
 #include "global.h"
@@ -102,11 +125,11 @@ SynthEvent::~SynthEvent()
 
 /* public methods */
 
-float* SynthEvent::getBuffer()
+AudioBuffer* SynthEvent::getBuffer()
 {
     // if caching hasn't completed, fill cache fragment
     if ( !_cachingCompleted )
-        doCache( audio_engine::BUFFER_SIZE );
+        doCache();
 
     return _buffer;
 }
@@ -208,8 +231,8 @@ void SynthEvent::calculateBuffers()
 
         // OSC2 generates no buffer (writes into parent buffer, saves memory)
         if ( !hasParent )
-            _buffer = BufferUtil::generateSilentBuffer( _sampleLength );
-    }
+            _buffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, _sampleLength );
+     }
 
     if ( _type == WaveForms::KARPLUS_STRONG )
         initKarplusStrong();
@@ -232,15 +255,15 @@ void SynthEvent::calculateBuffers()
  *
  * aBufferLength {int} length of the buffer to synthesize
  */
-float* SynthEvent::synthesize( int aBufferLength )
+AudioBuffer* SynthEvent::synthesize( int aBufferLength )
 {
     if ( aBufferLength != audio_engine::BUFFER_SIZE )
     {
         // clear previous buffer contents
         destroyLiveBuffer();
-        _liveBuffer = BufferUtil::generateSilentBuffer( aBufferLength );
+        _liveBuffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, aBufferLength );
     }
-    render( _liveBuffer, aBufferLength ); // overwrites old buffer contents
+    render( _liveBuffer ); // overwrites old buffer contents
 
     // keep track of the rendered bytes, in case of a key up event
     // we still want to have the sound ring for the minimum period
@@ -263,7 +286,10 @@ float* SynthEvent::synthesize( int aBufferLength )
 
            for ( int i = aBufferLength - amt; i < aBufferLength; ++i )
            {
-               _liveBuffer[ i ] *= amp;
+               for ( int c = 0, nc = _liveBuffer->amountOfChannels; c < nc; ++c )
+               {
+                   _liveBuffer->getBufferForChannel( c )[ i ] *= amp;
+               }
                amp -= envIncr;
            }
         }
@@ -298,7 +324,7 @@ void SynthEvent::cache( bool doCallback )
     if ( doThread )
         pthread_create( &t1, NULL, &po, NULL );
 
-    doCache( _sampleLength );
+    doCache();
 
     void* result;
 
@@ -440,20 +466,20 @@ void SynthEvent::initKarplusStrong()
 
     // fill the ring buffer with noise ( initial "pluck" of the "string" )
     for ( int i = 0; i < _ringBufferSize; i++ )
-        _ringBuffer->enqueue( randomfloat());
+        _ringBuffer->enqueue( randomFloat());
 }
 
 /**
  * the actual synthesizing of the audio
  *
- * @param aOutputBuffer {float*} the buffer to write into
- * @param bufferLength  {int} the total length of the buffer
+ * @param aOutputBuffer {AudioBuffer*} the buffer to write into
  */
-void SynthEvent::render( float* aOutputBuffer, int bufferLength )
+void SynthEvent::render( AudioBuffer* aOutputBuffer )
 {
     float amp = 0.0;
     float tmp, am, dpw, pmv;
     int i;
+    int bufferLength = aOutputBuffer->bufferSize;
 
     // following waveforms require alternate volume multipliers
     float sawAmp = liveSynthesis ? .7  : 1.0;
@@ -560,7 +586,7 @@ void SynthEvent::render( float* aOutputBuffer, int bufferLength )
                 }
                 // above we calculated pitch, now we add some
                 // randomization to the signal for the actual noise
-                amp *= randomfloat();
+                amp *= randomFloat();
                 break;
 
             case WaveForms::KARPLUS_STRONG:
@@ -610,8 +636,9 @@ void SynthEvent::render( float* aOutputBuffer, int bufferLength )
         if ( _cancel )
             break;
 
-        // -- write the output into the buffer
-        aOutputBuffer[ i ] = amp * _volume * VOLUME_CORRECTION;
+        // -- write the output into the buffers channels
+        for ( int c = 0, ca = aOutputBuffer->amountOfChannels; c < ca; ++c )
+            aOutputBuffer->getBufferForChannel( c )[ i ] = amp * _volume * VOLUME_CORRECTION;
     }
 
     // secondary oscillator ? render its contents into this (parent) buffer
@@ -621,9 +648,9 @@ void SynthEvent::render( float* aOutputBuffer, int bufferLength )
         // create a temporary buffer (this prevents writing to deleted buffers
         // when the parent event changes its _buffer properties (f.i. tempo change)
         int tempLength = ( cycleMax - _lastWriteIndex );
-        float* tempBuffer = BufferUtil::generateSilentBuffer( tempLength );
-        _osc2->render( tempBuffer, tempLength );
-        BufferUtil::mergeBuffer( aOutputBuffer, tempBuffer, tempLength, _lastWriteIndex );
+        AudioBuffer* tempBuffer = new AudioBuffer( _buffer->amountOfChannels, tempLength );
+        _osc2->render( tempBuffer );
+        aOutputBuffer->mergeBuffers( tempBuffer, 0, _lastWriteIndex, 1.0f );
 
         delete tempBuffer; // free allocated memory
     }
@@ -742,7 +769,7 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
 
         setFrequency( aFrequency );
 
-        _liveBuffer = BufferUtil::generateSilentBuffer( audio_engine::BUFFER_SIZE );
+        _liveBuffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, audio_engine::BUFFER_SIZE );
     }
     else
     {
@@ -845,14 +872,14 @@ void SynthEvent::destroyOSC2()
  * contents for the given bufferLength (cache buffer
  * fragments on demand, or all at once)
  */
-void SynthEvent::doCache( int bufferLength )
+void SynthEvent::doCache()
 {
     bool wasLocked = _locked;
 
     // no lock required as the buffer can be read/written to simultaneously...
 //    lock();
 
-    render( _buffer, bufferLength );
+    render( _buffer );
 
 //    if ( !wasLocked )
 //    {

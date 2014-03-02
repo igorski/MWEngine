@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "sequencer.h"
 #include "global.h"
 #include "utils.h"
@@ -6,8 +28,9 @@
 
 namespace sequencer
 {
-    std::vector<SynthInstrument*>* synthesizers = new std::vector<SynthInstrument*>();
-    DrumInstrument*  drummachine;
+    std::vector<SynthInstrument*> synthesizers;
+    std::vector<SampledInstrument*> samplers;
+    DrumInstrument* drummachine;
 
     std::vector<DrumPattern*> drumPatterns;
 
@@ -21,9 +44,9 @@ namespace sequencer
         channels.clear();
 
         // the sequenced synthesizer(s), note we update the properties as they might change during playback
-        for ( int i = 0, l = sequencer::synthesizers->size(); i < l; ++i )
+        for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
         {
-            SynthInstrument* synthesizer = sequencer::synthesizers->at( i );
+            SynthInstrument* synthesizer = sequencer::synthesizers.at( i );
             AudioChannel* synthChannel   = synthesizer->audioChannel;
 
             synthChannel->reset();
@@ -54,9 +77,9 @@ namespace sequencer
 
     void clearEvents()
     {
-        for ( int i = 0, l = sequencer::synthesizers->size(); i < l; ++i )
+        for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
         {
-            SynthInstrument* synthesizer = sequencer::synthesizers->at( i );
+            SynthInstrument* synthesizer = sequencer::synthesizers.at( i );
 
             if ( synthesizer->audioEvents != 0 )
                 synthesizer->audioEvents->clear();
@@ -159,6 +182,56 @@ void collectLiveEvents( AudioChannel *channel, std::vector<BaseAudioEvent*>* liv
     }
 }
 
+void collectSequencerSamplerEvents( AudioChannel *channel, std::vector<SampleEvent*> *audioEvents,
+                                    int bufferPosition, int bufferEnd )
+{
+    // removal queue
+    std::vector<BaseCacheableAudioEvent*> removes;
+
+    int i = 0;
+    int amount = audioEvents->size();
+    for ( i; i < amount; i++ )
+    {
+        SampleEvent* audioEvent = audioEvents->at( i );
+
+        if ( audioEvent->isEnabled() )
+        {
+            int sampleStart = audioEvent->getSampleStart();
+            int sampleEnd   = audioEvent->getSampleEnd();
+
+            if ( audioEvent->getLoopeable() ||
+               ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
+               ( sampleStart < bufferPosition && sampleEnd >= bufferPosition ))
+            {
+                if ( !audioEvent->deletable())
+                    channel->addEvent( audioEvent );
+                else
+                    removes.push_back( audioEvent );
+            }
+        }
+    }
+    // removal queue filled ? process it so we can safely
+    // remove "deleted" AudioEvents without read errors occurring
+
+    if ( removes.size() > 0 )
+    {
+        int i = 0;
+        for ( i; i < removes.size(); i++ )
+        {
+            BaseCacheableAudioEvent* audioEvent = removes[ i ];
+
+            // remove audio event from sequencer (if it was present)
+            if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
+            {
+                audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
+            }
+            // NO! let SWIG invoke deletion when Java references are lost
+            //delete audioEvent;
+            //audioEvent = 0;
+        }
+    }
+}
+
 void collectDrumEvents( AudioChannel *channel, int bufferPosition, int bufferEnd )
 {
     if ( sequencer::drumPatterns.size() > 0 )
@@ -211,9 +284,9 @@ std::vector<BaseCacheableAudioEvent*>* collectCacheableSequencerEvents( int buff
     //DebugTool::log("check for events at start range %d", bufferPosition);
     //DebugTool::log("until %d", bufferEnd );
 
-    for ( int i = 0, l = sequencer::synthesizers->size(); i < l; ++i )
+    for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
     {
-        std::vector<BaseCacheableAudioEvent*>* audioEvents = sequencer::synthesizers->at( i )->audioEvents;
+        std::vector<BaseCacheableAudioEvent*>* audioEvents = sequencer::synthesizers.at( i )->audioEvents;
         int amount = audioEvents->size();
 
         for ( int j = 0; j < amount; j++ )

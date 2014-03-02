@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "limiter.h"
 #include "global.h"
 
@@ -5,7 +27,7 @@
 
 Limiter::Limiter()
 {
-    init( 10, 500, audio_engine::SAMPLE_RATE );
+    init( 10, 500, audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS );
 }
 
 Limiter::~Limiter()
@@ -20,10 +42,11 @@ Limiter::~Limiter()
  * @param attackMs   {float} attack time in milliseconds
  * @param releaseMs  {float} attack decay time in milliseconds
  * @param sampleRate {int} the current samplerate
+ * @param amountOfChannels {int} amount of output channels
  */
-Limiter::Limiter( float attackMs, float releaseMs, int sampleRate )
+Limiter::Limiter( float attackMs, float releaseMs, int sampleRate, int amountOfChannels )
 {
-    init( attackMs, releaseMs, sampleRate );
+    init( attackMs, releaseMs, sampleRate, amountOfChannels );
 }
 
 /* public methods */
@@ -33,66 +56,38 @@ float Limiter::getLinearGR()
     return _follower->envelope > 1. ? 1 / _follower->envelope : 1.;
 }
 
-short* Limiter::process( float* sampleBuffer, int bufferLength )
+void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    // I don't want the left and right sides to get scaled differently, that would be silly.
-    // So I call Process() once on my interleaved stereo data with twice the number of
-    // frames, and skip = 1.
-
-    _output = new short[ bufferLength ];
-
-    // 32767 being the max value for a short
-    int i = bufferLength;
-
-    while ( i-- > 0 )
+    for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
-        float dest = sampleBuffer[ i ];
+        float* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        int j                 = sampleBuffer->bufferSize;
 
-        _follower->process( dest, skip );
+        while ( j-- > 0 )
+        {
+            float dest = channelBuffer[ j ];
 
-        if ( _follower->envelope > maxGain )
-            dest = dest / _follower->envelope;
+            _follower->process( dest, skip );
 
-        // extreme limiting (still above the thresholds?)
-        if ( dest < -1.0 )
-            dest = -1.0;
+            if ( _follower->envelope > maxGain )
+                dest = dest / _follower->envelope;
 
-        else if ( dest  > +1.0 )
-            dest = +1.0;
-
-        _output[ i ] = ( short ) (( dest + skip ) * 32767 );
+            channelBuffer[ j ] = ( dest + skip );
+        }
     }
-    return _output;
 }
 
-/**
- * used by the AudioBouncer, which doesn't need shorts!
- * @param sampleBuffer {float[]} buffer containing samples to limit
- * @return {float[]} limited buffer
- */
-void Limiter::limitfloats( float* sampleBuffer, int bufferLength )
+bool Limiter::isCacheable()
 {
-    int i = bufferLength;
-
-    while ( i-- > 0 )
-    {
-        float dest = sampleBuffer[ i ];
-
-        _follower->process( dest, skip );
-
-        if ( _follower->envelope > maxGain )
-            dest = dest / _follower->envelope;
-
-        sampleBuffer[ i ] = ( dest + skip );
-    }
+    return true;
 }
 
 /* protected methods */
 
-void Limiter::init( float attackMs, float releaseMs, int sampleRate )
+void Limiter::init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels )
 {
     maxGain   = .85;
     _follower = new EnvelopeFollower( maxGain, attackMs, releaseMs, sampleRate );
     _output   = new short[ audio_engine::BUFFER_SIZE ];
-    skip      = 0; // channel amount minus 1 apparently
+    skip      = amountOfChannels - 1;
 }

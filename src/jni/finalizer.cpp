@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "finalizer.h"
 
 // constructor
@@ -10,56 +32,53 @@
  * @param attackMs   {float} attack time in milliseconds
  * @param releaseMs  {float} attack decay time in milliseconds
  * @param sampleRate {int} the current samplerate
+ * @param amountOfChannels {int} the amount of output channels
  */
-Finalizer::Finalizer( float attackMs, float releaseMs, int sampleRate )
+Finalizer::Finalizer( float attackMs, float releaseMs, int sampleRate, int amountOfChannels )
 {
-    init( attackMs, releaseMs, sampleRate );
+    init( attackMs, releaseMs, sampleRate, amountOfChannels );
 
-    lastSample  = 0;
-    lastDSample = 0.0;
+    lastSamples = new float[ amountOfChannels ];
+
+    for ( int i = 0; i < amountOfChannels; ++i )
+        lastSamples[ i ] = 0.0;
+}
+
+Finalizer::~Finalizer()
+{
+    delete[] lastSamples;
 }
 
 /* public methods */
 
-short* Finalizer::process( float* sampleBuffer, int bufferLength )
-{
-    _output = Limiter::process( sampleBuffer, bufferLength );
-
-    int i = 0;
-
-    for ( i; i < bufferLength; ++i )
-    {
-        short theSample = ( short ) ( 0.996 * ( lastSample + _output[ i ] - lastSample ));
-        lastSample = theSample;
-
-        _output[ i ] = theSample;
-    }
-    return _output;
-}
-
 /**
  * used by the AudioBouncer, which doesn't need shorts!
- * @param sampleBuffer {float*} buffer containing samples to limit
- * @return {float*} limited buffer
+ * @param sampleBuffer {AudioBuffer*} buffer containing samples to limit
  */
-void Finalizer::limitfloats( float* sampleBuffer, int bufferLength )
+void Finalizer::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    Limiter::limitfloats( sampleBuffer, bufferLength );
+    Limiter::process( sampleBuffer, isMonoSource );
 
-    int i = 0;
+    int bufferSize = sampleBuffer->bufferSize;
 
-    for ( i; i < bufferLength; ++i )
+    for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
-        float theSample = 0.996 * ( lastDSample + sampleBuffer[ i ] - lastDSample );
-        lastDSample = theSample;
+        float* channelBuffer = sampleBuffer->getBufferForChannel( i );
 
-        // extreme limiting (still above the thresholds?)
-        if ( theSample < -1.0 )
-            theSample = -1.0;
+        for ( int j = 0; j < bufferSize; ++j )
+        {
+            float lastSample = lastSamples[ i ];
+            float theSample  = 0.996f * ( lastSample + channelBuffer[ j ] - lastSample );
 
-        else if ( theSample > +1.0 )
-            theSample = +1.0;
+            // extreme limiting (still above the thresholds?)
+            if ( theSample < -1.0f )
+                theSample = -1.0f;
 
-        sampleBuffer[ i ] = theSample;
+            else if ( theSample > +1.0f )
+                theSample = +1.0f;
+
+            lastSamples[ i ]   = theSample;
+            channelBuffer[ j ] = theSample;
+        }
     }
 }

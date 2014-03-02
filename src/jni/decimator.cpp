@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "decimator.h"
 #include <math.h>
 
@@ -17,23 +39,34 @@ Decimator::Decimator( int bits, float rate )
 
 /* public methods */
 
-void Decimator::process( float* sampleBuffer, int bufferLength )
+void Decimator::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int i = 0;
+    int bufferSize = sampleBuffer->bufferSize;
 
-    for ( i; i < bufferLength; ++i )
+    for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        float sample = sampleBuffer[ i ];
+        float* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        _count += _rate;
-
-        if ( _count >= 1 )
+        for ( int i = 0; i < bufferSize; ++i )
         {
-            _count -= 1;
-            //sample  = ( long ) ( sample * _m ) / _m;
-            sample = _m * floor( sample / _m + 0.5 );
+            float sample = channelBuffer[ i ];
+
+            _count += _rate;
+
+            if ( _count >= 1 )
+            {
+                _count -= 1;
+                //sample  = ( long ) ( sample * _m ) / _m;
+                sample = _m * floor( sample / _m + 0.5 );
+            }
+            channelBuffer[ i ] = sample;
         }
-        sampleBuffer[ i ] = sample;
+        // save CPU cycles when source is mono
+        if ( isMonoSource )
+        {
+            sampleBuffer->applyMonoSource();
+            break;
+        }
     }
 }
 

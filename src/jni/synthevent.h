@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #ifndef __SYNTHEVENT_H_INCLUDED__
 #define __SYNTHEVENT_H_INCLUDED__
 
@@ -42,8 +64,8 @@ class SynthEvent : public BaseCacheableAudioEvent
         float getVolume();
         void setVolume( float aValue );
 
-        float* getBuffer();
-        float* synthesize( int aBufferLength );
+        AudioBuffer* getBuffer();
+        AudioBuffer* synthesize( int aBufferLength );
         void unlock();
 
     private:
@@ -97,18 +119,18 @@ class SynthEvent : public BaseCacheableAudioEvent
         bool _hasMinLength;
         bool _queuedForDeletion;
 
-        float* _liveBuffer;
+        AudioBuffer* _liveBuffer;
 
         void init( SynthInstrument *aInstrument, float aFrequency, int aPosition, int aLength, bool aHasParent, bool aLiveSynthesis );
         void createOSC2( int aPosition, int aLength, SynthInstrument *aInstrument );
         void setDeletable( bool value );
-        void render( float* aOutputBuffer, int bufferLength );
+        void render( AudioBuffer* outputBuffer );
         void initKarplusStrong();
         void destroyLiveBuffer();
         void destroyOSC2();
 
         // caching
-        void doCache( int length );
+        void doCache();
         void resetCache();
         void resetEnvelopes();
 };

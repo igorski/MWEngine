@@ -20,32 +20,38 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BASEPROCESSOR_H_INCLUDED__
-#define __BASEPROCESSOR_H_INCLUDED__
-
+#include "sampledinstrument.h"
 #include "global.h"
-#include "audiobuffer.h"
+#include "sequencer.h"
+#include "utils.h"
+#include <cstddef>
 
-class BaseProcessor
+/* constructor / destructor */
+
+SampledInstrument::SampledInstrument()
 {
-    public:
-        BaseProcessor();
-        ~BaseProcessor();
+    processingChain = new ProcessingChain();
+    audioChannel    = new AudioChannel( processingChain, .75, bytes_per_bar );
+    audioEvents     = new std::vector<SampleEvent*>();
 
-        /**
-         * @param {audioBuffer*} sampleBuffer the buffer to write into
-         * @param {bool} isMonoSource whether the source signal is mono (save CPU cycles
-         *               by solely processing a single channel and writing its values into the
-         *               remaining channels
-         */
-        virtual void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+    sequencer::samplers.push_back( this ); // register instrument inside the sequencer
+}
 
-        /**
-         * if this processors effect is non-dynamic its output
-         * can be cached to omit unnecessary repeated calculations
-         * consuming unnecessary CPU cycles
-         */
-        virtual bool isCacheable();
-};
+SampledInstrument::~SampledInstrument()
+{
+    DebugTool::log( "SampledInstrument::DESTRUCT" );
 
-#endif
+    for ( int i; i < sequencer::samplers.size(); i++ )
+    {
+        if ( sequencer::samplers[ i ] == this )
+        {
+            sequencer::samplers.erase( sequencer::samplers.begin() + i );
+            break;
+        }
+    }
+    audioEvents->clear();
+    delete audioEvents;
+
+    delete audioChannel;
+    delete processingChain;
+}

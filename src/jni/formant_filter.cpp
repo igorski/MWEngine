@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "formant_filter.h"
 #include "utils.h"
 #include <cmath>
@@ -40,13 +62,13 @@ void FormantFilter::setVowel( float aVowel )
 
     int min      = ( int ) round( aVowel );
     int max      = min < ( 4 /* _coeffs.length - 1 */ ) ? min + 1 : min;
-    float delta = std::abs( min - aVowel );
+    double delta = std::abs( min - aVowel );
 
     // interpolate values
     int i;
     int l = 11; /* ARRAY_SIZE( _currentCoeffs )*/
 
-    for ( i = 0.0; i < l; ++i )
+    for ( i = 0; i < l; ++i )
     {
         float minCoeff = _coeffs[ min ][ i ];
         float maxCoeff = _coeffs[ max ][ i ];
@@ -55,37 +77,54 @@ void FormantFilter::setVowel( float aVowel )
     }
 }
 
-void FormantFilter::process( float* sampleBuffer, int bufferLength )
+void FormantFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int i = 0;
+    int bufferSize = sampleBuffer->bufferSize;
 
-    for ( i; i < bufferLength; ++i )
+    for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        float res = ( _currentCoeffs[ 0 ]  * sampleBuffer[ i ] +
-                       _currentCoeffs[ 1 ]  * _memory[ 0 ] +
-                       _currentCoeffs[ 2 ]  * _memory[ 1 ] +
-                       _currentCoeffs[ 3 ]  * _memory[ 2 ] +
-                       _currentCoeffs[ 4 ]  * _memory[ 3 ] +
-                       _currentCoeffs[ 5 ]  * _memory[ 4 ] +
-                       _currentCoeffs[ 6 ]  * _memory[ 5 ] +
-                       _currentCoeffs[ 7 ]  * _memory[ 6 ] +
-                       _currentCoeffs[ 8 ]  * _memory[ 7 ] +
-                       _currentCoeffs[ 9 ]  * _memory[ 8 ] +
-                       _currentCoeffs[ 10 ] * _memory[ 9 ] );
+        float* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        _memory[ 9 ] = _memory[ 8 ];
-        _memory[ 8 ] = _memory[ 7 ];
-        _memory[ 7 ] = _memory[ 6 ];
-        _memory[ 6 ] = _memory[ 5 ];
-        _memory[ 5 ] = _memory[ 4 ];
-        _memory[ 4 ] = _memory[ 3 ];
-        _memory[ 3 ] = _memory[ 2 ];
-        _memory[ 2 ] = _memory[ 1 ];
-        _memory[ 1 ] = _memory[ 0 ];
-        _memory[ 0 ] = res;
+        for ( int i = 0; i < bufferSize; ++i )
+        {
+            double res = ( _currentCoeffs[ 0 ]  * channelBuffer[ i ] +
+                           _currentCoeffs[ 1 ]  * _memory[ 0 ] +
+                           _currentCoeffs[ 2 ]  * _memory[ 1 ] +
+                           _currentCoeffs[ 3 ]  * _memory[ 2 ] +
+                           _currentCoeffs[ 4 ]  * _memory[ 3 ] +
+                           _currentCoeffs[ 5 ]  * _memory[ 4 ] +
+                           _currentCoeffs[ 6 ]  * _memory[ 5 ] +
+                           _currentCoeffs[ 7 ]  * _memory[ 6 ] +
+                           _currentCoeffs[ 8 ]  * _memory[ 7 ] +
+                           _currentCoeffs[ 9 ]  * _memory[ 8 ] +
+                           _currentCoeffs[ 10 ] * _memory[ 9 ] );
 
-        sampleBuffer[ i ] = res;
+            _memory[ 9 ] = _memory[ 8 ];
+            _memory[ 8 ] = _memory[ 7 ];
+            _memory[ 7 ] = _memory[ 6 ];
+            _memory[ 6 ] = _memory[ 5 ];
+            _memory[ 5 ] = _memory[ 4 ];
+            _memory[ 4 ] = _memory[ 3 ];
+            _memory[ 3 ] = _memory[ 2 ];
+            _memory[ 2 ] = _memory[ 1 ];
+            _memory[ 1 ] = _memory[ 0 ];
+            _memory[ 0 ] = res;
+
+            channelBuffer[ i ] = ( float ) res;
+        }
+
+        // omit unnecessary cycles by copying the mono content
+        if ( isMonoSource )
+        {
+            sampleBuffer->applyMonoSource();
+            break;
+        }
     }
+}
+
+bool FormantFilter::isCacheable()
+{
+    return true;
 }
 
 /* private methods */
