@@ -1,0 +1,35 @@
+#ifndef __UTILS_H_INCLUDED__
+#define __UTILS_H_INCLUDED__
+
+#include <math.h>
+
+/* convenience methods */
+
+double scale( double value, double maxValue, double maxCompareValue );
+double randomDouble();
+
+/* volume util */
+
+namespace VolumeUtil
+{
+    extern double FACTOR1;
+    extern double FACTOR2;
+
+    extern double lin2log( double dLinear );
+    extern double log2lin( double dLogarithmic );
+}
+
+// note this will not work on pointers (yes, that means arrays passed as arguments too ;-)
+#define ARRAY_SIZE( array ) ( sizeof(( array )) / sizeof(( array[ 0 ])))
+
+
+
+/* logging */
+
+#define APPNAME "SYNTH"
+
+extern void nlog( char const* aMessage );
+extern void nlog( char const* aMessage, int aValue );
+extern void nlog( char const* aMessage, double aValue );
+
+#endif

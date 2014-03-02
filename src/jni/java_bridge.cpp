@@ -1,0 +1,111 @@
+/**
+ * JavaBridge acts as the mediator between the native C(++) layer
+ * and the Java application
+ */
+#include "java_bridge.h"
+#include "global.h"
+#include <string.h>
+
+static JavaVM*   _vm   = 0;
+static jclass   _class = 0; // cached reference to Java mediator class
+
+/**
+ * registers the reference to the JAVA_CLASS (and its host environment)
+ * where all subsequent calls will be executed upon, the Java class
+ * will only expose static methods for its interface with the native code
+ *
+ * upon registration the current BUFFER_SIZE will be returned to the JNI
+ */
+void registerInterface( JNIEnv* env, jobject jobj )
+{
+    jclass localRefCls = env->FindClass( JAVA_CLASS );
+    if (localRefCls == NULL) {
+        return; /* exception thrown */
+    }
+    /* Create a global reference */
+    _class = ( jclass ) env->NewGlobalRef( localRefCls );
+
+    /* The local reference is no longer useful */
+    env->DeleteLocalRef( localRefCls );
+
+    /* Is the global reference created successfully? */
+    if ( _class == NULL) {
+        return; /* out of memory exception thrown */
+    }
+
+    jmethodID native_method_id = getJavaMethod( JavaAPIs::REGISTRATION_SUCCESS );
+
+    if ( native_method_id != 0 )
+        env->CallStaticVoidMethod( getJavaInterface(), native_method_id, 1 );
+}
+
+/**
+ * the reference to the JavaVM should be registered
+ * when the JNI environment has loaded, the JVM is
+ * queried for all subsequent JNI communications with the
+ * mediator Java class
+ */
+void registerVM( JavaVM* aVM )
+{
+    _vm = aVM;
+}
+
+JavaVM* getVM()
+{
+    return _vm;
+}
+
+/**
+ * retrieve a Java method ID from the registered Java interface class
+ * note: all these methods are expected to be static Java methods
+ *
+ * @param aAPImethod {javaAPI}
+ */
+jmethodID getJavaMethod( javaAPI aAPImethod )
+{
+    jmethodID native_method_id = 0;
+    jclass    javaClass        = getJavaInterface();
+
+    if ( javaClass != 0 )
+        native_method_id = getEnvironment()->GetStaticMethodID( javaClass, aAPImethod.method, aAPImethod.signature );
+
+    return native_method_id;
+}
+
+jclass getJavaInterface()
+{
+    JNIEnv *env = getEnvironment();
+
+    // might as well return as subsequent usage of
+    // the interface requires a valid environment for it's invocation!
+    if ( env == 0 )
+        return 0;
+
+    return _class; // we have a cached reference!
+
+    /*
+    jclass javaClass = env->FindClass( JAVA_CLASS );
+
+    if ( javaClass != 0 )
+        return javaClass;
+    else
+        return 0;
+    */
+}
+
+JNIEnv* getEnvironment()
+{
+    JNIEnv *env;
+    jint rs = _vm->AttachCurrentThread( &env, NULL );
+
+    if ( rs == JNI_OK )
+        return env;
+    else
+        return 0;
+    /*
+    JNIEnv* env;
+    ( getVM() )->GetEnv(( void** ) &env, JNI_VERSION_1_6 );
+
+    return env;
+    */
+}

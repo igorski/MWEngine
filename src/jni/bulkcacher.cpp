@@ -1,0 +1,101 @@
+#include "bulkcacher.h"
+#include "utils.h"
+#include <algorithm>
+#include <vector>
+
+/* constructor / destructor */
+
+/**
+ * @param sequential when true, the BulkCacher queue
+ *        will be processed one after another instead of all in one go
+ */
+BulkCacher::BulkCacher( bool sequential )
+{
+    _queue      = new std::vector<BaseCacheableAudioEvent*>();
+    _sequential = sequential;
+}
+
+BulkCacher::~BulkCacher()
+{
+    delete _queue;
+}
+
+/* public methods */
+
+void BulkCacher::addToQueue( std::vector<BaseCacheableAudioEvent*>* aEvents )
+{
+    int i = 0;
+    int amount = aEvents->size();
+    for ( i; i < amount; i++ )
+    {
+        BaseCacheableAudioEvent* event = aEvents->at( i );
+        event->setBulkCacheable( true );
+
+        addToQueue( event );
+    }
+}
+
+void BulkCacher::addToQueue( BaseCacheableAudioEvent* aEvent )
+{
+    // make sure we don't add the same event twice
+    if ( std::find( _queue->begin(), _queue->end(), aEvent ) == _queue->end())
+    {
+        if ( !aEvent->isCached())
+            _queue->push_back( aEvent );
+    }
+}
+
+bool BulkCacher::removeFromQueue( BaseCacheableAudioEvent* aEvent )
+{
+    if ( std::find( _queue->begin(), _queue->end(), aEvent ) != _queue->end())
+    {
+        _queue->erase( std::find( _queue->begin(), _queue->end(), aEvent ));
+        return true;
+    }
+    return false;
+}
+
+bool BulkCacher::hasQueue()
+{
+    return _queue->size() > 0;
+}
+
+/**
+ * invokes the cache method on all queued audio events
+ * (this will also remove them from the queue)
+ *
+ * in case the BulkCacher was constructed to work in
+ * sequence, this method will cache the queue one event at a time
+ * note that this method must be invoked after each cache-invocation
+ * from the freshly cached event when it finishes its caching routine
+ */
+void BulkCacher::cacheQueue()
+{
+    int i = 0;
+    int amount = _queue->size();
+
+    //DebugTool::log( "BulkCacher::caching %d events", amount );
+
+    for ( i; i < amount; i++ )
+    {
+        BaseCacheableAudioEvent* event = _queue->at( i );
+
+        // (interesting detail must remove the event from the queue
+        // BEFORE invoking cache (isn't executed synchronously and
+        // would cause a recursive loop!)
+
+        removeFromQueue( event );
+        event->cache( _sequential );
+
+        // just one when sequential
+
+        if ( _sequential )
+            return;
+    }
+    clearQueue(); // superfluous actually
+}
+
+void BulkCacher::clearQueue()
+{
+    _queue->clear();
+}
