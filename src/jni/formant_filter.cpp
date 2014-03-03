@@ -28,7 +28,7 @@
 
 /**
  * @param aVowel {float} interpolated value within
- *                        the range of the amount specified in the coeffs Array
+ *                       the range of the amount specified in the coeffs Array
  */
 FormantFilter::FormantFilter( float aVowel )
 {
@@ -60,21 +60,31 @@ void FormantFilter::setVowel( float aVowel )
 {
     _vowel = aVowel;
 
-    int min      = ( int ) round( aVowel );
-    int max      = min < ( 4 /* _coeffs.length - 1 */ ) ? min + 1 : min;
-    double delta = std::abs( min - aVowel );
+    int      intpart = (int)(aVowel * 4.0f);
+    float   fracpart = aVowel - intpart;
+
+    for ( int i = 0; i < 11; i++ )
+    {
+      _currentCoeffs[ i ] = _coeffs[intpart][i] * (1.0f - fracpart)
+         + (_coeffs[intpart + (intpart < 4)][i] * fracpart);      // Linear Interpolation
+    }
+    /*
+    int min     = ( int ) round( aVowel );
+    int max     = min < 4 ? min + 1 : min;
+    float delta = std::abs( min - aVowel );
 
     // interpolate values
     int i;
-    int l = 11; /* ARRAY_SIZE( _currentCoeffs )*/
+    int l = 11;
 
     for ( i = 0; i < l; ++i )
     {
         float minCoeff = _coeffs[ min ][ i ];
         float maxCoeff = _coeffs[ max ][ i ];
 
-        _currentCoeffs[ i ] = delta < .5 ? minCoeff : maxCoeff; // just take the nearest value for now... interpolation seems not possible ?
+        _currentCoeffs[ i ] = delta < .5f ? minCoeff : maxCoeff; // just take the nearest value for now... must rethink approach ;)
     }
+    */
 }
 
 void FormantFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
@@ -110,7 +120,21 @@ void FormantFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             _memory[ 1 ] = _memory[ 0 ];
             _memory[ 0 ] = res;
 
-            channelBuffer[ i ] = ( float ) res;
+            // 32-bit float resolution is too low on certain coefficients, below "hack"
+            // cheaply prevents extreme self oscillation to exceed the max. capacity
+
+            float output;
+
+            if ( res > FLT_MAX )
+                output = FLT_MAX;
+            else if ( res < -FLT_MAX )
+                output = -FLT_MAX;
+            else
+                output = ( float ) res;
+
+            channelBuffer[ i ] = output;
+            // TODO : still breaks, check with double value what was up!
+            DebugTool::log("buf %f", channelBuffer[ i ]);
         }
 
         // omit unnecessary cycles by copying the mono content
@@ -129,7 +153,7 @@ bool FormantFilter::isCacheable()
 
 /* private methods */
 
-// calculate the vowel coefficients
+// store the vowel coefficients
 
 void FormantFilter::calculateCoeffs()
 {
