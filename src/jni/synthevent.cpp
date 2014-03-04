@@ -94,6 +94,12 @@ SynthEvent::~SynthEvent()
         _ringBuffer = 0;
     }
 
+    if ( _arpeggiator != 0 )
+    {
+        delete _arpeggiator;
+        _arpeggiator = 0;
+    }
+
     // secondary oscillator
     destroyOSC2();
 
@@ -141,7 +147,7 @@ float SynthEvent::getFrequency()
 
 void SynthEvent::setFrequency( float aFrequency )
 {
-    _phase     = 0.0;
+    _phase     = 0.0f;
     _phaseIncr = aFrequency / audio_engine::SAMPLE_RATE;
     _frequency = aFrequency;
 
@@ -180,6 +186,8 @@ void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument
         createOSC2( aPosition, aLength, aInstrument );
     else
         destroyOSC2();
+
+    // TODO ARPEGGIATOR FROM SYNTH INSTRUMENT
 
     if ( updateLFO1 )
     {
@@ -444,6 +452,31 @@ void SynthEvent::setVolume( float aValue )
     _volume = aValue;
 }
 
+Arpeggiator* SynthEvent::getArpeggiator()
+{
+    return _arpeggiator;
+}
+
+void SynthEvent::setArpeggiator( Arpeggiator* arpeggiator )
+{
+    _arpeggiator = arpeggiator;
+
+    if ( arpeggiator == 0 )
+    {
+        _doArpeggiator = false;
+
+        if ( _osc2 != 0 )
+            _osc2->_doArpeggiator = false;
+
+        return;
+    }
+    if ( _osc2 != 0 )
+        _osc2->setArpeggiator( arpeggiator->clone() );
+
+    _doArpeggiator = true;
+    _baseFrequency = _frequency;    // cache current frequency as base
+}
+
 /* private methods */
 
 void SynthEvent::initKarplusStrong()
@@ -632,6 +665,13 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         if ( liveSynthesis )
             amp *= .5; // in case of multi-timbral fun
 
+        // update modules
+        if ( _doArpeggiator )
+        {
+            if ( _arpeggiator->peek())
+                setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), _baseFrequency ));
+        }
+
         // stop caching when cancel is requested
         if ( _cancel )
             break;
@@ -739,6 +779,7 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
     _decay                 = 0.0;
     _sampleLength          = 0;
     _lastWriteIndex        = 0;
+    _doArpeggiator         = false;
 
     // constants used by waveform generators
 
@@ -756,6 +797,8 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
 
     if ( !hasParent && aInstrument->osc2active )
        createOSC2( position, length, aInstrument );
+
+    // TODO ARPEGGIATOR FROM SYNTH INSTRUMENT
 
     if ( liveSynthesis )
     {

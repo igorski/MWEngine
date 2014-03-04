@@ -24,6 +24,7 @@
 #define __SYNTHEVENT_H_INCLUDED__
 
 #include "basecacheableaudioevent.h"
+#include "arpeggiator.h"
 #include "synthinstrument.h"
 #include "lfo.h"
 #include "ringbuffer.h"
@@ -50,6 +51,7 @@ class SynthEvent : public BaseCacheableAudioEvent
         int position;
         float length;
 
+        // properties
         float getFrequency();
         void setFrequency( float aFrequency );
         void updateProperties( int aPosition, float aLength, SynthInstrument *aInstrument, int aState );
@@ -64,8 +66,12 @@ class SynthEvent : public BaseCacheableAudioEvent
         float getVolume();
         void setVolume( float aValue );
 
+        void setArpeggiator( Arpeggiator* arpeggiator );
+        Arpeggiator* getArpeggiator();
+
         AudioBuffer* getBuffer();
         AudioBuffer* synthesize( int aBufferLength );
+
         void unlock();
 
     private:
@@ -77,6 +83,7 @@ class SynthEvent : public BaseCacheableAudioEvent
         float _phase;
         float _phaseIncr;
         float _frequency;
+        float _baseFrequency;
         int    _type;
         float PI;
         float TWO_PI;
@@ -112,6 +119,11 @@ class SynthEvent : public BaseCacheableAudioEvent
         SynthEvent *_osc2;  // secondary oscillator
         bool hasParent;
         float _pwmValue;
+
+        // modules
+
+        Arpeggiator* _arpeggiator;
+        bool _doArpeggiator;
 
         // live synthesis
 

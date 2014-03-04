@@ -15,6 +15,7 @@ java_bridge.cpp \
 opensl_io.c \
 audiobuffer.cpp \
 audiochannel.cpp \
+arpeggiator.cpp \
 baseaudioevent.cpp \
 basecacheableaudioevent.cpp \
 baseprocessor.cpp \
