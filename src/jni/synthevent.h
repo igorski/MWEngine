@@ -66,9 +66,6 @@ class SynthEvent : public BaseCacheableAudioEvent
         float getVolume();
         void setVolume( float aValue );
 
-        void setArpeggiator( Arpeggiator* arpeggiator );
-        Arpeggiator* getArpeggiator();
-
         AudioBuffer* getBuffer();
         AudioBuffer* synthesize( int aBufferLength );
 
@@ -122,8 +119,8 @@ class SynthEvent : public BaseCacheableAudioEvent
 
         // modules
 
+        void setArpeggiator( Arpeggiator* arpeggiator );
         Arpeggiator* _arpeggiator;
-        bool _doArpeggiator;
 
         // live synthesis
 

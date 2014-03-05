@@ -61,31 +61,16 @@ void FormantFilter::setVowel( float aVowel )
 {
     _vowel = aVowel;
 
-    int      intpart = (int)(aVowel * 4.0f);
-    float   fracpart = aVowel - intpart;
+    int roundVowel = ( int )( aVowel * 4.0f );
+    float fracpart = aVowel - roundVowel;
+
+    // Linearly interpolate values
 
     for ( int i = 0; i < 11; i++ )
     {
-      _currentCoeffs[ i ] = _coeffs[intpart][i] * (1.0f - fracpart)
-         + (_coeffs[intpart + (intpart < 4)][i] * fracpart);      // Linear Interpolation
+        _currentCoeffs[ i ] = _coeffs[ roundVowel ][ i ] * ( 1.0f - fracpart ) +
+                            ( _coeffs[ roundVowel + ( roundVowel < 4 )][ i ] * fracpart );
     }
-    /*
-    int min     = ( int ) round( aVowel );
-    int max     = min < 4 ? min + 1 : min;
-    float delta = std::abs( min - aVowel );
-
-    // interpolate values
-    int i;
-    int l = 11;
-
-    for ( i = 0; i < l; ++i )
-    {
-        float minCoeff = _coeffs[ min ][ i ];
-        float maxCoeff = _coeffs[ max ][ i ];
-
-        _currentCoeffs[ i ] = delta < .5f ? minCoeff : maxCoeff; // just take the nearest value for now... must rethink approach ;)
-    }
-    */
 }
 
 void FormantFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
@@ -94,7 +79,7 @@ void FormantFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        float* channelBuffer = sampleBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
         for ( int i = 0; i < bufferSize; ++i )
         {
@@ -124,18 +109,20 @@ void FormantFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             // 32-bit float resolution is too low on certain coefficients, below "hack"
             // cheaply prevents extreme self oscillation to exceed the max. capacity
 
-            float output;
+            #if PRECISION == 1
+                float output;
 
-            if ( res > FLT_MAX )
-                output = FLT_MAX;
-            else if ( res < -FLT_MAX )
-                output = -FLT_MAX;
-            else
-                output = ( float ) res;
+                if ( res > FLT_MAX )
+                    output = FLT_MAX;
+                else if ( res < -FLT_MAX )
+                    output = -FLT_MAX;
+                else
+                    output = ( float ) res;
 
-            channelBuffer[ i ] = output;
-            // TODO : still breaks, check with double value what was up!
-            DebugTool::log("buf %f", channelBuffer[ i ]);
+                channelBuffer[ i ] = output;
+            #else
+                channelBuffer[ i ] = res;
+            #endif
         }
 
         // omit unnecessary cycles by copying the mono content

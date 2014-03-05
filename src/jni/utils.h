@@ -63,7 +63,7 @@ namespace BufferUtil
 
 /* logging */
 
-#define APPNAME "ERIS"
+#define APPNAME "MWENGINE"
 
 namespace DebugTool
 {

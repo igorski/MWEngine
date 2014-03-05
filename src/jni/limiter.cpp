@@ -60,7 +60,7 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
-        float* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
         int j                 = sampleBuffer->bufferSize;
 
         while ( j-- > 0 )

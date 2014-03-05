@@ -108,17 +108,17 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        float* channelBuffer = sampleBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        float maxPhase = 3.14159f * 2.f;
+        SAMPLE_TYPE maxPhase = 3.14159 * 2;
         int i = 0;
         int j;
 
         for ( i; i < bufferSize; ++i )
         {
             // calculate and update phaser sweep LFO...
-            float d   = _dmin + ( _dmax - _dmin ) * (( sin( _lfoPhase ) + 1.0 ) / 2.0 );
-            _lfoPhase += _lfoInc;
+            SAMPLE_TYPE d  = _dmin + ( _dmax - _dmin ) * (( sin( _lfoPhase ) + 1.0 ) / 2.0 );
+            _lfoPhase     += _lfoInc;
 
             if ( _lfoPhase >= maxPhase )
                 _lfoPhase -= maxPhase;

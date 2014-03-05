@@ -53,7 +53,7 @@ void SampleManager::setSample( jstring aKey, jint aBufferLength, jint aChannelAm
         return;
 
     // copy buffer contents
-    float* channelBuffer = sampleBuffer->getBufferForChannel( 0 );
+    SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( 0 );
 
     for ( i = 0; i < aBufferLength; i++ )
         channelBuffer[ i ] = ( float ) c_array[ i ];

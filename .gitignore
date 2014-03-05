@@ -1,2 +1,3 @@
 *.iml
 *.DS_Store
+src/src/nl/igorski/lib/audio/nativeaudio/*

@@ -83,7 +83,7 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
-        float* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
 
         // each channel needs the same offset to get the same LFO movement ;)
         if ( _hasLFO && i > 0 )

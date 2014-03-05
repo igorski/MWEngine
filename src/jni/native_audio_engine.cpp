@@ -29,6 +29,7 @@
 #include <math.h>
 #include <vector>
 #include "native_audio_engine.h"
+#include "global.h"
 #include "audiochannel.h"
 #include "baseaudioevent.h"
 #include "diskwriter.h"
@@ -36,7 +37,6 @@
 #include "sequencer.h"
 #include "java_bridge.h"
 #include "opensl_io.h"
-#include "global.h"
 
 static int thread;
 
@@ -156,8 +156,8 @@ void start( JNIEnv* env, jobject jobj )
         // record audio from Android device ?
         if ( recordFromDevice && audio_engine::INPUT_CHANNELS > 0 )
         {
-            int recSamps            = android_AudioIn( p, recbufferIn, audio_engine::BUFFER_SIZE );
-            float* recBufferChannel = recbuffer->getBufferForChannel( 0 );
+            int recSamps                  = android_AudioIn( p, recbufferIn, audio_engine::BUFFER_SIZE );
+            SAMPLE_TYPE* recBufferChannel = recbuffer->getBufferForChannel( 0 );
 
             for ( int j = 0; j < recSamps; ++j )
             {
@@ -244,8 +244,8 @@ void start( JNIEnv* env, jobject jobj )
 
                                     for ( int c = 0, ca = buffer->amountOfChannels; c < ca; ++c )
                                     {
-                                        float* srcBuffer = buffer->getBufferForChannel( c );
-                                        float* tgtBuffer = channelBuffer->getBufferForChannel( c );
+                                        SAMPLE_TYPE* srcBuffer = buffer->getBufferForChannel( c );
+                                        SAMPLE_TYPE* tgtBuffer = channelBuffer->getBufferForChannel( c );
 
                                         tgtBuffer[ i ] += srcBuffer[ readPointer ];
                                     }
@@ -264,8 +264,8 @@ void start( JNIEnv* env, jobject jobj )
 
                                                 for ( int c = 0, ca = buffer->amountOfChannels; c < ca; ++c )
                                                 {
-                                                    float* srcBuffer = buffer->getBufferForChannel( c );
-                                                    float* tgtBuffer = channelBuffer->getBufferForChannel( c );
+                                                    SAMPLE_TYPE* srcBuffer = buffer->getBufferForChannel( c );
+                                                    SAMPLE_TYPE* tgtBuffer = channelBuffer->getBufferForChannel( c );
 
                                                     tgtBuffer[ i ] += srcBuffer[ readPointer ];
                                                 }
@@ -340,8 +340,8 @@ void start( JNIEnv* env, jobject jobj )
 
             for ( ci = 0; ci < outputChannels; ++ci )
             {
-                float* buffer    = inbuffer->getBufferForChannel( ci );
-                float* srcBuffer = channelBuffer->getBufferForChannel( ci );
+                SAMPLE_TYPE* buffer    = inbuffer->getBufferForChannel( ci );
+                SAMPLE_TYPE* srcBuffer = channelBuffer->getBufferForChannel( ci );
 
                 for ( i = 0; i < buffer_size; ++i )
                 {

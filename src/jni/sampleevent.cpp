@@ -240,7 +240,7 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
     if ( useInternalPointer )
         readPos = _readPointer;
 
-    float* srcBuffer;
+    SAMPLE_TYPE* srcBuffer;
 
     for ( int i = 0; i < bufferSize; ++i )
     {
@@ -256,8 +256,8 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
                 else
                     srcBuffer = _buffer->getBufferForChannel( 0 );
 
-                float* targetBuffer = buffer->getBufferForChannel( c );
-                targetBuffer[ i ]   += srcBuffer[ _rangePointer ];
+                SAMPLE_TYPE* targetBuffer = buffer->getBufferForChannel( c );
+                targetBuffer[ i ]        += srcBuffer[ _rangePointer ];
             }
 
             if ( ++_rangePointer > _bufferRangeEnd )

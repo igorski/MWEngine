@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "bitcrusher.h"
+#include "global.h"
 #include "utils.h"
 
 /* constructor */
@@ -41,7 +42,7 @@ void BitCrusher::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
-        float* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
 
         for ( int j = 0; j < bufferSize; ++j )
         {

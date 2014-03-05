@@ -28,11 +28,11 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
     loopeable        = false;
     amountOfChannels = aAmountOfChannels;
     bufferSize       = aBufferSize;
-    _buffers         = new std::vector<float*>();//[ amountOfChannels ];
+    _buffers         = new std::vector<SAMPLE_TYPE*>();//[ amountOfChannels ];
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {
-        float* buffer = new float[ bufferSize ];
+        SAMPLE_TYPE* buffer = new SAMPLE_TYPE[ bufferSize ];
 
         for ( int j = 0; j < bufferSize; ++j )
             buffer[ j ] = 0.0;
@@ -52,7 +52,7 @@ AudioBuffer::~AudioBuffer()
 
 /* public methods */
 
-float* AudioBuffer::getBufferForChannel( int aChannelNum )
+SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
 {
     return _buffers->at( aChannelNum );
 }
@@ -70,8 +70,8 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {
-        float* srcBuffer    = aBuffer->getBufferForChannel( i );
-        float* targetBuffer = getBufferForChannel( i );
+        SAMPLE_TYPE* srcBuffer    = aBuffer->getBufferForChannel( i );
+        SAMPLE_TYPE* targetBuffer = getBufferForChannel( i );
 
         for ( int j = aWriteOffset, l = aWriteOffset + writeLength, r = aReadOffset; j < l; ++j, ++r )
         {
@@ -98,7 +98,7 @@ void AudioBuffer::silenceBuffers()
 {
     for ( int i = 0; i < amountOfChannels; ++i )
     {
-        float* buffer = getBufferForChannel( i );
+        SAMPLE_TYPE* buffer = getBufferForChannel( i );
 
         for ( int j = 0; j < bufferSize; ++j )
             buffer[ j ] = 0.0;
@@ -111,12 +111,15 @@ void AudioBuffer::silenceBuffers()
  */
 void AudioBuffer::applyMonoSource()
 {
-    float* monoBuffer = getBufferForChannel( 0 );
+    if ( amountOfChannels == 1 )
+        return;
+
+    SAMPLE_TYPE* monoBuffer = getBufferForChannel( 0 );
 
     for ( int i = 1; i < amountOfChannels; ++i )
     {
-        float* targetBuffer = getBufferForChannel( i );
-        memcpy( targetBuffer, monoBuffer, bufferSize * sizeof( float ));
+        SAMPLE_TYPE* targetBuffer = getBufferForChannel( i );
+        memcpy( targetBuffer, monoBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
 }
 
@@ -126,10 +129,10 @@ AudioBuffer* AudioBuffer::clone()
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {
-        float* sourceBuffer = getBufferForChannel( i );
-        float* targetBuffer = output->getBufferForChannel( i );
+        SAMPLE_TYPE* sourceBuffer = getBufferForChannel( i );
+        SAMPLE_TYPE* targetBuffer = output->getBufferForChannel( i );
 
-        memcpy( targetBuffer, sourceBuffer, bufferSize * sizeof( float ));
+        memcpy( targetBuffer, sourceBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
     return output;
 }

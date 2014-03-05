@@ -22,7 +22,6 @@ baseprocessor.cpp \
 basebusprocessor.cpp \
 bitcrusher.cpp \
 bulkcacher.cpp \
-compressor.cpp \
 decimator.cpp \
 diskwriter.cpp \
 drumevent.cpp \
@@ -38,7 +37,6 @@ lfo.cpp \
 limiter.cpp \
 lpfhpfilter.cpp \
 phaser.cpp \
-pitchshifter.cpp \
 processingchain.cpp \
 ringbuffer.cpp \
 samplemanager.cpp \

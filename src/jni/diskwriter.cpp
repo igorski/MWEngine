@@ -66,7 +66,7 @@ namespace DiskWriter
             generateOutputBuffer();
 
         // TODO: currently MONO ONLY !!
-        float* channelBuffer = aBuffer->getBufferForChannel( 0 );
+        SAMPLE_TYPE* channelBuffer = aBuffer->getBufferForChannel( 0 );
         int writerIndex       = DiskWriter::outputWriterIndex;
         int MAX_VALUE         = 32767; // convert floats to shorts
 

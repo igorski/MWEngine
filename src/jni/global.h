@@ -23,9 +23,22 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-// audio engine variables
+// audio engine configuration
 
-const float MAX_PHASE = 1.0;
+// PRECISION defines the floating-point precision used to synthesize the audio samples
+// valid values are 1 (32-bit float) and 2 (64-bit double)
+
+#define PRECISION 2
+
+#if PRECISION == 1 // float
+ #define SAMPLE_TYPE float
+ const float MAX_PHASE = 1.0f;
+#endif
+
+#if PRECISION == 2 // double
+ #define SAMPLE_TYPE double
+ const float MAX_PHASE = 1.0;
+#endif
 
 namespace audio_engine
 {
@@ -36,6 +49,8 @@ namespace audio_engine
     extern int SAMPLE_RATE;         // initialized on engine start == device specific
     extern int BUFFER_SIZE;         // initialized on engine start == device specific
 }
+
+// E.O. audio engine configuration
 
 // global sequencer variables
 

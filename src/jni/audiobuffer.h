@@ -23,6 +23,7 @@
 #ifndef __AUDIOBUFFER_H_INCLUDED__
 #define __AUDIOBUFFER_H_INCLUDED__
 
+#include "global.h"
 #include <vector>
 
 class AudioBuffer
@@ -35,14 +36,14 @@ class AudioBuffer
         int bufferSize;
         bool loopeable;
 
-        float* getBufferForChannel( int aChannelNum );
+        SAMPLE_TYPE* getBufferForChannel( int aChannelNum );
         int mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume );
         void silenceBuffers();
         void applyMonoSource();
         AudioBuffer* clone();
 
     protected:
-        std::vector<float*>* _buffers;
+        std::vector<SAMPLE_TYPE*>* _buffers;
 };
 
 #endif

@@ -23,6 +23,7 @@
 #ifndef __SYNTHINSTRUMENT_H_INCLUDED__
 #define __SYNTHINSTRUMENT_H_INCLUDED__
 
+#include "arpeggiator.h"
 #include "audiochannel.h"
 #include "processingchain.h"
 #include "routeable_oscillator.h"
@@ -51,6 +52,9 @@ class SynthInstrument
         float osc2detune;
         int osc2octaveShift;
         int osc2fineShift;
+
+        Arpeggiator* arpeggiator;
+        bool arpeggiatorActive;
 
         std::vector<BaseCacheableAudioEvent*>* audioEvents;
         std::vector<BaseAudioEvent*>* liveEvents;

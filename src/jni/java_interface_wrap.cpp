@@ -213,6 +213,7 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 
 #include "native_audio_engine_api.h"
 #include "sequencer_api.h"
+#include "arpeggiator.h"
 #include "audiochannel.h"
 #include "bitcrusher.h"
 #include "baseprocessor.h"
@@ -591,6 +592,145 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
   }
   (arg1)->setRecordingFromDeviceState(arg2,arg3,arg4);
   if (arg4) jenv->ReleaseStringUTFChars(jarg4, (const char *)arg4);
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1Arpeggiator(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  Arpeggiator *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (Arpeggiator *)new Arpeggiator();
+  *(Arpeggiator **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1Arpeggiator(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1MAX_1STEPS_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)Arpeggiator::MAX_STEPS;
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1setStepSize(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  arg2 = (int)jarg2; 
+  (arg1)->setStepSize(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1setAmountOfSteps(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  arg2 = (int)jarg2; 
+  (arg1)->setAmountOfSteps(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1setShiftForStep(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3) {
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setShiftForStep(arg2,arg3);
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1getStep(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  result = (int)(arg1)->getStep();
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1peek(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  result = (bool)(arg1)->peek();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1getPitchForStep(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jfloat jarg3) {
+  jfloat jresult = 0 ;
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  int arg2 ;
+  float arg3 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (float)jarg3; 
+  result = (float)(arg1)->getPitchForStep(arg2,arg3);
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1clone(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  Arpeggiator *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  result = (Arpeggiator *)(arg1)->clone();
+  *(Arpeggiator **)&jresult = result; 
+  return jresult;
 }
 
 
@@ -6278,6 +6418,63 @@ SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
   arg1 = *(SynthInstrument **)&jarg1; 
   result = (int) ((arg1)->osc2fineShift);
   jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthInstrument_1arpeggiator_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  SynthInstrument *arg1 = (SynthInstrument *) 0 ;
+  Arpeggiator *arg2 = (Arpeggiator *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(SynthInstrument **)&jarg1; 
+  arg2 = *(Arpeggiator **)&jarg2; 
+  if (arg1) (arg1)->arpeggiator = arg2;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthInstrument_1arpeggiator_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  SynthInstrument *arg1 = (SynthInstrument *) 0 ;
+  Arpeggiator *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SynthInstrument **)&jarg1; 
+  result = (Arpeggiator *) ((arg1)->arpeggiator);
+  *(Arpeggiator **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthInstrument_1arpeggiatorActive_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  SynthInstrument *arg1 = (SynthInstrument *) 0 ;
+  bool arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SynthInstrument **)&jarg1; 
+  arg2 = jarg2 ? true : false; 
+  if (arg1) (arg1)->arpeggiatorActive = arg2;
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthInstrument_1arpeggiatorActive_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  SynthInstrument *arg1 = (SynthInstrument *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SynthInstrument **)&jarg1; 
+  result = (bool) ((arg1)->arpeggiatorActive);
+  jresult = (jboolean)result; 
   return jresult;
 }
 

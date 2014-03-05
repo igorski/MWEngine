@@ -45,7 +45,7 @@ void Decimator::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        float* channelBuffer = sampleBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
         for ( int i = 0; i < bufferSize; ++i )
         {

@@ -63,7 +63,7 @@ void Finalizer::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
-        float* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
 
         for ( int j = 0; j < bufferSize; ++j )
         {

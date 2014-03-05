@@ -80,4 +80,7 @@ void SynthInstrument::init()
 
     audioEvents = new std::vector<BaseCacheableAudioEvent*>();
     liveEvents  = new std::vector<BaseAudioEvent*>();
+
+    arpeggiator       = new Arpeggiator();
+    arpeggiatorActive = false;
 }

@@ -32,10 +32,10 @@
 /**
  * @method scale
  * scales a value against a scale different to the one "value" stems from
- * i.e. a UI slider with a value 0 - 100 ( percent ) to match against a
- * scale with a maximum value of 255
+ * i.e. a UI slider with a value 0 - 100 ( percent ) to match against an
+ * 8-bit scale with a maximum value of 255
  *
- * @param value           {float} value to get scaled to
+ * @param value           {float} value to scale
  * @param maxValue        {float} the maximum value we are likely to expect for param value
  * @param maxCompareValue {float} the maximum value in the scale we're matching against
  *
@@ -43,8 +43,8 @@
  */
 float scale( float value, float maxValue, float maxCompareValue )
 {
-    float ratio = maxCompareValue / maxValue;
-    return value * ratio;
+    double ratio = maxCompareValue / maxValue;
+    return ( float ) ( value * ratio );
 }
 
 //
