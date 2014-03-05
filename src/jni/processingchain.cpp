@@ -54,12 +54,6 @@ ProcessingChain::ProcessingChain()
     decimatorDistortion      = 16;
     decimatorDistortionLevel = .25;
 
-    cAttack         = 20;
-    cRelease        = 500;
-    cThreshold      = 8;
-    cGain           = 15.0;
-    cRatio          = 1.2;
-
     lpfCutoff = audio_engine::SAMPLE_RATE;
     hpfCutoff = 5;
 
@@ -68,12 +62,10 @@ ProcessingChain::ProcessingChain()
 
     fm           = 0;
     filter       = 0;
-    compressor   = 0;
     delay        = 0;
     lpfhpf       = 0;
     formant      = 0;
     phaser       = 0;
-    pitchShifter = 0;
     bitCrusher   = 0;
     decimator    = 0;
     waveShaper   = 0;
@@ -88,12 +80,10 @@ ProcessingChain::~ProcessingChain()
 
     delete fm;
     delete filter;
-    delete compressor;
     delete delay;
     delete lpfhpf;
     delete formant;
     delete phaser;
-    delete pitchShifter;
     delete bitCrusher;
     delete decimator;
     delete waveShaper;
@@ -111,7 +101,6 @@ void ProcessingChain::reset()
     bitCrusherActive = false;
     decimatorActive  = false;
     delayActive      = false;
-    compressorActive = false;
     lpfHpfActive     = false;
 
     cacheActiveProcessors();
@@ -134,10 +123,6 @@ void ProcessingChain::cacheActiveProcessors()
     if ( bitCrusherActive )
         _activeProcessors.push_back( bitCrusher );
 
-    // always active (but mostly idle sparing CPU sources)
-    if ( pitchShifter != 0 )
-        _activeProcessors.push_back( pitchShifter );
-
     if ( decimatorActive )
         _activeProcessors.push_back( decimator );
 
@@ -149,9 +134,6 @@ void ProcessingChain::cacheActiveProcessors()
 
     if ( formantActive )
         _activeProcessors.push_back( formant );
-
-    if ( compressorActive )
-        _activeProcessors.push_back( compressor );
 
     if ( lpfHpfActive )
         _activeProcessors.push_back( lpfhpf );

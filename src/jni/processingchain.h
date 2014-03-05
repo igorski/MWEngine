@@ -27,7 +27,6 @@
 #include "baseprocessor.h"
 #include "basebusprocessor.h"
 #include "bitcrusher.h"
-#include "compressor.h"
 #include "decimator.h"
 #include "delay.h"
 #include "fm.h"
@@ -35,7 +34,6 @@
 #include "filter.h"
 #include "lpfhpfilter.h"
 #include "phaser.h"
-#include "pitchshifter.h"
 #include "waveshaper.h"
 
 class ProcessingChain
@@ -90,20 +88,6 @@ class ProcessingChain
         float delayFeedback;
         bool delayActive;
         Delay *delay;
-
-        /* compressor properties */
-
-        float cAttack;
-        float cRelease;
-        float cThreshold;
-        float cGain;
-        float cRatio;
-        bool compressorActive;
-        Compressor *compressor;
-
-        /* pitchshifter properties */
-
-        PitchShifter *pitchShifter;
 
         /* LPF / HPF filter properties */
 
