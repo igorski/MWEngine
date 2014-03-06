@@ -1,7 +1,6 @@
 #!/bin/sh
 
 export ANDROID_NDK_ROOT=/Library/AndroidNDK
-#export ANDROID_NDK_ROOT=/home/igorzinken/Projects/_SDKs/android-ndk-r8d
 
 rm -rf src/nl/igorski/lib/audio/nativeaudio
 mkdir -p src/nl/igorski/lib/audio/nativeaudio

@@ -28,10 +28,10 @@
 /* constructor / destructor */
 
 /**
- * @param aVowel {float} interpolated value within
+ * @param aVowel {double} interpolated value within
  *                       the range of the amount specified in the coeffs Array
  */
-FormantFilter::FormantFilter( float aVowel )
+FormantFilter::FormantFilter( double aVowel )
 {
     int i = 0;
     for ( i; i < 11; i++ )
@@ -52,23 +52,23 @@ FormantFilter::~FormantFilter()
 
 /* public methods */
 
-float FormantFilter::getVowel()
+double FormantFilter::getVowel()
 {
     return _vowel;
 }
 
-void FormantFilter::setVowel( float aVowel )
+void FormantFilter::setVowel( double aVowel )
 {
     _vowel = aVowel;
 
-    int roundVowel = ( int )( aVowel * 4.0f );
-    float fracpart = aVowel - roundVowel;
+    int roundVowel  = ( int )( aVowel * 4.0 );
+    double fracpart = aVowel - roundVowel;
 
     // Linearly interpolate values
 
     for ( int i = 0; i < 11; i++ )
     {
-        _currentCoeffs[ i ] = _coeffs[ roundVowel ][ i ] * ( 1.0f - fracpart ) +
+        _currentCoeffs[ i ] = _coeffs[ roundVowel ][ i ] * ( 1.0 - fracpart ) +
                             ( _coeffs[ roundVowel + ( roundVowel < 4 )][ i ] * fracpart );
     }
 }

@@ -77,11 +77,11 @@ class SynthEvent : public BaseCacheableAudioEvent
         SynthInstrument* _instrument;
 
         // used for waveform generation
-        float _phase;
-        float _phaseIncr;
-        float _frequency;
-        float _baseFrequency;
-        int    _type;
+        SAMPLE_TYPE _phase;
+        SAMPLE_TYPE _phaseIncr;
+        SAMPLE_TYPE _frequency;
+        SAMPLE_TYPE _baseFrequency;
+        int   _type;
         float PI;
         float TWO_PI;
         float TWO_PI_OVER_SR;
@@ -119,7 +119,7 @@ class SynthEvent : public BaseCacheableAudioEvent
 
         // modules
 
-        void setArpeggiator( Arpeggiator* arpeggiator );
+        void applyModules( SynthInstrument* instrument );
         Arpeggiator* _arpeggiator;
 
         // live synthesis

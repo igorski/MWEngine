@@ -29,21 +29,15 @@
 class FormantFilter : public BaseProcessor
 {
     public:
-        FormantFilter( float aVowel );
+        FormantFilter( double aVowel );
         ~FormantFilter();
 
-        void setVowel( float aVowel );
-        float getVowel();
+        void setVowel( double aVowel );
+        double getVowel();
 
         void process( AudioBuffer* audioBuffer, bool isMonoSource );
         bool isCacheable();
 
-        /**
-        * adapted from public source code by alex@smartelectronix.com
-        * Simple example of implementation of formant filter
-        * Vowelnum can be 0,1,2,3,4 <=> A,E,I,O,U
-        * Good for spectral rich input like saw or square
-        */
         static const int VOWEL_A = 0;
         static const int VOWEL_E = 1;
         static const int VOWEL_I = 2;
@@ -51,7 +45,7 @@ class FormantFilter : public BaseProcessor
         static const int VOWEL_U = 4;
 
     private:
-        float  _vowel;
+        double  _vowel;
         double _currentCoeffs[ 11 ];
         double _coeffs[ 5 ][ 11 ];
         double _memory[ 10 ];

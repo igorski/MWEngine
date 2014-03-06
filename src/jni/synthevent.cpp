@@ -147,11 +147,12 @@ float SynthEvent::getFrequency()
 
 void SynthEvent::setFrequency( float aFrequency )
 {
-    _phase     = 0.0f;
-    _phaseIncr = aFrequency / audio_engine::SAMPLE_RATE;
-    _frequency = aFrequency;
+    _phase         = 0.0f;
+    _phaseIncr     = aFrequency / audio_engine::SAMPLE_RATE;
+    _frequency     = aFrequency;
+    _baseFrequency = aFrequency; // reference for arpeggiator / pitch shift modules
 
-    if ( liveSynthesis && _type == WaveForms::KARPLUS_STRONG )
+    if ( /*liveSynthesis &&*/ _type == WaveForms::KARPLUS_STRONG )
         initKarplusStrong();
 
     if ( _osc2 != 0 )
@@ -189,10 +190,7 @@ void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument
 
     // modules
 
-    if ( aInstrument->arpeggiatorActive )
-        setArpeggiator( aInstrument->arpeggiator->clone() );
-    else
-        setArpeggiator( 0 );
+    applyModules( aInstrument );
 
     if ( updateLFO1 )
     {
@@ -281,6 +279,7 @@ AudioBuffer* SynthEvent::synthesize( int aBufferLength )
     // keep track of the rendered bytes, in case of a key up event
     // we still want to have the sound ring for the minimum period
     // defined in the constructor instead of cut off immediately
+
     if ( _queuedForDeletion && _minLength > 0 )
         _minLength -= aBufferLength;
 
@@ -489,14 +488,15 @@ void SynthEvent::initKarplusStrong()
  */
 void SynthEvent::render( AudioBuffer* aOutputBuffer )
 {
-    float amp = 0.0;
-    float tmp, am, dpw, pmv;
     int i;
     int bufferLength = aOutputBuffer->bufferSize;
 
+    SAMPLE_TYPE amp = 0.0;
+    SAMPLE_TYPE tmp, am, dpw, pmv;
+
     // following waveforms require alternate volume multipliers
-    float sawAmp = liveSynthesis ? .7  : 1.0;
-    float swAmp  = liveSynthesis ? /*.25*/ .005 : .005;
+    SAMPLE_TYPE sawAmp = liveSynthesis ? .7  : 1.0;
+    SAMPLE_TYPE swAmp  = liveSynthesis ? /*.25*/ .005 : .005;
 
     bool applyRelease = _release > 0 && !liveSynthesis;
 
@@ -649,7 +649,11 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         if ( _arpeggiator != 0 )
         {
             if ( _arpeggiator->peek())
-                setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), _baseFrequency ));
+            {
+                float baseFreq = _baseFrequency;
+                setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), baseFreq ));
+                _baseFrequency = baseFreq; // restore base freq for next arpeggiator step
+            }
         }
 
         // stop caching when cancel is requested
@@ -667,7 +671,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
     {
         // create a temporary buffer (this prevents writing to deleted buffers
         // when the parent event changes its _buffer properties (f.i. tempo change)
-        int tempLength = ( cycleMax - _lastWriteIndex );
+        int tempLength = liveSynthesis ? bufferLength : ( cycleMax - _lastWriteIndex );
         AudioBuffer* tempBuffer = new AudioBuffer( _buffer->amountOfChannels, tempLength );
         _osc2->render( tempBuffer );
         aOutputBuffer->mergeBuffers( tempBuffer, 0, _lastWriteIndex, 1.0f );
@@ -739,6 +743,7 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
     _locked         = false;
 
     _frequency      = aFrequency;
+    _baseFrequency  = aFrequency;
     position        = aPosition;
     length          = aLength;
     hasParent       = aHasParent;
@@ -779,10 +784,8 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
 
     // modules
 
-    if ( aInstrument->arpeggiatorActive )
-            setArpeggiator( aInstrument->arpeggiator->clone() );
-        else
-            setArpeggiator( 0 );
+    _arpeggiator = 0;
+    applyModules( aInstrument );
 
     if ( liveSynthesis )
     {
@@ -894,20 +897,19 @@ void SynthEvent::destroyOSC2()
     }
 }
 
-void SynthEvent::setArpeggiator( Arpeggiator* arpeggiator )
+void SynthEvent::applyModules( SynthInstrument* instrument )
 {
-    _arpeggiator = arpeggiator;
-
-    if ( _osc2 != 0 )
+    if ( _arpeggiator != 0 )
     {
-        if ( arpeggiator == 0 )
-            _osc2->setArpeggiator( 0 );
-        else
-            _osc2->setArpeggiator( arpeggiator->clone() );
+        delete _arpeggiator;
+        _arpeggiator = 0;
     }
 
-    if ( arpeggiator != 0 )
-        _baseFrequency = _frequency;    // cache current frequency as base
+    if ( instrument->arpeggiatorActive )
+        _arpeggiator = instrument->arpeggiator->clone();
+
+    if ( _osc2 != 0 )
+        _osc2->applyModules( instrument );
 }
 
 /**
