@@ -27,139 +27,56 @@
 
 // constructor
 
-/**
- * TODO: remove all references to specific processors
- * and allow check-in of BaseProcessor Objects (allowing
- * for multiple instances of the same effect)
- *
- * TODO: add a convenient method for altering the order
- * of these effects
- */
 ProcessingChain::ProcessingChain()
 {
-    filterCutoff    = audio_engine::SAMPLE_RATE / 4;
-    filterResonance = sqrt( 1 ) * .5;
-    filterFormant   = 0;
 
-    phaserDepth     = 0.5;
-    phaserFeedback  = 0.7;
-    phaserRate      = 0.5;
-
-    delayTime       = 250;
-    delayMix        = .25;
-    delayFeedback   = .5;
-
-    distortion               = .5;
-    distortionLevel          = .5;
-    decimatorDistortion      = 16;
-    decimatorDistortionLevel = .25;
-
-    cAttack         = 20;
-    cRelease        = 500;
-    cThreshold      = 8;
-    cGain           = 15.0;
-    cRatio          = 1.2;
-
-    lpfCutoff = audio_engine::SAMPLE_RATE;
-    hpfCutoff = 5;
-
-    // start off with all effects deactivated
-    reset();
-
-    fm           = 0;
-    filter       = 0;
-    compressor   = 0;
-    delay        = 0;
-    lpfhpf       = 0;
-    formant      = 0;
-    phaser       = 0;
-    pitchShifter = 0;
-    bitCrusher   = 0;
-    decimator    = 0;
-    waveShaper   = 0;
 }
 
 ProcessingChain::~ProcessingChain()
 {
-    DebugTool::log( "ProcessingChain::DESTRUCT" );
-
     _activeProcessors.clear();
     _activeBusProcessors.clear();
-
-    delete fm;
-    delete filter;
-    delete compressor;
-    delete delay;
-    delete lpfhpf;
-    delete formant;
-    delete phaser;
-    delete pitchShifter;
-    delete bitCrusher;
-    delete decimator;
-    delete waveShaper;
 }
 
 /* public methods */
 
-void ProcessingChain::reset()
+void ProcessingChain::addProcessor( BaseProcessor* aProcessor )
 {
-    fmActive         = false;
-    filterActive     = false;
-    formantActive    = false;
-    phaserActive     = false;
-    waveshaperActive = false;
-    bitCrusherActive = false;
-    decimatorActive  = false;
-    delayActive      = false;
-    compressorActive = false;
-    lpfHpfActive     = false;
-
-    cacheActiveProcessors();
+    _activeProcessors.push_back( aProcessor );
 }
 
-void ProcessingChain::cacheActiveProcessors()
+void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
 {
-    // note no delete / destructors should be invoked when clearing the previously active processors!
+    for ( int i = 0; i < _activeProcessors.size(); i++ )
+    {
+        if ( _activeProcessors.at( i ) == aProcessor )
+        {
+            _activeProcessors.erase( _activeProcessors.begin() + i );
+            break;
+        }
+    }
+}
+void ProcessingChain::addBusProcessor( BaseBusProcessor* aBusProcessor )
+{
+    _activeBusProcessors.push_back( aBusProcessor );
+}
+
+void ProcessingChain::removeBusProcessor( BaseBusProcessor* aBusProcessor )
+{
+    for ( int i = 0; i < _activeBusProcessors.size(); i++ )
+    {
+        if ( _activeBusProcessors.at( i ) == aBusProcessor )
+        {
+            _activeBusProcessors.erase( _activeBusProcessors.begin() + i );
+            break;
+        }
+    }
+}
+
+void ProcessingChain::reset()
+{
     _activeProcessors.clear();
     _activeBusProcessors.clear();
-
-    /* processors */
-
-    if ( fmActive )
-        _activeProcessors.push_back( fm );
-
-    if ( waveshaperActive )
-        _activeProcessors.push_back( waveShaper );
-
-    if ( bitCrusherActive )
-        _activeProcessors.push_back( bitCrusher );
-
-    // always active (but mostly idle sparing CPU sources)
-    if ( pitchShifter != 0 )
-        _activeProcessors.push_back( pitchShifter );
-
-    if ( decimatorActive )
-        _activeProcessors.push_back( decimator );
-
-    if ( phaserActive )
-        _activeProcessors.push_back( phaser );
-
-    if ( filterActive )
-        _activeProcessors.push_back( filter );
-
-    if ( formantActive )
-        _activeProcessors.push_back( formant );
-
-    if ( compressorActive )
-        _activeProcessors.push_back( compressor );
-
-    if ( lpfHpfActive )
-        _activeProcessors.push_back( lpfhpf );
-
-    /* bus processors */
-
-    if ( delayActive )
-        _activeBusProcessors.push_back( delay );
 }
 
 std::vector<BaseProcessor*> ProcessingChain::getActiveProcessors()

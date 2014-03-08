@@ -26,15 +26,6 @@
 #include <vector>
 #include "baseprocessor.h"
 #include "basebusprocessor.h"
-#include "bitcrusher.h"
-#include "decimator.h"
-#include "delay.h"
-#include "fm.h"
-#include "formant_filter.h"
-#include "filter.h"
-#include "lpfhpfilter.h"
-#include "phaser.h"
-#include "waveshaper.h"
 
 class ProcessingChain
 {
@@ -42,64 +33,13 @@ class ProcessingChain
         ProcessingChain();
         ~ProcessingChain();
 
-        bool fmActive;
-        FrequencyModulator *fm;
-
-        /* filter properties */
-
-        float filterCutoff;
-        float filterResonance;
-        bool filterActive;
-        Filter *filter;
-
-        /* formant filter properties */
-
-        float filterFormant;
-        bool formantActive;
-        FormantFilter *formant;
-
-        /* phaser properties */
-
-        float phaserRate;
-        float phaserFeedback;
-        float phaserDepth;
-        bool phaserActive;
-        Phaser *phaser;
-
-        /* distortion properties */
-
-        float distortion;
-        float distortionLevel;
-        bool waveshaperActive;
-        WaveShaper *waveShaper;
-
-        bool bitCrusherActive;
-        BitCrusher *bitCrusher;
-
-        float decimatorDistortion;
-        float decimatorDistortionLevel;
-        bool decimatorActive;
-        Decimator *decimator;
-
-        /* delay properties */
-
-        float delayTime;
-        float delayMix;
-        float delayFeedback;
-        bool delayActive;
-        Delay *delay;
-
-        /* LPF / HPF filter properties */
-
-        float lpfCutoff;
-        float hpfCutoff;
-        bool lpfHpfActive;
-        LPFHPFilter *lpfhpf;
-
         std::vector<BaseProcessor*>   getActiveProcessors();
         std::vector<BaseBusProcessor*> getActiveBusProcessors();
 
-        void cacheActiveProcessors();
+        void addProcessor      ( BaseProcessor* aProcessor );
+        void removeProcessor   ( BaseProcessor* aProcessor );
+        void addBusProcessor   ( BaseBusProcessor* aBusProcessor );
+        void removeBusProcessor( BaseBusProcessor* aBusProcessor );
         void reset();
 
     private:
