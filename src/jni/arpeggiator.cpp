@@ -64,6 +64,11 @@ void Arpeggiator::setAmountOfSteps( int value )
     _stepAmount = value;
 }
 
+int Arpeggiator::getShiftForStep( int step )
+{
+    return _stepShifts[ step ];
+}
+
 void Arpeggiator::setShiftForStep( int step, int shift )
 {
     _stepShifts[ step ] = shift;

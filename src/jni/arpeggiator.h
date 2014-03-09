@@ -39,6 +39,7 @@ class Arpeggiator
         void setStepSize( int value );
         int getAmountOfSteps();
         void setAmountOfSteps( int value );
+        int getShiftForStep( int step );
         void setShiftForStep( int step, int shift );
         int getStep();
 
