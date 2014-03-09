@@ -44,9 +44,19 @@ Arpeggiator::~Arpeggiator()
 
 /* public methods */
 
+int Arpeggiator::getStepSize()
+{
+    return _stepSize;
+}
+
 void Arpeggiator::setStepSize( int value )
 {
     _stepSize = value;
+}
+
+int Arpeggiator::getAmountOfSteps()
+{
+    return _stepAmount;
 }
 
 void Arpeggiator::setAmountOfSteps( int value )

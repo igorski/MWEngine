@@ -35,7 +35,9 @@ class Arpeggiator
 
         static const int MAX_STEPS = 16;
 
+        int getStepSize();
         void setStepSize( int value );
+        int getAmountOfSteps();
         void setAmountOfSteps( int value );
         void setShiftForStep( int step, int shift );
         int getStep();
