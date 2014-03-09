@@ -524,7 +524,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     tmp = ( _phase * 4.0 - 3.0 );
                     amp = ( tmp * tmp - 1.0 );
                 }
-                amp *= .7; // sines tend to distort easily when overlapping multi timbral parts
+                //amp *= .7; // sines tend to distort easily when overlapping multi timbral parts
 
                 break;
 
@@ -582,7 +582,8 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                 am = sin( pmv / 0x1000 ); // LFO -> AM
 
                 // we multiply the amplitude as PWM results in a "quieter" wave
-                amp *= ( am * 3 );
+                amp *= 4; // watch below, we USED the am value...
+//                amp *= ( am * 3 );
                 break;
 
             case WaveForms::NOISE:
@@ -634,7 +635,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         }
 
         // --- _phase update operations
-        if ( _type != WaveForms::PWM || ( liveSynthesis && _type != WaveForms::PWM ))
+        if ( _type != WaveForms::PWM )
         {
             _phase += _phaseIncr;
 
@@ -672,7 +673,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         // create a temporary buffer (this prevents writing to deleted buffers
         // when the parent event changes its _buffer properties (f.i. tempo change)
         int tempLength = liveSynthesis ? bufferLength : ( cycleMax - _lastWriteIndex );
-        AudioBuffer* tempBuffer = new AudioBuffer( _buffer->amountOfChannels, tempLength );
+        AudioBuffer* tempBuffer = new AudioBuffer( aOutputBuffer->amountOfChannels, tempLength );
         _osc2->render( tempBuffer );
         aOutputBuffer->mergeBuffers( tempBuffer, 0, _lastWriteIndex, 1.0f );
 
