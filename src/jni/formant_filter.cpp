@@ -64,10 +64,9 @@ void FormantFilter::setVowel( double aVowel )
     int roundVowel  = ( int )( aVowel * 4.0 );
     double fracpart = aVowel - roundVowel;
 
-    // Linearly interpolate values
-
     for ( int i = 0; i < 11; i++ )
     {
+        // Linearly interpolate the values
         _currentCoeffs[ i ] = _coeffs[ roundVowel ][ i ] * ( 1.0 - fracpart ) +
                             ( _coeffs[ roundVowel + ( roundVowel < 4 )][ i ] * fracpart );
     }

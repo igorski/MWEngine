@@ -37,12 +37,12 @@ class LPFHPFilter : public BaseProcessor
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     private:
-        float a0;
-        float a1;
-        float b0;
-        float b1;
-        float* lastSamples;
-        float* lastUnprocessedSamples;
+        SAMPLE_TYPE a0;
+        SAMPLE_TYPE a1;
+        SAMPLE_TYPE b0;
+        SAMPLE_TYPE b1;
+        SAMPLE_TYPE* lastSamples;
+        SAMPLE_TYPE* lastUnprocessedSamples;
 };
 
 #endif

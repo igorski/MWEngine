@@ -61,11 +61,11 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
-        int j                 = sampleBuffer->bufferSize;
+        int j                      = sampleBuffer->bufferSize;
 
         while ( j-- > 0 )
         {
-            float dest = channelBuffer[ j ];
+            SAMPLE_TYPE dest = channelBuffer[ j ];
 
             _follower->process( dest, skip );
 

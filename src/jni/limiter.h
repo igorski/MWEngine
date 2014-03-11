@@ -43,7 +43,7 @@ class Limiter
 
     private:
         int skip;
-        float maxGain;
+        SAMPLE_TYPE maxGain;
         EnvelopeFollower* _follower;
 };
 

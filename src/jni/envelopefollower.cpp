@@ -29,15 +29,15 @@ EnvelopeFollower::EnvelopeFollower( float maxGain, float attackMs, float release
 {
     envelope = 0.0;
 
-    _attack  = pow( 0.01, maxGain / ( attackMs  * sampleRate * 0.001 ));
-    _release = pow( 0.01, maxGain / ( releaseMs * sampleRate * 0.001 ));
+    _attack  = pow( 0.01, maxGain / ( attackMs  * sampleRate / 1000 ));
+    _release = pow( 0.01, maxGain / ( releaseMs * sampleRate / 1000 ));
 }
 
 /* public methods */
 
-void EnvelopeFollower::process( float src, int skip )
+void EnvelopeFollower::process( SAMPLE_TYPE src, int skip )
 {
-    float v = std::abs( src );
+    SAMPLE_TYPE v = std::abs( src );
     src += skip;
 
     if ( v > envelope )

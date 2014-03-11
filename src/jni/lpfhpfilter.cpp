@@ -31,8 +31,8 @@ LPFHPFilter::LPFHPFilter( float aLPCutoff, float aHPCutoff, int amountOfChannels
     setLPF( aLPCutoff, audio_engine::SAMPLE_RATE );
     setHPF( aHPCutoff, audio_engine::SAMPLE_RATE );
 
-    lastSamples            = new float[ amountOfChannels ];
-    lastUnprocessedSamples = new float[ amountOfChannels ];
+    lastSamples            = new SAMPLE_TYPE[ amountOfChannels ];
+    lastUnprocessedSamples = new SAMPLE_TYPE[ amountOfChannels ];
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {
@@ -51,8 +51,8 @@ LPFHPFilter::~LPFHPFilter()
 
 void LPFHPFilter::setLPF( float aCutOffFrequency, int aSampleRate )
 {
-    float w = 2.0 * aSampleRate;
-    float Norm;
+    SAMPLE_TYPE w = 2.0 * aSampleRate;
+    SAMPLE_TYPE Norm;
 
     aCutOffFrequency *= 2.0 * ( atan( 1 ) * 4 );
     Norm              = 1.0 / ( aCutOffFrequency + w );
@@ -62,8 +62,8 @@ void LPFHPFilter::setLPF( float aCutOffFrequency, int aSampleRate )
 
 void LPFHPFilter::setHPF( float aCutOffFrequency, int aSampleRate )
 {
-    float w = 2.0 * aSampleRate;
-    float Norm;
+    SAMPLE_TYPE w = 2.0 * aSampleRate;
+    SAMPLE_TYPE Norm;
 
     aCutOffFrequency *= 2.0 *( atan( 1 ) * 4 );
     Norm              = 1.0 / ( aCutOffFrequency + w );
@@ -76,20 +76,20 @@ void LPFHPFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize = sampleBuffer->bufferSize;
 
-    for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
+    for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        for ( int j = 0; j < bufferSize; ++j )
+        for ( int i = 0; i < bufferSize; ++i )
         {
-            float curUnprocessedSample = channelBuffer[ j ];
+            SAMPLE_TYPE curUnprocessedSample = channelBuffer[ i ];
 
-            // keep an eye on the iterator names ;)
-            if ( j > 0 )
-                lastSamples[ i ] = channelBuffer[ j - 1 ];
+            // keep an eye on the iterator ;)
+            if ( i > 0 )
+                lastSamples[ c ] = channelBuffer[ i - 1 ];
 
-            channelBuffer[ j ]     = curUnprocessedSample * a0 + lastUnprocessedSamples[ i ] * a1 + lastSamples[ i ] * b1;
-            lastUnprocessedSamples[ i ] = curUnprocessedSample;
+            channelBuffer[ i ]          = curUnprocessedSample * a0 + lastUnprocessedSamples[ c ] * a1 + lastSamples[ c ] * b1;
+            lastUnprocessedSamples[ c ] = curUnprocessedSample;
 
     //            out[n] = in[n]*a0 + in[n-1]*a1 + out[n-1]*b1;
         }

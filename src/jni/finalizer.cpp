@@ -38,10 +38,10 @@ Finalizer::Finalizer( float attackMs, float releaseMs, int sampleRate, int amoun
 {
     init( attackMs, releaseMs, sampleRate, amountOfChannels );
 
-    lastSamples = new float[ amountOfChannels ];
+    lastSamples = new SAMPLE_TYPE[ amountOfChannels ];
 
     for ( int i = 0; i < amountOfChannels; ++i )
-        lastSamples[ i ] = 0.0;
+        lastSamples[ i ] = ( SAMPLE_TYPE ) 0.0;
 }
 
 Finalizer::~Finalizer()
@@ -61,24 +61,24 @@ void Finalizer::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
     int bufferSize = sampleBuffer->bufferSize;
 
-    for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
+    for ( int c = 0, nc = sampleBuffer->amountOfChannels; c < nc; ++c )
     {
-        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        for ( int j = 0; j < bufferSize; ++j )
+        for ( int i = 0; i < bufferSize; ++i )
         {
-            float lastSample = lastSamples[ i ];
-            float theSample  = 0.996f * ( lastSample + channelBuffer[ j ] - lastSample );
+            SAMPLE_TYPE lastSample = lastSamples[ c ];
+            SAMPLE_TYPE theSample  = 0.996 * ( lastSample + channelBuffer[ i ] - lastSample );
 
             // extreme limiting (still above the thresholds?)
-            if ( theSample < -1.0f )
-                theSample = -1.0f;
+            if ( theSample < -MAX_PHASE )
+                theSample = -MAX_PHASE;
 
-            else if ( theSample > +1.0f )
-                theSample = +1.0f;
+            else if ( theSample > +MAX_PHASE )
+                theSample = +MAX_PHASE;
 
-            lastSamples[ i ]   = theSample;
-            channelBuffer[ j ] = theSample;
+            lastSamples[ c ]   = theSample;
+            channelBuffer[ i ] = theSample;
         }
     }
 }

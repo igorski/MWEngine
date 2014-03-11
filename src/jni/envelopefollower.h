@@ -23,16 +23,18 @@
 #ifndef __ENVELOPEFOLLOWER_H_INCLUDED__
 #define __ENVELOPEFOLLOWER_H_INCLUDED__
 
+#include "global.h"
+
 class EnvelopeFollower
 {
     public:
         EnvelopeFollower( float maxGain, float attackMs, float releaseMs, int sampleRate );
-        float envelope;
-        void process( float src, int skip );
+        SAMPLE_TYPE envelope;
+        void process( SAMPLE_TYPE src, int skip );
 
     protected:
-        float _attack;
-        float _release;
+        SAMPLE_TYPE _attack;
+        SAMPLE_TYPE _release;
 };
 
 #endif

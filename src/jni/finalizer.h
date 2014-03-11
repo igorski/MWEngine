@@ -25,6 +25,7 @@
 
 #include "limiter.h"
 #include "audiobuffer.h"
+#include "global.h"
 
 class Finalizer : public Limiter
 {
@@ -34,7 +35,7 @@ class Finalizer : public Limiter
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     private:
-        float* lastSamples;
+        SAMPLE_TYPE* lastSamples;
 };
 
 #endif

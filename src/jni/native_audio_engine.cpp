@@ -336,7 +336,7 @@ void start( JNIEnv* env, jobject jobj )
             }
 
             // write the channel buffer into the combined output buffer, apply channel volume
-            float channelVolume = channel->mixVolume;
+            SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->mixVolume;
 
             for ( ci = 0; ci < outputChannels; ++ci )
             {
