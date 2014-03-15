@@ -165,7 +165,7 @@ void SynthEvent::setFrequency( float aFrequency )
  * @param aInstrument the SynthInstrument whose properties will be used for synthesizing this event
  * @param aState which oscillator(s) to update 0 = all, 1 = oscillator 1, 2 = oscillator 2
  *               this is currently rudimentary as both oscillators are rendered and merged into one
- *               this is here for either legacy purposes or when performance can be gained
+ *               this is here for either legacy purposes or when performance improvements can be gained
  */
 void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument *aInstrument, int aState )
 {
@@ -524,7 +524,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     tmp = ( _phase * 4.0 - 3.0 );
                     amp = ( tmp * tmp - 1.0 );
                 }
-                //amp *= .7; // sines tend to distort easily when overlapping multi timbral parts
+                amp *= .7; // sines tend to distort easily when overlapping multi timbral parts
 
                 break;
 
@@ -579,11 +579,14 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                 // PWM has its own phase update operation
                 _phase = _phase + ( TWO_PI_OVER_SR * _frequency );
                 _phase = _phase > TWO_PI ? _phase - TWO_PI : _phase;
-                am = sin( pmv / 0x1000 ); // LFO -> AM
 
                 // we multiply the amplitude as PWM results in a "quieter" wave
-                amp *= 4; // watch below, we USED the am value...
-//                amp *= ( am * 3 );
+                amp *= 4;
+
+                /* // OLD: oscillation modulating the PW wave
+                am   = sin( pmv / 0x1000 ); // LFO -> AM
+                amp *= am;
+                */
                 break;
 
             case WaveForms::NOISE:
