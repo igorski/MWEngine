@@ -1,7 +1,6 @@
 package nl.igorski.example;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -9,11 +8,14 @@ import nl.igorski.lib.audio.definitions.Pitch;
 import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
 import nl.igorski.lib.audio.nativeaudio.*;
 import nl.igorski.lib.audio.renderer.NativeAudioRenderer;
+import nl.igorski.lib.debug.Logger;
 
 import java.util.Vector;
 
 public class MWEngineActivity extends Activity
 {
+    public final String LOG_ID  = "MWENGINE";
+
     /**
      * IMPORTANT : when creating native layer objects through JNI it
      * is important to remember that when the Java references go out of scope
@@ -41,16 +43,49 @@ public class MWEngineActivity extends Activity
         super.onCreate( savedInstanceState );
         setContentView( R.layout.main );
 
+        Logger.setLogTag( "MWENGINE" ); // set the log tag for easy identification in logcat
+
         init();
+    }
+
+    /* protected methods */
+
+    @Override
+    public void onWindowFocusChanged( boolean hasFocus )
+    {
+        Logger.log( "window focus changed for MWEngineActivity, has focus > " + hasFocus );
+
+        if ( !hasFocus )
+        {
+            // suspending the app - stop threads to save CPU cycles
+
+            if ( _audioRenderer != null )
+            {
+                _audioRenderer.pause();
+                _audioRenderer.dispose();
+            }
+        }
+        else
+        {
+            // returning to the app
+            init();
+        }
     }
 
     /* private methods */
 
     private void init()
     {
+        Logger.log( "initing MWEngineActivity" );
+
         // STEP 1 : preparing the native audio engine
 
-        _audioRenderer = new NativeAudioRenderer( getApplicationContext() );
+        // check if it existed as we can pool it (see windowFocusChange when app is suspended)
+
+        final boolean engineExisted = _audioRenderer != null;
+
+        if ( !engineExisted )
+            _audioRenderer = new NativeAudioRenderer( getApplicationContext() );
 
         // get the recommended buffer size for this device (NOTE : lower buffer sizes may
         // provide lower latency, but make sure all buffer sizes are powers of two of
@@ -61,8 +96,10 @@ public class MWEngineActivity extends Activity
         final int bufferSize = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
         final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
-        _audioRenderer.createOutput( sampleRate, bufferSize );
-        _audioRenderer.start();     // start thread (NOTE : sequencer is still paused!)
+        if ( !engineExisted )
+            _audioRenderer.createOutput( sampleRate, bufferSize );
+
+        _audioRenderer.start(); // start render thread (NOTE : sequencer is still paused!)
 
         // STEP 2 : let's create some instruments =D
 
@@ -70,7 +107,7 @@ public class MWEngineActivity extends Activity
         _synth2 = new SynthInstrument();
 
         _synth1.setWaveform( 2 );   // sawtooth (see global.h for enumerations)
-        _synth2.setWaveform( 5 );   // pulse witdth modulation
+        _synth2.setWaveform( 5 );   // pulse width modulation
 
         // add a phaser to synth 1
         _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );
@@ -83,6 +120,7 @@ public class MWEngineActivity extends Activity
         // STEP 3 : let's create some music !
 
         _audioEvents = new Vector<BaseAudioEvent>();    // remember : strong references!
+        _audioRenderer.setTempoNow( 130.0f, 4, 4 );     // 130 BPM at 4/4 time
 
         // bubbly sixteenth note bass line for synth 1
 
@@ -110,10 +148,10 @@ public class MWEngineActivity extends Activity
         createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
         createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
 
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  8 );
-        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  8 );
-        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
         // STEP 4 : attach click handler to the play button (see main.xml layout)
 
@@ -142,8 +180,11 @@ public class MWEngineActivity extends Activity
      */
     private void createSynthEvent( SynthInstrument synth, double frequency, int position )
     {
-        final int duration = 1; // sixteenth note at a BAR_SUBDIVISION of 16 (see NativeAudioRenderer)
+        final int duration     = 1; // 16th note at a BAR_SUBDIVISION of 16 (see NativeAudioRenderer)
+        final SynthEvent event = new SynthEvent(( float ) frequency, position, duration, synth, false );
 
-        _audioEvents.add( new SynthEvent(( float ) frequency, position, duration, synth, true ));
+        event.calculateBuffers();
+
+        _audioEvents.add( event );
     }
 }

@@ -1,7 +1,12 @@
 MWEngine is..
 =============
 
-...an audio engine for Android written in C++, using OpenSL for low latency performance. As used by MikroWave.
+...an audio engine for Android written in C++, using OpenSL for low latency performance. The engine has
+been written for the MikroWave synth/sequencing-application.
+
+The engine provides an architecture that allows you to work with audio within a musical context (i.e.: tempo
+synced sequencing working within time signatures, multi-channel output of either (live) synthesized audio or
+sample based-playback). It is easy to extend the base classes for your custom audio generating mayhem.
 
 ### Build instructions
 
@@ -10,7 +15,7 @@ The makefile (src/jni/Android.mk) has been written to build the library using th
 Those of a Unix-bent can immediately un the _build.sh_-file in the /src-folder, just make sure ANDROID_NDK_ROOT points to the correct installation
 directory on your system!
 
-What kind soul will supply a Windows .BAT to run the makefile ? ;-)
+For the unfortunates on Windows, adjusting the sh to a .BAT-file shouldn't be too troublesome. :-)
 
 ### SWIG ?
 

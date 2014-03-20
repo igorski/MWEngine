@@ -801,8 +801,6 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
         setAttack   ( aInstrument->attack );
         //setRelease( aInstrument->release ); // no release envelopes for live synth!
 
-        setFrequency( aFrequency );
-
         _liveBuffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, audio_engine::BUFFER_SIZE );
     }
     else
@@ -810,6 +808,8 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
         _hasMinLength   = true; // a (pre-)cached event has no early cancel
         calculateBuffers();
     }
+
+    setFrequency( aFrequency );
 
     // add the event to the sequencer so it can be heard
     // note that OSC2 contents aren't added to the sequencer

@@ -30,7 +30,7 @@ namespace sequencer
 {
     std::vector<SynthInstrument*> synthesizers;
     std::vector<SampledInstrument*> samplers;
-    DrumInstrument* drummachine;
+    DrumInstrument* drummachine = 0;
 
     std::vector<DrumPattern*> drumPatterns;
 

@@ -52,6 +52,7 @@ jint JNI_OnLoad( JavaVM* vm, void* reserved )
     registerVM( vm );
 
     DebugTool::log( "JNI INITED OK" );
+
     return JNI_VERSION_1_6;
 }
 
@@ -236,6 +237,7 @@ void start( JNIEnv* env, jobject jobj )
                                     else if ( !loopStarted )
                                         readPointer -= ( maxBufferPosition - min_buffer_position );
                                 }
+
                                 if ( readPointer >= startOffset && readPointer <= endOffset )
                                 {
                                     // mind the offset ! ( cached buffer starts at 0 while

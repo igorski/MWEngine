@@ -3,6 +3,7 @@ package nl.igorski.lib.audio.renderer;
 import android.content.Context;
 import nl.igorski.lib.audio.nativeaudio.NativeAudioEngine;
 import nl.igorski.lib.audio.nativeaudio.SequencerAPI;
+import nl.igorski.lib.debug.Logger;
 
 /**
  * Created by IntelliJ IDEA.
@@ -110,7 +111,7 @@ public final class NativeAudioRenderer extends Thread
 
     public void setBouncing( boolean value, String outputDirectory )
     {
-        _api.setBounceState( value, calculateMaxBuffers(), outputDirectory );
+        _api.setBounceState(value, calculateMaxBuffers(), outputDirectory);
     }
 
     public float getTempo()
@@ -133,7 +134,7 @@ public final class NativeAudioRenderer extends Thread
      */
     public void setTempo( float aValue, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
     {
-        _api.setTempo( aValue, aTimeSigBeatAmount, aTimeSigBeatUnit );
+        _api.setTempo(aValue, aTimeSigBeatAmount, aTimeSigBeatUnit);
     }
 
     /**
@@ -169,7 +170,7 @@ public final class NativeAudioRenderer extends Thread
     public void setVolume( float aValue )
     {
         _volume = aValue * VOLUME_MULTIPLIER;
-        _api.setVolume( _volume );
+        _api.setVolume(_volume);
     }
 
     /**
@@ -289,7 +290,7 @@ public final class NativeAudioRenderer extends Thread
 
     public void run()
     {
-        //DebugTool.log( "NativeAudioRenderer STARTING NATIVE AUDIO RENDER LOOP" );
+        Logger.log( "NativeAudioRenderer::STARTING NATIVE AUDIO RENDER LOOP" );
 
         while ( _isRunning )
         {
@@ -297,6 +298,7 @@ public final class NativeAudioRenderer extends Thread
             if ( !_openSLrunning )
             {
                 // starting native thread
+                Logger.log( "NativeAudioRenderer::starting engine render thread with " + BUFFER_SIZE + " sample buffer at " + SAMPLE_RATE + " Hz samplerate" );
 
                 _openSLrunning = true;
                 NativeAudioEngine.start();
@@ -354,6 +356,8 @@ public final class NativeAudioRenderer extends Thread
     public static void handleBridgeConnected( int aSomething )
     {
         // JNI bridge from native layer connected to this static Java class
+
+        Logger.log( "NativeAudioRenderer::connected to JNI bridge" );
     }
 
     public static void handleTempoUpdated( float aNewTempo, int aBytesPerBeat, int aBytesPerTick, int aBytesPerBar, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
@@ -373,25 +377,35 @@ public final class NativeAudioRenderer extends Thread
             INSTANCE._initialCreation = false;
             INSTANCE.setLoopPoint( 0, BYTES_PER_BAR - 1 );
         }
+
+        Logger.log( "NativeAudioRenderer::handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
     }
 
     public static void handleSequencerPositionUpdate( int aStepPosition )
     {
         INSTANCE._stepPosition = aStepPosition;
+
+        //Logger.log( "NativeAudioRenderer::handleSequencerPositionUpdate position > " + aStepPosition );
     }
 
     public static void handleRecordingUpdate( int aRecordedFileNum )
     {
         // invoked after engine has recorded the given buffer length
+
+        Logger.log( "NativeAudioRenderer::handleRecordingUpdate recorded next fragment with num > " + aRecordedFileNum );
     }
 
     public static void handleBounceComplete( int aIdentifier )
     {
         // invoked after bouncing of audio has completed
+
+        Logger.log( "NativeAudioRenderer::handleBounceComplete finished bouncing of audio for id > " + aIdentifier );
     }
 
     public static void handleOpenSLError()
     {
+        Logger.log( "NativeAudioRenderer::error occurred during OpenSL initialization" );
+
         // re-initialize thread
         INSTANCE.dispose();
         INSTANCE._openSLrunning = false;

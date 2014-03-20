@@ -41,7 +41,8 @@ static jclass   _class = 0; // cached reference to Java mediator class
 void registerInterface( JNIEnv* env, jobject jobj )
 {
     jclass localRefCls = env->FindClass( JAVA_CLASS );
-    if (localRefCls == NULL) {
+    if  ( localRefCls == NULL )
+    {
         return; /* exception thrown */
     }
     /* Create a global reference */
