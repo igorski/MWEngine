@@ -42,7 +42,6 @@ ringbuffer.cpp \
 samplemanager.cpp \
 sequencer.cpp \
 sequencer_api.cpp \
-samplebuffer.cpp \
 sampleevent.cpp \
 synthevent.cpp \
 synthinstrument.cpp \
