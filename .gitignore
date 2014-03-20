@@ -1,5 +1,8 @@
 *.iml
 *.DS_Store
-src/src/nl/igorski/lib/audio/nativeaudio/*
-src/obj
-src/libs/*
+*.idea
+src/nl/igorski/lib/audio/nativeaudio/*
+obj
+bin/*
+gen/*
+libs/*

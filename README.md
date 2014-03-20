@@ -23,9 +23,16 @@ or events that are created on the Java side, must also hold strong references du
 
 ### Documentation
 
-this repository is constantly being updated and as such so is the documentation. Planned are:
+this repository is constantly being updated and as such so is the documentation. You can view the Wiki (which will document the basic
+engine architecture) here:
+
+https://github.com/igorski/MWEngine/wiki
 
  * Wiki pages documenting basic engine architecture
- * Example Activity showing how to quickly get sound
 
- you can always view the contents of the header files to get more details about the inner workings of each class.
+Note you can always view the contents of the header files to get more details about the inner workings of each class.
+
+### Demo
+
+The repository contains an example Activity that is ready to deploy onto an Android device / emulator. The example will
+demonstrate how to quickly get a musical sequence going using the library.
