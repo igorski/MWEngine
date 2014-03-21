@@ -180,7 +180,7 @@ public final class NativeAudioRenderer extends Thread
      */
     public void updateMeasures( int aValue )
     {
-        _api.updateMeasures( aValue, BAR_SUBDIVISIONS);
+        _api.updateMeasures( aValue, BAR_SUBDIVISIONS );
     }
 
     public void setRecordingState( boolean value, String outputDirectory )

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import nl.igorski.lib.audio.definitions.Pitch;
 import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
 import nl.igorski.lib.audio.nativeaudio.*;
@@ -25,12 +26,18 @@ public class MWEngineActivity extends Activity
      */
     private SynthInstrument        _synth1;
     private SynthInstrument        _synth2;
+    private Filter                 _filter;
     private Phaser                 _phaser;
     private Delay                  _delay;
     private NativeAudioRenderer    _audioRenderer;
-    private Vector<BaseAudioEvent> _audioEvents;
+    private Vector<SynthEvent>     _synth1Events;
+    private Vector<SynthEvent>     _synth2Events;
 
     private boolean _sequencerPlaying = false;
+    private boolean _inited           = false;
+
+    private float minFilterCutoff = 50.0f;
+    private float maxFilterCutoff;
 
     /* public methods */
 
@@ -68,7 +75,96 @@ public class MWEngineActivity extends Activity
         else
         {
             // returning to the app
-            init();
+            if ( !_inited )
+                init();
+            else
+                _audioRenderer.start(); // resumes audio render thread
+        }
+    }
+
+    /* event handlers */
+
+    /**
+     *  invoked when user presses the play / pause button
+     */
+    private class PlayClickHandler implements View.OnClickListener
+    {
+        public void onClick( View v )
+        {
+            // start/stop the sequencer so we can toggle hearing actual output! ;)
+
+            _sequencerPlaying = !_sequencerPlaying;
+            _audioRenderer.setPlaying( _sequencerPlaying );
+        }
+    }
+
+    /**
+     *  invoked when user interacts with the filter cutoff slider
+     */
+    private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener
+    {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
+        {
+            _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
+        }
+
+        public void onStartTrackingTouch( SeekBar seekBar ) {
+
+        }
+
+        public void onStopTrackingTouch( SeekBar seekBar ) {
+
+        }
+    }
+
+    /**
+     *  invoked when user interacts with the delay mix slider
+     */
+    private class DelayMixChangeHandler implements SeekBar.OnSeekBarChangeListener
+    {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
+        {
+            _delay.setFeedback( progress / 100f );
+        }
+
+        public void onStartTrackingTouch( SeekBar seekBar ) {
+
+        }
+
+        public void onStopTrackingTouch( SeekBar seekBar ) {
+
+        }
+    }
+
+    /**
+     *  invoked when user interacts with the tempo slider
+     */
+    private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener
+    {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
+        {
+            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
+            final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
+
+            final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
+
+            _audioRenderer.setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
+
+            // update all audio events (re-renders their contents to match the new tempo)
+
+            for ( final SynthEvent audioEvent : _synth1Events )
+                audioEvent.updateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth1, 0 );
+
+            for ( final SynthEvent audioEvent : _synth2Events )
+                audioEvent.updateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth2, 0 );
+        }
+
+        public void onStartTrackingTouch( SeekBar seekBar ) {
+
+        }
+
+        public void onStopTrackingTouch( SeekBar seekBar ) {
+
         }
     }
 
@@ -76,16 +172,14 @@ public class MWEngineActivity extends Activity
 
     private void init()
     {
+        if ( _inited )
+            return;
+
         Logger.log( "initing MWEngineActivity" );
 
         // STEP 1 : preparing the native audio engine
 
-        // check if it existed as we can pool it (see windowFocusChange when app is suspended)
-
-        final boolean engineExisted = _audioRenderer != null;
-
-        if ( !engineExisted )
-            _audioRenderer = new NativeAudioRenderer( getApplicationContext() );
+        _audioRenderer = new NativeAudioRenderer( getApplicationContext() );
 
         // get the recommended buffer size for this device (NOTE : lower buffer sizes may
         // provide lower latency, but make sure all buffer sizes are powers of two of
@@ -96,9 +190,8 @@ public class MWEngineActivity extends Activity
         final int bufferSize = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
         final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
-        if ( !engineExisted )
-            _audioRenderer.createOutput( sampleRate, bufferSize );
-
+        _audioRenderer.createOutput( sampleRate, bufferSize );
+        _audioRenderer.updateMeasures( 1 ); // we'll loop just a single measure
         _audioRenderer.start(); // start render thread (NOTE : sequencer is still paused!)
 
         // STEP 2 : let's create some instruments =D
@@ -108,6 +201,12 @@ public class MWEngineActivity extends Activity
 
         _synth1.setWaveform( 2 );   // sawtooth (see global.h for enumerations)
         _synth2.setWaveform( 5 );   // pulse width modulation
+
+        // add a filter to synth 1
+        maxFilterCutoff = ( float ) sampleRate / 8;
+
+        _filter = new Filter( maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ), minFilterCutoff, maxFilterCutoff, 0f, 1 );
+        _synth1.getProcessingChain().addProcessor( _filter );
 
         // add a phaser to synth 1
         _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );
@@ -119,8 +218,9 @@ public class MWEngineActivity extends Activity
 
         // STEP 3 : let's create some music !
 
-        _audioEvents = new Vector<BaseAudioEvent>();    // remember : strong references!
-        _audioRenderer.setTempoNow( 130.0f, 4, 4 );     // 130 BPM at 4/4 time
+        _synth1Events = new Vector<SynthEvent>();   // remember : strong references!
+        _synth2Events = new Vector<SynthEvent>();   // remember : strong references!
+        _audioRenderer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM at 4/4 time
 
         // bubbly sixteenth note bass line for synth 1
 
@@ -153,21 +253,21 @@ public class MWEngineActivity extends Activity
         createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
         createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
-        // STEP 4 : attach click handler to the play button (see main.xml layout)
+        // STEP 4 : attach event handler to the UI elements (see main.xml layout)
 
         final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
         playPauseButton.setOnClickListener( new PlayClickHandler() );
-    }
 
-    private class PlayClickHandler implements View.OnClickListener
-    {
-        public void onClick( View v )
-        {
-            // start/stop the sequencer so we can toggle hearing actual output! ;)
+        final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
+        filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
 
-            _sequencerPlaying = !_sequencerPlaying;
-            _audioRenderer.setPlaying( _sequencerPlaying );
-        }
+        final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
+        feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
+
+        final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
+        tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
+
+        _inited = true;
     }
 
     /**
@@ -185,6 +285,9 @@ public class MWEngineActivity extends Activity
 
         event.calculateBuffers();
 
-        _audioEvents.add( event );
+        if ( synth == _synth1 )
+            _synth1Events.add( event );
+        else
+            _synth2Events.add( event );
     }
 }

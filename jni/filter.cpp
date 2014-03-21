@@ -38,7 +38,6 @@ Filter::Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float 
     _tempCutoff   = 0;    // used for reading when automating via LFO
 
     _resonance = aResonance;
-    setCutoff ( aCutoffFrequency );
     setLFORate( aLfoRate );
     _lfo       = 0;
     _hasLFO    = false;
@@ -59,8 +58,7 @@ Filter::Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float 
         out1[ i ] = 0.0;
         out2[ i ] = 0.0;
     }
-
-    calculateParameters();
+    setCutoff( aCutoffFrequency );
 }
 
 Filter::~Filter()
@@ -219,10 +217,9 @@ void Filter::setLFORate( float rate )
         _tempCutoff = _cutoff;
         return;
     }
-    else {
-        _hasLFO = true;
-    }
-    _lfo->setRate( rate );
+
+    if ( hasLFO() )
+        _lfo->setRate( rate );
 }
 
 /* private methods */

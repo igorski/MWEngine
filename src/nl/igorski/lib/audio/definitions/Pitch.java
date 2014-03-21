@@ -1,3 +1,25 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package nl.igorski.lib.audio.definitions;
 
 /**
@@ -10,15 +32,18 @@ package nl.igorski.lib.audio.definitions;
 public final class Pitch
 {
     /**
-     *  initial variables set @ 4th octave where "middle C" resides
-     *  these are used for calculating requested notes, we differentiate
-     *  between whole-notes and enharmonic notes by using 'sharp' ( while
-     *  these might not be "musically correct" in regard to scales and theory,
-     *  the returned frequencies are the same!
+     * Pitch is a helper class where musical notes can be calculated
+     * to their frequencies in Hz or as MIDI notes
      *
-     *  note: we calculate from the 4th octave as way of moving from "center"
-     *  pitches outward ( to lower / higher ranges ) as the changes in Hz feature
-     *  slight deviations, which would become more apparent by calculating powers of n.
+     * initial variables set @ 4th octave where "middle C" resides
+     * these are used for calculating requested notes, we differentiate
+     * between whole-notes and enharmonic notes by using 'sharp' ( while
+     * these might not be "musically correct" in regard to scales and theory,
+     * the returned frequencies are the same!
+     *
+     * note: we calculate from the 4th octave as way of moving from "center"
+     * pitches outward ( to lower / higher ranges ) as the changes in Hz feature
+     * slight deviations, which would become more apparent by calculating powers of n.
      */
 
     public static final double C                = 261.626;
