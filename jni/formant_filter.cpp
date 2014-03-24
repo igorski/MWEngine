@@ -23,6 +23,7 @@
  */
 #include "formant_filter.h"
 #include "utils.h"
+#include <cfloat>
 #include <cmath>
 
 /* constructor / destructor */
@@ -61,14 +62,39 @@ void FormantFilter::setVowel( double aVowel )
 {
     _vowel = aVowel;
 
-    int roundVowel  = ( int )( aVowel * 4.0 );
-    double fracpart = aVowel - roundVowel;
+    double interpolationThreshold = .7;
 
-    for ( int i = 0; i < 11; i++ )
+    // Linearly interpolate the values when below threshold
+    // TODO : this is weak ;) keep calculated coeffecient values within double range
+
+    if ( aVowel < interpolationThreshold )
     {
-        // Linearly interpolate the values
-        _currentCoeffs[ i ] = _coeffs[ roundVowel ][ i ] * ( 1.0 - fracpart ) +
-                            ( _coeffs[ roundVowel + ( roundVowel < 4 )][ i ] * fracpart );
+        int roundVowel  = ( int )( aVowel * 4.0 );
+        double fracpart = aVowel - roundVowel;
+
+        for ( int i = 0; i < 11; i++ )
+        {
+            _currentCoeffs[ i ] = _coeffs[ roundVowel ][ i ] * ( 1.0 - fracpart ) +
+                                ( _coeffs[ roundVowel + ( roundVowel < 4 )][ i ] * fracpart );
+        }
+    }
+    else
+    {
+        // interpolation beyond this point is quite nasty... keep in exact range
+
+        int min      = ( int ) round( aVowel );
+        int max      = min < ( 4 /* _coeffs.length - 1 */ ) ? min + 1 : min;
+        double delta = std::abs( min - aVowel );
+
+        int l = 11; /* ARRAY_SIZE( _currentCoeffs )*/
+
+        for ( int i = 0; i < l; ++i )
+        {
+            double minCoeff = _coeffs[ min ][ i ];
+            double maxCoeff = _coeffs[ max ][ i ];
+
+            _currentCoeffs[ i ] = delta < .5 ? minCoeff : maxCoeff;
+        }
     }
 }
 
