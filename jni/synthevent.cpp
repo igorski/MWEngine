@@ -800,7 +800,6 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
 
         setAttack   ( aInstrument->attack );
         //setRelease( aInstrument->release ); // no release envelopes for live synth!
-
         _liveBuffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, audio_engine::BUFFER_SIZE );
     }
     else
@@ -911,6 +910,8 @@ void SynthEvent::applyModules( SynthInstrument* instrument )
 
     if ( instrument->arpeggiatorActive )
         _arpeggiator = instrument->arpeggiator->clone();
+    else
+        setFrequency( _baseFrequency ); // restore base frequency (arp deactivated)
 
     if ( _osc2 != 0 )
         _osc2->applyModules( instrument );
