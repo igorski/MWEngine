@@ -23,6 +23,7 @@
 package nl.igorski.lib.audio.renderer;
 
 import android.content.Context;
+import android.os.Build;
 import nl.igorski.lib.audio.nativeaudio.NativeAudioEngine;
 import nl.igorski.lib.audio.nativeaudio.SequencerAPI;
 import nl.igorski.lib.debug.Logger;
@@ -110,6 +111,10 @@ public final class NativeAudioRenderer extends Thread
     {
         SAMPLE_RATE = aSampleRate;
         BUFFER_SIZE = aBufferSize;
+
+        // Android emulators can only work at 8 kHz or crash...
+        if ( Build.FINGERPRINT.startsWith( "generic" ))
+            SAMPLE_RATE = 8000;
 
         _api = new SequencerAPI();
 
