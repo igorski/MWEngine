@@ -147,16 +147,28 @@ float SynthEvent::getFrequency()
 
 void SynthEvent::setFrequency( float aFrequency )
 {
-    _phase         = 0.0f;
-    _phaseIncr     = aFrequency / audio_engine::SAMPLE_RATE;
-    _frequency     = aFrequency;
-    _baseFrequency = aFrequency; // reference for arpeggiator / pitch shift modules
+    setFrequency( aFrequency, false );
+}
+
+void SynthEvent::setFrequency( float aFrequency, bool osc1only )
+{
+    float currentFreq = _frequency;
+    _frequency        = aFrequency;
+    _phase            = 0.0f;
+    _phaseIncr        = aFrequency / audio_engine::SAMPLE_RATE;
+    _baseFrequency    = aFrequency; // reference for arpeggiator / pitch shift modules
 
     if ( /*liveSynthesis &&*/ _type == WaveForms::KARPLUS_STRONG )
         initKarplusStrong();
 
-    if ( _osc2 != 0 )
-        _osc2->setFrequency( aFrequency );
+    // update properties of secondary oscillator, note that OSC2 can
+    // have a pitch that deviates from the first oscillator
+    // as such we multiply it by the deviation of the new frequency
+    if ( !osc1only && _osc2 != 0 )
+    {
+        float multiplier = aFrequency / currentFreq;
+        _osc2->setFrequency( _osc2->_frequency * multiplier );
+    }
 }
 
 /**
@@ -499,6 +511,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
     SAMPLE_TYPE swAmp  = liveSynthesis ? /*.25*/ .005 : .005;
 
     bool applyRelease = _release > 0 && !liveSynthesis;
+    bool hasOSC2      = _osc2 != 0;
 
     int maxIndex = _sampleLength - 1;              // max index possible for this events length
     int cycleMax = _lastWriteIndex + bufferLength; // max buffer index to be written to in this cycle
@@ -655,12 +668,18 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
             if ( _arpeggiator->peek())
             {
                 float baseFreq = _baseFrequency;
+                float osc2freq = hasOSC2 ? _osc2->_baseFrequency : baseFreq;
+
                 setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), baseFreq ));
-                _baseFrequency = baseFreq; // restore base freq for next arpeggiator step
+
+                // restore base frequencies for the next arpeggiator step / restore
+                _baseFrequency = baseFreq;
+                if ( hasOSC2 )
+                    _osc2->_baseFrequency = osc2freq;
             }
         }
 
-        // stop caching when cancel is requested
+        // stop caching/rendering when cancel is requested
         if ( _cancel )
             break;
 
@@ -671,7 +690,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
 
     // secondary oscillator ? render its contents into this (parent) buffer
 
-    if ( _osc2 != 0 && !_cancel )
+    if ( hasOSC2 && !_cancel )
     {
         // create a temporary buffer (this prevents writing to deleted buffers
         // when the parent event changes its _buffer properties (f.i. tempo change)
@@ -902,6 +921,9 @@ void SynthEvent::destroyOSC2()
 
 void SynthEvent::applyModules( SynthInstrument* instrument )
 {
+    bool hasOSC2   = _osc2 != 0;
+    float OSC2freq = hasOSC2 ? _osc2->_baseFrequency : _baseFrequency;
+
     if ( _arpeggiator != 0 )
     {
         delete _arpeggiator;
@@ -910,11 +932,18 @@ void SynthEvent::applyModules( SynthInstrument* instrument )
 
     if ( instrument->arpeggiatorActive )
         _arpeggiator = instrument->arpeggiator->clone();
-    else
-        setFrequency( _baseFrequency ); // restore base frequency (arp deactivated)
 
-    if ( _osc2 != 0 )
+    if ( hasOSC2 )
         _osc2->applyModules( instrument );
+
+    // restore base frequency upon deactivation of pitch shift modules
+    if ( !instrument->arpeggiatorActive )
+    {
+        setFrequency( _baseFrequency, true );
+
+        if ( hasOSC2 )
+            _osc2->setFrequency( OSC2freq, true );
+    }
 }
 
 /**

@@ -54,6 +54,7 @@ class SynthEvent : public BaseCacheableAudioEvent
         // properties
         float getFrequency();
         void setFrequency( float aFrequency );
+        void setFrequency( float aFrequency, bool osc1only );
         void updateProperties( int aPosition, float aLength, SynthInstrument *aInstrument, int aState );
         void calculateBuffers();
         void cache( bool doCallback );
