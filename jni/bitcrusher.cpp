@@ -26,12 +26,11 @@
 
 /* constructor */
 
-BitCrusher::BitCrusher( float amount, float level )
+BitCrusher::BitCrusher( float amount, float inputMix, float outputMix )
 {
-    _levelCorrection = 1;
-
-    setAmount( amount );
-    setLevel( level );
+    setAmount   ( amount );
+    setInputMix ( inputMix );
+    setOutputMix( outputMix );
 }
 
 /* public methods */
@@ -46,10 +45,10 @@ void BitCrusher::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
         for ( int j = 0; j < bufferSize; ++j )
         {
-            short input = ( short ) ( channelBuffer[ j ] * 32767 );
+            short input = ( short ) (( channelBuffer[ j ] * _inputMix ) * 32767 );
             short prevent_offset = ( short )( -1 >> _bits + 1 );
             input &= ( -1 << ( 16 - _bits ));
-            channelBuffer[ j ] = ((( input + prevent_offset ) * _levelCorrection ) / 32767 );
+            channelBuffer[ j ] = ((( input + prevent_offset ) * _outputMix ) / 32767 );
         }
 
         // omit unnecessary cycles by copying the mono content
@@ -79,18 +78,24 @@ void BitCrusher::setAmount( float value )
 
     // scale float to 1 - 16 bit range
     _bits = ( int ) floor( scale( value, 1, 15 )) + 1;
-    setLevel( _level );
 }
 
-float BitCrusher::getLevel()
+float BitCrusher::getInputMix()
 {
-    return _level;
+    return _inputMix;
 }
 
-void BitCrusher::setLevel( float value )
+void BitCrusher::setInputMix( float value )
 {
-    _level = value;
+    _inputMix = value;
+}
 
-    // at lower bit resolutions the sound goes through the ceiling, auto-correct the volume
-    _levelCorrection = ( _bits < 2 ) ? _level * .35 : _level;
+float BitCrusher::getOutputMix()
+{
+    return _outputMix;
+}
+
+void BitCrusher::setOutputMix( float value )
+{
+    _outputMix = value;
 }

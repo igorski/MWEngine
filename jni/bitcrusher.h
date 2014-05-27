@@ -28,20 +28,22 @@
 class BitCrusher : public BaseProcessor
 {
     public:
-        BitCrusher( float amount, float level );
+        BitCrusher( float amount, float inputMix, float outputMix );
 
         float getAmount();
         void setAmount( float value );
-        float getLevel();
-        void setLevel( float value );
+        float getInputMix();
+        void setInputMix( float value );
+        float getOutputMix();
+        void setOutputMix( float value );
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         bool isCacheable();
 
     private:
         int _bits; // we scale the amount to integers in the 1-16 range
         float _amount;
-        float _level;
-        float _levelCorrection;
+        float _inputMix;
+        float _outputMix;
 };
 
 #endif
