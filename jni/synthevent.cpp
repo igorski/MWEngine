@@ -147,16 +147,19 @@ float SynthEvent::getFrequency()
 
 void SynthEvent::setFrequency( float aFrequency )
 {
-    setFrequency( aFrequency, false );
+    setFrequency( aFrequency, true, true );
 }
 
-void SynthEvent::setFrequency( float aFrequency, bool osc1only )
+void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool storeAsBaseFrequency )
 {
     float currentFreq = _frequency;
     _frequency        = aFrequency;
     _phase            = 0.0f;
     _phaseIncr        = aFrequency / audio_engine::SAMPLE_RATE;
-    _baseFrequency    = aFrequency; // reference for arpeggiator / pitch shift modules
+
+    // store as base frequency (acts as a reference "return point" for pitch shifting modules)
+    if ( storeAsBaseFrequency )
+        _baseFrequency = aFrequency;
 
     if ( /*liveSynthesis &&*/ _type == WaveForms::KARPLUS_STRONG )
         initKarplusStrong();
@@ -164,10 +167,10 @@ void SynthEvent::setFrequency( float aFrequency, bool osc1only )
     // update properties of secondary oscillator, note that OSC2 can
     // have a pitch that deviates from the first oscillator
     // as such we multiply it by the deviation of the new frequency
-    if ( !osc1only && _osc2 != 0 )
+    if ( allOscillators && _osc2 != 0 )
     {
         float multiplier = aFrequency / currentFreq;
-        _osc2->setFrequency( _osc2->_frequency * multiplier );
+        _osc2->setFrequency( _osc2->_frequency * multiplier, true, storeAsBaseFrequency );
     }
 }
 
@@ -665,18 +668,9 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         // update modules
         if ( _arpeggiator != 0 )
         {
+            // step the arpeggiator to the next position
             if ( _arpeggiator->peek())
-            {
-                float baseFreq = _baseFrequency;
-                float osc2freq = hasOSC2 ? _osc2->_baseFrequency : baseFreq;
-
-                setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), baseFreq ));
-
-                // restore base frequencies for the next arpeggiator step / restore
-                _baseFrequency = baseFreq;
-                if ( hasOSC2 )
-                    _osc2->_baseFrequency = osc2freq;
-            }
+                setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), _baseFrequency ), true, false );
         }
 
         // stop caching/rendering when cancel is requested
@@ -764,9 +758,9 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
     _ringBufferSize = 0;
     _liveBuffer     = 0;
     _locked         = false;
-
     _frequency      = aFrequency;
     _baseFrequency  = aFrequency;
+
     position        = aPosition;
     length          = aLength;
     hasParent       = aHasParent;
@@ -797,13 +791,14 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
     pwAmp                  = 0.075;
     EnergyDecayFactor      = 0.990f; // TODO make this settable ?
     _pwmValue              = 0.0;
-    _phase                 = 0.0;
 
     // secondary oscillator, note different constructor
     // to omit going into recursion!
 
     if ( !hasParent && aInstrument->osc2active )
        createOSC2( position, length, aInstrument );
+
+    setFrequency( aFrequency );
 
     // modules
 
@@ -826,8 +821,6 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
         _hasMinLength   = true; // a (pre-)cached event has no early cancel
         calculateBuffers();
     }
-
-    setFrequency( aFrequency );
 
     // add the event to the sequencer so it can be heard
     // note that OSC2 contents aren't added to the sequencer
@@ -936,13 +929,19 @@ void SynthEvent::applyModules( SynthInstrument* instrument )
     if ( hasOSC2 )
         _osc2->applyModules( instrument );
 
-    // restore base frequency upon deactivation of pitch shift modules
-    if ( !instrument->arpeggiatorActive )
+    // pitch shift module active ? make sure current frequency
+    // matches the current arpeggiator step
+    if ( instrument->arpeggiatorActive )
     {
-        setFrequency( _baseFrequency, true );
+        setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), _baseFrequency ), true, false );
+    }
+    else
+    {
+        // restore base frequency upon deactivation of pitch shift modules
+        setFrequency( _baseFrequency, false, true );
 
         if ( hasOSC2 )
-            _osc2->setFrequency( OSC2freq, true );
+            _osc2->setFrequency( OSC2freq, false, true );
     }
 }
 
