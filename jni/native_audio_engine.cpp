@@ -113,7 +113,7 @@ void start( JNIEnv* env, jobject jobj )
 
     // signal processors
     Finalizer* limiter = new Finalizer  ( 2, 500, audio_engine::SAMPLE_RATE, outputChannels );
-    LPFHPFilter* hpf   = new LPFHPFilter(( float ) audio_engine::SAMPLE_RATE, 200, outputChannels );
+    LPFHPFilter* hpf   = new LPFHPFilter(( float ) audio_engine::SAMPLE_RATE, 45, outputChannels );
 
     while ( thread )
     {
