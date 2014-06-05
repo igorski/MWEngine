@@ -52,7 +52,6 @@ jint JNI_OnLoad( JavaVM* vm, void* reserved )
     registerVM( vm );
 
     DebugTool::log( "JNI INITED OK" );
-
     return JNI_VERSION_1_6;
 }
 
@@ -185,6 +184,7 @@ void start( JNIEnv* env, jobject jobj )
             bool gotBuffer        = false;
             int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
+            SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->mixVolume;
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
             int amount                               = audioEvents.size();
 
@@ -202,9 +202,10 @@ void start( JNIEnv* env, jobject jobj )
             while ( bufferPos > maxBufferPosition )
                 bufferPos -= bytes_per_bar;
 
-            // only render these events when the sequencer isn't in the paused state!
-            // note that live instruments are ALWAYS rendered
-            if ( playing && amount > 0 )
+            // only render sequenced events when the sequencer isn't in the paused state
+            // and the channel volume is actually at an audible level! ( > 0 )
+
+            if ( playing && amount > 0 && channelVolume > 0.0 )
             {
                 if ( !isCached )
                 {
@@ -237,7 +238,6 @@ void start( JNIEnv* env, jobject jobj )
                                     else if ( !loopStarted )
                                         readPointer -= ( maxBufferPosition - min_buffer_position );
                                 }
-
                                 if ( readPointer >= startOffset && readPointer <= endOffset )
                                 {
                                     // mind the offset ! ( cached buffer starts at 0 while
@@ -291,15 +291,15 @@ void start( JNIEnv* env, jobject jobj )
             {
                 int lAmount = channel->liveEvents.size();
 
-                // we divide the volume by the channel mix volume as the keyboard is part of
-                // the same instrument, but has a separate volume in the mixer...
-                //float lAmp = ( lAmount == 1 ) ? 1 / channel->mixVolume : ( 1.0 / ( lAmount - 1.0 )) * ( 1 / channel->mixVolume ); // legacy
-                float lAmp = 1.0 / channel->mixVolume; // no normalization when multiple notes sound
+                // the volume of the live events is divided by the channel mix as a live event
+                // is played on the same instrument, but just as a different voice (note the
+                // events can have their own mix level)
+
+                float lAmp = channel->mixVolume > 0.0 ? 1.0 / channel->mixVolume : 1.0;
 
                 for ( int k = 0; k < lAmount; ++k )
                 {
                     BaseAudioEvent* vo = channel->liveEvents[ k ];
-
                     channelBuffer->mergeBuffers( vo->synthesize( buffer_size ), 0, 0, lAmp );
                 }
             }
@@ -338,18 +338,9 @@ void start( JNIEnv* env, jobject jobj )
             }
 
             // write the channel buffer into the combined output buffer, apply channel volume
-            SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->mixVolume;
-
-            for ( ci = 0; ci < outputChannels; ++ci )
-            {
-                SAMPLE_TYPE* buffer    = inbuffer->getBufferForChannel( ci );
-                SAMPLE_TYPE* srcBuffer = channelBuffer->getBufferForChannel( ci );
-
-                for ( i = 0; i < buffer_size; ++i )
-                {
-                    buffer[ i ] += ( srcBuffer[ i ] * channelVolume );
-                }
-            }
+            // note live events are always audible as their volume is relative to the instrument
+            if ( channel->hasLiveEvents && channelVolume == 0.0 ) channelVolume = 1.0f;
+            inbuffer->mergeBuffers( channelBuffer, 0, 0, channelVolume );
         }
 
         // apply high pass filtering to prevent extreme low rumbling and nasty filter offsets
