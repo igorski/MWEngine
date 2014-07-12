@@ -180,7 +180,7 @@ void SequencerAPI::setRecordingState( bool aRecording, int aMaxBuffers, char* aO
 
     if ( recordOutput )
     {
-        DiskWriter::prepareOutput( std::string( aOutputDirectory ), aMaxBuffers );
+        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, audio_engine::OUTPUT_CHANNELS );
     }
     else
     {
@@ -215,13 +215,13 @@ void SequencerAPI::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers
 
     if ( recordFromDevice )
     {
-        // we have only one diskwriter currently (see Java CacheWriter/Readers), so we
+        // diskwriter is a static instance currently (see Java CacheWriter/Readers), so we
         // must halt recording of live output when recording from the Android device
         if ( recordOutput )
         {
             setRecordingState( false, 0, "" );
         }
-        DiskWriter::prepareOutput( std::string( aOutputDirectory ), aMaxBuffers );
+        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, audio_engine::INPUT_CHANNELS );
     }
     else
     {
@@ -229,11 +229,11 @@ void SequencerAPI::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers
         {
             if ( !playing )
             {
-                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS, true );
+                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::INPUT_CHANNELS, true );
             }
             else {
                 // apparently renderer is stopped before cycle completes next Disk Writing query... =/
-                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS, true );
+                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::INPUT_CHANNELS, true );
                 haltRecording = true;
             }
         }

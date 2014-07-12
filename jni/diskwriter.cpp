@@ -33,14 +33,22 @@ namespace DiskWriter
     unsigned long outputWriterIndex = 0;
     short int* cachedBuffer         = 0;
 
-    void prepareOutput( std::string aOutputDir, int aBufferSize )
+    /**
+     * prepare a new iteration of recording
+     */
+    void prepare( std::string aOutputDir, int aBufferSize, int amountOfChannels )
     {
         DiskWriter::outputDirectory  = aOutputDir;
-        DiskWriter::outputBufferSize = aBufferSize;
 
+        // PCM : write each sample for each channel one after the other channel sample
+        // (as opposed to unique buffers per channel like in the AudioBuffer)
+        DiskWriter::outputBufferSize = aBufferSize * amountOfChannels;
         DiskWriter::generateOutputBuffer();
     }
 
+    /**
+     * allocates a new buffer for the next write iterations
+     */
     void generateOutputBuffer()
     {
         int bufferSize = DiskWriter::outputBufferSize;
@@ -58,39 +66,52 @@ namespace DiskWriter
         DiskWriter::outputWriterIndex = 0;
     }
 
+    /**
+     * append a AudioBuffer into the write buffer
+     */
     void appendBuffer( AudioBuffer* aBuffer )
     {
-        int bufferSize = aBuffer->bufferSize;
+        int bufferSize    = aBuffer->bufferSize;
+        int channelAmount = aBuffer->amountOfChannels;
 
         if ( DiskWriter::cachedBuffer == 0 )
             generateOutputBuffer();
 
-        // TODO: currently MONO ONLY !!
-        SAMPLE_TYPE* channelBuffer = aBuffer->getBufferForChannel( 0 );
-        int writerIndex       = DiskWriter::outputWriterIndex;
-        int MAX_VALUE         = 32767; // convert floats to shorts
+        int writerIndex = DiskWriter::outputWriterIndex;
+        int MAX_VALUE   = 32767; // convert samples to shorts
 
-        // write floats as short values
-        for ( int i = 0; i < bufferSize; ++i )
+        // write samples into PCM short buffer
+        for ( int i = 0; i < bufferSize; ++i, writerIndex += channelAmount )
         {
-            short int sample = ( short int )( channelBuffer[ i ] * MAX_VALUE );
+            for ( int c = 0; c < channelAmount; ++c )
+            {
+                SAMPLE_TYPE* channelBuffer = aBuffer->getBufferForChannel( c );
 
-            if ( sample > MAX_VALUE )
-                sample = MAX_VALUE;
+                short int sample = ( short int )( channelBuffer[ i ] * MAX_VALUE );
 
-            else if ( sample < -MAX_VALUE )
-                sample = -MAX_VALUE;
+                if ( sample > MAX_VALUE )
+                    sample = MAX_VALUE;
 
-            DiskWriter::cachedBuffer[ writerIndex + i ] = sample;
+                else if ( sample < -MAX_VALUE )
+                    sample = -MAX_VALUE;
+
+                DiskWriter::cachedBuffer[ writerIndex + c ] = sample;
+            }
         }
-        DiskWriter::outputWriterIndex = writerIndex + bufferSize;
+        DiskWriter::outputWriterIndex = writerIndex;
     }
 
+    /**
+     * checks whether the current write buffer is full
+     */
     bool bufferFull()
     {
         return DiskWriter::outputWriterIndex >= DiskWriter::outputBufferSize;
     }
 
+    /**
+     * flush the contents of the write buffer
+     */
     void flushOutput()
     {
         if ( DiskWriter::cachedBuffer != 0 )
@@ -101,16 +122,20 @@ namespace DiskWriter
         DiskWriter::outputWriterIndex = 0;
     }
 
+    /**
+     * write the contents of the write buffer into
+     * an output file, this will only write content
+     * up until the point if was written to in case
+     * the buffer wasn't full yet
+     */
     void writeBufferToFile( int aSampleRate, int aNumChannels, bool broadcastUpdate )
     {
         // quick assertion
         if ( DiskWriter::cachedBuffer == 0 )
             return;
 
-        aNumChannels = 1;   // TODO : currently MONO only (see appendBuffer above)
-
-        // we improve the use of the CPU resources
-        // by creating a small local thread
+        // we can improve the use of the CPU resources
+        // by creating a local thread
         // TODO: do it ? (this non-threading blocks the renderer, but nicely omits issue w/ continuous writes ;) )
 
         //pthread_t t1;
@@ -133,11 +158,12 @@ namespace DiskWriter
 
             write_wav( outputFile.append( SSTR( recordingFileName )), bufferSize, tempBuffer, aSampleRate, aNumChannels );
 
-            delete[] tempBuffer;
+            delete[] tempBuffer; // free memory of temporary buffer
         }
         else {
             write_wav( outputFile.append( SSTR( recordingFileName )), bufferSize, DiskWriter::cachedBuffer, aSampleRate, aNumChannels );
         }
+
         DiskWriter::flushOutput(); // free memory
 
         if ( broadcastUpdate )

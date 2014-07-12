@@ -26,6 +26,13 @@
 #include "audiobuffer.h"
 #include <string>
 
+/**
+ * DiskWriter is a util that will record audio for a given buffer length
+ * (for instance to record a whole measure of live generated music) and
+ * appends the AudioBuffer generatad by the engines render queue
+ * until the buffer is full, after which the contents can be written
+ * onto disk in PCM WAV format
+ */
 namespace DiskWriter
 {
     // output directory to write to
@@ -34,7 +41,7 @@ namespace DiskWriter
     extern unsigned long outputWriterIndex;
     extern short int* cachedBuffer;
 
-    extern void prepareOutput( std::string aOutputDir, int aBufferSize );
+    extern void prepare( std::string aOutputDir, int aBufferSize, int amountOfChannels );
     extern void generateOutputBuffer();
     extern void flushOutput();
     extern void appendBuffer( AudioBuffer* aBuffer );
