@@ -25,6 +25,7 @@
 
 #include <math.h>
 #include <sstream>
+#include "global.h"
 
 /* convenience methods */
 
@@ -47,7 +48,7 @@ namespace VolumeUtil
 
 namespace BufferUtil
 {
-    extern float* generateSilentBuffer( int aBufferSize );
+    extern SAMPLE_TYPE* generateSilentBuffer( int aBufferSize );
     extern int calculateBufferLength( float aMinRate );
     extern int calculateBufferLength( int milliSeconds );
 }

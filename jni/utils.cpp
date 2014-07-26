@@ -83,9 +83,9 @@ namespace VolumeUtil
 
 namespace BufferUtil
 {
-    float* generateSilentBuffer( int aBufferSize )
+    SAMPLE_TYPE* generateSilentBuffer( int aBufferSize )
     {
-        float* out = new float[ aBufferSize ];
+        SAMPLE_TYPE* out = new SAMPLE_TYPE[ aBufferSize ];
 
         for ( int i = 0; i < aBufferSize; ++i )
             out[ i ] = 0.0;

@@ -24,6 +24,7 @@
 #define __FM_H_INCLUDED__
 
 #include "baseprocessor.h"
+#include "global.h"
 #include "lfo.h"
 
 class FrequencyModulator : public BaseProcessor, public LFO
@@ -44,11 +45,11 @@ class FrequencyModulator : public BaseProcessor, public LFO
         #endif
 
     private:
-        float* _buffer; // cached buffer
-        float modulator;
-        float carrier;
-        float fmamp;
-        float AMP_MULTIPLIER;
+        SAMPLE_TYPE* _buffer; // cached buffer
+        SAMPLE_TYPE modulator;
+        SAMPLE_TYPE carrier;
+        SAMPLE_TYPE fmamp;
+        SAMPLE_TYPE AMP_MULTIPLIER;
 };
 
 #endif

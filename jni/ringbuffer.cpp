@@ -72,10 +72,10 @@ void RingBuffer::flush()
     }
 }
 
-void RingBuffer::enqueue( float aSample )
+void RingBuffer::enqueue( SAMPLE_TYPE aSample )
 {
     if ( _buffer == 0 )
-        return;             // TODO: WHERE DOES THIS NONSENSE COME FROM!?
+        return;
 
     _buffer[ last ] = aSample;
 
@@ -83,12 +83,12 @@ void RingBuffer::enqueue( float aSample )
         last = 0;
 }
 
-float RingBuffer::dequeue()
+SAMPLE_TYPE RingBuffer::dequeue()
 {
     if ( _buffer == 0 )
-        return randomFloat();
+        return ( SAMPLE_TYPE ) randomFloat();
 
-    float item = _buffer[ first ];
+    SAMPLE_TYPE item = _buffer[ first ];
 
     if ( ++first == bufferLength )
         first = 0;
@@ -96,10 +96,10 @@ float RingBuffer::dequeue()
     return item;
 }
 
-float RingBuffer::peek()
+SAMPLE_TYPE RingBuffer::peek()
 {
     if ( _buffer == 0 )
-        return randomFloat();
+        return ( SAMPLE_TYPE ) randomFloat();
 
     return _buffer[ first ];
 }
