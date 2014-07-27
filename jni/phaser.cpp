@@ -106,11 +106,12 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize = sampleBuffer->bufferSize;
 
+    SAMPLE_TYPE maxPhase = 3.14159 * 2; // two PI
+        
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        SAMPLE_TYPE maxPhase = 3.14159 * 2;
         int i = 0;
         int j;
 
