@@ -23,17 +23,11 @@
 #include "limiter.h"
 #include "global.h"
 
-// constructor / destructor
+// constructors / destructor
 
 Limiter::Limiter()
 {
-    init( 10, 500, audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS );
-}
 
-Limiter::~Limiter()
-{
-    delete _follower;
-    delete _output;
 }
 
 /**
@@ -49,11 +43,20 @@ Limiter::Limiter( float attackMs, float releaseMs, int sampleRate, int amountOfC
     init( attackMs, releaseMs, sampleRate, amountOfChannels );
 }
 
+Limiter::~Limiter()
+{
+    while ( !_followers->empty())
+    {
+        delete _followers->back(), _followers->pop_back();
+    }
+}
+
 /* public methods */
 
 float Limiter::getLinearGR()
 {
-    return _follower->envelope > 1. ? 1 / _follower->envelope : 1.;
+    // TODO : currently mono / left signal only
+    return _followers->at( 0 )->envelope > 1. ? 1 / _followers->at( 0 )->envelope : 1.;
 }
 
 void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
@@ -61,16 +64,17 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
+        EnvelopeFollower* follower = _followers->at( i );
         int j                      = sampleBuffer->bufferSize;
 
         while ( j-- > 0 )
         {
             SAMPLE_TYPE dest = channelBuffer[ j ];
 
-            _follower->process( dest, skip );
+            follower->process( dest, skip );
 
-            if ( _follower->envelope > maxGain )
-                dest = dest / _follower->envelope;
+            if ( follower->envelope > maxGain )
+                dest = dest / follower->envelope;
 
             channelBuffer[ j ] = ( dest + skip );
         }
@@ -86,8 +90,12 @@ bool Limiter::isCacheable()
 
 void Limiter::init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels )
 {
-    maxGain   = .85;
-    _follower = new EnvelopeFollower( maxGain, attackMs, releaseMs, sampleRate );
-    _output   = new short[ audio_engine::BUFFER_SIZE ];
-    skip      = amountOfChannels - 1;
+    maxGain    = .85;
+    _followers = new std::vector<EnvelopeFollower*>( amountOfChannels );
+
+    for ( int i = 0; i < amountOfChannels; ++i )
+        _followers->at( i ) = new EnvelopeFollower( maxGain, attackMs, releaseMs, sampleRate );
+
+    skip = 0; //amountOfChannels - 1;
 }
+

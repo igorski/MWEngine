@@ -25,6 +25,7 @@
 
 #include "envelopefollower.h"
 #include "audiobuffer.h"
+#include <vector>
 
 class Limiter
 {
@@ -39,12 +40,11 @@ class Limiter
 
     protected:
         void init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
-        short* _output;
 
     private:
         int skip;
         SAMPLE_TYPE maxGain;
-        EnvelopeFollower* _follower;
+        std::vector<EnvelopeFollower*>* _followers;
 };
 
 #endif
