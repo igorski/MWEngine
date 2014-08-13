@@ -28,7 +28,7 @@
 RingBuffer::RingBuffer( int capacity )
 {
     bufferLength = capacity;
-    _buffer      = BufferUtil::generateSilentBuffer( capacity );
+    _buffer      = BufferUtil::generateSilentBuffer( bufferLength );
 
     first        = 0;
     last         = 0;
@@ -79,18 +79,20 @@ void RingBuffer::enqueue( SAMPLE_TYPE aSample )
 
     _buffer[ last ] = aSample;
 
-    if ( ++last == bufferLength )
+    if ( ++last >= bufferLength )
         last = 0;
 }
 
 SAMPLE_TYPE RingBuffer::dequeue()
 {
-    if ( _buffer == 0 )
+    SAMPLE_TYPE item;
+
+    if ( _buffer == 0 || first >= bufferLength )
         return ( SAMPLE_TYPE ) randomFloat();
+    else
+        item = _buffer[ first ];
 
-    SAMPLE_TYPE item = _buffer[ first ];
-
-    if ( ++first == bufferLength )
+    if ( ++first >= bufferLength )
         first = 0;
 
     return item;
