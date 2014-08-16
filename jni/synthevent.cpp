@@ -480,7 +480,7 @@ void SynthEvent::initKarplusStrong()
     _ringBufferSize        = ( int ) ( audio_engine::SAMPLE_RATE / _frequency );
     bool newSize           = _ringBufferSize != prevRingBufferSize;
 
-    if ( _ringBuffer != 0 && newSize )
+    if ( !liveSynthesis && ( _ringBuffer != 0 && newSize ))
     {
         delete _ringBuffer;
         _ringBuffer = 0;

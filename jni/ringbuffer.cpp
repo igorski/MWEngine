@@ -87,7 +87,7 @@ SAMPLE_TYPE RingBuffer::dequeue()
 {
     SAMPLE_TYPE item;
 
-    if ( _buffer == 0 || first >= bufferLength )
+    if ( _buffer == 0 )
         return ( SAMPLE_TYPE ) randomFloat();
     else
         item = _buffer[ first ];
