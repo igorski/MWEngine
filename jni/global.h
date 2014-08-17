@@ -23,6 +23,8 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <cmath>
+
 // audio engine configuration
 
 // PRECISION defines the floating-point precision used to synthesize the audio samples
@@ -39,6 +41,10 @@
  #define SAMPLE_TYPE double
  const float MAX_PHASE = 1.0;
 #endif
+
+// global constans used throughout the engine
+const SAMPLE_TYPE PI     = atan( 1 ) * 4;
+const SAMPLE_TYPE TWO_PI = PI * 2.0;
 
 namespace audio_engine
 {

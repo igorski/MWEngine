@@ -1,6 +1,8 @@
 /**
  * The MIT License (MIT)
  *
+ * adapted from musicdsp.org-post by mistert@inwind.it
+ *
  * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -31,20 +33,20 @@ LPFHPFilter::LPFHPFilter( float aLPCutoff, float aHPCutoff, int amountOfChannels
     setLPF( aLPCutoff, audio_engine::SAMPLE_RATE );
     setHPF( aHPCutoff, audio_engine::SAMPLE_RATE );
 
-    lastSamples            = new SAMPLE_TYPE[ amountOfChannels ];
-    lastUnprocessedSamples = new SAMPLE_TYPE[ amountOfChannels ];
+    outSamples = new SAMPLE_TYPE[ amountOfChannels ];
+    inSamples  = new SAMPLE_TYPE[ amountOfChannels ];
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {
-        lastSamples[ i ]            = 0.0;
-        lastUnprocessedSamples[ i ] = 0.0;
+        outSamples[ i ] = 0.0;
+        inSamples[ i ]  = 0.0;
     }
 }
 
 LPFHPFilter::~LPFHPFilter()
 {
-    delete[] lastSamples;
-    delete[] lastUnprocessedSamples;
+    delete[] outSamples;
+    delete[] inSamples;
 }
 
 /* public methods */
@@ -54,7 +56,7 @@ void LPFHPFilter::setLPF( float aCutOffFrequency, int aSampleRate )
     SAMPLE_TYPE w = 2.0 * aSampleRate;
     SAMPLE_TYPE Norm;
 
-    aCutOffFrequency *= 2.0 * ( atan( 1 ) * 4 );
+    aCutOffFrequency *= TWO_PI;
     Norm              = 1.0 / ( aCutOffFrequency + w );
     b1                = ( w - aCutOffFrequency ) * Norm;
     a0                = a1 = aCutOffFrequency * Norm;
@@ -65,7 +67,7 @@ void LPFHPFilter::setHPF( float aCutOffFrequency, int aSampleRate )
     SAMPLE_TYPE w = 2.0 * aSampleRate;
     SAMPLE_TYPE Norm;
 
-    aCutOffFrequency *= 2.0 *( atan( 1 ) * 4 );
+    aCutOffFrequency *= TWO_PI;
     Norm              = 1.0 / ( aCutOffFrequency + w );
     a0                = w * Norm;
     a1                = -a0;
@@ -82,16 +84,11 @@ void LPFHPFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
         for ( int i = 0; i < bufferSize; ++i )
         {
-            SAMPLE_TYPE curUnprocessedSample = channelBuffer[ i ];
+            SAMPLE_TYPE sample = channelBuffer[ i ];
 
-            // keep an eye on the iterator ;)
-            if ( i > 0 )
-                lastSamples[ c ] = channelBuffer[ i - 1 ];
-
-            channelBuffer[ i ]          = curUnprocessedSample * a0 + lastUnprocessedSamples[ c ] * a1 + lastSamples[ c ] * b1;
-            lastUnprocessedSamples[ c ] = curUnprocessedSample;
-
-    //            out[n] = in[n]*a0 + in[n-1]*a1 + out[n-1]*b1;
+            channelBuffer[ i ] = sample * a0 + inSamples[ c ] * a1 + outSamples[ c ] * b1;
+            inSamples[ c ]     = sample; // store this unprocessed sample for next iteration
+            outSamples[ c ]    = channelBuffer[ i ]; // and the processed sample too
         }
 
         // save CPU cycles when source is mono

@@ -44,7 +44,7 @@ Filter::Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float 
 
     minFreq    = aMinFreq;
     maxFreq    = aMaxFreq;
-    lfoRange   = ( maxFreq * .5 ) - minFreq;
+    lfoRange   = ( maxFreq / 2 ) - minFreq;
 
     in1  = new float[ numChannels ];
     in2  = new float[ numChannels ];
@@ -226,7 +226,7 @@ void Filter::setLFORate( float rate )
 
 void Filter::calculateParameters()
 {
-    c  = 1 / tan(( atan( 1 ) * 4 ) * _tempCutoff / fs );
+    c  = 1 / tan( PI * _tempCutoff / fs );
     a1 = 1.0 / ( 1.0 + _resonance * c + c * c );
     a2 = 2 * a1;
     a3 = a1;

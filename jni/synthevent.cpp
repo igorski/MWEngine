@@ -154,7 +154,7 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
 {
     float currentFreq = _frequency;
     _frequency        = aFrequency;
-    _phase            = 0.0f;
+    //_phase            = 0.0f; // will create nasty pop if another freq was playing previously
     _phaseIncr        = aFrequency / audio_engine::SAMPLE_RATE;
 
     // store as base frequency (acts as a reference "return point" for pitch shifting modules)
@@ -780,13 +780,12 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
 
     // constants used by waveform generators
 
-    PI                     = ( atan( 1 ) * 4 );
-    TWO_PI                 = PI * 2;
     TWO_PI_OVER_SR         = TWO_PI / audio_engine::SAMPLE_RATE;
     pwr                    = PI / 1.05;
     pwAmp                  = 0.075;
     EnergyDecayFactor      = 0.990f; // TODO make this settable ?
     _pwmValue              = 0.0;
+    _phase                 = 0.0;
 
     // secondary oscillator, note different constructor
     // to omit going into recursion!

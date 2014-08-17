@@ -41,8 +41,10 @@ class LPFHPFilter : public BaseProcessor
         SAMPLE_TYPE a1;
         SAMPLE_TYPE b0;
         SAMPLE_TYPE b1;
-        SAMPLE_TYPE* lastSamples;
-        SAMPLE_TYPE* lastUnprocessedSamples;
+
+        // for each channel we store the previous in- and output samples
+        SAMPLE_TYPE* outSamples;
+        SAMPLE_TYPE* inSamples;
 };
 
 #endif

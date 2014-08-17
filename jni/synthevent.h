@@ -82,10 +82,8 @@ class SynthEvent : public BaseCacheableAudioEvent
         SAMPLE_TYPE _phaseIncr;
         SAMPLE_TYPE _frequency;
         SAMPLE_TYPE _baseFrequency;
+        SAMPLE_TYPE TWO_PI_OVER_SR;
         int   _type;
-        float PI;
-        float TWO_PI;
-        float TWO_PI_OVER_SR;
         float _decay;
         float _release;
         float _attack;
