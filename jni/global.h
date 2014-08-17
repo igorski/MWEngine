@@ -43,11 +43,11 @@
 namespace audio_engine
 {
     const int INPUT_CHANNELS  = 1;
-    const int OUTPUT_CHANNELS = 1;
+    const int OUTPUT_CHANNELS = 1;     // min 1 (mono)
     const bool USE_CACHING    = false; // whether to cache audio channels and their processing chains
 
-    extern int SAMPLE_RATE;         // initialized on engine start == device specific
-    extern int BUFFER_SIZE;         // initialized on engine start == device specific
+    extern int SAMPLE_RATE;            // initialized on engine start == device specific
+    extern int BUFFER_SIZE;            // initialized on engine start == device specific
 }
 
 // E.O. audio engine configuration
@@ -92,7 +92,6 @@ extern int queuedTime_sig_beat_unit;
 /* audio output related */
 
 extern float volume;
-
 extern void *print_message( void* );
 
 // enumerations
@@ -100,19 +99,29 @@ extern void *print_message( void* );
 class WaveForms
 {
     public:
-        enum WaveFormTypes { SINE_WAVE, TRIANGLE, SAWTOOTH, SQUARE_WAVE, NOISE, PWM, KARPLUS_STRONG };
+        enum WaveFormTypes { SINE_WAVE,
+                             TRIANGLE,
+                             SAWTOOTH,
+                             SQUARE_WAVE,
+                             NOISE,
+                             PWM,
+                             KARPLUS_STRONG };
 };
 
 class PercussionTypes
 {
     public:
-        enum Types { KICK_808, STICK, SNARE, HI_HAT };
+        enum Types { KICK_808,
+                     STICK,
+                     SNARE,
+                     HI_HAT };
 };
 
 class DrumSynthTimbres
 {
     public:
-        enum Timbres { LIGHT, GRAVEL };
+        enum Timbres { LIGHT,
+                       GRAVEL };
 };
 
 #endif

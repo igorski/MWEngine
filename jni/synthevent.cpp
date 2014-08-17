@@ -509,10 +509,6 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
     SAMPLE_TYPE amp = 0.0;
     SAMPLE_TYPE tmp, am, dpw, pmv;
 
-    // following waveforms require alternate volume multipliers
-    SAMPLE_TYPE sawAmp = liveSynthesis ? .7  : 1.0;
-    SAMPLE_TYPE swAmp  = liveSynthesis ? /*.25*/ .005 : .005;
-
     bool applyRelease = _release > 0 && !liveSynthesis;
     bool hasOSC2      = _osc2 != 0;
 
@@ -548,7 +544,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
 
                 // ---- Sawtooth
                 amp = ( _phase < 0 ) ? _phase - ( int )( _phase - 1 ) : _phase - ( int )( _phase );
-                amp *= sawAmp;
+                //amp *= ( liveSynthesis ? .7  : 1.0; );
 
                 break;
 
@@ -564,7 +560,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     tmp = TWO_PI * ( _phase * 4.0 - 3.0 );
                     amp = ( tmp * tmp - 1.0 );
                 }
-                amp *= swAmp; // these get loud
+                amp *= .01; // these get loud ! 0.005
                 break;
 
             case WaveForms::TRIANGLE:
@@ -626,7 +622,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
 
                 // --- Karplus-Strong algorithm for plucked string-sound
                 _ringBuffer->enqueue(( EnergyDecayFactor * (( _ringBuffer->dequeue() + _ringBuffer->peek()) / 2 )));
-                amp = _ringBuffer->peek() * .7; // get the level down a bit, 'tis loud
+                amp = _ringBuffer->peek(); // * .7; gets the level down a bit, 'tis loud
 
                 break;
         }
