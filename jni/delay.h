@@ -23,9 +23,9 @@
 #ifndef __DELAY_H_INCLUDED__
 #define __DELAY_H_INCLUDED__
 
-#include "basebusprocessor.h"
+#include "baseprocessor.h"
 
-class Delay : public BaseBusProcessor
+class Delay : public BaseProcessor
 {
     public:
         Delay( float aDelayTime, float aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels );
@@ -37,7 +37,7 @@ class Delay : public BaseBusProcessor
         void setMix( float aValue );
         float getFeedback();
         void setFeedback( float aValue );
-        void apply( AudioBuffer* sampleBuffer, bool isMonoSource );
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         void reset();
 
     protected:

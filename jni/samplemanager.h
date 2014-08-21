@@ -27,7 +27,6 @@
 #include <string>
 #include <map>
 #include <utility>
-#include <jni.h>
 
 typedef struct
 {
@@ -35,21 +34,22 @@ typedef struct
    AudioBuffer* sampleBuffer;
 } cachedSample;
 
+/**
+ * SampleManager is a static class that
+ * holds a map of Sampled audio, it can be
+ * used to pool samples that are to be used
+ * repeatedly or simultaneously, etc...
+ */
 class SampleManager
 {
     public:
 
         static void setSample( std::string aKey, AudioBuffer* aBuffer );
 
-        // JNI interface-hack... (move to Java bridge?)
-        static void setSample( jstring aKey, jint aBufferLength, jint aChannelAmount, jdoubleArray aBuffer, jdoubleArray aOptRightBuffer );
-
         static AudioBuffer* getSample( std::string aIdentifier );
-        static AudioBuffer* getSample( jstring aIdentifier );
         static int getSampleLength( std::string aIdentifier );
 
         static bool hasSample( std::string aIdentifier );
-        static bool hasSample( jstring aIdentifier );
         static void removeSample( std::string aIdentifier );
         static void flushSamples();
 };

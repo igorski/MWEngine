@@ -28,7 +28,7 @@
 DCOffsetFilter::DCOffsetFilter()
 {
     lastSample = 0.0;
-    R          = 1.0 - (( atan( 1 ) * 4 ) * 2 * Pitch.note( "C", 2 ) / audio_engine::SAMPLE_RATE );
+    R          = 1.0 - (( atan( 1 ) * 4 ) * 2 * Pitch.note( "C", 2 ) / AudioEngineProps::SAMPLE_RATE );
 }
 
 /* public methods */

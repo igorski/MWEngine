@@ -26,7 +26,7 @@
 #include "arpeggiator.h"
 #include "audiochannel.h"
 #include "processingchain.h"
-#include "routeable_oscillator.h"
+#include "routeableoscillator.h"
 #include "baseaudioevent.h"
 #include "basecacheableaudioevent.h"
 

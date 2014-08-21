@@ -21,10 +21,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "diskwriter.h"
+#include "audioengine.h"
 #include "wavewriter.h"
 #include "utils.h"
-#include "global.h"
-#include "java_bridge.h"
+#include "observer.h"
 
 namespace DiskWriter
 {
@@ -156,28 +156,22 @@ namespace DiskWriter
             for ( int i = 0; i < bufferSize; ++i )
                 tempBuffer[ i ] = DiskWriter::cachedBuffer[ i ];
 
-            write_wav( outputFile.append( SSTR( recordingFileName )), bufferSize, tempBuffer, aSampleRate, aNumChannels );
+            write_wav( outputFile.append( SSTR( AudioEngine::recordingFileId )),
+                       bufferSize, tempBuffer, aSampleRate, aNumChannels );
 
             delete[] tempBuffer; // free memory of temporary buffer
         }
         else {
-            write_wav( outputFile.append( SSTR( recordingFileName )), bufferSize, DiskWriter::cachedBuffer, aSampleRate, aNumChannels );
+            write_wav( outputFile.append( SSTR( AudioEngine::recordingFileId )),
+                       bufferSize, DiskWriter::cachedBuffer, aSampleRate, aNumChannels );
         }
 
         DiskWriter::flushOutput(); // free memory
 
         if ( broadcastUpdate )
         {
-            // broadcast update via JNI, pass buffer identifier name to identify last recording
-            jmethodID native_method_id = getJavaMethod( JavaAPIs::RECORDING_UPDATE );
-
-            if ( native_method_id != 0 )
-            {
-                JNIEnv* env = getEnvironment();
-
-                if ( env != 0 )
-                    env->CallStaticVoidMethod( getJavaInterface(), native_method_id, recordingFileName );
-            }
+            // broadcast update via JNI, pass buffer identifier to identify last recording
+            Observer::broadcastRecordingUpdate( AudioEngine::recordingFileId );
         }
         //void* result;
         //pthread_join( t1, &result );

@@ -29,24 +29,12 @@
 
 // PRECISION defines the floating-point precision used to synthesize the audio samples
 // valid values are 1 (32-bit float) and 2 (64-bit double)
+// if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
 
 #define PRECISION 2
+#define USE_JNI
 
-#if PRECISION == 1 // float
- #define SAMPLE_TYPE float
- const float MAX_PHASE = 1.0f;
-#endif
-
-#if PRECISION == 2 // double
- #define SAMPLE_TYPE double
- const float MAX_PHASE = 1.0;
-#endif
-
-// global constans used throughout the engine
-const SAMPLE_TYPE PI     = atan( 1 ) * 4;
-const SAMPLE_TYPE TWO_PI = PI * 2.0;
-
-namespace audio_engine
+namespace AudioEngineProps
 {
     const int INPUT_CHANNELS  = 1;
     const int OUTPUT_CHANNELS = 1;     // min 1 (mono)
@@ -58,46 +46,20 @@ namespace audio_engine
 
 // E.O. audio engine configuration
 
-// global sequencer variables
+#if PRECISION == 1 // float
+ #define SAMPLE_TYPE float
+ const float MAX_PHASE = 1.0f;
+#endif
 
-extern int bytes_per_beat;
-extern int bytes_per_bar;
-extern int bytes_per_tick;
+#if PRECISION == 2 // double
+ #define SAMPLE_TYPE double
+ const float MAX_PHASE = 1.0;
+#endif
 
-extern int amount_of_bars;
-extern int beat_subdivision;    // the amount of sub divisions the engine recognises for a beat (for instance a value of 4 equals sixteenth notes in 4/4 time)
-extern int min_buffer_position; // initially 0, but can differ when looping specific measures
-extern int max_buffer_position;
-extern int min_step_position;
-extern int max_step_position;
-extern bool playing;
-extern bool recordOutput;
-extern bool haltRecording;
-extern bool bouncing;
-extern int recordingIterator;
-extern int recordingMaxIterations;
-extern int recordingFileName;
-extern bool recordFromDevice;
-extern bool monitorRecording;
+// global constants used throughout the engine
+const SAMPLE_TYPE PI     = atan( 1 ) * 4;
+const SAMPLE_TYPE TWO_PI = PI * 2.0;
 
-/* buffer read/write pointers */
-
-extern int bufferPosition;
-extern int stepPosition;
-extern int playbackPos;
-
-/* tempo related */
-
-extern float tempo;
-extern float queuedTempo;
-extern int time_sig_beat_amount;
-extern int time_sig_beat_unit;
-extern int queuedTime_sig_beat_amount;
-extern int queuedTime_sig_beat_unit;
-
-/* audio output related */
-
-extern float volume;
 extern void *print_message( void* );
 
 // enumerations

@@ -25,7 +25,7 @@
 
 #include "audiochannel.h"
 #include "processingchain.h"
-#include "routeable_oscillator.h"
+#include "routeableoscillator.h"
 
 class DrumInstrument
 {

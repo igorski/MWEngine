@@ -20,8 +20,9 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "sequencer.h"
 #include "synthevent.h"
+#include "audioengine.h"
+#include "sequencer.h"
 #include "utils.h"
 #include "global.h"
 #include <cmath>
@@ -155,7 +156,7 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
     float currentFreq = _frequency;
     _frequency        = aFrequency;
     //_phase            = 0.0f; // will create nasty pop if another freq was playing previously
-    _phaseIncr        = aFrequency / audio_engine::SAMPLE_RATE;
+    _phaseIncr        = aFrequency / AudioEngineProps::SAMPLE_RATE;
 
     // store as base frequency (acts as a reference "return point" for pitch shifting modules)
     if ( storeAsBaseFrequency )
@@ -243,8 +244,8 @@ void SynthEvent::calculateBuffers()
         _cancel = true;
 
     int oldLength = _sampleLength;
-    _sampleLength = ( int )( length * ( float ) bytes_per_tick );
-    _sampleStart  = position * bytes_per_tick;
+    _sampleLength = ( int )( length * ( float ) AudioEngine::bytes_per_tick );
+    _sampleStart  = position * AudioEngine::bytes_per_tick;
     _sampleEnd    = _sampleStart + _sampleLength;
 
     resetEnvelopes();
@@ -257,7 +258,7 @@ void SynthEvent::calculateBuffers()
 
         // OSC2 generates no buffer (writes into parent buffer, saves memory)
         if ( !hasParent )
-            _buffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, _sampleLength );
+            _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, _sampleLength );
      }
 
     if ( _type == WaveForms::KARPLUS_STRONG )
@@ -283,11 +284,11 @@ void SynthEvent::calculateBuffers()
  */
 AudioBuffer* SynthEvent::synthesize( int aBufferLength )
 {
-    if ( aBufferLength != audio_engine::BUFFER_SIZE )
+    if ( aBufferLength != AudioEngineProps::BUFFER_SIZE )
     {
         // clear previous buffer contents
         destroyLiveBuffer();
-        _liveBuffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, aBufferLength );
+        _liveBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
     }
     render( _liveBuffer ); // overwrites old buffer contents
 
@@ -477,7 +478,7 @@ void SynthEvent::initKarplusStrong()
 {
     // reset previous _ringBuffer data
     int prevRingBufferSize = _ringBufferSize;
-    _ringBufferSize        = ( int ) ( audio_engine::SAMPLE_RATE / _frequency );
+    _ringBufferSize        = ( int ) ( AudioEngineProps::SAMPLE_RATE / _frequency );
     bool newSize           = _ringBufferSize != prevRingBufferSize;
 
     if ( !liveSynthesis && ( _ringBuffer != 0 && newSize ))
@@ -780,7 +781,7 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
 
     // constants used by waveform generators
 
-    TWO_PI_OVER_SR         = TWO_PI / audio_engine::SAMPLE_RATE;
+    TWO_PI_OVER_SR         = TWO_PI / AudioEngineProps::SAMPLE_RATE;
     pwr                    = PI / 1.05;
     pwAmp                  = 0.075;
     EnergyDecayFactor      = 0.990f; // TODO make this settable ?
@@ -803,13 +804,13 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
     if ( liveSynthesis )
     {
         // quick releases of the key should at least ring for a 32nd note
-        _minLength    = bytes_per_bar / 32;
-        _sampleLength = bytes_per_bar;                  // important for amplitude swell in
+        _minLength    = AudioEngine::bytes_per_bar / 32;
+        _sampleLength = AudioEngine::bytes_per_bar;     // important for amplitude swell in
         _hasMinLength = false;                          // keeping track if the min length has been rendered
 
         setAttack   ( aInstrument->attack );
         //setRelease( aInstrument->release ); // no release envelopes for live synth!
-        _liveBuffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, audio_engine::BUFFER_SIZE );
+        _liveBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
     }
     else
     {

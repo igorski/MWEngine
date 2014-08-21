@@ -20,17 +20,26 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "global.h"
-#include <pthread.h>
+#ifndef __BUFFER_UTILITY_H_INCLUDED__
+#define __BUFFER_UTILITY_H_INCLUDED__
 
-// default values (overridden by audio engine initializer for platform-specific values)
-
-int AudioEngineProps::SAMPLE_RATE = 44100;
-int AudioEngineProps::BUFFER_SIZE = 1024;
-
-/* used for threading */
-
-void *print_message( void* )
+/**
+ * BufferUtility provides several functions
+ * for basic time / BPM related calculations
+ * where musical concepts are translated into buffers
+ */
+class BufferUtility
 {
+    public:
 
-}
+        static double getBPMbyLength( double length, int amountOfBars );
+        static double getBPMbySamples( int length, int amountOfBars, int sampleRate );
+        static int bufferToMilliseconds( int bufferSize, int sampleRate );
+        static int millisecondsToBuffer( int milliSeconds, int sampleRate );
+        static int getBitRate( int sampleRate, int bitDepth, int channels );
+        static int calculateSamplesPerBeatDivision( int sampleRate, double tempo, int subdivision );
+        static int getSamplesPerBeat( int sampleRate, double tempo );
+        static int getSamplesPerBar( int sampleRate, double tempo, int beatAmount, int beatUnit );
+};
+
+#endif

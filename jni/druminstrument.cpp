@@ -21,7 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "druminstrument.h"
-#include "global.h"
+#include "audioengine.h"
 #include "sequencer.h"
 #include "utils.h"
 #include <cstddef>
@@ -32,7 +32,7 @@ DrumInstrument::DrumInstrument()
 {
     rOsc = 0;//rOsc            = new RouteableOscillator();  // currently unused...
     processingChain = new ProcessingChain();
-    audioChannel    = new AudioChannel( processingChain, this->volume, bytes_per_bar );
+    audioChannel    = new AudioChannel( processingChain, this->volume, AudioEngine::bytes_per_bar );
 
     volume    = .5;
     drumTimbre = DrumSynthTimbres::LIGHT;

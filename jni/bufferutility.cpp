@@ -1,0 +1,131 @@
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+#include "bufferutility.h"
+
+/* public methods */
+
+/**
+ * get the tempo in Beats per Minute from the length
+ * in milliseconds of a audio snippet
+ *
+ * @param length       {double} length in milliseconds
+ * @param amountOfBars {int} the amount of bars the snippet lasts
+ */
+double BufferUtility::getBPMbyLength( double length, int amountOfBars )
+{
+    // length to seconds
+    length = length / 1000;
+
+    return 240.0 / ( length / amountOfBars );
+}
+
+/**
+ * get the tempo in Beats Per Minute by the length in
+ * samples of a audio snippet
+ *
+ * @param length       {int} length in samples
+ * @param amountOfBars {int} the amount of bars the snippet lasts
+ * @param sampleRate   {int} sampleRate in Hz
+ */
+double BufferUtility::getBPMbySamples( int length, int amountOfBars, int sampleRate )
+{
+     return 240.0 / (( length / amountOfBars ) / sampleRate );
+}
+
+/**
+ * translates the size of a given buffer to its duration in milliseconds
+ *
+ * @param {int} bufferSize
+ * @param {int} sampleRate in Hz
+ */
+int BufferUtility::bufferToMilliseconds( int bufferSize, int sampleRate )
+{
+    return ( int ) ( bufferSize / ( sampleRate / 1000 ));
+}
+
+/**
+ * return the required buffer size for a value in milliseconds
+ *
+ * @param {int} milliSeconds
+ * @param {int} sampleRate in Hz
+ */
+int BufferUtility::millisecondsToBuffer( int milliSeconds, int sampleRate )
+{
+    return ( int ) ( milliSeconds * ( sampleRate / 1000 ));
+}
+
+/**
+ * calculate the bitRate of a given audiostream
+ *
+ * @param sampleRate  {int} sampleRate in Hz
+ * @param bitDepth    {int} bit depth
+ * @param channels    {int} the amount of audio channels
+ */
+int BufferUtility::getBitRate( int sampleRate, int bitDepth, int channels )
+{
+    return sampleRate * bitDepth * channels;
+}
+
+/**
+ * calculations within a musical context:
+ * calculate the sample length required for each
+ * beat at a given tempo at a given bar subdivision
+ *
+ * @param tempo       {double} tempo in BPM
+ * @param sampleRate  {int} the sample rate in Hz
+ * @param subdivision {int} the desired subdivision of the measure, i.e.
+ *                    1 = full measure, 2 = half measure, 4 = quaver,
+ *                    8 = 8th note, 16 = sixteenth note, 32 = 32nd note, etc.
+ */
+int BufferUtility::calculateSamplesPerBeatDivision( int sampleRate, double tempo, int subdivision )
+{
+    int bytesPerBar = getSamplesPerBar( sampleRate, tempo, 4, 4 );
+    return ( int ) ( bytesPerBar / subdivision );
+}
+
+/**
+ * calculate the amount of samples necessary to hold a buffer
+ * representing a single beat at the given sample rate and tempo
+ *
+ * @param sampleRate {int} the sample rate in Hz
+ * @param tempo      {double} tempo in BPM
+ */
+int BufferUtility::getSamplesPerBeat( int sampleRate, double tempo )
+{
+    return ( int ) (( sampleRate * 60 ) / tempo );
+}
+
+/**
+ * calculate the amount of samples necessary to hold a buffer
+ * representing a full bar/measure at the given sample rate, tempo and time signature
+ *
+ * @param sampleRate {int} the sample rate in Hz
+ * @param tempo      {double} tempo in BPM
+ * @param beatAmount {int} upper numeral in time signature (i.e. the "3" in 3/4)
+ * @param beatUnit   {int} lower numeral in time signature (i.e. the "4" in 3/4)
+ */
+int BufferUtility::getSamplesPerBar( int sampleRate, double tempo, int beatAmount, int beatUnit )
+{
+    int samplesPerDoubleFourTime = getSamplesPerBeat( sampleRate, tempo ) * 4;
+    return samplesPerDoubleFourTime / beatUnit * beatAmount;
+}

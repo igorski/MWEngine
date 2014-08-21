@@ -91,7 +91,7 @@ void AudioChannel::canCache( bool value, int aBufferSize, int aCacheStartOffset,
     if ( value )
     {
         if ( _cachedBuffer == 0 )
-            _cachedBuffer = new AudioBuffer( audio_engine::OUTPUT_CHANNELS, aBufferSize );
+            _cachedBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferSize );
     }
     else {
         isCaching = false;

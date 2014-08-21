@@ -120,7 +120,7 @@ AudioBuffer* BaseAudioEvent::getBuffer()
 AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
 {
     // override in subclass as this requires memory cleanup (and is basically silence ;-) ... ) !
-    return new AudioBuffer( audio_engine::OUTPUT_CHANNELS, aBufferLength );
+    return new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
 }
 
 /* protected methods */

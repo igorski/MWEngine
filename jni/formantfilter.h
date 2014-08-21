@@ -1,7 +1,8 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * based on public source code by alex@smartelectronix.com, adapted
+ * by Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,17 +21,35 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "global.h"
-#include <pthread.h>
+#ifndef __FORMANTFILTER_H_INCLUDED__
+#define __FORMANTFILTER_H_INCLUDED__
 
-// default values (overridden by audio engine initializer for platform-specific values)
+#include "baseprocessor.h"
 
-int AudioEngineProps::SAMPLE_RATE = 44100;
-int AudioEngineProps::BUFFER_SIZE = 1024;
-
-/* used for threading */
-
-void *print_message( void* )
+class FormantFilter : public BaseProcessor
 {
+    public:
+        FormantFilter( double aVowel );
+        ~FormantFilter();
 
-}
+        void setVowel( double aVowel );
+        double getVowel();
+
+        void process( AudioBuffer* audioBuffer, bool isMonoSource );
+        bool isCacheable();
+
+        static const int VOWEL_A = 0;
+        static const int VOWEL_E = 1;
+        static const int VOWEL_I = 2;
+        static const int VOWEL_O = 3;
+        static const int VOWEL_U = 4;
+
+    private:
+        double  _vowel;
+        double _currentCoeffs[ 11 ];
+        double _coeffs[ 5 ][ 11 ];
+        double _memory[ 10 ];
+        void calculateCoeffs();
+};
+
+#endif

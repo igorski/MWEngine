@@ -20,17 +20,31 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "global.h"
-#include <pthread.h>
+#ifndef JAVABRIDGE_API_H_INCLUDED
+#define JAVABRIDGE_API_H_INCLUDED
 
-// default values (overridden by audio engine initializer for platform-specific values)
+#include "javabridge.h"
 
-int AudioEngineProps::SAMPLE_RATE = 44100;
-int AudioEngineProps::BUFFER_SIZE = 1024;
+/**
+ * javabridge_api.h is used to establish a two-way communication (together with javabridge.h)
+ * to allow the AudioEngine to send messages to the Java VM, if you do not need
+ * to send messages TO Java and are using the engine only in a native environment,
+ * simple omit adding this header file in the "native_audio_lib.i"-file which
+ * describes the SWIG-enabled classes for the JNI environment
+ */
 
-/* used for threading */
-
-void *print_message( void* )
+/**
+ * these are the same methods as declared in the AudioEngine namespace, but
+ * re-declared so we can call them from Java without having to resort to
+ * go through a lot of trouble declaring the JNIEnv* en jobject arguments
+ * which otherwise wouldn't survive the SWIG wrapping...
+ */
+extern "C"
 {
-
+    void init();
+    void start();
+    void stop();
+    void reset();
 }
+
+#endif

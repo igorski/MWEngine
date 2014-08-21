@@ -20,17 +20,25 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "global.h"
-#include <pthread.h>
+#ifndef __OBSERVER_H_INCLUDED__
+#define __OBSERVER_H_INCLUDED__
 
-// default values (overridden by audio engine initializer for platform-specific values)
-
-int AudioEngineProps::SAMPLE_RATE = 44100;
-int AudioEngineProps::BUFFER_SIZE = 1024;
-
-/* used for threading */
-
-void *print_message( void* )
+/**
+ * The Observer is used to broadcast messages
+ * related to engine state changes, it can use the JNI
+ * bridge to communicate messages back to the Java environment, but
+ * can also be extended for custom behaviour should you choose to
+ * keep the entire application within C++
+ */
+class Observer
 {
+    public:
 
-}
+        static void handleBounceComplete( int aIdentifier );
+        static void broadcastStepPosition();
+        static void broadcastTempoUpdate();
+        static void broadcastRecordingUpdate( int aRecordingIdentifier );
+        static void handleHardwareUnavailable();
+};
+
+#endif

@@ -21,7 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "lfo.h"
-#include "native_audio_engine.h"
+#include "audioengine.h"
 #include "utils.h"
 #include <math.h>
 
@@ -66,8 +66,8 @@ void LFO::setRate( float value )
 {
     _rate          = value;
     _phase         = 0.0;
-    _phaseIncr     = value / audio_engine::SAMPLE_RATE;
-    TWO_PI_OVER_SR = TWO_PI / audio_engine::SAMPLE_RATE;
+    _phaseIncr     = value / AudioEngineProps::SAMPLE_RATE;
+    TWO_PI_OVER_SR = TWO_PI / AudioEngineProps::SAMPLE_RATE;
 
     setLength( BufferUtil::calculateBufferLength( value )); // will invoke generation of cycle
 }

@@ -25,7 +25,6 @@
 
 #include <vector>
 #include "baseprocessor.h"
-#include "basebusprocessor.h"
 
 class ProcessingChain
 {
@@ -33,20 +32,16 @@ class ProcessingChain
         ProcessingChain();
         ~ProcessingChain();
 
-        std::vector<BaseProcessor*>   getActiveProcessors();
-        std::vector<BaseBusProcessor*> getActiveBusProcessors();
+        std::vector<BaseProcessor*> getActiveProcessors();
 
-        void addProcessor      ( BaseProcessor* aProcessor );
-        void removeProcessor   ( BaseProcessor* aProcessor );
-        void addBusProcessor   ( BaseBusProcessor* aBusProcessor );
-        void removeBusProcessor( BaseBusProcessor* aBusProcessor );
+        void addProcessor   ( BaseProcessor* aProcessor );
+        void removeProcessor( BaseProcessor* aProcessor );
         void reset();
 
     private:
 
         /* cached chains */
-       std::vector<BaseProcessor*>    _activeProcessors;
-       std::vector<BaseBusProcessor*> _activeBusProcessors;
+       std::vector<BaseProcessor*> _activeProcessors;
 };
 
 #endif

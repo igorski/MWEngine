@@ -21,7 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "sampleevent.h"
-#include "global.h"
+#include "audioengine.h"
 #include "sequencer.h"
 #include "utils.h"
 
@@ -112,7 +112,7 @@ void SampleEvent::playNow()
     if ( getLoopeable() )
         _rangePointer = _bufferRangeStart;
     else
-        _sampleStart = bufferPosition;
+        _sampleStart = AudioEngine::bufferPosition;
 
     setEnabled( true );
 }
@@ -181,7 +181,7 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
     _sampleLength      = sampleLength;
     _cachingCompleted  = true;
 
-    _sampleStart       = position * bytes_per_tick;
+    _sampleStart       = position * AudioEngine::bytes_per_tick;
     _sampleEnd         = _sampleStart + _sampleLength;
     _bufferRangeStart  = _sampleStart;
     _bufferRangeEnd    = _sampleEnd;

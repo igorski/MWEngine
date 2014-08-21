@@ -21,9 +21,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "sequencer_api.h"
-#include "global.h"
+#include "sequencer.h"
+#include "audioengine.h"
 #include "utils.h"
-#include "native_audio_engine.h"
 #include "diskwriter.h"
 
 /* constructor / destructor */
@@ -40,18 +40,19 @@ SequencerAPI::~SequencerAPI()
 
 /* public methods */
 
-void SequencerAPI::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+void SequencerAPI::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo,
+                            int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
     // set renderer output variables
-    audio_engine::BUFFER_SIZE = aBufferSize;
-    audio_engine::SAMPLE_RATE = aSampleRate;
+    AudioEngineProps::BUFFER_SIZE = aBufferSize;
+    AudioEngineProps::SAMPLE_RATE = aSampleRate;
 
     // calculate buffers and ranges
     if ( aQueuedTempo > 0 )
     {
-        queuedTempo = aQueuedTempo;
-        handleTempoUpdate( aQueuedTempo, false );   // just to initialize all buffer sizes
-        setLoopPoint( 0, bytes_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
+        AudioEngine::queuedTempo = aQueuedTempo;
+        AudioEngine::handleTempoUpdate( aQueuedTempo, false );   // just to initialize all buffer sizes
+        setLoopPoint( 0, AudioEngine::bytes_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
     }
 };
 
@@ -65,50 +66,57 @@ void SequencerAPI::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo
  */
 void SequencerAPI::setLoopPoint( int aStartPosition, int aEndPosition, int aStepsPerBar )
 {
-    min_buffer_position = aStartPosition;
-    max_buffer_position = aEndPosition;
+    AudioEngine::min_buffer_position = aStartPosition;
+    AudioEngine::max_buffer_position = aEndPosition;
 
     // keep current buffer read pointer within the new loop range
-    if ( bufferPosition < min_buffer_position || bufferPosition > max_buffer_position )
-        bufferPosition = min_buffer_position;
-
-    min_step_position = ( aStartPosition / bytes_per_bar ) * aStepsPerBar;
-    max_step_position = (( aEndPosition + 1 ) / bytes_per_bar ) * aStepsPerBar;
+    if ( AudioEngine::bufferPosition < AudioEngine::min_buffer_position ||
+         AudioEngine::bufferPosition > AudioEngine::max_buffer_position )
+    {
+        AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
+    }
+    AudioEngine::min_step_position = ( aStartPosition      / AudioEngine::bytes_per_bar ) * aStepsPerBar;
+    AudioEngine::max_step_position = (( aEndPosition + 1 ) / AudioEngine::bytes_per_bar ) * aStepsPerBar;
 
     // keep current sequencer step within the new loop range
-    if ( stepPosition < min_step_position || stepPosition > max_step_position )
-        stepPosition =  min_step_position;
+    if ( AudioEngine::stepPosition < AudioEngine::min_step_position ||
+         AudioEngine::stepPosition > AudioEngine::max_step_position )
+    {
+        AudioEngine::stepPosition = AudioEngine::min_step_position;
+    }
 }
 
 void SequencerAPI::updateMeasures( int aValue, int aStepsPerBar )
 {
-    amount_of_bars      = aValue;
-    max_step_position   = aStepsPerBar * amount_of_bars;
-    max_buffer_position = ( bytes_per_bar * amount_of_bars ) - 1; // -1 as we use array lookups and start at 0
+    AudioEngine::amount_of_bars      = aValue;
+    AudioEngine::max_step_position   = aStepsPerBar * AudioEngine::amount_of_bars;
+
+    // -1 as we use array look-ups and start at 0 !
+    AudioEngine::max_buffer_position = ( AudioEngine::bytes_per_bar * AudioEngine::amount_of_bars ) - 1;
 }
 
 void SequencerAPI::setTempo( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
-    queuedTempo = aTempo;
+    AudioEngine::queuedTempo = aTempo;
 
-    queuedTime_sig_beat_amount = aTimeSigBeatAmount;
-    queuedTime_sig_beat_unit   = aTimeSigBeatUnit;
+    AudioEngine::queuedTime_sig_beat_amount = aTimeSigBeatAmount;
+    AudioEngine::queuedTime_sig_beat_unit   = aTimeSigBeatUnit;
 }
 
 void SequencerAPI::setTempoNow( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
     setTempo( aTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
-    handleTempoUpdate( queuedTempo, true );
+    AudioEngine::handleTempoUpdate( AudioEngine::queuedTempo, true );
 }
 
 void SequencerAPI::setVolume( float aVolume )
 {
-    volume = aVolume;
+    AudioEngine::volume = aVolume;
 }
 
 void SequencerAPI::setPlaying( bool aIsPlaying )
 {
-    playing = aIsPlaying;
+    AudioEngine::playing = aIsPlaying;
 }
 
 void SequencerAPI::setActiveDrumPattern( int activePattern )
@@ -118,10 +126,10 @@ void SequencerAPI::setActiveDrumPattern( int activePattern )
 
 void SequencerAPI::rewind()
 {
-    bufferPosition = min_buffer_position;
-    stepPosition   = min_step_position;
+    AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
+    AudioEngine::stepPosition   = AudioEngine::min_step_position;
 
-    broadcastStepPosition();
+    Observer::broadcastStepPosition();
 }
 
 /**
@@ -132,10 +140,10 @@ void SequencerAPI::rewind()
  */
 void SequencerAPI::cacheAudioEventsForMeasure( int aMeasure )
 {
-    int startBufferPos = bytes_per_bar * aMeasure;
-    int endBufferPos   = startBufferPos + bytes_per_bar;
+    int startBufferPos = AudioEngine::bytes_per_bar * aMeasure;
+    int endBufferPos   = startBufferPos + AudioEngine::bytes_per_bar;
 
-    std::vector<BaseCacheableAudioEvent*>* list = collectCacheableSequencerEvents( startBufferPos, endBufferPos );
+    std::vector<BaseCacheableAudioEvent*>* list = sequencer::collectCacheableSequencerEvents( startBufferPos, endBufferPos );
     getBulkCacher()->addToQueue( list );
 
     delete list; // free memory
@@ -155,12 +163,12 @@ BulkCacher* SequencerAPI::getBulkCacher()
  */
 void SequencerAPI::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputDirectory )
 {
-    bouncing = aIsBouncing;
+    AudioEngine::bouncing = aIsBouncing;
 
-    if ( bouncing )
+    if ( AudioEngine::bouncing )
     {
-        bufferPosition = 0;
-        stepPosition   = 0;
+        AudioEngine::bufferPosition = 0;
+        AudioEngine::stepPosition   = 0;
     }
     setRecordingState( aIsBouncing, aMaxBuffers, aOutputDirectory );
 }
@@ -175,29 +183,29 @@ void SequencerAPI::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOut
  */
 void SequencerAPI::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
-    bool wasRecording = recordOutput;
-    recordOutput      = aRecording;
+    bool wasRecording         = AudioEngine::recordOutput;
+    AudioEngine::recordOutput = aRecording;
 
-    if ( recordOutput )
+    if ( AudioEngine::recordOutput )
     {
-        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, audio_engine::OUTPUT_CHANNELS );
+        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::OUTPUT_CHANNELS );
     }
     else
     {
         if ( wasRecording )
         {
-            if ( !playing )
+            if ( !AudioEngine::playing )
             {
-                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS, true );
+                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
             }
             else {
                 // apparently renderer is stopped before cycle completes next Disk Writing query... =/
-                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::OUTPUT_CHANNELS, true );
-                haltRecording = true;
+                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
+                AudioEngine::haltRecording = true;
             }
         }
     }
-    recordingFileName = 0;  // write existing buffers using previous iteration before resetting this counter!!
+    AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!
 }
 
 /**
@@ -210,33 +218,33 @@ void SequencerAPI::setRecordingState( bool aRecording, int aMaxBuffers, char* aO
  */
 void SequencerAPI::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
-    bool wasRecording = recordFromDevice;
-    recordFromDevice  = aRecording;
+    bool wasRecording              = AudioEngine::recordFromDevice;
+    AudioEngine::recordFromDevice  = aRecording;
 
-    if ( recordFromDevice )
+    if ( AudioEngine::recordFromDevice )
     {
         // diskwriter is a static instance currently (see Java CacheWriter/Readers), so we
         // must halt recording of live output when recording from the Android device
-        if ( recordOutput )
+        if ( AudioEngine::recordOutput )
         {
             setRecordingState( false, 0, "" );
         }
-        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, audio_engine::INPUT_CHANNELS );
+        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::INPUT_CHANNELS );
     }
     else
     {
         if ( wasRecording )
         {
-            if ( !playing )
+            if ( !AudioEngine::playing )
             {
-                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::INPUT_CHANNELS, true );
+                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
             }
             else {
                 // apparently renderer is stopped before cycle completes next Disk Writing query... =/
-                DiskWriter::writeBufferToFile( audio_engine::SAMPLE_RATE, audio_engine::INPUT_CHANNELS, true );
-                haltRecording = true;
+                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
+                AudioEngine::haltRecording = true;
             }
         }
     }
-    recordingFileName = 0;  // write existing buffers using previous iteration before resetting this counter!!
+    AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!
 }

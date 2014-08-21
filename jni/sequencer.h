@@ -33,6 +33,13 @@
 #include "drumpattern.h"
 #include <vector>
 
+/**
+ * Sequencer is the brain that collects
+ * AudioEvents for all AudioChannels for the
+ * AudioEngine to play at the given "playback head" offset
+ *
+ * It shouldn't be used directly, but rather via the SequencerAPI
+ */
 namespace sequencer
 {
     extern std::vector<SynthInstrument*> synthesizers;
@@ -49,14 +56,12 @@ namespace sequencer
     extern int activeDrumPattern;
 
     extern BulkCacher* bulkCacher;
+
+    extern void collectSequencedEvents( AudioChannel *channel, std::vector<BaseCacheableAudioEvent*>* audioEvents, int bufferPosition, int bufferEnd );
+    extern std::vector<BaseCacheableAudioEvent*>* collectCacheableSequencerEvents( int bufferPosition, int bufferEnd );
+    extern void collectLiveEvents( AudioChannel *channel, std::vector<BaseAudioEvent*>* liveEvents );
+    extern void collectSequencerSamplerEvents( AudioChannel *channel, std::vector<SampleEvent*> *audioEvents, int bufferPosition, int bufferEnd );
+    extern void collectDrumEvents( AudioChannel *channel, int bufferPosition, int bufferEnd );
 }
-
-/* "internal" methods */
-
-void collectSequencerEvents( AudioChannel *channel, std::vector<BaseCacheableAudioEvent*>* audioEvents, int bufferPosition, int bufferEnd );
-std::vector<BaseCacheableAudioEvent*>* collectCacheableSequencerEvents( int bufferPosition, int bufferEnd );
-void collectLiveEvents( AudioChannel *channel, std::vector<BaseAudioEvent*>* liveEvents );
-void collectSequencerSamplerEvents( AudioChannel *channel, std::vector<SampleEvent*> *audioEvents, int bufferPosition, int bufferEnd );
-void collectDrumEvents( AudioChannel *channel, int bufferPosition, int bufferEnd );
 
 #endif

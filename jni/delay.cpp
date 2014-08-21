@@ -37,8 +37,8 @@
  */
 Delay::Delay( float aDelayTime, float aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels )
 {
-    _time        = ( int ) round(( audio_engine::SAMPLE_RATE * .001 ) * aDelayTime );
-    _maxTime     = ( int ) round(( audio_engine::SAMPLE_RATE * .001 ) * aMaxDelayTime );
+    _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE * .001 ) * aDelayTime );
+    _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE * .001 ) * aMaxDelayTime );
     _delayBuffer = new AudioBuffer( amountOfChannels, _maxTime );
     _mix         = aMix;
     _feedback    = aFeedback;
@@ -58,7 +58,7 @@ Delay::~Delay()
 
 /* public methods */
 
-void Delay::apply( AudioBuffer* sampleBuffer, bool isMonoSource )
+void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     float delay;
     int readIndex, delayIndex;
@@ -119,12 +119,12 @@ void Delay::reset()
 
 float Delay::getDelayTime()
 {
-    return _time / ( audio_engine::SAMPLE_RATE * .001 );
+    return _time / ( AudioEngineProps::SAMPLE_RATE * .001 );
 }
 
 void Delay::setDelayTime( float aValue )
 {
-    _time = ( int ) round(( audio_engine::SAMPLE_RATE * .001 ) * aValue );
+    _time = ( int ) round(( AudioEngineProps::SAMPLE_RATE * .001 ) * aValue );
 
     for ( int i = 0; i < _amountOfChannels; ++i )
     {

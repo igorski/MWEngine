@@ -64,8 +64,8 @@ Phaser::~Phaser()
  */
 void Phaser::setRange( float aMin, float aMax )
 {
-    _dmin = aMin / ( audio_engine::SAMPLE_RATE / 2.0 );
-    _dmax = aMax / ( audio_engine::SAMPLE_RATE / 2.0 );
+    _dmin = aMin / ( AudioEngineProps::SAMPLE_RATE / 2.0 );
+    _dmax = aMax / ( AudioEngineProps::SAMPLE_RATE / 2.0 );
 }
 
 float Phaser::getRate()
@@ -79,7 +79,7 @@ float Phaser::getRate()
 void Phaser::setRate( float aRate )
 {
     _rate   = aRate;
-    _lfoInc = 2.0 * 3.14159f * ( _rate / audio_engine::SAMPLE_RATE );
+    _lfoInc = 2.0 * 3.14159f * ( _rate / AudioEngineProps::SAMPLE_RATE );
 }
 
 float Phaser::getFeedback()
@@ -107,7 +107,7 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     int bufferSize = sampleBuffer->bufferSize;
 
     SAMPLE_TYPE maxPhase = 3.14159 * 2; // two PI
-        
+
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );

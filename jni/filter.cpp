@@ -34,7 +34,7 @@
  */
 Filter::Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float aMaxFreq, float aLfoRate, int numChannels )
 {
-    fs            = audio_engine::SAMPLE_RATE;
+    fs            = AudioEngineProps::SAMPLE_RATE;
     _tempCutoff   = 0;    // used for reading when automating via LFO
 
     _resonance = aResonance;

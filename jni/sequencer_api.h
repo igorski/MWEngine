@@ -24,7 +24,14 @@
 #define __SEQUENCERAPI_H_INCLUDED__
 
 #include "bulkcacher.h"
+#include "sequencer.h"
+#include "observer.h"
 
+/**
+ * SequencerAPI is to be used as a bridge to
+ * combine AudioEngine and Sequencer methods
+ * into a single musical context
+ */
 class SequencerAPI
 {
     public:

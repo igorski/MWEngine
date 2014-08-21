@@ -21,7 +21,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "samplemanager.h"
-#include "java_bridge.h"
 
 namespace SampleManagerSamples
 {
@@ -38,71 +37,10 @@ void SampleManager::setSample( std::string aKey, AudioBuffer* aBuffer )
     SampleManagerSamples::_sampleMap.insert( std::pair<std::string, cachedSample>( aKey, sample ));
 }
 
-void SampleManager::setSample( jstring aKey, jint aBufferLength, jint aChannelAmount, jdoubleArray aBuffer, jdoubleArray aOptRightBuffer )
-{
-    AudioBuffer* sampleBuffer = new AudioBuffer( aChannelAmount, aBufferLength );
-
-    int i = 0;
-
-    // get a pointer to the Java array
-    jdouble *c_array;
-    c_array = getEnvironment()->GetDoubleArrayElements( aBuffer, 0 );
-
-    // exception checking
-    if ( c_array == NULL )
-        return;
-
-    // copy buffer contents
-    SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( 0 );
-
-    for ( i = 0; i < aBufferLength; i++ )
-        channelBuffer[ i ] = ( float ) c_array[ i ];
-
-    // release the memory so Java can have it again
-    getEnvironment()->ReleaseDoubleArrayElements( aBuffer, c_array, 0 );
-
-    // stereo ?
-
-    if ( aChannelAmount == 2 )
-    {
-        c_array = getEnvironment()->GetDoubleArrayElements( aOptRightBuffer, 0 );
-
-        // exception checking
-        if ( c_array == NULL )
-            return;
-
-        // copy buffer contents
-        channelBuffer = sampleBuffer->getBufferForChannel( 1 );
-
-        for ( i = 0; i < aBufferLength; i++ )
-            channelBuffer[ i ] = ( float ) c_array[ i ];
-
-        // release the memory so Java can have it again
-        getEnvironment()->ReleaseDoubleArrayElements( aOptRightBuffer, c_array, 0 );
-    }
-
-    // convert jstring to std::string
-    const char *s = getEnvironment()->GetStringUTFChars( aKey, NULL );
-    std::string theKey = s;
-    getEnvironment()->ReleaseStringUTFChars( aKey, s );
-
-    setSample( theKey, sampleBuffer );
-}
-
 AudioBuffer* SampleManager::getSample( std::string aIdentifier )
 {
     std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
     return it->second.sampleBuffer; // key stored in first, value stored in second
-}
-
-AudioBuffer* SampleManager::getSample( jstring aIdentifier )
-{
-    // convert jstring to std::string
-    const char *s = getEnvironment()->GetStringUTFChars( aIdentifier, NULL );
-    std::string theKey = s;
-    getEnvironment()->ReleaseStringUTFChars( aIdentifier, s );
-
-    return getSample( theKey );
 }
 
 int SampleManager::getSampleLength( std::string aIdentifier )
@@ -117,16 +55,6 @@ bool SampleManager::hasSample( std::string aIdentifier )
     return ( it != SampleManagerSamples::_sampleMap.end());
 }
 
-bool SampleManager::hasSample( jstring aIdentifier )
-{
-// convert jstring to std::string
-    const char *s = getEnvironment()->GetStringUTFChars( aIdentifier, NULL );
-    std::string theKey = s;
-    getEnvironment()->ReleaseStringUTFChars( aIdentifier, s );
-
-    return hasSample( theKey );
-}
-
 void SampleManager::removeSample( std::string aIdentifier )
 {
     if ( hasSample( aIdentifier ))
@@ -139,6 +67,13 @@ void SampleManager::removeSample( std::string aIdentifier )
 
 void SampleManager::flushSamples()
 {
-    // TODO: not actually deleting buffers and thus leaking memory
+    // invoke destructors on all AudioBuffers
+
+    std::map<std::string, cachedSample>::iterator it;
+
+    for ( it = SampleManagerSamples::_sampleMap.begin(); it != SampleManagerSamples::_sampleMap.end(); ++it )
+    {
+        delete it->second.sampleBuffer;
+    }
     SampleManagerSamples::_sampleMap.clear();
 }

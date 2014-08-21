@@ -22,8 +22,6 @@
  */
 #include "processingchain.h"
 #include "global.h"
-#include <math.h>
-#include "utils.h"
 
 // constructor
 
@@ -35,7 +33,6 @@ ProcessingChain::ProcessingChain()
 ProcessingChain::~ProcessingChain()
 {
     _activeProcessors.clear();
-    _activeBusProcessors.clear();
 }
 
 /* public methods */
@@ -56,35 +53,13 @@ void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
         }
     }
 }
-void ProcessingChain::addBusProcessor( BaseBusProcessor* aBusProcessor )
-{
-    _activeBusProcessors.push_back( aBusProcessor );
-}
-
-void ProcessingChain::removeBusProcessor( BaseBusProcessor* aBusProcessor )
-{
-    for ( int i = 0; i < _activeBusProcessors.size(); i++ )
-    {
-        if ( _activeBusProcessors.at( i ) == aBusProcessor )
-        {
-            _activeBusProcessors.erase( _activeBusProcessors.begin() + i );
-            break;
-        }
-    }
-}
 
 void ProcessingChain::reset()
 {
     _activeProcessors.clear();
-    _activeBusProcessors.clear();
 }
 
 std::vector<BaseProcessor*> ProcessingChain::getActiveProcessors()
 {
     return _activeProcessors;
-}
-
-std::vector<BaseBusProcessor*> ProcessingChain::getActiveBusProcessors()
-{
-    return _activeBusProcessors;
 }

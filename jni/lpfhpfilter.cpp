@@ -30,8 +30,8 @@
 
 LPFHPFilter::LPFHPFilter( float aLPCutoff, float aHPCutoff, int amountOfChannels )
 {
-    setLPF( aLPCutoff, audio_engine::SAMPLE_RATE );
-    setHPF( aHPCutoff, audio_engine::SAMPLE_RATE );
+    setLPF( aLPCutoff, AudioEngineProps::SAMPLE_RATE );
+    setHPF( aHPCutoff, AudioEngineProps::SAMPLE_RATE );
 
     outSamples = new SAMPLE_TYPE[ amountOfChannels ];
     inSamples  = new SAMPLE_TYPE[ amountOfChannels ];

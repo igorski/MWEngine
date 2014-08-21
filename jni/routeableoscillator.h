@@ -20,17 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "global.h"
-#include <pthread.h>
+#ifndef __ROUTEABLEOSCILLATOR_H_INCLUDED__
+#define __ROUTEABLEOSCILLATOR_H_INCLUDED__
 
-// default values (overridden by audio engine initializer for platform-specific values)
+#include "lfo.h"
+#include "baseprocessor.h"
 
-int AudioEngineProps::SAMPLE_RATE = 44100;
-int AudioEngineProps::BUFFER_SIZE = 1024;
-
-/* used for threading */
-
-void *print_message( void* )
+class RouteableOscillator
 {
+    public:
+        RouteableOscillator();
+        ~RouteableOscillator();
+        int destination;
+        float speed;
+        int wave;
 
-}
+        void linkOscillator();
+        void unlinkOscillator();
+        bool isLinked();
+        LFO *getLinkedOscillator();
+
+    private:
+        bool _hasOscillator;
+        LFO* _oscillator;
+};
+
+#endif

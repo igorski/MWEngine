@@ -101,7 +101,7 @@ namespace BufferUtil
      */
     int calculateBufferLength( float aMinRate )
     {
-        float phaseStep = aMinRate / audio_engine::SAMPLE_RATE;
+        float phaseStep = aMinRate / AudioEngineProps::SAMPLE_RATE;
         return ceil( 1.0 / phaseStep );
     }
 
@@ -111,7 +111,7 @@ namespace BufferUtil
      */
     int calculateBufferLength( int milliSeconds )
     {
-        return milliSeconds * ( audio_engine::SAMPLE_RATE * .001 );
+        return milliSeconds * ( AudioEngineProps::SAMPLE_RATE * .001 );
     }
 }
 

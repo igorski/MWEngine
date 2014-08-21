@@ -20,17 +20,42 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "global.h"
-#include <pthread.h>
+#ifndef __COMPRESSOR_H_INCLUDED__
+#define __COMPRESSOR_H_INCLUDED__
 
-// default values (overridden by audio engine initializer for platform-specific values)
+#include "baseprocessor.h"
+#include <chunkware/SimpleComp.h>
 
-int AudioEngineProps::SAMPLE_RATE = 44100;
-int AudioEngineProps::BUFFER_SIZE = 1024;
-
-/* used for threading */
-
-void *print_message( void* )
+class Compressor : public BaseProcessor
 {
+    public:
+        Compressor( float aThreshold, float aAttack, float aRelease, float aRatio );
+        ~Compressor();
 
-}
+        static const int THRESHOLD_MAX_NEGATIVE_VALUE = 40;
+        static const int THRESHOLD_MAX_POSITIVE_VALUE = 20;
+
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+        bool isCacheable();
+
+        float getAttack();
+        void setAttack( float value );
+
+        float getRelease();
+        void setRelease( float value );
+
+        float getThreshold();
+        void setThreshold( float value );
+
+        float getRatio();
+        void setRatio( float value );
+
+        void setSampleRate( int aSampleRate );
+
+    protected:
+
+    private:
+        chunkware_simple::SimpleComp* _sc;
+};
+
+#endif
