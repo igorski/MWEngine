@@ -214,7 +214,7 @@ public class MWEngineActivity extends Activity
 
         // add some funky delay to synth 2
         _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
-        _synth2.getProcessingChain().addBusProcessor( _delay );
+        _synth2.getProcessingChain().addProcessor( _delay );
 
         // STEP 3 : let's create some music !
 

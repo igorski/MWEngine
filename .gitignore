@@ -1,6 +1,7 @@
 *.iml
 *.DS_Store
 *.idea
+intelliJ project
 src/nl/igorski/lib/audio/nativeaudio/*
 obj
 bin/*
