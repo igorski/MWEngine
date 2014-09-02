@@ -174,8 +174,14 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
     if ( _sampleLength != sampleLength || _buffer == 0 )
         destroyBuffer();
 
-    // copy buffer contents
-    _buffer = sampleBuffer->clone();
+    // is this events buffer destroyable ? then clone
+    // the input buffer, if not, merely point to it to
+    // minimize memory consumption when re-using existing samples
+
+    if ( _destroyableBuffer )
+        _buffer = sampleBuffer->clone();
+    else
+        _buffer = sampleBuffer;
 
     _buffer->loopeable = _loopeable;
     _sampleLength      = sampleLength;
@@ -293,4 +299,5 @@ void SampleEvent::init()
     _readPointer       = 0;
     _rangePointer      = 0;
     _loopeable         = false;
+    _destroyableBuffer = false; // is referenced via SampleManager !
 }

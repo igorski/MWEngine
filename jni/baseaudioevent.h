@@ -88,6 +88,14 @@ class BaseAudioEvent
         bool _deleteMe;
         bool _locked;
         bool _updateAfterUnlock;    // use in update-methods when checking for lock
+
+        // _destroyableBuffer indicates we can delete the buffer on destruction (true by default and
+        // implies that this AudioEvent holds the only reference to its buffers
+        // contents (SampleEvents on the other hand might share equal content-buffers with
+        // other (which point to the same memory in location, and should thus be
+        // managed / disposed outside of this AudioEvent!)
+
+        bool _destroyableBuffer;
 };
 
 #endif

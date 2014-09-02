@@ -691,8 +691,9 @@ void SynthEvent::setDeletable( bool value )
 void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
                        int aLength, bool aHasParent, bool aIsSequenced )
 {
-    _instrument     = aInstrument;
-    _adsr           = _instrument->adsr->clone();
+    _destroyableBuffer = true;  // always unique and managed by this instance !
+    _instrument        = aInstrument;
+    _adsr              = _instrument->adsr->clone();
 
     // when instrument has no fixed length and the decay is short
     // we deactivate the decay envelope completely (for now)

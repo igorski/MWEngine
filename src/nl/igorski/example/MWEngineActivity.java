@@ -202,6 +202,9 @@ public class MWEngineActivity extends Activity
         _synth1.setWaveform( 2 );   // sawtooth (see global.h for enumerations)
         _synth2.setWaveform( 5 );   // pulse width modulation
 
+        // a high decay for synth 1 (bubblier effect)
+        _synth1.getAdsr().setDecay( .9f );
+
         // add a filter to synth 1
         maxFilterCutoff = ( float ) sampleRate / 8;
 

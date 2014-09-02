@@ -28,9 +28,10 @@
 
 BaseAudioEvent::BaseAudioEvent()
 {
-    _buffer  = 0;
-    _enabled = true;
-    _locked  = false;
+    _buffer            = 0;
+    _enabled           = true;
+    _destroyableBuffer = true;
+    _locked            = false;
 }
 
 BaseAudioEvent::~BaseAudioEvent()
@@ -196,7 +197,7 @@ void BaseAudioEvent::destroy()
 
 void BaseAudioEvent::destroyBuffer()
 {
-    if ( _buffer != 0 )
+    if ( _destroyableBuffer && _buffer != 0 )
     {
         delete _buffer;
         _buffer = 0;
