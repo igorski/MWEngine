@@ -71,12 +71,12 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         {
             SAMPLE_TYPE dest = channelBuffer[ j ];
 
-            follower->process( dest, skip );
+            follower->process( dest );
 
             if ( follower->envelope > maxGain )
                 dest = dest / follower->envelope;
 
-            channelBuffer[ j ] = ( dest + skip );
+            channelBuffer[ j ] = ( dest );
         }
     }
 }
@@ -95,7 +95,5 @@ void Limiter::init( float attackMs, float releaseMs, int sampleRate, int amountO
 
     for ( int i = 0; i < amountOfChannels; ++i )
         _followers->at( i ) = new EnvelopeFollower( maxGain, attackMs, releaseMs, sampleRate );
-
-    skip = 0; //amountOfChannels - 1;
 }
 

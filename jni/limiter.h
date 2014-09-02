@@ -42,7 +42,6 @@ class Limiter
         void init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
 
     private:
-        int skip;
         SAMPLE_TYPE maxGain;
         std::vector<EnvelopeFollower*>* _followers;
 };

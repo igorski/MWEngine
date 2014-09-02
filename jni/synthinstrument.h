@@ -23,6 +23,7 @@
 #ifndef __SYNTHINSTRUMENT_H_INCLUDED__
 #define __SYNTHINSTRUMENT_H_INCLUDED__
 
+#include "adsr.h"
 #include "arpeggiator.h"
 #include "audiochannel.h"
 #include "processingchain.h"
@@ -39,8 +40,7 @@ class SynthInstrument
         int waveform;
         int octave;
         int keyboardOctave;
-        float attack;
-        float release;
+        ADSR* adsr;
         float volume;
         float keyboardVolume;
         RouteableOscillator *rOsc;

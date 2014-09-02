@@ -62,7 +62,7 @@ namespace BufferUtil
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
  ( std::ostringstream() << std::dec << x ) ).str()
 
-/* logging */
+/* convenience log methods */
 
 #define APPNAME "MWENGINE"
 
@@ -72,6 +72,7 @@ namespace DebugTool
     extern void log( char const* aMessage, char const* aValue );
     extern void log( char const* aMessage, int aValue );
     extern void log( char const* aMessage, float aValue );
+    extern void log( char const* aMessage, double aValue );
 }
 
 #endif

@@ -32,8 +32,14 @@ class BaseAudioEvent
         ~BaseAudioEvent();
 
         /**
-         * an BaseAudioEvent contains a buffer holding the samples, this
-         * is used by the AudioRenderer to write the events samples into the output buffer
+         * used by the AudioEngine to mix in parts of this
+         * event buffer at a specific range
+         */
+        virtual void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
+                                bool loopStarted, int loopOffset, bool useChannelRange );
+
+        /**
+         * get the complete AudioBuffer for this event
          */
         virtual AudioBuffer* getBuffer();
 

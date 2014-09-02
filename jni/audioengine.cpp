@@ -186,7 +186,7 @@ namespace AudioEngine
             {
                 AudioChannel* channel = channels[ j ];
                 bool isCached         = channel->hasCache;                // whether this channel has a fully cached buffer
-                bool mustCache        = AudioEngineProps::USE_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
+                bool mustCache        = AudioEngineProps::CHANNEL_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
                 bool gotBuffer        = false;
                 int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
@@ -197,7 +197,7 @@ namespace AudioEngine
                 // clear previous channel buffer content
                 channelBuffer->silenceBuffers();
 
-                bool useChannelRange = ( channel->maxBufferPosition != 0 ); // channel has its own buffer range (i.e. drumloops)
+                bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
                 int maxBufferPosition = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
 
                 // we make a copy of the current buffer position indicator
@@ -218,71 +218,15 @@ namespace AudioEngine
                         // write the audioEvent buffers into the main output buffer
                         for ( int k = 0; k < amount; ++k )
                         {
-                            BaseAudioEvent* vo = audioEvents[ k ];
+                            BaseAudioEvent* audioEvent = audioEvents[ k ];
 
-                            if ( !vo->isLocked())   // make sure we are allowed to query the contents
+                            if ( !audioEvent->isLocked())   // make sure we are allowed to query the contents
                             {
-                                vo->lock();         // prevent buffer mutations during this read cycle
+                                audioEvent->lock();         // prevent buffer mutations during this read cycle
+                                audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
+                                                       maxBufferPosition, loopStarted, loopOffset, useChannelRange );
 
-                                // read from a pre-cached buffer for sequenced notes
-                                // first we cache references to the AudioEvents properties
-                                AudioBuffer* buffer = vo->getBuffer();
-                                int startOffset     = vo->getSampleStart();
-                                int endOffset       = vo->getSampleEnd();
-                                int sampleLength    = vo->getSampleLength();
-
-                                for ( i = 0; i < buffer_size; ++i )
-                                {
-                                    int readPointer = i + bufferPos;
-
-                                    // over the max position ? read from the start ( sequence has started loop )
-                                    if ( readPointer >= maxBufferPosition )
-                                    {
-                                        if ( useChannelRange )  // TODO: channels use a min buffer position too ? (currently drumloop only)
-                                            readPointer -= maxBufferPosition;
-
-                                        else if ( !loopStarted )
-                                            readPointer -= ( maxBufferPosition - min_buffer_position );
-                                    }
-                                    if ( readPointer >= startOffset && readPointer <= endOffset )
-                                    {
-                                        // mind the offset ! ( cached buffer starts at 0 while
-                                        // the startOffset defines where the event is positioned in the sequencer )
-                                        readPointer -= startOffset;
-
-                                        for ( int c = 0, ca = buffer->amountOfChannels; c < ca; ++c )
-                                        {
-                                            SAMPLE_TYPE* srcBuffer = buffer->getBufferForChannel( c );
-                                            SAMPLE_TYPE* tgtBuffer = channelBuffer->getBufferForChannel( c );
-
-                                            tgtBuffer[ i ] += srcBuffer[ readPointer ];
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if ( loopStarted )
-                                        {
-                                            if ( i >= loopOffset )
-                                            {
-                                                readPointer = min_buffer_position + ( i - loopOffset );
-
-                                                if ( readPointer >= startOffset && readPointer <= endOffset )
-                                                {
-                                                    readPointer -= startOffset;
-
-                                                    for ( int c = 0, ca = buffer->amountOfChannels; c < ca; ++c )
-                                                    {
-                                                        SAMPLE_TYPE* srcBuffer = buffer->getBufferForChannel( c );
-                                                        SAMPLE_TYPE* tgtBuffer = channelBuffer->getBufferForChannel( c );
-
-                                                        tgtBuffer[ i ] += srcBuffer[ readPointer ];
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                vo->unlock();   // release lock
+                                audioEvent->unlock();   // release lock
                             }
                         }
                     }
@@ -301,7 +245,7 @@ namespace AudioEngine
                     // is played on the same instrument, but just as a different voice (note the
                     // events can have their own mix level)
 
-                    float lAmp = channel->mixVolume > 0.0 ? 1.0 / channel->mixVolume : 1.0;
+                    float lAmp = channel->mixVolume > 0.0 ? MAX_PHASE / channel->mixVolume : MAX_PHASE;
 
                     for ( int k = 0; k < lAmount; ++k )
                     {
@@ -337,7 +281,7 @@ namespace AudioEngine
 
                 // write the channel buffer into the combined output buffer, apply channel volume
                 // note live events are always audible as their volume is relative to the instrument
-                if ( channel->hasLiveEvents && channelVolume == 0.0 ) channelVolume = 1.0f;
+                if ( channel->hasLiveEvents && channelVolume == 0.0 ) channelVolume = MAX_PHASE;
                 inbuffer->mergeBuffers( channelBuffer, 0, 0, channelVolume );
             }
 

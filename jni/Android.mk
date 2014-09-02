@@ -7,12 +7,13 @@ LOCAL_C_INCLUDES  := $(LOCAL_PATH)
 LOCAL_CFLAGS      := -O3
 LOCAL_CPPFLAGS    := $(LOCAL_CFLAGS)
 LOCAL_SRC_FILES   := \
+audioengine.cpp \
 java_interface_wrap.cpp \
 javabridge.cpp \
 global.cpp \
 utils.cpp \
-audioengine.cpp \
 opensl_io.c \
+adsr.cpp \
 audiobuffer.cpp \
 audiochannel.cpp \
 arpeggiator.cpp \

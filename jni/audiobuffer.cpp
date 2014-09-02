@@ -92,7 +92,7 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
 
 /**
  * fills the buffers with silence
- * overriding their previous contents
+ * clearing their previous contents
  */
 void AudioBuffer::silenceBuffers()
 {
@@ -102,6 +102,17 @@ void AudioBuffer::silenceBuffers()
 
         for ( int j = 0; j < bufferSize; ++j )
             buffer[ j ] = 0.0;
+    }
+}
+
+void AudioBuffer::adjustBufferVolumes( SAMPLE_TYPE amp )
+{
+    for ( int i = 0; i < amountOfChannels; ++i )
+    {
+        SAMPLE_TYPE* buffer = getBufferForChannel( i );
+
+        for ( int j = 0; j < bufferSize; ++j )
+            buffer[ j ] *= amp;
     }
 }
 

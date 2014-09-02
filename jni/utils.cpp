@@ -159,4 +159,15 @@ namespace DebugTool
     {
         __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, aMessage, aValue );
     }
+
+    /**
+     * same as above, but traces contents of a double value
+     * @param aValue {double} optional numerical value
+     *
+     * to trace float values pass "%f" in aMessage to show aValue
+     */
+    void log( char const* aMessage, double aValue )
+    {
+        __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, aMessage, aValue );
+    }
 }

@@ -30,7 +30,7 @@ class EnvelopeFollower
     public:
         EnvelopeFollower( float maxGain, float attackMs, float releaseMs, int sampleRate );
         SAMPLE_TYPE envelope;
-        void process( SAMPLE_TYPE src, int skip );
+        void process( SAMPLE_TYPE src );
 
     protected:
         SAMPLE_TYPE _attack;

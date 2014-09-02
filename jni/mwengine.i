@@ -9,6 +9,7 @@
 %{
 #include "javabridge_api.h"
 #include "sequencer_api.h"
+#include "adsr.h"
 #include "arpeggiator.h"
 #include "audiochannel.h"
 #include "bitcrusher.h"
@@ -50,6 +51,7 @@
 %array_functions(int, int_array)   // int arrays
 %include "javabridge_api.h"
 %include "sequencer_api.h"
+%include "adsr.h"
 %include "arpeggiator.h"
 %include "audiochannel.h"
 %include "baseaudioevent.h"

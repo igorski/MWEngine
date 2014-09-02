@@ -39,6 +39,7 @@ SynthInstrument::~SynthInstrument()
 {
     DebugTool::log( "SynthInstrument::DESTRUCT" );
 
+    delete adsr;
     delete rOsc;
     delete audioChannel;
     delete processingChain;
@@ -59,11 +60,13 @@ SynthInstrument::~SynthInstrument()
 
 void SynthInstrument::init()
 {
+    adsr = new ADSR();
+    adsr->setAttack ( 0.0 );
+    adsr->setDecay  ( 0.0 );
+
     // default values
     octave          = 4;
     keyboardOctave  = 4;
-    attack          = 0.01;
-    release         = 0.01;
     volume          = 0.8;
     keyboardVolume  = 0.5;
     waveform        = WaveForms::SAWTOOTH;

@@ -35,10 +35,9 @@ EnvelopeFollower::EnvelopeFollower( float maxGain, float attackMs, float release
 
 /* public methods */
 
-void EnvelopeFollower::process( SAMPLE_TYPE src, int skip )
+void EnvelopeFollower::process( SAMPLE_TYPE src )
 {
     SAMPLE_TYPE v = std::abs( src );
-    src += skip;
 
     if ( v > envelope )
         envelope = _attack * ( envelope - v ) + v;

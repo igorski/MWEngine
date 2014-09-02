@@ -61,6 +61,6 @@ void BaseCacheableAudioEvent::cache( bool doCallback )
 
 void BaseCacheableAudioEvent::resetCache()
 {
-    _lastWriteIndex   = 0;
+    _cacheWriteIndex  = 0;
     _cachingCompleted = false;
 }

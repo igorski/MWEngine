@@ -39,6 +39,7 @@ class AudioBuffer
         SAMPLE_TYPE* getBufferForChannel( int aChannelNum );
         int mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume );
         void silenceBuffers();
+        void adjustBufferVolumes( SAMPLE_TYPE amp );
         void applyMonoSource();
         AudioBuffer* clone();
 

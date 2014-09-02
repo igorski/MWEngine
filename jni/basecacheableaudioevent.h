@@ -50,7 +50,7 @@ class BaseCacheableAudioEvent : public BaseAudioEvent
             bool _autoCache;        // whether we can cache the entire buffer in one go
 
             // render-specific
-            int _lastWriteIndex;    // last buffer index written to
+            int _cacheWriteIndex;    // last buffer index written to
 
             void resetCache();      // resets all for next caching sequence
 };
