@@ -43,8 +43,11 @@ namespace sequencer
         // clear previous channel contents (note we don't delete the channels anywhere as we re-use them)
         channels.clear();
 
-        // the sequenced synthesizer(s), note we update the properties as they might change during playback
-        for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
+        int i, l;
+
+        // 1. the sequenced synthesizers, note we update their mix properties here as they might change during playback
+
+        for ( i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
         {
             SynthInstrument* synthesizer = sequencer::synthesizers.at( i );
             AudioChannel* synthChannel   = synthesizer->audioChannel;
@@ -60,7 +63,24 @@ namespace sequencer
             channels.push_back( synthChannel );
         }
 
-        // drum machine, note we update the properties as they might change during playback
+        // 2. the samplers
+
+        for ( i = 0, l = sequencer::samplers.size(); i < l; ++i )
+        {
+            SampledInstrument* sampler   = sequencer::samplers.at( i );
+            AudioChannel* samplerChannel = sampler->audioChannel;
+
+            samplerChannel->reset();
+
+            if ( !samplerChannel->muted )
+            {
+                collectSequencerSamplerEvents( samplerChannel, sampler->audioEvents, bufferPosition, bufferEnd );
+                channels.push_back( samplerChannel );
+            }
+        }
+
+        // 3. drum machine, note we update its properties here as they might change during playback
+
         if ( sequencer::drummachine != 0 )
         {
             AudioChannel* drumChannel = sequencer::drummachine->audioChannel;
@@ -116,7 +136,7 @@ namespace sequencer
             int sampleEnd   = audioEvent->getSampleEnd();
 
             if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                ( sampleStart < bufferPosition && sampleEnd >= bufferPosition ))
+                ( sampleStart < bufferPosition  && sampleEnd >= bufferPosition ))
             {
                 if ( !audioEvent->deletable())
                     channel->addEvent( audioEvent );
@@ -138,9 +158,11 @@ namespace sequencer
                 {
                     audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
                 }
-                // NO! let SWIG invoke deletion when Java references are lost
-                //delete audioEvent;
-                //audioEvent = 0;
+#ifndef USE_JNI
+                // when using JNI, we let SWIG invoke destructors when Java references are finalized
+                delete audioEvent;
+                audioEvent = 0;
+#endif
             }
         }
     }
@@ -174,7 +196,11 @@ namespace sequencer
                 {
                     liveEvents->erase( std::find( liveEvents->begin(), liveEvents->end(), audioEvent ));
                 }
-                // actual deletion from heap is invoked by SWIG once Java-held reference is broken
+#ifndef USE_JNI
+                // when using JNI, we let SWIG invoke destructors when Java references are finalized
+                delete audioEvent;
+                audioEvent = 0;
+#endif
             }
         }
     }
@@ -198,7 +224,7 @@ namespace sequencer
 
                 if ( audioEvent->getLoopeable() ||
                    ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                   ( sampleStart < bufferPosition && sampleEnd >= bufferPosition ))
+                   ( sampleStart < bufferPosition  && sampleEnd >= bufferPosition ))
                 {
                     if ( !audioEvent->deletable())
                         channel->addEvent( audioEvent );
@@ -222,9 +248,11 @@ namespace sequencer
                 {
                     audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
                 }
-                // NO! let SWIG invoke deletion when Java references are lost
-                //delete audioEvent;
-                //audioEvent = 0;
+#ifndef USE_JNI
+                // when using JNI, we let SWIG invoke destructors when Java references are finalized
+                delete audioEvent;
+                audioEvent = 0;
+#endif
             }
         }
     }
