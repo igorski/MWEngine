@@ -25,9 +25,10 @@
 
 #include "envelopefollower.h"
 #include "audiobuffer.h"
+#include "baseprocessor.h"
 #include <vector>
 
-class Limiter
+class Limiter : public BaseProcessor
 {
     public:
         Limiter();

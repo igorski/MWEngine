@@ -27,8 +27,6 @@
 #include "baseaudioevent.h"
 #include "diskwriter.h"
 #include "processingchain.h"
-#include "finalizer.h"
-#include "lpfhpfilter.h"
 #include "sequencer.h"
 #include "opensl_io.h"
 #include "observer.h"
@@ -72,6 +70,7 @@ namespace AudioEngine
     /* output related */
 
     float volume = .85;
+    ProcessingChain* masterBus = new ProcessingChain();
 
     static int thread;
 
@@ -115,10 +114,6 @@ namespace AudioEngine
         AudioBuffer* recbuffer     = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, buffer_size );
 
         thread = 1;
-
-        // signal processors
-        Finalizer* limiter = new Finalizer  ( 2, 500,  AudioEngineProps::SAMPLE_RATE, outputChannels );
-        LPFHPFilter* hpf   = new LPFHPFilter(( float ) AudioEngineProps::SAMPLE_RATE, 55, outputChannels );
 
         while ( thread )
         {
@@ -222,11 +217,8 @@ namespace AudioEngine
 
                             if ( !audioEvent->isLocked())   // make sure we are allowed to query the contents
                             {
-                                audioEvent->lock();         // prevent buffer mutations during this read cycle
                                 audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
                                                        maxBufferPosition, loopStarted, loopOffset, useChannelRange );
-
-                                audioEvent->unlock();   // release lock
                             }
                         }
                     }
@@ -285,13 +277,14 @@ namespace AudioEngine
                 inbuffer->mergeBuffers( channelBuffer, 0, 0, channelVolume );
             }
 
-            // TODO: create bus processors for these ?
+            // apply master bus processors (e.g. high pass filter, limiter, etc.)
+            std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
 
-            // apply high pass filtering to prevent extreme low rumbling and nasty filter offsets
-            hpf->process( inbuffer, buffer_size );
-
-            // limit the audio to prevent clipping
-            limiter->process( inbuffer, isMono );
+            for ( int k = 0; k < processors.size(); k++ )
+            {
+                BaseProcessor* processor = processors[ k ];
+                processors[ k ]->process( inbuffer, isMono );
+            }
 
             // write the accumulated buffers into the output buffer
             for ( i = 0, c = 0; i < buffer_size; i++, c += outputChannels )
@@ -359,8 +352,6 @@ namespace AudioEngine
         // clear heap memory allocated before thread loop
         delete inbuffer;
         delete channelBuffer;
-        delete limiter;
-        delete hpf;
     }
 
     void stop()
@@ -494,6 +485,12 @@ extern "C"
 void reset( JNIEnv* env, jobject jobj )
 {
     AudioEngine::reset();
+}
+
+extern "C"
+ProcessingChain* getMasterBusProcessors( JNIEnv* env, jobject jobj )
+{
+    return AudioEngine::masterBus;
 }
 
 #endif

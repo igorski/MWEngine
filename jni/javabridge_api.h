@@ -24,6 +24,7 @@
 #define JAVABRIDGE_API_H_INCLUDED
 
 #include "javabridge.h"
+#include "processingchain.h"
 
 /**
  * javabridge_api.h is used to establish a two-way communication (together with javabridge.h)
@@ -45,6 +46,7 @@ extern "C"
     void start();
     void stop();
     void reset();
+    ProcessingChain* getMasterBusProcessors();
 }
 
 #endif

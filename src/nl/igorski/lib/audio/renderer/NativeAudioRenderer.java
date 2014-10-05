@@ -25,6 +25,7 @@ package nl.igorski.lib.audio.renderer;
 import android.content.Context;
 import android.os.Build;
 import nl.igorski.lib.audio.nativeaudio.NativeAudioEngine;
+import nl.igorski.lib.audio.nativeaudio.ProcessingChain;
 import nl.igorski.lib.audio.nativeaudio.SequencerAPI;
 import nl.igorski.lib.debug.Logger;
 
@@ -149,6 +150,11 @@ public final class NativeAudioRenderer extends Thread
     public SequencerAPI getAPI()
     {
         return _api;
+    }
+
+    public ProcessingChain getMasterBusProcessors()
+    {
+        return NativeAudioEngine.getMasterBusProcessors();
     }
 
     /**

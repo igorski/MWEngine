@@ -90,7 +90,7 @@ bool Limiter::isCacheable()
 
 void Limiter::init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels )
 {
-    maxGain    = .85;
+    maxGain    = .95;
     _followers = new std::vector<EnvelopeFollower*>( amountOfChannels );
 
     for ( int i = 0; i < amountOfChannels; ++i )
