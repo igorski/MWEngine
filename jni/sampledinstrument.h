@@ -36,6 +36,7 @@ class SampledInstrument
         ProcessingChain *processingChain;
         AudioChannel *audioChannel;
 
+        int index;  // index in Sequencers sampler Vector
         std::vector<SampleEvent*> *audioEvents;
 };
 

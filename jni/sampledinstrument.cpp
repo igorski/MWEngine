@@ -34,7 +34,8 @@ SampledInstrument::SampledInstrument()
     audioChannel    = new AudioChannel( processingChain, .75, bytes_per_bar );
     audioEvents     = new std::vector<SampleEvent*>();
 
-    sequencer::samplers.push_back( this ); // register instrument inside the sequencer
+    sequencer::samplers.push_back( this );  // register instrument inside the sequencer
+    index = sequencer::samplers.size() - 1; // the index this instrument is registered at in the sequencer
 }
 
 SampledInstrument::~SampledInstrument()
