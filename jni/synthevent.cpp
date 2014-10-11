@@ -236,6 +236,14 @@ void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument
     position = aPosition;
     length   = aLength;
 
+    // cancel current rendering operations
+    if ( _osc2 != 0 /*&& _osc2->_caching*/ )
+        _osc2->_cancel = true;
+
+    _cancel = true;
+
+    // ADSR envelopes
+
     _adsr->cloneEnvelopes( aInstrument->adsr );
 
     // secondary oscillator
@@ -251,16 +259,8 @@ void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument
 
     if ( updateOSC1 )
     {
-        if ( _caching /*&& !_cachingCompleted */)
-        {
-            if ( _osc2 != 0 /*&& _osc2->_caching*/ )
-                _osc2->_cancel = true;
-
-            _cancel = true;
-        }
-        else {
+        if ( !_caching )
             calculateBuffers();
-        }
     }
 }
 
@@ -286,8 +286,7 @@ void SynthEvent::calculateBuffers()
 
     if ( isSequenced )
     {
-        if ( _caching )
-            _cancel = true;
+        _cancel = true;
 
         oldLength     = _sampleLength;
         _sampleLength = ( int )( length * ( float ) AudioEngine::bytes_per_tick );
@@ -337,8 +336,6 @@ void SynthEvent::calculateBuffers()
             {
                 if ( !_caching )
                     cache( false );
-                else
-                    _cancel = true;
             }
         }
     }
@@ -358,7 +355,7 @@ AudioBuffer* SynthEvent::synthesize( int aBufferLength )
         destroyBuffer();
         _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
     }
-    render( _buffer ); // overwrites old buffer contents
+    render( _buffer ); // synthesize, also overwrites old buffer contents
 
     // keep track of the rendered bytes, in case of a key up event
     // we still want to have the sound ring for the minimum period
@@ -372,7 +369,7 @@ AudioBuffer* SynthEvent::synthesize( int aBufferLength )
         _hasMinLength = true;
         setDeletable( _queuedForDeletion );
 
-        // event is about to be deleted, apply a tiny fadeout
+        // this event is about to be deleted, apply a tiny fadeout
         if ( _queuedForDeletion )
         {
             int amt = ceil( aBufferLength / 4 );
@@ -783,7 +780,6 @@ void SynthEvent::createOSC2( int aPosition, int aLength, SynthInstrument *aInstr
             else
                 _osc2 = new SynthEvent( _frequency, aPosition, aLength, aInstrument, false, true );
         }
-        // seems verbose, but in case of updating an existing OSC2, necessary
         _osc2->_type    = aInstrument->osc2waveform;
         _osc2->position = aPosition;
         _osc2->length   = aLength;
@@ -809,8 +805,11 @@ void SynthEvent::createOSC2( int aPosition, int aLength, SynthInstrument *aInstr
 
         _osc2->setFrequency( lfo2freq );
 
-        if ( _osc2->_caching /*&& !_osc2->_cachingCompleted */)
-            _osc2->_cancel = true;
+        if ( AudioEngineProps::EVENT_CACHING )
+        {
+            if ( _osc2->_caching /*&& !_osc2->_cachingCompleted */)
+                _osc2->_cancel = true;
+        }
     }
 }
 
@@ -831,14 +830,18 @@ void SynthEvent::applyModules( SynthInstrument* instrument )
     bool hasOSC2   = _osc2 != 0;
     float OSC2freq = hasOSC2 ? _osc2->_baseFrequency : _baseFrequency;
 
-    if ( _arpeggiator != 0 )
+    if ( instrument->arpeggiatorActive )
+    {
+        if ( _arpeggiator == 0 )
+            _arpeggiator = instrument->arpeggiator->clone();
+        else
+            instrument->arpeggiator->cloneProperties( _arpeggiator );
+    }
+    else if ( _arpeggiator != 0 )
     {
         delete _arpeggiator;
         _arpeggiator = 0;
     }
-
-    if ( instrument->arpeggiatorActive )
-        _arpeggiator = instrument->arpeggiator->clone();
 
     if ( hasOSC2 )
         _osc2->applyModules( instrument );

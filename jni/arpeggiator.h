@@ -49,6 +49,7 @@ class Arpeggiator
 
         float getPitchForStep( int step, float basePitch );
 
+        void cloneProperties( Arpeggiator* source );
         Arpeggiator* clone();
 
     private:

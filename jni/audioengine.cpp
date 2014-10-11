@@ -241,8 +241,11 @@ namespace AudioEngine
 
                     for ( int k = 0; k < lAmount; ++k )
                     {
-                        BaseAudioEvent* vo = channel->liveEvents[ k ];
-                        channelBuffer->mergeBuffers( vo->synthesize( buffer_size ), 0, 0, lAmp );
+                        BaseAudioEvent* vo       = channel->liveEvents[ k ];
+                        AudioBuffer* eventBuffer = vo->synthesize( buffer_size );
+
+                        if ( eventBuffer != 0 )
+                            channelBuffer->mergeBuffers( eventBuffer, 0, 0, lAmp );
                     }
                 }
 

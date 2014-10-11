@@ -52,6 +52,9 @@ int Arpeggiator::getStepSize()
 void Arpeggiator::setStepSize( int value )
 {
     _stepSize = value;
+
+    if ( _bufferPosition >= _stepSize )
+        _bufferPosition = 0;
 }
 
 int Arpeggiator::getAmountOfSteps()
@@ -62,6 +65,9 @@ int Arpeggiator::getAmountOfSteps()
 void Arpeggiator::setAmountOfSteps( int value )
 {
     _stepAmount = value;
+
+    if ( _step >= _stepAmount )
+        _step = 0;
 }
 
 int Arpeggiator::getShiftForStep( int step )
@@ -119,15 +125,19 @@ float Arpeggiator::getPitchForStep( int step, float basePitch )
     return pitch;
 }
 
+void Arpeggiator::cloneProperties( Arpeggiator* source )
+{
+    source->setStepSize     ( _stepSize );
+    source->setAmountOfSteps( _stepAmount );
+
+    for ( int i = 0; i < _stepAmount; ++i )
+        source->setShiftForStep( i, _stepShifts[ i ]);
+}
+
 Arpeggiator* Arpeggiator::clone()
 {
     Arpeggiator* out = new Arpeggiator();
-
-    out->setStepSize     ( _stepSize );
-    out->setAmountOfSteps( _stepAmount );
-
-    for ( int i = 0; i < _stepAmount; ++i )
-        out->setShiftForStep( i, _stepShifts[ i ]);
+    cloneProperties( out );
 
     return out;
 }
