@@ -166,11 +166,11 @@ void SynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBuf
             render( _buffer ); // overwrites old buffer contents
             outputBuffer->mergeBuffers( _buffer, 0, writeOffset, MAX_PHASE );
 
-            // reset of properties
-            if ( _cacheWriteIndex >= _sampleEnd )
-                setFrequency( _baseFrequency );
+            // reset of properties at end of write
+            if ( _cacheWriteIndex >= _sampleLength )
+                calculateBuffers();
         }
-        // TODO : loop start seamless reading
+        // TODO : loop start seamless reading required ?
     }
 }
 
@@ -229,7 +229,7 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
  */
 void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument *aInstrument, int aState )
 {
-    bool updateLFO1 = true;//( aState == 0 || aState == 1 );
+    bool updateOSC1 = true;//( aState == 0 || aState == 1 );
     bool updateOSC2 = true;//( aState == 0 || aState == 2 );
 
     _type    = aInstrument->waveform;
@@ -249,11 +249,11 @@ void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument
 
     applyModules( aInstrument );
 
-    if ( updateLFO1 )
+    if ( updateOSC1 )
     {
         if ( _caching /*&& !_cachingCompleted */)
         {
-            if ( _osc2 != 0 && _osc2->_caching )
+            if ( _osc2 != 0 /*&& _osc2->_caching*/ )
                 _osc2->_cancel = true;
 
             _cancel = true;
@@ -493,7 +493,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     tmp = ( _phase * 4.0 - 3.0 );
                     amp = ( tmp * tmp - 1.0 );
                 }
-                amp *= .7; // sines tend to distort easily when overlapping multi timbral parts
+                amp *= .7;  // sines distorted easily when overlapping
 
                 break;
 
@@ -501,7 +501,6 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
 
                 // ---- Sawtooth
                 amp = ( _phase < 0 ) ? _phase - ( int )( _phase - 1 ) : _phase - ( int )( _phase );
-                //amp *= ( !isSequenced ? .7  : 1.0; );
 
                 break;
 
@@ -594,9 +593,6 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                 _phase -= MAX_PHASE;
         }
 
-        if ( !isSequenced )
-            amp *= .5; // anticipating multi-timbral fun
-
         // update modules
         if ( _arpeggiator != 0 )
         {
@@ -606,8 +602,10 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         }
 
         // -- write the output into the buffers channels
+        if ( hasOSC2 ) amp *= .5;
+
         for ( int c = 0, ca = aOutputBuffer->amountOfChannels; c < ca; ++c )
-            aOutputBuffer->getBufferForChannel( c )[ i ] = amp * _volume * VOLUME_CORRECTION;
+            aOutputBuffer->getBufferForChannel( c )[ i ] = amp * _volume;
 
         // stop caching/rendering loop when cancel was requested
         if ( _cancel )
@@ -641,12 +639,10 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         {
             _caching = false;
 
-            // was a cancel requested ? re-cache to
-            // match the new properties (cancel may only
-            // be requested when changing properties!)
+            // was a cancel requested ? re-cache to match the new instrument properties (cancel
+            // may only be requested during the changing of properties!)
             if ( _cancel )
             {
-                _cancel = false;
                 calculateBuffers();
             }
             else
@@ -659,6 +655,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
             }
         }
     }
+    _cancel = false; // ensure we can render for the next iteration
 }
 
 void SynthEvent::setDeletable( bool value )
