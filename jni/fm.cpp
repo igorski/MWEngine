@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "fm.h"
+#include "global.h"
 #include <math.h>
 #include "utils.h"
 
@@ -37,7 +38,6 @@ FrequencyModulator::FrequencyModulator( int aWaveForm, float aRate )
     carrier        = 0.0;
     fmamp          = 10;
     AMP_MULTIPLIER = 0.15;
-    TWO_PI         = 2 * ( atan( 1 ) * 4 );
 
     setRate( aRate );
 }

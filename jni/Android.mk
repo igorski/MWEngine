@@ -23,6 +23,7 @@ baseprocessor.cpp \
 bitcrusher.cpp \
 bufferutility.cpp \
 bulkcacher.cpp \
+dcoffsetfilter.cpp \
 decimator.cpp \
 diskwriter.cpp \
 drumevent.cpp \

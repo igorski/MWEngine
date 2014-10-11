@@ -76,7 +76,7 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             if ( follower->envelope > maxGain )
                 dest = dest / follower->envelope;
 
-            channelBuffer[ j ] = ( dest );
+            channelBuffer[ j ] = dest;
         }
     }
 }

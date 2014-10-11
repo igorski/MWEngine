@@ -35,7 +35,7 @@ class Finalizer : public Limiter
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     private:
-        SAMPLE_TYPE* lastSamples;
+        SAMPLE_TYPE* _lastSamples;
 };
 
 #endif

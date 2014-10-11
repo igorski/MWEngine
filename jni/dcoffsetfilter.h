@@ -3,6 +3,8 @@
  *
  * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
  *
+ * DCOffsetFilter is based on work by Julius O. Smith III (jos@ccrma.stanford.edu)
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -28,11 +30,14 @@
 class DCOffsetFilter : public BaseProcessor
 {
     public:
-        DCOffsetFilter();
+        DCOffsetFilter( int amountOfChannels );
+        ~DCOffsetFilter();
+
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     private:
-        float lastSample;
-        float R;
-}
+        SAMPLE_TYPE* _lastSamples;
+        SAMPLE_TYPE  R;
+};
 
 #endif

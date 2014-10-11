@@ -3,6 +3,8 @@
  *
  * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
  *
+ * DCOffsetFilter is based on work by Julius O. Smith III (jos@ccrma.stanford.edu)
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -23,17 +25,27 @@
 #include "dcoffsetfilter.h"
 #include <math.h>
 
-// constructor
+/* constructor / destructor */
 
-DCOffsetFilter::DCOffsetFilter()
+DCOffsetFilter::DCOffsetFilter( int amountOfChannels )
 {
-    lastSample = 0.0;
-    R          = 1.0 - (( atan( 1 ) * 4 ) * 2 * Pitch.note( "C", 2 ) / AudioEngineProps::SAMPLE_RATE );
+    _lastSamples = new SAMPLE_TYPE[ amountOfChannels ];
+
+    for ( int i = 0; i < amountOfChannels; ++i )
+        _lastSamples[ i ] = 0.0;
+
+    SAMPLE_TYPE baseFrequency = 65.41; // is a C2 note
+    R = 1.0 - ( TWO_PI * baseFrequency / AudioEngineProps::SAMPLE_RATE );
+}
+
+DCOffsetFilter::~DCOffsetFilter()
+{
+    delete[] _lastSamples;
 }
 
 /* public methods */
 
-void DCOffsetFilter::process( float* sampleBuffer, int bufferLength )
+void DCOffsetFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     /**
      * This is based on code found in the document:
@@ -59,12 +71,27 @@ void DCOffsetFilter::process( float* sampleBuffer, int bufferLength )
      * How to calculate "R" for a given (-3dB) low frequency point?
      * R = 1 - (pi*2 * frequency /samplerate)
      */
-    int i = 0;
-    for ( i; i < DCOffsetFilter; ++i )
-    {
-        float theSample = R * ( lastSample + sampleBuffer[ i ] - lastSample );
-        lastSample = theSample;
+    int bufferSize = sampleBuffer->bufferSize;
 
-        sampleBuffer[ i ] = theSample;
+    for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
+    {
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE lastSample     = _lastSamples[ c ];
+
+        for ( int i = 0; i < bufferSize; ++i )
+        {
+            SAMPLE_TYPE theSample = R * ( lastSample + channelBuffer[ i ] - lastSample );
+            lastSample            = theSample;
+            channelBuffer[ i ]    = theSample;
+        }
+
+        _lastSamples[ c ] = lastSample;
+
+        // save CPU cycles when source is mono
+        if ( isMonoSource )
+        {
+            sampleBuffer->applyMonoSource();
+            break;
+        }
     }
 }

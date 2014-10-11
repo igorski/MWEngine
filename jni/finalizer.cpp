@@ -38,23 +38,19 @@ Finalizer::Finalizer( float attackMs, float releaseMs, int sampleRate, int amoun
 {
     init( attackMs, releaseMs, sampleRate, amountOfChannels );
 
-    lastSamples = new SAMPLE_TYPE[ amountOfChannels ];
+    _lastSamples = new SAMPLE_TYPE[ amountOfChannels ];
 
     for ( int i = 0; i < amountOfChannels; ++i )
-        lastSamples[ i ] = ( SAMPLE_TYPE ) 0.0;
+        _lastSamples[ i ] = ( SAMPLE_TYPE ) 0.0;
 }
 
 Finalizer::~Finalizer()
 {
-    delete[] lastSamples;
+    delete[] _lastSamples;
 }
 
 /* public methods */
 
-/**
- * used by the AudioBouncer, which doesn't need shorts!
- * @param sampleBuffer {AudioBuffer*} buffer containing samples to limit
- */
 void Finalizer::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     Limiter::process( sampleBuffer, isMonoSource );
@@ -64,11 +60,11 @@ void Finalizer::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     for ( int c = 0, nc = sampleBuffer->amountOfChannels; c < nc; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE lastSample     = _lastSamples[ c ];
 
         for ( int i = 0; i < bufferSize; ++i )
         {
-            SAMPLE_TYPE lastSample = lastSamples[ c ];
-            SAMPLE_TYPE theSample  = 0.996 * ( lastSample + channelBuffer[ i ] - lastSample );
+            SAMPLE_TYPE theSample = 0.996 * ( lastSample + channelBuffer[ i ] - lastSample );
 
             // extreme limiting (still above the thresholds?)
             if ( theSample < -MAX_PHASE )
@@ -77,8 +73,9 @@ void Finalizer::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             else if ( theSample > +MAX_PHASE )
                 theSample = +MAX_PHASE;
 
-            lastSamples[ c ]   = theSample;
+            lastSample         = theSample;
             channelBuffer[ i ] = theSample;
         }
+        _lastSamples[ c ] = lastSample;
     }
 }

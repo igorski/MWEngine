@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "lfo.h"
+#include "global.h"
 #include "audioengine.h"
 #include "utils.h"
 #include <math.h>
@@ -40,8 +41,6 @@ LFO::LFO()
 
     for ( int i = 0; i < bufferSize; ++i )
         _buffer[ i ] = 0.0f;
-
-    TWO_PI = 2 * ( atan( 1 ) * 4 );
 
     setRate( MIN_LFO_RATE );
 }
