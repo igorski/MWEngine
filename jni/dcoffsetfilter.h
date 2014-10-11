@@ -36,7 +36,8 @@ class DCOffsetFilter : public BaseProcessor
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     private:
-        SAMPLE_TYPE* _lastSamples;
+        SAMPLE_TYPE* _lastInSamples;
+        SAMPLE_TYPE* _lastOutSamples;
         SAMPLE_TYPE  R;
 };
 

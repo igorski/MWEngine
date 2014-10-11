@@ -29,18 +29,22 @@
 
 DCOffsetFilter::DCOffsetFilter( int amountOfChannels )
 {
-    _lastSamples = new SAMPLE_TYPE[ amountOfChannels ];
+    _lastInSamples  = new SAMPLE_TYPE[ amountOfChannels ];
+    _lastOutSamples = new SAMPLE_TYPE[ amountOfChannels ];
 
     for ( int i = 0; i < amountOfChannels; ++i )
-        _lastSamples[ i ] = 0.0;
-
+    {
+        _lastInSamples [ i ] = 0.0;
+        _lastOutSamples[ i ] = 0.0;
+    }
     SAMPLE_TYPE baseFrequency = 65.41; // is a C2 note
     R = 1.0 - ( TWO_PI * baseFrequency / AudioEngineProps::SAMPLE_RATE );
 }
 
 DCOffsetFilter::~DCOffsetFilter()
 {
-    delete[] _lastSamples;
+    delete[] _lastInSamples;
+    delete[] _lastOutSamples;
 }
 
 /* public methods */
@@ -76,16 +80,19 @@ void DCOffsetFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
-        SAMPLE_TYPE lastSample     = _lastSamples[ c ];
+        SAMPLE_TYPE lastInSample   = _lastInSamples [ c ];
+        SAMPLE_TYPE lastOutSample  = _lastOutSamples[ c ];
 
         for ( int i = 0; i < bufferSize; ++i )
         {
-            SAMPLE_TYPE theSample = R * ( lastSample + channelBuffer[ i ] - lastSample );
-            lastSample            = theSample;
-            channelBuffer[ i ]    = theSample;
+            SAMPLE_TYPE outSample = channelBuffer[ i ] - lastInSample + R * lastOutSample;
+            lastInSample          = channelBuffer[ i ]; // cache last input sample
+            lastOutSample         =                     // cache last output sample
+            channelBuffer[ i ]    = outSample;          // write filtered sample into output buffer
         }
 
-        _lastSamples[ c ] = lastSample;
+        _lastInSamples [ c ] = lastInSample;
+        _lastOutSamples[ c ] = lastOutSample;
 
         // save CPU cycles when source is mono
         if ( isMonoSource )
