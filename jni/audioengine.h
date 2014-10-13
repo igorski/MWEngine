@@ -26,6 +26,7 @@
 #include "audiobuffer.h"
 #include "audiochannel.h"
 #include "global.h"
+#include "processingchain.h"
 
 /**
  * this is the API exposed to an external application
@@ -82,7 +83,8 @@ namespace AudioEngine
 
     /* output related */
 
-    extern float volume;            // master volume
+    extern float volume;                // master volume
+    extern ProcessingChain* masterBus;  // processing chain for the master bus
 
     /* internal methods */
 

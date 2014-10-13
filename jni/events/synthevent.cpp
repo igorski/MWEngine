@@ -21,10 +21,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "synthevent.h"
-#include "audioengine.h"
-#include "sequencer.h"
-#include "utils.h"
-#include "global.h"
+#include "../audioengine.h"
+#include "../sequencer.h"
+#include "../utils.h"
+#include "../global.h"
 #include <cmath>
 
 /* constructor / destructor */
@@ -40,9 +40,9 @@
  *                     only available if AudioEngineProps::EVENT_CACHING is true
  */
 SynthEvent::SynthEvent( float aFrequency, int aPosition, float aLength,
-                        SynthInstrument *aInstrument, bool aAutoCache )
+                            SynthInstrument *aInstrument, bool aAutoCache )
 {
-    init( aInstrument, aFrequency, aPosition, aLength, false, true );
+    init( aInstrument, aFrequency, aPosition, aLength, true, false );
     setAutoCache( aAutoCache );
 }
 
@@ -60,7 +60,7 @@ SynthEvent::SynthEvent( float aFrequency, int aPosition, float aLength,
 SynthEvent::SynthEvent( float aFrequency, int aPosition, float aLength,
                         SynthInstrument *aInstrument, bool aAutoCache, bool hasParent )
 {
-    init( aInstrument, aFrequency, aPosition, aLength, hasParent, true );
+    init( aInstrument, aFrequency, aPosition, aLength, true, hasParent );
     setAutoCache( aAutoCache );
 }
 
@@ -84,7 +84,7 @@ SynthEvent::SynthEvent( float aFrequency, SynthInstrument *aInstrument )
  */
 SynthEvent::SynthEvent( float aFrequency, SynthInstrument *aInstrument, bool hasParent )
 {
-    init( aInstrument, aFrequency, 0, 1, hasParent, false );
+    init( aInstrument, aFrequency, 0, 1, false, hasParent );
 }
 
 SynthEvent::~SynthEvent()
@@ -101,94 +101,10 @@ SynthEvent::~SynthEvent()
         _arpeggiator = 0;
     }
 
-    if ( _adsr != 0 )
-    {
-        delete _adsr;
-        _adsr = 0;
-    }
-
-    // secondary oscillator
     destroyOSC2();
-
-    // remove AudioEvent from sequencer
-
-    if ( !isSequenced )
-    {
-        for ( int i; i < _instrument->liveEvents->size(); i++ )
-        {
-            if ( _instrument->liveEvents->at( i ) == this )
-            {
-                _instrument->liveEvents->erase( _instrument->liveEvents->begin() + i );
-                break;
-            }
-        }
-    }
-    else
-    {
-        for ( int i; i < _instrument->audioEvents->size(); i++ )
-        {
-            if ( _instrument->audioEvents->at( i ) == this )
-            {
-                _instrument->audioEvents->erase( _instrument->audioEvents->begin() + i );
-                break;
-            }
-        }
-    }
 }
 
 /* public methods */
-
-/**
- * will only occur for a sequenced SynthEvent
- */
-void SynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
-                            bool loopStarted, int loopOffset, bool useChannelRange )
-{
-    // is EVENT_CACHING is enabled, read from cached buffer
-
-    if ( AudioEngineProps::EVENT_CACHING )
-    {
-        BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition, loopStarted, loopOffset, useChannelRange );
-    }
-    else
-    {
-        int bufferEndPos = bufferPos + AudioEngineProps::BUFFER_SIZE;
-
-        // EVENT_CACHING is disabled, synthesize on the fly
-        // ex. : START 200 | END 2000 | LENGTH 1800 | CURRENT BUFFER POS 0 @ BUFFER SIZE 512
-        if (( bufferPos >= _sampleStart || bufferEndPos > _sampleStart ) &&
-              bufferPos < _sampleEnd )
-        {
-            // render the snippet
-            _cacheWriteIndex = _sampleStart > bufferPos ? 0 : bufferPos - _sampleStart;
-            int writeOffset  = _sampleStart > bufferPos ? _sampleStart - bufferPos : 0;
-
-            render( _buffer ); // overwrites old buffer contents
-            outputBuffer->mergeBuffers( _buffer, 0, writeOffset, MAX_PHASE );
-
-            // reset of properties at end of write
-            if ( _cacheWriteIndex >= _sampleLength )
-                calculateBuffers();
-        }
-        // TODO : loop start seamless reading required ?
-    }
-}
-
-AudioBuffer* SynthEvent::getBuffer()
-{
-    if ( AudioEngineProps::EVENT_CACHING )
-    {
-        // if caching hasn't completed, fill cache fragment
-        if ( !_cachingCompleted )
-            doCache();
-    }
-    return _buffer;
-}
-
-float SynthEvent::getFrequency()
-{
-    return _frequency;
-}
 
 void SynthEvent::setFrequency( float aFrequency )
 {
@@ -199,8 +115,8 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
 {
     float currentFreq = _frequency;
     _frequency        = aFrequency;
-    //_phase            = 0.0f; // will create nasty pop if another freq was playing previously
     _phaseIncr        = aFrequency / AudioEngineProps::SAMPLE_RATE;
+    //_phase            = 0.0f; // resetting will create nasty pop if another freq was playing previously
 
     // store as base frequency (acts as a reference "return point" for pitch shifting modules)
     if ( storeAsBaseFrequency )
@@ -223,59 +139,27 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
  * @param aPosition position in the sequencer where this event starts playing
  * @param aLength length (in sequencer steps) of this event
  * @param aInstrument the SynthInstrument whose properties will be used for synthesizing this event
- * @param aState which oscillator(s) to update 0 = all, 1 = oscillator 1, 2 = oscillator 2
- *               this is currently rudimentary as both oscillators are rendered and merged into one
- *               this is here for either legacy purposes or when performance improvements can be gained
+ *                    can be NULL to keep the current SynthInstrument, if not null the current
+ *                    SynthInstrument is replaced
  */
-void SynthEvent::updateProperties( int aPosition, float aLength, SynthInstrument *aInstrument, int aState )
+void SynthEvent::invalidateProperties( int aPosition, float aLength, SynthInstrument *aInstrument )
 {
-    bool updateOSC1 = true;//( aState == 0 || aState == 1 );
-    bool updateOSC2 = true;//( aState == 0 || aState == 2 );
+    if ( aInstrument != 0 )
+        _type = _instrument->waveform;
 
-    _type    = aInstrument->waveform;
-    position = aPosition;
-    length   = aLength;
-
-    // cancel current rendering operations
-    if ( _osc2 != 0 /*&& _osc2->_caching*/ )
-        _osc2->_cancel = true;
-
-    _cancel = true;
-
-    // ADSR envelopes
-
-    _adsr->cloneEnvelopes( aInstrument->adsr );
-
-    // secondary oscillator
-
-    if ( updateOSC2 && aInstrument->osc2active )
-        createOSC2( aPosition, aLength, aInstrument );
-    else
-        destroyOSC2();
-
-    // modules
-
-    applyModules( aInstrument );
-
-    if ( updateOSC1 )
+    if ( AudioEngineProps::EVENT_CACHING && _rendering && !_cachingCompleted )
     {
-        if ( !_caching )
-            calculateBuffers();
+        if ( _osc2 != 0 && _osc2->_rendering )
+            _osc2->_cancel = true;
     }
-}
-
-void SynthEvent::unlock()
-{
-    _locked = false;
-
-    if ( _updateAfterUnlock )
-        calculateBuffers();
-
-    _updateAfterUnlock = false;
+    BaseSynthEvent::invalidateProperties( aPosition, aLength, aInstrument );
 }
 
 void SynthEvent::calculateBuffers()
 {
+    // we override the entire function body as we need some
+    // oscillator 2-specific operations in here
+
     if ( _locked )
     {
         _updateAfterUnlock = true;
@@ -331,62 +215,10 @@ void SynthEvent::calculateBuffers()
         {
             resetCache(); // yes here, not in cache()-invocation as cancels might otherwise remain permanent (see BulkCacher)
 
-            // (re)cache (unless this event is OSC2 as only the parent event can invoke the render)
-            if ( _autoCache && !hasParent )
-            {
-                if ( !_caching )
-                    cache( false );
-            }
+            if ( _autoCache && !_caching ) // re-cache
+                cache( false );
         }
     }
-}
-
-/**
- * synthesize is invoked by the Sequencer for rendering a non-sequenced
- * SynthEvent into a single buffer
- *
- * aBufferLength {int} length of the buffer to synthesize
- */
-AudioBuffer* SynthEvent::synthesize( int aBufferLength )
-{
-    if ( aBufferLength != AudioEngineProps::BUFFER_SIZE )
-    {
-        // clear previous buffer contents
-        destroyBuffer();
-        _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
-    }
-    render( _buffer ); // synthesize, also overwrites old buffer contents
-
-    // keep track of the rendered bytes, in case of a key up event
-    // we still want to have the sound ring for the minimum period
-    // defined in the constructor instead of cut off immediately
-
-    if ( _queuedForDeletion && _minLength > 0 )
-        _minLength -= aBufferLength;
-
-    if ( _minLength <= 0 )
-    {
-        _hasMinLength = true;
-        setDeletable( _queuedForDeletion );
-
-        // this event is about to be deleted, apply a tiny fadeout
-        if ( _queuedForDeletion )
-        {
-            int amt = ceil( aBufferLength / 4 );
-
-            float envIncr = MAX_PHASE / amt;
-            float amp     = MAX_PHASE;
-
-            for ( int i = aBufferLength - amt; i < aBufferLength; ++i )
-            {
-                for ( int c = 0, nc = _buffer->amountOfChannels; c < nc; ++c )
-                    _buffer->getBufferForChannel( c )[ i ] *= amp;
-
-                amp -= envIncr;
-            }
-        }
-    }
-    return _buffer;
 }
 
 /**
@@ -395,8 +227,8 @@ AudioBuffer* SynthEvent::synthesize( int aBufferLength )
  */
 void SynthEvent::cache( bool doCallback )
 {
-    if ( _buffer == 0 ) // this cache request was invoked after destruction
-        return;
+    if ( _buffer == 0 ) return; // cache request was invoked after destruction
+    if ( hasParent )    return; // OSC2 is rendered via parents render
 
     _caching = true;
 
@@ -406,44 +238,19 @@ void SynthEvent::cache( bool doCallback )
         sequencer::bulkCacher->cacheQueue();
 }
 
-ADSR* SynthEvent::getADSR()
+/* protected methods */
+
+void SynthEvent::updateProperties()
 {
-    return _adsr;
-}
+    // secondary oscillator
 
-float SynthEvent::getVolume()
-{
-    return _volume;
-}
-
-void SynthEvent::setVolume( float aValue )
-{
-    _volume = aValue;
-}
-
-/* private methods */
-
-void SynthEvent::initKarplusStrong()
-{
-    // reset previous _ringBuffer data
-    int prevRingBufferSize = _ringBufferSize;
-    _ringBufferSize        = ( int ) ( AudioEngineProps::SAMPLE_RATE / _frequency );
-    bool newSize           = _ringBufferSize != prevRingBufferSize;
-
-    if ( isSequenced && ( _ringBuffer != 0 && newSize ))
-    {
-        delete _ringBuffer;
-        _ringBuffer = 0;
-    }
-
-    if ( _ringBuffer == 0 )
-        _ringBuffer = new RingBuffer( _ringBufferSize );
+    if ( _instrument->osc2active )
+        createOSC2( position, length, _instrument );
     else
-        _ringBuffer->flush();
+        destroyOSC2();
 
-    // fill the ring buffer with noise ( initial "pluck" of the "string" )
-    for ( int i = 0; i < _ringBufferSize; i++ )
-        _ringBuffer->enqueue( randomFloat());
+    applyModules( _instrument );    // modules
+    BaseSynthEvent::updateProperties(); // base method
 }
 
 /**
@@ -453,6 +260,8 @@ void SynthEvent::initKarplusStrong()
  */
 void SynthEvent::render( AudioBuffer* aOutputBuffer )
 {
+    _rendering = true;
+
     int i;
     int bufferLength = aOutputBuffer->bufferSize;
 
@@ -573,8 +382,8 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
 
             case WaveForms::KARPLUS_STRONG:
 
-                // --- Karplus-Strong algorithm for plucked string-sound
-                _ringBuffer->enqueue(( EnergyDecayFactor * (( _ringBuffer->dequeue() + _ringBuffer->peek()) / 2 )));
+                // --- Karplus-Strong algorithm for plucked string-sound (0.990f being energy decay factor)
+                _ringBuffer->enqueue(( 0.990f * (( _ringBuffer->dequeue() + _ringBuffer->peek()) / 2 )));
                 amp = _ringBuffer->peek(); // * .7; gets the level down a bit, 'tis loud
 
                 break;
@@ -598,15 +407,14 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                 setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), _baseFrequency ), true, false );
         }
 
+        if ( _update ) updateProperties(); // if an update was requested, do it now (prior to committing to buffer)
+        if ( _cancel ) break;              // if a caching cancel was requested, cancel now
+
         // -- write the output into the buffers channels
         if ( hasOSC2 ) amp *= .5;
 
         for ( int c = 0, ca = aOutputBuffer->amountOfChannels; c < ca; ++c )
             aOutputBuffer->getBufferForChannel( c )[ i ] = amp * _volume;
-
-        // stop caching/rendering loop when cancel was requested
-        if ( _cancel )
-            break;
     }
 
     // secondary oscillator ? render its contents into this (parent) buffer
@@ -640,7 +448,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
             // may only be requested during the changing of properties!)
             if ( _cancel )
             {
-                calculateBuffers();
+                //calculateBuffers(); // no, use a manual invocation (BulkCacher)
             }
             else
             {
@@ -652,17 +460,13 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
             }
         }
     }
-    _cancel = false; // ensure we can render for the next iteration
+    _cancel    = false; // ensure we can render for the next iteration
+    _rendering = false;
 }
 
 void SynthEvent::setDeletable( bool value )
 {
-    // pre buffered event or rendered min length ? schedule for immediate deletion
-
-    if ( isSequenced || _hasMinLength )
-        _deleteMe = value;
-    else
-        _queuedForDeletion = value;
+    BaseSynthEvent::setDeletable( value );
 
     // secondary oscillator too
 
@@ -683,83 +487,59 @@ void SynthEvent::setDeletable( bool value )
  * @param aIsSequenced whether this event is sequenced and only audible in a specific sequence range
  */
 void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
-                       int aLength, bool aHasParent, bool aIsSequenced )
+                         int aLength, bool aIsSequenced, bool aHasParent )
 {
-    _destroyableBuffer = true;  // always unique and managed by this instance !
-    _instrument        = aInstrument;
-    _adsr              = _instrument->adsr->clone();
-
-    // when instrument has no fixed length and the decay is short
-    // we deactivate the decay envelope completely (for now)
-    if ( !aIsSequenced && _adsr->getDecay() < .75 )
-        _adsr->setDecay( 0 );
-
-    _buffer         = 0;
     _ringBuffer     = 0;
     _ringBufferSize = 0;
-    _locked         = false;
+    _osc2           = 0;
     _frequency      = aFrequency;
     _baseFrequency  = aFrequency;
-
-    position        = aPosition;
-    length          = aLength;
     hasParent       = aHasParent;
-
-    isSequenced            = aIsSequenced;
-    _queuedForDeletion     = false;
-    _deleteMe              = false;
-    _cancel                = false; // whether we should cancel caching
-    _caching               = false;
-    _cachingCompleted      = false; // whether we're done caching
-    _autoCache             = false; // we'll cache sequentially instead
-    _type                  = aInstrument->waveform;
-    _osc2                  = 0;
-    _volume                = aInstrument->volume;
-    _sampleLength          = 0;
-    _cacheWriteIndex       = 0;
 
     // constants used by waveform generators
 
     TWO_PI_OVER_SR         = TWO_PI / AudioEngineProps::SAMPLE_RATE;
     pwr                    = PI / 1.05;
     pwAmp                  = 0.075;
-    EnergyDecayFactor      = 0.990f; // TODO make this settable ?
     _pwmValue              = 0.0;
     _phase                 = 0.0;
+    _type                  = aInstrument->waveform;
 
-    // secondary oscillator, note different constructor
-    // to omit going into recursion!
+    // create the secondary oscillator
 
     if ( !hasParent && aInstrument->osc2active )
        createOSC2( position, length, aInstrument );
 
-    setFrequency( aFrequency );
+    // base class invocation
+    BaseSynthEvent::init( aInstrument, aFrequency, aPosition, aLength, aIsSequenced );
 
     // modules
 
     _arpeggiator = 0;
     applyModules( aInstrument );
+}
 
-    // buffer
-
-    _hasMinLength = isSequenced; // a sequenced event has no early cancel
-    calculateBuffers();
-
-    // add the event to the sequencer so it can be heard
-    // note that OSC2 contents aren't added to the sequencer
+void SynthEvent::addToSequencer()
+{
+    // OSC2 contents aren't added to the sequencer
     // individually as their render is invoked by their parent,
     // writing directly into their parent buffer (saves memory overhead)
 
-    if ( isSequenced )
-    {
-        if ( !hasParent )
-            aInstrument->audioEvents->push_back( this );
-    }
-    else {
-        if ( !hasParent )
-            aInstrument->liveEvents->push_back( this );
-    }
+    if ( hasParent )
+        return;
+
+    BaseSynthEvent::addToSequencer();
 }
+
+void SynthEvent::resetCache()
+{
+    BaseCacheableAudioEvent::resetCache();
+
+    if ( _osc2 != 0 )
+        _osc2->resetCache();
+}
+
+/* private methods */
 
 /**
  * creates a new/updates an existing secondary oscillator
@@ -775,6 +555,7 @@ void SynthEvent::createOSC2( int aPosition, int aLength, SynthInstrument *aInstr
         // note no auto caching for a sequenced OSC2, its render is invoked by its parent (=this) event!
         if ( _osc2 == 0 )
         {
+            // note the alternate constructors (avoids recursion into nested oscillators)
             if ( !isSequenced )
                 _osc2 = new SynthEvent( _frequency, aInstrument, true );
             else
@@ -807,7 +588,7 @@ void SynthEvent::createOSC2( int aPosition, int aLength, SynthInstrument *aInstr
 
         if ( AudioEngineProps::EVENT_CACHING )
         {
-            if ( _osc2->_caching /*&& !_osc2->_cachingCompleted */)
+            if ( _osc2->_caching && !_osc2->_cachingCompleted )
                 _osc2->_cancel = true;
         }
     }
@@ -817,7 +598,7 @@ void SynthEvent::destroyOSC2()
 {
     if ( _osc2 != 0 )
     {
-        if ( _osc2->_caching /*&& !_osc2->_cachingCompleted */)
+        if ( _osc2->_rendering )
             _osc2->_cancel = true;
 
         delete _osc2;
@@ -862,20 +643,25 @@ void SynthEvent::applyModules( SynthInstrument* instrument )
     }
 }
 
-/**
- * render the event into the buffer and cache its
- * contents for the given bufferLength (we can cache
- * buffer fragments on demand, or all at once)
- */
-void SynthEvent::doCache()
+void SynthEvent::initKarplusStrong()
 {
-    render( _buffer );
-}
+    // reset previous _ringBuffer data
+    int prevRingBufferSize = _ringBufferSize;
+    _ringBufferSize        = ( int ) ( AudioEngineProps::SAMPLE_RATE / _frequency );
+    bool newSize           = _ringBufferSize != prevRingBufferSize;
 
-void SynthEvent::resetCache()
-{
-    BaseCacheableAudioEvent::resetCache();
+    if ( isSequenced && ( _ringBuffer != 0 && newSize ))
+    {
+        delete _ringBuffer;
+        _ringBuffer = 0;
+    }
 
-    if ( _osc2 != 0 )
-        _osc2->resetCache();
+    if ( _ringBuffer == 0 )
+        _ringBuffer = new RingBuffer( _ringBufferSize );
+    else
+        _ringBuffer->flush();
+
+    // fill the ring buffer with noise ( initial "pluck" of the "string" )
+    for ( int i = 0; i < _ringBufferSize; i++ )
+        _ringBuffer->enqueue( randomFloat());
 }

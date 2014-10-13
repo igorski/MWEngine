@@ -23,10 +23,10 @@
 #ifndef __AUDIOCHANNEL_H_INCLUDED__
 #define __AUDIOCHANNEL_H_INCLUDED__
 
-#include <vector>
 #include "audiobuffer.h"
-#include "baseaudioevent.h"
 #include "processingchain.h"
+#include <events/baseaudioevent.h>
+#include <vector>
 
 class AudioChannel
 {

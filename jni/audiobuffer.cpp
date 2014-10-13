@@ -59,6 +59,8 @@ SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
 
 int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume )
 {
+    if ( aBuffer == 0 ) return 0;
+
     int sourceLength   = aBuffer->bufferSize;
     int writeLength    = sourceLength;
     int writtenSamples = 0;

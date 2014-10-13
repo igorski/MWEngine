@@ -20,30 +20,32 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMEVENT_H_INCLUDED__
-#define __DRUMEVENT_H_INCLUDED__
+#ifndef __BASEPROCESSOR_H_INCLUDED__
+#define __BASEPROCESSOR_H_INCLUDED__
 
-#include "sampleevent.h"
-#include "druminstrument.h"
-#include <string>
+#include "../global.h"
+#include "../audiobuffer.h"
 
-class DrumEvent : public SampleEvent
+class BaseProcessor
 {
     public:
-        DrumEvent( int aPosition, int aDrumType, DrumInstrument* aInstrument );
-        ~DrumEvent();
+        BaseProcessor();
+        ~BaseProcessor();
 
-        int getTimbre();
-        void setTimbre( int aTimbre );
-        int getType();
-        void setType( int aType );
-        void unlock();
+        /**
+         * @param {audioBuffer*} sampleBuffer the buffer to write into
+         * @param {bool} isMonoSource whether the source signal is mono (save CPU cycles
+         *               by solely processing a single channel and writing its values into the
+         *               remaining channels
+         */
+        virtual void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
-    private:
-        int _timbre;
-        int _type;
-        bool _inited;
-        void updateSample();
+        /**
+         * if this processors effect is non-dynamic its output
+         * can be cached to omit unnecessary repeated calculations
+         * consuming unnecessary CPU cycles
+         */
+        virtual bool isCacheable();
 };
 
 #endif

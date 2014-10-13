@@ -25,7 +25,7 @@
 
 #include "audiochannel.h"
 #include "processingchain.h"
-#include "sampleevent.h"
+#include <events/sampleevent.h>
 
 class SampledInstrument
 {

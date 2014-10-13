@@ -20,42 +20,31 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __COMPRESSOR_H_INCLUDED__
-#define __COMPRESSOR_H_INCLUDED__
+#ifndef __LPFHPFILTER_H_INCLUDED__
+#define __LPFHPFILTER_H_INCLUDED__
 
 #include "baseprocessor.h"
-#include <chunkware/SimpleComp.h>
+#include "../audiobuffer.h"
 
-class Compressor : public BaseProcessor
+class LPFHPFilter : public BaseProcessor
 {
     public:
-        Compressor( float aThreshold, float aAttack, float aRelease, float aRatio );
-        ~Compressor();
+        LPFHPFilter( float aLPCutoff, float aHPCutoff, int amountOfChannels );
+        ~LPFHPFilter();
 
-        static const int THRESHOLD_MAX_NEGATIVE_VALUE = 40;
-        static const int THRESHOLD_MAX_POSITIVE_VALUE = 20;
-
+        void setLPF( float aCutOffFrequency, int aSampleRate );
+        void setHPF( float aCutOffFrequency, int aSampleRate );
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
-        bool isCacheable();
-
-        float getAttack();
-        void setAttack( float value );
-
-        float getRelease();
-        void setRelease( float value );
-
-        float getThreshold();
-        void setThreshold( float value );
-
-        float getRatio();
-        void setRatio( float value );
-
-        void setSampleRate( int aSampleRate );
-
-    protected:
 
     private:
-        chunkware_simple::SimpleComp* _sc;
+        SAMPLE_TYPE a0;
+        SAMPLE_TYPE a1;
+        SAMPLE_TYPE b0;
+        SAMPLE_TYPE b1;
+
+        // for each channel we store the previous in- and output samples
+        SAMPLE_TYPE* outSamples;
+        SAMPLE_TYPE* inSamples;
 };
 
 #endif

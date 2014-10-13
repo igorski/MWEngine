@@ -23,8 +23,8 @@
 #ifndef __DRUMPATTERN_H_INCLUDED__
 #define __DRUMPATTERN_H_INCLUDED__
 
-#include "drumevent.h"
 #include "druminstrument.h"
+#include <events/drumevent.h>
 #include <vector>
 
 class DrumPattern

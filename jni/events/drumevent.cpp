@@ -21,8 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "drumevent.h"
-#include "global.h"
-#include "samplemanager.h"
+#include "../global.h"
+#include "../samplemanager.h"
 #include <cstdlib>
 
 /* constructor / destructor */

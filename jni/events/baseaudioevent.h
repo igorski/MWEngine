@@ -23,7 +23,7 @@
 #ifndef __BASEAUDIOEVENT_H_INCLUDED__
 #define __BASEAUDIOEVENT_H_INCLUDED__
 
-#include "audiobuffer.h"
+#include "../audiobuffer.h"
 
 class BaseAudioEvent
 {

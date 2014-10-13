@@ -155,10 +155,10 @@ public class MWEngineActivity extends Activity
             // update all audio events (re-renders their contents to match the new tempo)
 
             for ( final SynthEvent audioEvent : _synth1Events )
-                audioEvent.updateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth1, 0 );
+                audioEvent.invalidateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth1 );
 
             for ( final SynthEvent audioEvent : _synth2Events )
-                audioEvent.updateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth2, 0 );
+                audioEvent.invalidateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth2 );
         }
 
         public void onStartTrackingTouch( SeekBar seekBar ) {

@@ -23,7 +23,7 @@
 #ifndef __BULKCACHER_H_INCLUDED__
 #define __BULKCACHER_H_INCLUDED__
 
-#include "basecacheableaudioevent.h"
+#include <events/basecacheableaudioevent.h>
 #include <vector>
 
 class BulkCacher

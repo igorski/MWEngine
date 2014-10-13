@@ -24,7 +24,7 @@
 #define __FILTER_H_INCLUDED__
 
 #include "baseprocessor.h"
-#include "lfo.h"
+#include "../lfo.h"
 
 class Filter : public BaseProcessor
 {

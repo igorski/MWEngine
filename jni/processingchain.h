@@ -24,7 +24,7 @@
 #define __PROCESSINGCHAIN_H_INCLUDED__
 
 #include <vector>
-#include "baseprocessor.h"
+#include "processors/baseprocessor.h"
 
 class ProcessingChain
 {

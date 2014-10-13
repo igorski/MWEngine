@@ -20,17 +20,17 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <vector>
 #include "audioengine.h"
 #include "global.h"
 #include "audiochannel.h"
-#include "baseaudioevent.h"
 #include "diskwriter.h"
 #include "processingchain.h"
 #include "sequencer.h"
 #include "opensl_io.h"
 #include "observer.h"
 #include "utils.h"
+#include <events/baseaudioevent.h>
+#include <vector>
 
 namespace AudioEngine
 {
@@ -241,11 +241,8 @@ namespace AudioEngine
 
                     for ( int k = 0; k < lAmount; ++k )
                     {
-                        BaseAudioEvent* vo       = channel->liveEvents[ k ];
-                        AudioBuffer* eventBuffer = vo->synthesize( buffer_size );
-
-                        if ( eventBuffer != 0 )
-                            channelBuffer->mergeBuffers( eventBuffer, 0, 0, lAmp );
+                        BaseAudioEvent* vo = channel->liveEvents[ k ];
+                        channelBuffer->mergeBuffers( vo->synthesize( buffer_size ), 0, 0, lAmp );
                     }
                 }
 

@@ -21,8 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "delay.h"
-#include "global.h"
-#include "utils.h"
+#include "../global.h"
+#include "../utils.h"
 #include <math.h>
 
 /* constructor / destructor */
@@ -37,8 +37,8 @@
  */
 Delay::Delay( float aDelayTime, float aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels )
 {
-    _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE * .001 ) * aDelayTime );
-    _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE * .001 ) * aMaxDelayTime );
+    _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aDelayTime );
+    _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aMaxDelayTime );
     _delayBuffer = new AudioBuffer( amountOfChannels, _maxTime );
     _mix         = aMix;
     _feedback    = aFeedback;
@@ -119,12 +119,12 @@ void Delay::reset()
 
 float Delay::getDelayTime()
 {
-    return _time / ( AudioEngineProps::SAMPLE_RATE * .001 );
+    return _time / ( AudioEngineProps::SAMPLE_RATE / 1000 );
 }
 
 void Delay::setDelayTime( float aValue )
 {
-    _time = ( int ) round(( AudioEngineProps::SAMPLE_RATE * .001 ) * aValue );
+    _time = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aValue );
 
     for ( int i = 0; i < _amountOfChannels; ++i )
     {

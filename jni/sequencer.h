@@ -23,14 +23,14 @@
 #ifndef __SEQUENCER_H_INCLUDED__
 #define __SEQUENCER_H_INCLUDED__
 
-#include "basecacheableaudioevent.h"
-#include "baseaudioevent.h"
 #include "bulkcacher.h"
 #include "audiochannel.h"
 #include "sampledinstrument.h"
 #include "synthinstrument.h"
 #include "druminstrument.h"
 #include "drumpattern.h"
+#include <events/basecacheableaudioevent.h>
+#include <events/baseaudioevent.h>
 #include <vector>
 
 /**

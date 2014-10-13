@@ -20,36 +20,31 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FM_H_INCLUDED__
-#define __FM_H_INCLUDED__
+#ifndef __LIMITER_H_INCLUDED__
+#define __LIMITER_H_INCLUDED__
 
 #include "baseprocessor.h"
-#include "global.h"
-#include "lfo.h"
+#include "../envelopefollower.h"
+#include "../audiobuffer.h"
+#include <vector>
 
-class FrequencyModulator : public BaseProcessor, public LFO
+class Limiter : public BaseProcessor
 {
     public:
-        FrequencyModulator( int aWaveForm, float aRate );
-        void process( AudioBuffer* sampleBuffer, bool isMonosource );
+        Limiter();
+        Limiter( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
+        ~Limiter();
 
-        // these are here only for SWIG purposes so we can "multiple inherit" from LFO, bit fugly... but hey
-        #ifdef SWIG
-        float getRate();
-        void setRate( float value );
-        int getWave();
-        void setWave( int value );
-        void generate( int aLength );
-        int getLength();
-        void setLength( int value );
-        #endif
+        float getLinearGR();
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+        bool isCacheable();
+
+    protected:
+        void init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
 
     private:
-        SAMPLE_TYPE* _buffer; // cached buffer
-        SAMPLE_TYPE modulator;
-        SAMPLE_TYPE carrier;
-        SAMPLE_TYPE fmamp;
-        SAMPLE_TYPE AMP_MULTIPLIER;
+        SAMPLE_TYPE maxGain;
+        std::vector<EnvelopeFollower*>* _followers;
 };
 
 #endif

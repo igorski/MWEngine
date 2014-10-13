@@ -21,8 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "baseaudioevent.h"
-#include "global.h"
-#include "utils.h"
+#include "../global.h"
+#include "../utils.h"
 
 // constructor / destructor
 
@@ -116,6 +116,8 @@ bool BaseAudioEvent::isLocked()
 void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                                 bool loopStarted, int loopOffset, bool useChannelRange )
 {
+    lock(); // prevents buffer mutations (from other thread) during this read cycle
+
     // read from the pre-cached buffer for sequenced notes
 
     int startOffset  = getSampleStart();
@@ -127,7 +129,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int mi
     {
         int readPointer = i + bufferPos;
 
-        // over the max position ? read from the start ( sequence has started loop )
+        // over the max position ? read from the start ( implies that sequence has started loop )
         if ( readPointer >= maxBufferPosition )
         {
             if ( useChannelRange )  // TODO: channels use a min buffer position too ? (currently drummachine only)
@@ -153,28 +155,26 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int mi
         }
         else
         {
-            if ( loopStarted )
+            if ( loopStarted && i >= loopOffset )
             {
-                if ( i >= loopOffset )
+                readPointer = minBufferPosition + ( i - loopOffset );
+
+                if ( readPointer >= startOffset && readPointer <= endOffset )
                 {
-                    readPointer = minBufferPosition + ( i - loopOffset );
+                    readPointer -= startOffset;
 
-                    if ( readPointer >= startOffset && readPointer <= endOffset )
+                    for ( int c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
                     {
-                        readPointer -= startOffset;
+                        SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
+                        SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
 
-                        for ( int c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
-                        {
-                            SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
-                            SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
-
-                            tgtBuffer[ i ] += srcBuffer[ readPointer ];
-                        }
+                        tgtBuffer[ i ] += srcBuffer[ readPointer ];
                     }
                 }
             }
         }
     }
+    unlock();   // release lock
 }
 
 AudioBuffer* BaseAudioEvent::getBuffer()

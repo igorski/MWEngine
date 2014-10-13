@@ -21,7 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "phaser.h"
-#include "global.h"
+#include "../global.h"
 #include <math.h>
 
 /* constructor / destructor */

@@ -23,66 +23,65 @@
 #ifndef __SYNTHEVENT_H_INCLUDED__
 #define __SYNTHEVENT_H_INCLUDED__
 
-#include "basecacheableaudioevent.h"
-#include "adsr.h"
-#include "arpeggiator.h"
-#include "synthinstrument.h"
-#include "ringbuffer.h"
-#include "global.h"
+#include "basesynthevent.h"
+#include "../arpeggiator.h"
+#include "../ringbuffer.h"
 
-class SynthEvent : public BaseCacheableAudioEvent
+/**
+ * SynthEvent is an example of a BaseSynthEvent that uses
+ * one or more oscillators to render output. It is completely equal
+ * to the rendering used in MikroWave
+ *
+ * https://play.google.com/store/apps/details?id=nl.igorski.mikrowave&hl=en
+ */
+class SynthEvent : public BaseSynthEvent
 {
     public:
         // construct as a sequenced event
         SynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument *aInstrument, bool aAutoCache );
         SynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument *aInstrument, bool aAutoCache, bool hasParent );
 
-        // construct as live event (for instance: on noteOn of a keyboard)
+        // construct as live event (for instance: a keyboard noteOn)
         SynthEvent( float aFrequency, SynthInstrument *aInstrument );
         SynthEvent( float aFrequency, SynthInstrument *aInstrument, bool hasParent );
 
         ~SynthEvent();
 
-        static const float VOLUME_CORRECTION = .65; // we downscale the volume of the instrument as multi-timbral pops occur easily
-        bool isSequenced;
-
-        // used by view representation
-        int position;
-        float length;
-
         // properties
-        ADSR* getADSR();
-        float getFrequency();
         void setFrequency( float aFrequency );
         void setFrequency( float aFrequency, bool allOscillators, bool storeAsBaseFrequency );
-        void updateProperties( int aPosition, float aLength, SynthInstrument *aInstrument, int aState );
+
+        // render related
+        void invalidateProperties( int aPosition, float aLength, SynthInstrument *aInstrument );
         void calculateBuffers();
+
+        // cache related
         void cache( bool doCallback );
-        float getVolume();
-        void setVolume( float aValue );
 
-        void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
-                        bool loopStarted, int loopOffset, bool useChannelRange );
+    protected:
 
-        AudioBuffer* getBuffer();
-        AudioBuffer* synthesize( int aBufferLength );
+        // setup related
+        void init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
+                   int aLength, bool aIsSequenced, bool aHasParent );
 
-        void unlock();
+        void addToSequencer();
+        void setDeletable( bool value );
+
+        // render related
+        void render( AudioBuffer* outputBuffer );
+        void updateProperties();
+
+        // caching
+        void resetCache();
 
     private:
-
-        // reference to instrument
-        SynthInstrument* _instrument;
 
         // used for waveform generation
         SAMPLE_TYPE _phase;
         SAMPLE_TYPE _phaseIncr;
-        SAMPLE_TYPE _frequency;
         SAMPLE_TYPE _baseFrequency;
         SAMPLE_TYPE TWO_PI_OVER_SR;
-        int   _type;
-        float _volume;
-        ADSR* _adsr;
+        int _type;
 
         // specific to Pulse Width Modulation
         float pwr;
@@ -92,37 +91,20 @@ class SynthEvent : public BaseCacheableAudioEvent
 
         RingBuffer* _ringBuffer;
         int _ringBufferSize;
-        float EnergyDecayFactor;
+        void initKarplusStrong();
 
         // oscillators
 
         SynthEvent *_osc2;  // secondary oscillator
         bool hasParent;
         float _pwmValue;
+        void createOSC2( int aPosition, int aLength, SynthInstrument *aInstrument );
+        void destroyOSC2();
 
         // modules
 
         void applyModules( SynthInstrument* instrument );
         Arpeggiator* _arpeggiator;
-
-        // non-sequenced synthesis
-
-        int _minLength;
-        bool _hasMinLength;
-        bool _queuedForDeletion;
-
-        void init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
-                   int aLength, bool aHasParent, bool aIsSequenced );
-
-        void createOSC2( int aPosition, int aLength, SynthInstrument *aInstrument );
-        void setDeletable( bool value );
-        void render( AudioBuffer* outputBuffer );
-        void initKarplusStrong();
-        void destroyOSC2();
-
-        // caching
-        void doCache();
-        void resetCache();
 };
 
 #endif

@@ -216,27 +216,31 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #include "adsr.h"
 #include "arpeggiator.h"
 #include "audiochannel.h"
-#include "bitcrusher.h"
-#include "baseprocessor.h"
-#include "bufferutility.h"
-#include "bulkcacher.h"
-#include "decimator.h"
-#include "sampleevent.h"
-#include "delay.h"
-#include "drumevent.h"
-#include "drumpattern.h"
-#include "druminstrument.h"
-#include "filter.h"
-#include "fm.h"
-#include "formantfilter.h"
+#include "events/basesynthevent.h"
+#include "events/sampleevent.h"
+#include "events/drumevent.h"
+#include "events/synthevent.h"
 #include "lfo.h"
-#include "phaser.h"
-#include "processingchain.h"
 #include "routeableoscillator.h"
+#include "processors/bitcrusher.h"
+#include "processors/baseprocessor.h"
+#include "processors/decimator.h"
+#include "processors/delay.h"
+#include "processors/filter.h"
+#include "processors/limiter.h"
+#include "processors/finalizer.h"
+#include "processors/fm.h"
+#include "processors/formantfilter.h"
+#include "processors/waveshaper.h"
+#include "processors/lpfhpfilter.h"
+#include "processors/phaser.h"
+#include "processingchain.h"
 #include "samplemanager.h"
 #include "synthinstrument.h"
-#include "synthevent.h"
-#include "waveshaper.h"
+#include "bufferutility.h"
+#include "bulkcacher.h"
+#include "drumpattern.h"
+#include "druminstrument.h"
 
 
 static int *new_int_array(int nelements) { 
@@ -338,6 +342,18 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
   (void)jenv;
   (void)jcls;
   reset();
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_getMasterBusProcessors(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  ProcessingChain *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (ProcessingChain *)getMasterBusProcessors();
+  *(ProcessingChain **)&jresult = result; 
+  return jresult;
 }
 
 
@@ -981,6 +997,20 @@ SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngin
   result = (float)(arg1)->getPitchForStep(arg2,arg3);
   jresult = (jfloat)result; 
   return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Arpeggiator_1cloneProperties(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  Arpeggiator *arg1 = (Arpeggiator *) 0 ;
+  Arpeggiator *arg2 = (Arpeggiator *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(Arpeggiator **)&jarg1; 
+  arg2 = *(Arpeggiator **)&jarg2; 
+  (arg1)->cloneProperties(arg2);
 }
 
 
@@ -1787,560 +1817,330 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BaseProcessor(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BaseSynthEvent_1_1SWIG_10(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
-  BaseProcessor *result = 0 ;
+  BaseSynthEvent *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  result = (BaseProcessor *)new BaseProcessor();
-  *(BaseProcessor **)&jresult = result; 
+  result = (BaseSynthEvent *)new BaseSynthEvent();
+  *(BaseSynthEvent **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BaseProcessor(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  BaseProcessor *arg1 = (BaseProcessor *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(BaseProcessor **)&jarg1; 
-  delete arg1;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseProcessor_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
-  BaseProcessor *arg1 = (BaseProcessor *) 0 ;
-  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
-  bool arg3 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BaseProcessor **)&jarg1; 
-  arg2 = *(AudioBuffer **)&jarg2; 
-  arg3 = jarg3 ? true : false; 
-  (arg1)->process(arg2,arg3);
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseProcessor_1isCacheable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jboolean jresult = 0 ;
-  BaseProcessor *arg1 = (BaseProcessor *) 0 ;
-  bool result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BaseProcessor **)&jarg1; 
-  result = (bool)(arg1)->isCacheable();
-  jresult = (jboolean)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BitCrusher(JNIEnv *jenv, jclass jcls, jfloat jarg1, jfloat jarg2, jfloat jarg3) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BaseSynthEvent_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jfloat jarg1, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_, jboolean jarg5) {
   jlong jresult = 0 ;
   float arg1 ;
-  float arg2 ;
+  int arg2 ;
   float arg3 ;
-  BitCrusher *result = 0 ;
+  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
+  bool arg5 ;
+  BaseSynthEvent *result = 0 ;
   
   (void)jenv;
   (void)jcls;
+  (void)jarg4_;
   arg1 = (float)jarg1; 
-  arg2 = (float)jarg2; 
+  arg2 = (int)jarg2; 
   arg3 = (float)jarg3; 
-  result = (BitCrusher *)new BitCrusher(arg1,arg2,arg3);
-  *(BitCrusher **)&jresult = result; 
+  arg4 = *(SynthInstrument **)&jarg4; 
+  arg5 = jarg5 ? true : false; 
+  result = (BaseSynthEvent *)new BaseSynthEvent(arg1,arg2,arg3,arg4,arg5);
+  *(BaseSynthEvent **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1getAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  float result;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BaseSynthEvent_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jfloat jarg1, jlong jarg2, jobject jarg2_) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  SynthInstrument *arg2 = (SynthInstrument *) 0 ;
+  BaseSynthEvent *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  result = (float)(arg1)->getAmount();
-  jresult = (jfloat)result; 
+  (void)jarg2_;
+  arg1 = (float)jarg1; 
+  arg2 = *(SynthInstrument **)&jarg2; 
+  result = (BaseSynthEvent *)new BaseSynthEvent(arg1,arg2);
+  *(BaseSynthEvent **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1setAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  float arg2 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BaseSynthEvent(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1isSequenced_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  bool arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setAmount(arg2);
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  arg2 = jarg2 ? true : false; 
+  if (arg1) (arg1)->isSequenced = arg2;
 }
 
 
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1getInputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  result = (float)(arg1)->getInputMix();
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1setInputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  float arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setInputMix(arg2);
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1getOutputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  result = (float)(arg1)->getOutputMix();
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1setOutputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  float arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setOutputMix(arg2);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
-  bool arg3 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  arg2 = *(AudioBuffer **)&jarg2; 
-  arg3 = jarg3 ? true : false; 
-  (arg1)->process(arg2,arg3);
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1isCacheable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1isSequenced_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jboolean jresult = 0 ;
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
   bool result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(BitCrusher **)&jarg1; 
-  result = (bool)(arg1)->isCacheable();
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  result = (bool) ((arg1)->isSequenced);
   jresult = (jboolean)result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BitCrusher(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  BitCrusher *arg1 = (BitCrusher *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(BitCrusher **)&jarg1; 
-  delete arg1;
-}
-
-
-SWIGEXPORT jdouble JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getBPMbyLength(JNIEnv *jenv, jclass jcls, jdouble jarg1, jint jarg2) {
-  jdouble jresult = 0 ;
-  double arg1 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1position_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
   int arg2 ;
-  double result;
   
   (void)jenv;
   (void)jcls;
-  arg1 = (double)jarg1; 
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
   arg2 = (int)jarg2; 
-  result = (double)BufferUtility::getBPMbyLength(arg1,arg2);
-  jresult = (jdouble)result; 
-  return jresult;
+  if (arg1) (arg1)->position = arg2;
 }
 
 
-SWIGEXPORT jdouble JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getBPMbySamples(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3) {
-  jdouble jresult = 0 ;
-  int arg1 ;
-  int arg2 ;
-  int arg3 ;
-  double result;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (int)jarg1; 
-  arg2 = (int)jarg2; 
-  arg3 = (int)jarg3; 
-  result = (double)BufferUtility::getBPMbySamples(arg1,arg2,arg3);
-  jresult = (jdouble)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1bufferToMilliseconds(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2) {
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1position_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jint jresult = 0 ;
-  int arg1 ;
-  int arg2 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
   int result;
   
   (void)jenv;
   (void)jcls;
-  arg1 = (int)jarg1; 
-  arg2 = (int)jarg2; 
-  result = (int)BufferUtility::bufferToMilliseconds(arg1,arg2);
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  result = (int) ((arg1)->position);
   jresult = (jint)result; 
   return jresult;
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1millisecondsToBuffer(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2) {
-  jint jresult = 0 ;
-  int arg1 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1length_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  arg2 = (float)jarg2; 
+  if (arg1) (arg1)->length = arg2;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1length_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  result = (float) ((arg1)->length);
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1getADSR(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  ADSR *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  result = (ADSR *)(arg1)->getADSR();
+  *(ADSR **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1getVolume(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  result = (float)(arg1)->getVolume();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1setVolume(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setVolume(arg2);
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1getFrequency(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  result = (float)(arg1)->getFrequency();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1setFrequency(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setFrequency(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1invalidateProperties(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
   int arg2 ;
-  int result;
+  float arg3 ;
+  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
   
   (void)jenv;
   (void)jcls;
-  arg1 = (int)jarg1; 
+  (void)jarg1_;
+  (void)jarg4_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
   arg2 = (int)jarg2; 
-  result = (int)BufferUtility::millisecondsToBuffer(arg1,arg2);
-  jresult = (jint)result; 
-  return jresult;
+  arg3 = (float)jarg3; 
+  arg4 = *(SynthInstrument **)&jarg4; 
+  (arg1)->invalidateProperties(arg2,arg3,arg4);
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getBitRate(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3) {
-  jint jresult = 0 ;
-  int arg1 ;
-  int arg2 ;
-  int arg3 ;
-  int result;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1calculateBuffers(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
   
   (void)jenv;
   (void)jcls;
-  arg1 = (int)jarg1; 
-  arg2 = (int)jarg2; 
-  arg3 = (int)jarg3; 
-  result = (int)BufferUtility::getBitRate(arg1,arg2,arg3);
-  jresult = (jint)result; 
-  return jresult;
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  (arg1)->calculateBuffers();
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1calculateSamplesPerBeatDivision(JNIEnv *jenv, jclass jcls, jint jarg1, jdouble jarg2, jint jarg3) {
-  jint jresult = 0 ;
-  int arg1 ;
-  double arg2 ;
-  int arg3 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (int)jarg1; 
-  arg2 = (double)jarg2; 
-  arg3 = (int)jarg3; 
-  result = (int)BufferUtility::calculateSamplesPerBeatDivision(arg1,arg2,arg3);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getSamplesPerBeat(JNIEnv *jenv, jclass jcls, jint jarg1, jdouble jarg2) {
-  jint jresult = 0 ;
-  int arg1 ;
-  double arg2 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (int)jarg1; 
-  arg2 = (double)jarg2; 
-  result = (int)BufferUtility::getSamplesPerBeat(arg1,arg2);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getSamplesPerBar(JNIEnv *jenv, jclass jcls, jint jarg1, jdouble jarg2, jint jarg3, jint jarg4) {
-  jint jresult = 0 ;
-  int arg1 ;
-  double arg2 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1mixBuffer(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3, jint jarg4, jint jarg5, jboolean jarg6, jint jarg7, jboolean jarg8) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
   int arg3 ;
   int arg4 ;
-  int result;
+  int arg5 ;
+  bool arg6 ;
+  int arg7 ;
+  bool arg8 ;
   
   (void)jenv;
   (void)jcls;
-  arg1 = (int)jarg1; 
-  arg2 = (double)jarg2; 
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
   arg3 = (int)jarg3; 
   arg4 = (int)jarg4; 
-  result = (int)BufferUtility::getSamplesPerBar(arg1,arg2,arg3,arg4);
-  jresult = (jint)result; 
-  return jresult;
+  arg5 = (int)jarg5; 
+  arg6 = jarg6 ? true : false; 
+  arg7 = (int)jarg7; 
+  arg8 = jarg8 ? true : false; 
+  (arg1)->mixBuffer(arg2,arg3,arg4,arg5,arg6,arg7,arg8);
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BufferUtility(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1getBuffer(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jlong jresult = 0 ;
-  BufferUtility *result = 0 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  AudioBuffer *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  result = (BufferUtility *)new BufferUtility();
-  *(BufferUtility **)&jresult = result; 
+  (void)jarg1_;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  result = (AudioBuffer *)(arg1)->getBuffer();
+  *(AudioBuffer **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BufferUtility(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  BufferUtility *arg1 = (BufferUtility *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(BufferUtility **)&jarg1; 
-  delete arg1;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BulkCacher(JNIEnv *jenv, jclass jcls, jboolean jarg1) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1synthesize(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
   jlong jresult = 0 ;
-  bool arg1 ;
-  BulkCacher *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = jarg1 ? true : false; 
-  result = (BulkCacher *)new BulkCacher(arg1);
-  *(BulkCacher **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BulkCacher(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  BulkCacher *arg1 = (BulkCacher *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(BulkCacher **)&jarg1; 
-  delete arg1;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1addToQueue_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
-  BulkCacher *arg1 = (BulkCacher *) 0 ;
-  std::vector< BaseCacheableAudioEvent * > *arg2 = (std::vector< BaseCacheableAudioEvent * > *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BulkCacher **)&jarg1; 
-  arg2 = *(std::vector< BaseCacheableAudioEvent * > **)&jarg2; 
-  (arg1)->addToQueue(arg2);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1addToQueue_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  BulkCacher *arg1 = (BulkCacher *) 0 ;
-  BaseCacheableAudioEvent *arg2 = (BaseCacheableAudioEvent *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(BulkCacher **)&jarg1; 
-  arg2 = *(BaseCacheableAudioEvent **)&jarg2; 
-  (arg1)->addToQueue(arg2);
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1removeFromQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  jboolean jresult = 0 ;
-  BulkCacher *arg1 = (BulkCacher *) 0 ;
-  BaseCacheableAudioEvent *arg2 = (BaseCacheableAudioEvent *) 0 ;
-  bool result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(BulkCacher **)&jarg1; 
-  arg2 = *(BaseCacheableAudioEvent **)&jarg2; 
-  result = (bool)(arg1)->removeFromQueue(arg2);
-  jresult = (jboolean)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1hasQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jboolean jresult = 0 ;
-  BulkCacher *arg1 = (BulkCacher *) 0 ;
-  bool result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BulkCacher **)&jarg1; 
-  result = (bool)(arg1)->hasQueue();
-  jresult = (jboolean)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1cacheQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  BulkCacher *arg1 = (BulkCacher *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BulkCacher **)&jarg1; 
-  (arg1)->cacheQueue();
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1clearQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  BulkCacher *arg1 = (BulkCacher *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(BulkCacher **)&jarg1; 
-  (arg1)->clearQueue();
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1Decimator(JNIEnv *jenv, jclass jcls, jint jarg1, jfloat jarg2) {
-  jlong jresult = 0 ;
-  int arg1 ;
-  float arg2 ;
-  Decimator *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (int)jarg1; 
-  arg2 = (float)jarg2; 
-  result = (Decimator *)new Decimator(arg1,arg2);
-  *(Decimator **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1getBits(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  Decimator *arg1 = (Decimator *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Decimator **)&jarg1; 
-  result = (int)(arg1)->getBits();
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1setBits(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  Decimator *arg1 = (Decimator *) 0 ;
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
   int arg2 ;
+  AudioBuffer *result = 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(Decimator **)&jarg1; 
+  arg1 = *(BaseSynthEvent **)&jarg1; 
   arg2 = (int)jarg2; 
-  (arg1)->setBits(arg2);
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1getRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  Decimator *arg1 = (Decimator *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(Decimator **)&jarg1; 
-  result = (float)(arg1)->getRate();
-  jresult = (jfloat)result; 
+  result = (AudioBuffer *)(arg1)->synthesize(arg2);
+  *(AudioBuffer **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1setRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  Decimator *arg1 = (Decimator *) 0 ;
-  float arg2 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1cache(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
+  bool arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(Decimator **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setRate(arg2);
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  arg2 = jarg2 ? true : false; 
+  (arg1)->cache(arg2);
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
-  Decimator *arg1 = (Decimator *) 0 ;
-  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
-  bool arg3 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1unlock(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  BaseSynthEvent *arg1 = (BaseSynthEvent *) 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(Decimator **)&jarg1; 
-  arg2 = *(AudioBuffer **)&jarg2; 
-  arg3 = jarg3 ? true : false; 
-  (arg1)->process(arg2,arg3);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1Decimator(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  Decimator *arg1 = (Decimator *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(Decimator **)&jarg1; 
-  delete arg1;
+  arg1 = *(BaseSynthEvent **)&jarg1; 
+  (arg1)->unlock();
 }
 
 
@@ -2842,579 +2642,804 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1DrumInstrument(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jfloat jarg1, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_, jboolean jarg5) {
   jlong jresult = 0 ;
-  DrumInstrument *result = 0 ;
+  float arg1 ;
+  int arg2 ;
+  float arg3 ;
+  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
+  bool arg5 ;
+  SynthEvent *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  result = (DrumInstrument *)new DrumInstrument();
-  *(DrumInstrument **)&jresult = result; 
+  (void)jarg4_;
+  arg1 = (float)jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (float)jarg3; 
+  arg4 = *(SynthInstrument **)&jarg4; 
+  arg5 = jarg5 ? true : false; 
+  result = (SynthEvent *)new SynthEvent(arg1,arg2,arg3,arg4,arg5);
+  *(SynthEvent **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1DrumInstrument(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jfloat jarg1, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_, jboolean jarg5, jboolean jarg6) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  int arg2 ;
+  float arg3 ;
+  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
+  bool arg5 ;
+  bool arg6 ;
+  SynthEvent *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  arg1 = *(DrumInstrument **)&jarg1; 
+  (void)jarg4_;
+  arg1 = (float)jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (float)jarg3; 
+  arg4 = *(SynthInstrument **)&jarg4; 
+  arg5 = jarg5 ? true : false; 
+  arg6 = jarg6 ? true : false; 
+  result = (SynthEvent *)new SynthEvent(arg1,arg2,arg3,arg4,arg5,arg6);
+  *(SynthEvent **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jfloat jarg1, jlong jarg2, jobject jarg2_) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  SynthInstrument *arg2 = (SynthInstrument *) 0 ;
+  SynthEvent *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg2_;
+  arg1 = (float)jarg1; 
+  arg2 = *(SynthInstrument **)&jarg2; 
+  result = (SynthEvent *)new SynthEvent(arg1,arg2);
+  *(SynthEvent **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_13(JNIEnv *jenv, jclass jcls, jfloat jarg1, jlong jarg2, jobject jarg2_, jboolean jarg3) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  SynthInstrument *arg2 = (SynthInstrument *) 0 ;
+  bool arg3 ;
+  SynthEvent *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg2_;
+  arg1 = (float)jarg1; 
+  arg2 = *(SynthInstrument **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  result = (SynthEvent *)new SynthEvent(arg1,arg2,arg3);
+  *(SynthEvent **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1SynthEvent(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(SynthEvent **)&jarg1; 
   delete arg1;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1volume_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1setFrequency_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
   float arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumInstrument **)&jarg1; 
+  arg1 = *(SynthEvent **)&jarg1; 
   arg2 = (float)jarg2; 
-  if (arg1) (arg1)->volume = arg2;
+  (arg1)->setFrequency(arg2);
 }
 
 
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1volume_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  float result;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1setFrequency_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2, jboolean jarg3, jboolean jarg4) {
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
+  float arg2 ;
+  bool arg3 ;
+  bool arg4 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  result = (float) ((arg1)->volume);
-  jresult = (jfloat)result; 
-  return jresult;
+  arg1 = *(SynthEvent **)&jarg1; 
+  arg2 = (float)jarg2; 
+  arg3 = jarg3 ? true : false; 
+  arg4 = jarg4 ? true : false; 
+  (arg1)->setFrequency(arg2,arg3,arg4);
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1drumTimbre_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1invalidateProperties(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_) {
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
   int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  arg2 = (int)jarg2; 
-  if (arg1) (arg1)->drumTimbre = arg2;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1drumTimbre_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  result = (int) ((arg1)->drumTimbre);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1processingChain_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  ProcessingChain *arg2 = (ProcessingChain *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  arg2 = *(ProcessingChain **)&jarg2; 
-  if (arg1) (arg1)->processingChain = arg2;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1processingChain_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  ProcessingChain *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  result = (ProcessingChain *) ((arg1)->processingChain);
-  *(ProcessingChain **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1rOsc_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  RouteableOscillator *arg2 = (RouteableOscillator *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  arg2 = *(RouteableOscillator **)&jarg2; 
-  if (arg1) (arg1)->rOsc = arg2;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1rOsc_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  RouteableOscillator *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  result = (RouteableOscillator *) ((arg1)->rOsc);
-  *(RouteableOscillator **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1audioChannel_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  AudioChannel *arg2 = (AudioChannel *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  arg2 = *(AudioChannel **)&jarg2; 
-  if (arg1) (arg1)->audioChannel = arg2;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1audioChannel_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
-  AudioChannel *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumInstrument **)&jarg1; 
-  result = (AudioChannel *) ((arg1)->audioChannel);
-  *(AudioChannel **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1DrumPattern(JNIEnv *jenv, jclass jcls, jint jarg1) {
-  jlong jresult = 0 ;
-  int arg1 ;
-  DrumPattern *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (int)jarg1; 
-  result = (DrumPattern *)new DrumPattern(arg1);
-  *(DrumPattern **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1DrumPattern(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(DrumPattern **)&jarg1; 
-  delete arg1;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1num_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = (int)jarg2; 
-  if (arg1) (arg1)->num = arg2;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1num_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int) ((arg1)->num);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1eventAmount_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = (int)jarg2; 
-  if (arg1) (arg1)->eventAmount = arg2;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1eventAmount_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int) ((arg1)->eventAmount);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1audioEvents_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  std::vector< DrumEvent * > *arg2 = (std::vector< DrumEvent * > *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = *(std::vector< DrumEvent * > **)&jarg2; 
-  if (arg1) (arg1)->audioEvents = arg2;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1audioEvents_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  std::vector< DrumEvent * > *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (std::vector< DrumEvent * > *) ((arg1)->audioEvents);
-  *(std::vector< DrumEvent * > **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1updateTimbre(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->updateTimbre(arg2);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1cacheEvents(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  DrumInstrument *arg2 = (DrumInstrument *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  (void)jarg2_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = *(DrumInstrument **)&jarg2; 
-  (arg1)->cacheEvents(arg2);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1addDrumEvent(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3, jlong jarg4, jobject jarg4_) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int arg2 ;
-  int arg3 ;
-  DrumInstrument *arg4 = (DrumInstrument *) 0 ;
+  float arg3 ;
+  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   (void)jarg4_;
-  arg1 = *(DrumPattern **)&jarg1; 
+  arg1 = *(SynthEvent **)&jarg1; 
   arg2 = (int)jarg2; 
-  arg3 = (int)jarg3; 
-  arg4 = *(DrumInstrument **)&jarg4; 
-  (arg1)->addDrumEvent(arg2,arg3,arg4);
+  arg3 = (float)jarg3; 
+  arg4 = *(SynthInstrument **)&jarg4; 
+  (arg1)->invalidateProperties(arg2,arg3,arg4);
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1removeDrumEvent(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int arg2 ;
-  int arg3 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1calculateBuffers(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = (int)jarg2; 
-  arg3 = (int)jarg3; 
-  (arg1)->removeDrumEvent(arg2,arg3);
+  arg1 = *(SynthEvent **)&jarg1; 
+  (arg1)->calculateBuffers();
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1destroy(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1cache(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
+  bool arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  (arg1)->destroy();
+  arg1 = *(SynthEvent **)&jarg1; 
+  arg2 = jarg2 ? true : false; 
+  (arg1)->cache(arg2);
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1kickPatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int arg2 ;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1LFO(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  LFO *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (LFO *)new LFO();
+  *(LFO **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1LFO(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  LFO *arg1 = (LFO *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(LFO **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1MAX_1LFO_1RATE_1get(JNIEnv *jenv, jclass jcls) {
+  jfloat jresult = 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (float)LFO::MAX_LFO_RATE;
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1MIN_1LFO_1RATE_1get(JNIEnv *jenv, jclass jcls) {
+  jfloat jresult = 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (float)LFO::MIN_LFO_RATE;
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  LFO *arg1 = (LFO *) 0 ;
+  float result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = (int)jarg2; 
-  if (arg1) (arg1)->kickPatternLength = arg2;
+  arg1 = *(LFO **)&jarg1; 
+  result = (float)(arg1)->getRate();
+  jresult = (jfloat)result; 
+  return jresult;
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1kickPatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  LFO *arg1 = (LFO *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(LFO **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setRate(arg2);
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getWave(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jint jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  LFO *arg1 = (LFO *) 0 ;
   int result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int) ((arg1)->kickPatternLength);
+  arg1 = *(LFO **)&jarg1; 
+  result = (int)(arg1)->getWave();
   jresult = (jint)result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1snarePatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setWave(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  LFO *arg1 = (LFO *) 0 ;
   int arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
+  arg1 = *(LFO **)&jarg1; 
   arg2 = (int)jarg2; 
-  if (arg1) (arg1)->snarePatternLength = arg2;
+  (arg1)->setWave(arg2);
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1snarePatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int) ((arg1)->snarePatternLength);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1stickPatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1generate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  LFO *arg1 = (LFO *) 0 ;
   int arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
+  arg1 = *(LFO **)&jarg1; 
   arg2 = (int)jarg2; 
-  if (arg1) (arg1)->stickPatternLength = arg2;
+  (arg1)->generate(arg2);
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1stickPatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jint jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  LFO *arg1 = (LFO *) 0 ;
   int result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int) ((arg1)->stickPatternLength);
+  arg1 = *(LFO **)&jarg1; 
+  result = (int)(arg1)->getLength();
   jresult = (jint)result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1hatPatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  LFO *arg1 = (LFO *) 0 ;
   int arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
+  arg1 = *(LFO **)&jarg1; 
   arg2 = (int)jarg2; 
-  if (arg1) (arg1)->hatPatternLength = arg2;
+  (arg1)->setLength(arg2);
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1hatPatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getReadOffset(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jint jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  LFO *arg1 = (LFO *) 0 ;
   int result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int) ((arg1)->hatPatternLength);
+  arg1 = *(LFO **)&jarg1; 
+  result = (int)(arg1)->getReadOffset();
   jresult = (jint)result; 
   return jresult;
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getKickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *result = 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setReadOffset(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  LFO *arg1 = (LFO *) 0 ;
+  int arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int *)(arg1)->getKickPattern();
-  *(int **)&jresult = result; 
+  arg1 = *(LFO **)&jarg1; 
+  arg2 = (int)jarg2; 
+  (arg1)->setReadOffset(arg2);
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1peek(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  LFO *arg1 = (LFO *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(LFO **)&jarg1; 
+  result = (float)(arg1)->peek();
+  jresult = (jfloat)result; 
   return jresult;
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getSnarePattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1RouteableOscillator(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *result = 0 ;
+  RouteableOscillator *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int *)(arg1)->getSnarePattern();
-  *(int **)&jresult = result; 
+  result = (RouteableOscillator *)new RouteableOscillator();
+  *(RouteableOscillator **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getStickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *result = 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1RouteableOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1destination_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  int arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int *)(arg1)->getStickPattern();
-  *(int **)&jresult = result; 
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->destination = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1destination_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  result = (int) ((arg1)->destination);
+  jresult = (jint)result; 
   return jresult;
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getHatPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *result = 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1speed_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  float arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  result = (int *)(arg1)->getHatPattern();
-  *(int **)&jresult = result; 
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  arg2 = (float)jarg2; 
+  if (arg1) (arg1)->speed = arg2;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1speed_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  result = (float) ((arg1)->speed);
+  jresult = (jfloat)result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setKickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *arg2 = (int *) 0 ;
-  int arg3 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1wave_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  int arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = *(int **)&jarg2; 
-  arg3 = (int)jarg3; 
-  (arg1)->setKickPattern(arg2,arg3);
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->wave = arg2;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setSnarePattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *arg2 = (int *) 0 ;
-  int arg3 ;
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1wave_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  int result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = *(int **)&jarg2; 
-  arg3 = (int)jarg3; 
-  (arg1)->setSnarePattern(arg2,arg3);
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  result = (int) ((arg1)->wave);
+  jresult = (jint)result; 
+  return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setStickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *arg2 = (int *) 0 ;
-  int arg3 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1linkOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = *(int **)&jarg2; 
-  arg3 = (int)jarg3; 
-  (arg1)->setStickPattern(arg2,arg3);
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  (arg1)->linkOscillator();
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setHatPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
-  DrumPattern *arg1 = (DrumPattern *) 0 ;
-  int *arg2 = (int *) 0 ;
-  int arg3 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1unlinkOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(DrumPattern **)&jarg1; 
-  arg2 = *(int **)&jarg2; 
-  arg3 = (int)jarg3; 
-  (arg1)->setHatPattern(arg2,arg3);
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  (arg1)->unlinkOscillator();
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1isLinked(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  result = (bool)(arg1)->isLinked();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1getLinkedOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
+  LFO *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(RouteableOscillator **)&jarg1; 
+  result = (LFO *)(arg1)->getLinkedOscillator();
+  *(LFO **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BaseProcessor(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  BaseProcessor *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (BaseProcessor *)new BaseProcessor();
+  *(BaseProcessor **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BaseProcessor(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  BaseProcessor *arg1 = (BaseProcessor *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(BaseProcessor **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseProcessor_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  BaseProcessor *arg1 = (BaseProcessor *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseProcessor **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseProcessor_1isCacheable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  BaseProcessor *arg1 = (BaseProcessor *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BaseProcessor **)&jarg1; 
+  result = (bool)(arg1)->isCacheable();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BitCrusher(JNIEnv *jenv, jclass jcls, jfloat jarg1, jfloat jarg2, jfloat jarg3) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  float arg2 ;
+  float arg3 ;
+  BitCrusher *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (float)jarg1; 
+  arg2 = (float)jarg2; 
+  arg3 = (float)jarg3; 
+  result = (BitCrusher *)new BitCrusher(arg1,arg2,arg3);
+  *(BitCrusher **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1getAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  result = (float)(arg1)->getAmount();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1setAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setAmount(arg2);
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1getInputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  result = (float)(arg1)->getInputMix();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1setInputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setInputMix(arg2);
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1getOutputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  result = (float)(arg1)->getOutputMix();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1setOutputMix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setOutputMix(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1isCacheable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BitCrusher **)&jarg1; 
+  result = (bool)(arg1)->isCacheable();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BitCrusher(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  BitCrusher *arg1 = (BitCrusher *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(BitCrusher **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1Decimator(JNIEnv *jenv, jclass jcls, jint jarg1, jfloat jarg2) {
+  jlong jresult = 0 ;
+  int arg1 ;
+  float arg2 ;
+  Decimator *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (float)jarg2; 
+  result = (Decimator *)new Decimator(arg1,arg2);
+  *(Decimator **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1getBits(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  Decimator *arg1 = (Decimator *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Decimator **)&jarg1; 
+  result = (int)(arg1)->getBits();
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1setBits(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  Decimator *arg1 = (Decimator *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Decimator **)&jarg1; 
+  arg2 = (int)jarg2; 
+  (arg1)->setBits(arg2);
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1getRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  Decimator *arg1 = (Decimator *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Decimator **)&jarg1; 
+  result = (float)(arg1)->getRate();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1setRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  Decimator *arg1 = (Decimator *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Decimator **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setRate(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  Decimator *arg1 = (Decimator *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Decimator **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1Decimator(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Decimator *arg1 = (Decimator *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(Decimator **)&jarg1; 
+  delete arg1;
 }
 
 
@@ -3750,189 +3775,208 @@ SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEng
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1LFO(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1Limiter_1_1SWIG_10(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
-  LFO *result = 0 ;
+  Limiter *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  result = (LFO *)new LFO();
-  *(LFO **)&jresult = result; 
+  result = (Limiter *)new Limiter();
+  *(Limiter **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1LFO(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  LFO *arg1 = (LFO *) 0 ;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1Limiter_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jfloat jarg1, jfloat jarg2, jint jarg3, jint jarg4) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  float arg2 ;
+  int arg3 ;
+  int arg4 ;
+  Limiter *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  arg1 = *(LFO **)&jarg1; 
+  arg1 = (float)jarg1; 
+  arg2 = (float)jarg2; 
+  arg3 = (int)jarg3; 
+  arg4 = (int)jarg4; 
+  result = (Limiter *)new Limiter(arg1,arg2,arg3,arg4);
+  *(Limiter **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1Limiter(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Limiter *arg1 = (Limiter *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(Limiter **)&jarg1; 
   delete arg1;
 }
 
 
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1MAX_1LFO_1RATE_1get(JNIEnv *jenv, jclass jcls) {
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Limiter_1getLinearGR(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jfloat jresult = 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (float)LFO::MAX_LFO_RATE;
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1MIN_1LFO_1RATE_1get(JNIEnv *jenv, jclass jcls) {
-  jfloat jresult = 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (float)LFO::MIN_LFO_RATE;
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  LFO *arg1 = (LFO *) 0 ;
+  Limiter *arg1 = (Limiter *) 0 ;
   float result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  result = (float)(arg1)->getRate();
+  arg1 = *(Limiter **)&jarg1; 
+  result = (float)(arg1)->getLinearGR();
   jresult = (jfloat)result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  LFO *arg1 = (LFO *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Limiter_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  Limiter *arg1 = (Limiter *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Limiter **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Limiter_1isCacheable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  Limiter *arg1 = (Limiter *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Limiter **)&jarg1; 
+  result = (bool)(arg1)->isCacheable();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1Finalizer(JNIEnv *jenv, jclass jcls, jfloat jarg1, jfloat jarg2, jint jarg3, jint jarg4) {
+  jlong jresult = 0 ;
+  float arg1 ;
   float arg2 ;
+  int arg3 ;
+  int arg4 ;
+  Finalizer *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
+  arg1 = (float)jarg1; 
   arg2 = (float)jarg2; 
-  (arg1)->setRate(arg2);
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getWave(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  LFO *arg1 = (LFO *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  result = (int)(arg1)->getWave();
-  jresult = (jint)result; 
+  arg3 = (int)jarg3; 
+  arg4 = (int)jarg4; 
+  result = (Finalizer *)new Finalizer(arg1,arg2,arg3,arg4);
+  *(Finalizer **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setWave(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  LFO *arg1 = (LFO *) 0 ;
-  int arg2 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1Finalizer(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Finalizer *arg1 = (Finalizer *) 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->setWave(arg2);
+  arg1 = *(Finalizer **)&jarg1; 
+  delete arg1;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1generate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  LFO *arg1 = (LFO *) 0 ;
-  int arg2 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Finalizer_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  Finalizer *arg1 = (Finalizer *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->generate(arg2);
+  arg1 = *(Finalizer **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  LFO *arg1 = (LFO *) 0 ;
-  int result;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1LPFHPFilter(JNIEnv *jenv, jclass jcls, jfloat jarg1, jfloat jarg2, jint jarg3) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  float arg2 ;
+  int arg3 ;
+  LPFHPFilter *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  result = (int)(arg1)->getLength();
-  jresult = (jint)result; 
+  arg1 = (float)jarg1; 
+  arg2 = (float)jarg2; 
+  arg3 = (int)jarg3; 
+  result = (LPFHPFilter *)new LPFHPFilter(arg1,arg2,arg3);
+  *(LPFHPFilter **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  LFO *arg1 = (LFO *) 0 ;
-  int arg2 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1LPFHPFilter(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  LPFHPFilter *arg1 = (LPFHPFilter *) 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->setLength(arg2);
+  arg1 = *(LPFHPFilter **)&jarg1; 
+  delete arg1;
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getReadOffset(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  LFO *arg1 = (LFO *) 0 ;
-  int result;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LPFHPFilter_1setLPF(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2, jint jarg3) {
+  LPFHPFilter *arg1 = (LPFHPFilter *) 0 ;
+  float arg2 ;
+  int arg3 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  result = (int)(arg1)->getReadOffset();
-  jresult = (jint)result; 
-  return jresult;
+  arg1 = *(LPFHPFilter **)&jarg1; 
+  arg2 = (float)jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setLPF(arg2,arg3);
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setReadOffset(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  LFO *arg1 = (LFO *) 0 ;
-  int arg2 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LPFHPFilter_1setHPF(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2, jint jarg3) {
+  LPFHPFilter *arg1 = (LPFHPFilter *) 0 ;
+  float arg2 ;
+  int arg3 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->setReadOffset(arg2);
+  arg1 = *(LPFHPFilter **)&jarg1; 
+  arg2 = (float)jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setHPF(arg2,arg3);
 }
 
 
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1peek(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  LFO *arg1 = (LFO *) 0 ;
-  float result;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LPFHPFilter_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  LPFHPFilter *arg1 = (LPFHPFilter *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  result = (float)(arg1)->peek();
-  jresult = (jfloat)result; 
-  return jresult;
+  arg1 = *(LPFHPFilter **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
 }
 
 
@@ -4414,6 +4458,103 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1WaveShaper(JNIEnv *jenv, jclass jcls, jfloat jarg1, jfloat jarg2) {
+  jlong jresult = 0 ;
+  float arg1 ;
+  float arg2 ;
+  WaveShaper *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (float)jarg1; 
+  arg2 = (float)jarg2; 
+  result = (WaveShaper *)new WaveShaper(arg1,arg2);
+  *(WaveShaper **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1getAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  WaveShaper *arg1 = (WaveShaper *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(WaveShaper **)&jarg1; 
+  result = (float)(arg1)->getAmount();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1setAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  WaveShaper *arg1 = (WaveShaper *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(WaveShaper **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setAmount(arg2);
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1getLevel(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  WaveShaper *arg1 = (WaveShaper *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(WaveShaper **)&jarg1; 
+  result = (float)(arg1)->getLevel();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1setLevel(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  WaveShaper *arg1 = (WaveShaper *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(WaveShaper **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->setLevel(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  WaveShaper *arg1 = (WaveShaper *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(WaveShaper **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1WaveShaper(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  WaveShaper *arg1 = (WaveShaper *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(WaveShaper **)&jarg1; 
+  delete arg1;
+}
+
+
 SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1ProcessingChain(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
   ProcessingChain *result = 0 ;
@@ -4487,164 +4628,6 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
   (void)jarg1_;
   arg1 = *(ProcessingChain **)&jarg1; 
   (arg1)->reset();
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1RouteableOscillator(JNIEnv *jenv, jclass jcls) {
-  jlong jresult = 0 ;
-  RouteableOscillator *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (RouteableOscillator *)new RouteableOscillator();
-  *(RouteableOscillator **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1RouteableOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  delete arg1;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1destination_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  arg2 = (int)jarg2; 
-  if (arg1) (arg1)->destination = arg2;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1destination_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  result = (int) ((arg1)->destination);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1speed_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  float arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  arg2 = (float)jarg2; 
-  if (arg1) (arg1)->speed = arg2;
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1speed_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  result = (float) ((arg1)->speed);
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1wave_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  arg2 = (int)jarg2; 
-  if (arg1) (arg1)->wave = arg2;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1wave_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  result = (int) ((arg1)->wave);
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1linkOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  (arg1)->linkOscillator();
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1unlinkOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  (arg1)->unlinkOscillator();
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1isLinked(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jboolean jresult = 0 ;
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  bool result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  result = (bool)(arg1)->isLinked();
-  jresult = (jboolean)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_RouteableOscillator_1getLinkedOscillator(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  RouteableOscillator *arg1 = (RouteableOscillator *) 0 ;
-  LFO *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(RouteableOscillator **)&jarg1; 
-  result = (LFO *)(arg1)->getLinkedOscillator();
-  *(LFO **)&jresult = result; 
-  return jresult;
 }
 
 
@@ -5402,490 +5385,845 @@ SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngine
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jfloat jarg1, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_, jboolean jarg5) {
-  jlong jresult = 0 ;
-  float arg1 ;
+SWIGEXPORT jdouble JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getBPMbyLength(JNIEnv *jenv, jclass jcls, jdouble jarg1, jint jarg2) {
+  jdouble jresult = 0 ;
+  double arg1 ;
   int arg2 ;
-  float arg3 ;
-  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
-  bool arg5 ;
-  SynthEvent *result = 0 ;
+  double result;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg4_;
-  arg1 = (float)jarg1; 
+  arg1 = (double)jarg1; 
   arg2 = (int)jarg2; 
-  arg3 = (float)jarg3; 
-  arg4 = *(SynthInstrument **)&jarg4; 
-  arg5 = jarg5 ? true : false; 
-  result = (SynthEvent *)new SynthEvent(arg1,arg2,arg3,arg4,arg5);
-  *(SynthEvent **)&jresult = result; 
+  result = (double)BufferUtility::getBPMbyLength(arg1,arg2);
+  jresult = (jdouble)result; 
   return jresult;
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jfloat jarg1, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_, jboolean jarg5, jboolean jarg6) {
-  jlong jresult = 0 ;
-  float arg1 ;
+SWIGEXPORT jdouble JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getBPMbySamples(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3) {
+  jdouble jresult = 0 ;
+  int arg1 ;
   int arg2 ;
-  float arg3 ;
-  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
-  bool arg5 ;
-  bool arg6 ;
-  SynthEvent *result = 0 ;
+  int arg3 ;
+  double result;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg4_;
-  arg1 = (float)jarg1; 
+  arg1 = (int)jarg1; 
   arg2 = (int)jarg2; 
-  arg3 = (float)jarg3; 
-  arg4 = *(SynthInstrument **)&jarg4; 
-  arg5 = jarg5 ? true : false; 
-  arg6 = jarg6 ? true : false; 
-  result = (SynthEvent *)new SynthEvent(arg1,arg2,arg3,arg4,arg5,arg6);
-  *(SynthEvent **)&jresult = result; 
+  arg3 = (int)jarg3; 
+  result = (double)BufferUtility::getBPMbySamples(arg1,arg2,arg3);
+  jresult = (jdouble)result; 
   return jresult;
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jfloat jarg1, jlong jarg2, jobject jarg2_) {
-  jlong jresult = 0 ;
-  float arg1 ;
-  SynthInstrument *arg2 = (SynthInstrument *) 0 ;
-  SynthEvent *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg2_;
-  arg1 = (float)jarg1; 
-  arg2 = *(SynthInstrument **)&jarg2; 
-  result = (SynthEvent *)new SynthEvent(arg1,arg2);
-  *(SynthEvent **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1SynthEvent_1_1SWIG_13(JNIEnv *jenv, jclass jcls, jfloat jarg1, jlong jarg2, jobject jarg2_, jboolean jarg3) {
-  jlong jresult = 0 ;
-  float arg1 ;
-  SynthInstrument *arg2 = (SynthInstrument *) 0 ;
-  bool arg3 ;
-  SynthEvent *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg2_;
-  arg1 = (float)jarg1; 
-  arg2 = *(SynthInstrument **)&jarg2; 
-  arg3 = jarg3 ? true : false; 
-  result = (SynthEvent *)new SynthEvent(arg1,arg2,arg3);
-  *(SynthEvent **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1SynthEvent(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = *(SynthEvent **)&jarg1; 
-  delete arg1;
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1VOLUME_1CORRECTION_1get(JNIEnv *jenv, jclass jcls) {
-  jfloat jresult = 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  result = (float)SynthEvent::VOLUME_CORRECTION;
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1isSequenced_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  bool arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = jarg2 ? true : false; 
-  if (arg1) (arg1)->isSequenced = arg2;
-}
-
-
-SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1isSequenced_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jboolean jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  bool result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  result = (bool) ((arg1)->isSequenced);
-  jresult = (jboolean)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1position_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = (int)jarg2; 
-  if (arg1) (arg1)->position = arg2;
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1position_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1bufferToMilliseconds(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2) {
   jint jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
+  int arg1 ;
+  int arg2 ;
   int result;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  result = (int) ((arg1)->position);
+  arg1 = (int)jarg1; 
+  arg2 = (int)jarg2; 
+  result = (int)BufferUtility::bufferToMilliseconds(arg1,arg2);
   jresult = (jint)result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1length_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  float arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = (float)jarg2; 
-  if (arg1) (arg1)->length = arg2;
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1length_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  result = (float) ((arg1)->length);
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1getADSR(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  ADSR *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  result = (ADSR *)(arg1)->getADSR();
-  *(ADSR **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1getFrequency(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  result = (float)(arg1)->getFrequency();
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1setFrequency_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  float arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setFrequency(arg2);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1setFrequency_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2, jboolean jarg3, jboolean jarg4) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  float arg2 ;
-  bool arg3 ;
-  bool arg4 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = (float)jarg2; 
-  arg3 = jarg3 ? true : false; 
-  arg4 = jarg4 ? true : false; 
-  (arg1)->setFrequency(arg2,arg3,arg4);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1updateProperties(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_, jint jarg5) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1millisecondsToBuffer(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2) {
+  jint jresult = 0 ;
+  int arg1 ;
   int arg2 ;
-  float arg3 ;
-  SynthInstrument *arg4 = (SynthInstrument *) 0 ;
-  int arg5 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (int)jarg2; 
+  result = (int)BufferUtility::millisecondsToBuffer(arg1,arg2);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getBitRate(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3) {
+  jint jresult = 0 ;
+  int arg1 ;
+  int arg2 ;
+  int arg3 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (int)jarg3; 
+  result = (int)BufferUtility::getBitRate(arg1,arg2,arg3);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1calculateSamplesPerBeatDivision(JNIEnv *jenv, jclass jcls, jint jarg1, jdouble jarg2, jint jarg3) {
+  jint jresult = 0 ;
+  int arg1 ;
+  double arg2 ;
+  int arg3 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (double)jarg2; 
+  arg3 = (int)jarg3; 
+  result = (int)BufferUtility::calculateSamplesPerBeatDivision(arg1,arg2,arg3);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getSamplesPerBeat(JNIEnv *jenv, jclass jcls, jint jarg1, jdouble jarg2) {
+  jint jresult = 0 ;
+  int arg1 ;
+  double arg2 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (double)jarg2; 
+  result = (int)BufferUtility::getSamplesPerBeat(arg1,arg2);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1getSamplesPerBar(JNIEnv *jenv, jclass jcls, jint jarg1, jdouble jarg2, jint jarg3, jint jarg4) {
+  jint jresult = 0 ;
+  int arg1 ;
+  double arg2 ;
+  int arg3 ;
+  int arg4 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (double)jarg2; 
+  arg3 = (int)jarg3; 
+  arg4 = (int)jarg4; 
+  result = (int)BufferUtility::getSamplesPerBar(arg1,arg2,arg3,arg4);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BufferUtility(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  BufferUtility *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (BufferUtility *)new BufferUtility();
+  *(BufferUtility **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BufferUtility(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  BufferUtility *arg1 = (BufferUtility *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(BufferUtility **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1BulkCacher(JNIEnv *jenv, jclass jcls, jboolean jarg1) {
+  jlong jresult = 0 ;
+  bool arg1 ;
+  BulkCacher *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = jarg1 ? true : false; 
+  result = (BulkCacher *)new BulkCacher(arg1);
+  *(BulkCacher **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1BulkCacher(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  BulkCacher *arg1 = (BulkCacher *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(BulkCacher **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1addToQueue_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
+  BulkCacher *arg1 = (BulkCacher *) 0 ;
+  std::vector< BaseCacheableAudioEvent * > *arg2 = (std::vector< BaseCacheableAudioEvent * > *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BulkCacher **)&jarg1; 
+  arg2 = *(std::vector< BaseCacheableAudioEvent * > **)&jarg2; 
+  (arg1)->addToQueue(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1addToQueue_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  BulkCacher *arg1 = (BulkCacher *) 0 ;
+  BaseCacheableAudioEvent *arg2 = (BaseCacheableAudioEvent *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(BulkCacher **)&jarg1; 
+  arg2 = *(BaseCacheableAudioEvent **)&jarg2; 
+  (arg1)->addToQueue(arg2);
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1removeFromQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  jboolean jresult = 0 ;
+  BulkCacher *arg1 = (BulkCacher *) 0 ;
+  BaseCacheableAudioEvent *arg2 = (BaseCacheableAudioEvent *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(BulkCacher **)&jarg1; 
+  arg2 = *(BaseCacheableAudioEvent **)&jarg2; 
+  result = (bool)(arg1)->removeFromQueue(arg2);
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1hasQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  BulkCacher *arg1 = (BulkCacher *) 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BulkCacher **)&jarg1; 
+  result = (bool)(arg1)->hasQueue();
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1cacheQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  BulkCacher *arg1 = (BulkCacher *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BulkCacher **)&jarg1; 
+  (arg1)->cacheQueue();
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BulkCacher_1clearQueue(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  BulkCacher *arg1 = (BulkCacher *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(BulkCacher **)&jarg1; 
+  (arg1)->clearQueue();
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1DrumInstrument(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  DrumInstrument *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (DrumInstrument *)new DrumInstrument();
+  *(DrumInstrument **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1DrumInstrument(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1volume_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  arg2 = (float)jarg2; 
+  if (arg1) (arg1)->volume = arg2;
+}
+
+
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1volume_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  result = (float) ((arg1)->volume);
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1drumTimbre_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->drumTimbre = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1drumTimbre_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  result = (int) ((arg1)->drumTimbre);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1processingChain_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  ProcessingChain *arg2 = (ProcessingChain *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  arg2 = *(ProcessingChain **)&jarg2; 
+  if (arg1) (arg1)->processingChain = arg2;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1processingChain_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  ProcessingChain *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  result = (ProcessingChain *) ((arg1)->processingChain);
+  *(ProcessingChain **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1rOsc_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  RouteableOscillator *arg2 = (RouteableOscillator *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  arg2 = *(RouteableOscillator **)&jarg2; 
+  if (arg1) (arg1)->rOsc = arg2;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1rOsc_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  RouteableOscillator *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  result = (RouteableOscillator *) ((arg1)->rOsc);
+  *(RouteableOscillator **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1audioChannel_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  AudioChannel *arg2 = (AudioChannel *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  arg2 = *(AudioChannel **)&jarg2; 
+  if (arg1) (arg1)->audioChannel = arg2;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumInstrument_1audioChannel_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  DrumInstrument *arg1 = (DrumInstrument *) 0 ;
+  AudioChannel *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumInstrument **)&jarg1; 
+  result = (AudioChannel *) ((arg1)->audioChannel);
+  *(AudioChannel **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1DrumPattern(JNIEnv *jenv, jclass jcls, jint jarg1) {
+  jlong jresult = 0 ;
+  int arg1 ;
+  DrumPattern *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  result = (DrumPattern *)new DrumPattern(arg1);
+  *(DrumPattern **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1DrumPattern(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(DrumPattern **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1num_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->num = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1num_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int) ((arg1)->num);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1eventAmount_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->eventAmount = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1eventAmount_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int) ((arg1)->eventAmount);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1audioEvents_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  std::vector< DrumEvent * > *arg2 = (std::vector< DrumEvent * > *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = *(std::vector< DrumEvent * > **)&jarg2; 
+  if (arg1) (arg1)->audioEvents = arg2;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1audioEvents_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  std::vector< DrumEvent * > *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (std::vector< DrumEvent * > *) ((arg1)->audioEvents);
+  *(std::vector< DrumEvent * > **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1updateTimbre(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = (int)jarg2; 
+  (arg1)->updateTimbre(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1cacheEvents(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  DrumInstrument *arg2 = (DrumInstrument *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = *(DrumInstrument **)&jarg2; 
+  (arg1)->cacheEvents(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1addDrumEvent(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3, jlong jarg4, jobject jarg4_) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  DrumInstrument *arg4 = (DrumInstrument *) 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   (void)jarg4_;
-  arg1 = *(SynthEvent **)&jarg1; 
+  arg1 = *(DrumPattern **)&jarg1; 
   arg2 = (int)jarg2; 
-  arg3 = (float)jarg3; 
-  arg4 = *(SynthInstrument **)&jarg4; 
-  arg5 = (int)jarg5; 
-  (arg1)->updateProperties(arg2,arg3,arg4,arg5);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1calculateBuffers(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  (arg1)->calculateBuffers();
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1cache(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  bool arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = jarg2 ? true : false; 
-  (arg1)->cache(arg2);
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1getVolume(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  result = (float)(arg1)->getVolume();
-  jresult = (jfloat)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1setVolume(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  float arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setVolume(arg2);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1mixBuffer(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3, jint jarg4, jint jarg5, jboolean jarg6, jint jarg7, jboolean jarg8) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
-  int arg3 ;
-  int arg4 ;
-  int arg5 ;
-  bool arg6 ;
-  int arg7 ;
-  bool arg8 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  arg2 = *(AudioBuffer **)&jarg2; 
   arg3 = (int)jarg3; 
-  arg4 = (int)jarg4; 
-  arg5 = (int)jarg5; 
-  arg6 = jarg6 ? true : false; 
-  arg7 = (int)jarg7; 
-  arg8 = jarg8 ? true : false; 
-  (arg1)->mixBuffer(arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+  arg4 = *(DrumInstrument **)&jarg4; 
+  (arg1)->addDrumEvent(arg2,arg3,arg4);
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1getBuffer(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jlong jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
-  AudioBuffer *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  result = (AudioBuffer *)(arg1)->getBuffer();
-  *(AudioBuffer **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1synthesize(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  jlong jresult = 0 ;
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1removeDrumEvent(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
   int arg2 ;
-  AudioBuffer *result = 0 ;
+  int arg3 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
+  arg1 = *(DrumPattern **)&jarg1; 
   arg2 = (int)jarg2; 
-  result = (AudioBuffer *)(arg1)->synthesize(arg2);
-  *(AudioBuffer **)&jresult = result; 
-  return jresult;
+  arg3 = (int)jarg3; 
+  (arg1)->removeDrumEvent(arg2,arg3);
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1unlock(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  SynthEvent *arg1 = (SynthEvent *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1destroy(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(SynthEvent **)&jarg1; 
-  (arg1)->unlock();
+  arg1 = *(DrumPattern **)&jarg1; 
+  (arg1)->destroy();
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1WaveShaper(JNIEnv *jenv, jclass jcls, jfloat jarg1, jfloat jarg2) {
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1kickPatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->kickPatternLength = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1kickPatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int) ((arg1)->kickPatternLength);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1snarePatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->snarePatternLength = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1snarePatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int) ((arg1)->snarePatternLength);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1stickPatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->stickPatternLength = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1stickPatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int) ((arg1)->stickPatternLength);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1hatPatternLength_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->hatPatternLength = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1hatPatternLength_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int) ((arg1)->hatPatternLength);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getKickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jlong jresult = 0 ;
-  float arg1 ;
-  float arg2 ;
-  WaveShaper *result = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  arg1 = (float)jarg1; 
-  arg2 = (float)jarg2; 
-  result = (WaveShaper *)new WaveShaper(arg1,arg2);
-  *(WaveShaper **)&jresult = result; 
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int *)(arg1)->getKickPattern();
+  *(int **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1getAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  WaveShaper *arg1 = (WaveShaper *) 0 ;
-  float result;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getSnarePattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *result = 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(WaveShaper **)&jarg1; 
-  result = (float)(arg1)->getAmount();
-  jresult = (jfloat)result; 
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int *)(arg1)->getSnarePattern();
+  *(int **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1setAmount(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  WaveShaper *arg1 = (WaveShaper *) 0 ;
-  float arg2 ;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getStickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *result = 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(WaveShaper **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setAmount(arg2);
-}
-
-
-SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1getLevel(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jfloat jresult = 0 ;
-  WaveShaper *arg1 = (WaveShaper *) 0 ;
-  float result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(WaveShaper **)&jarg1; 
-  result = (float)(arg1)->getLevel();
-  jresult = (jfloat)result; 
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int *)(arg1)->getStickPattern();
+  *(int **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1setLevel(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
-  WaveShaper *arg1 = (WaveShaper *) 0 ;
-  float arg2 ;
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1getHatPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *result = 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(WaveShaper **)&jarg1; 
-  arg2 = (float)jarg2; 
-  (arg1)->setLevel(arg2);
+  arg1 = *(DrumPattern **)&jarg1; 
+  result = (int *)(arg1)->getHatPattern();
+  *(int **)&jresult = result; 
+  return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_WaveShaper_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
-  WaveShaper *arg1 = (WaveShaper *) 0 ;
-  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
-  bool arg3 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setKickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int arg3 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(WaveShaper **)&jarg1; 
-  arg2 = *(AudioBuffer **)&jarg2; 
-  arg3 = jarg3 ? true : false; 
-  (arg1)->process(arg2,arg3);
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = *(int **)&jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setKickPattern(arg2,arg3);
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1WaveShaper(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-  WaveShaper *arg1 = (WaveShaper *) 0 ;
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setSnarePattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int arg3 ;
   
   (void)jenv;
   (void)jcls;
-  arg1 = *(WaveShaper **)&jarg1; 
-  delete arg1;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = *(int **)&jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setSnarePattern(arg2,arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setStickPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = *(int **)&jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setStickPattern(arg2,arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_DrumPattern_1setHatPattern(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
+  DrumPattern *arg1 = (DrumPattern *) 0 ;
+  int *arg2 = (int *) 0 ;
+  int arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(DrumPattern **)&jarg1; 
+  arg2 = *(int **)&jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setHatPattern(arg2,arg3);
 }
 
 
@@ -5897,19 +6235,11 @@ SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngine
     return baseptr;
 }
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BaseSynthEvent_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
     jlong baseptr = 0;
     (void)jenv;
     (void)jcls;
-    *(BaseProcessor **)&baseptr = *(BitCrusher **)&jarg1;
-    return baseptr;
-}
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-    jlong baseptr = 0;
-    (void)jenv;
-    (void)jcls;
-    *(BaseProcessor **)&baseptr = *(Decimator **)&jarg1;
+    *(BaseCacheableAudioEvent **)&baseptr = *(BaseSynthEvent **)&jarg1;
     return baseptr;
 }
 
@@ -5929,6 +6259,30 @@ SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngine
     return baseptr;
 }
 
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    (void)jenv;
+    (void)jcls;
+    *(BaseSynthEvent **)&baseptr = *(SynthEvent **)&jarg1;
+    return baseptr;
+}
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BitCrusher_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    (void)jenv;
+    (void)jcls;
+    *(BaseProcessor **)&baseptr = *(BitCrusher **)&jarg1;
+    return baseptr;
+}
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Decimator_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    (void)jenv;
+    (void)jcls;
+    *(BaseProcessor **)&baseptr = *(Decimator **)&jarg1;
+    return baseptr;
+}
+
 SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Delay_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
     jlong baseptr = 0;
     (void)jenv;
@@ -5942,6 +6296,30 @@ SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngine
     (void)jenv;
     (void)jcls;
     *(BaseProcessor **)&baseptr = *(Filter **)&jarg1;
+    return baseptr;
+}
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Limiter_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    (void)jenv;
+    (void)jcls;
+    *(BaseProcessor **)&baseptr = *(Limiter **)&jarg1;
+    return baseptr;
+}
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_Finalizer_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    (void)jenv;
+    (void)jcls;
+    *(Limiter **)&baseptr = *(Finalizer **)&jarg1;
+    return baseptr;
+}
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LPFHPFilter_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    (void)jenv;
+    (void)jcls;
+    *(BaseProcessor **)&baseptr = *(LPFHPFilter **)&jarg1;
     return baseptr;
 }
 
@@ -5966,14 +6344,6 @@ SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngine
     (void)jenv;
     (void)jcls;
     *(BaseProcessor **)&baseptr = *(Phaser **)&jarg1;
-    return baseptr;
-}
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
-    jlong baseptr = 0;
-    (void)jenv;
-    (void)jcls;
-    *(BaseCacheableAudioEvent **)&baseptr = *(SynthEvent **)&jarg1;
     return baseptr;
 }
 

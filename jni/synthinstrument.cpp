@@ -61,8 +61,8 @@ SynthInstrument::~SynthInstrument()
 void SynthInstrument::init()
 {
     adsr = new ADSR();
-    adsr->setAttack ( 0.0 );
-    adsr->setDecay  ( 0.0 );
+    adsr->setAttack ( 0.01 );
+    adsr->setDecay  ( 0.01 );
 
     // default values
     octave          = 4;

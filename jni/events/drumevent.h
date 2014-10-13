@@ -20,22 +20,30 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FINALIZER_H_INCLUDED__
-#define __FINALIZER_H_INCLUDED__
+#ifndef __DRUMEVENT_H_INCLUDED__
+#define __DRUMEVENT_H_INCLUDED__
 
-#include "limiter.h"
-#include "audiobuffer.h"
-#include "global.h"
+#include "sampleevent.h"
+#include "../druminstrument.h"
+#include <string>
 
-class Finalizer : public Limiter
+class DrumEvent : public SampleEvent
 {
     public:
-        Finalizer( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
-        ~Finalizer();
-        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+        DrumEvent( int aPosition, int aDrumType, DrumInstrument* aInstrument );
+        ~DrumEvent();
+
+        int getTimbre();
+        void setTimbre( int aTimbre );
+        int getType();
+        void setType( int aType );
+        void unlock();
 
     private:
-        SAMPLE_TYPE* _lastSamples;
+        int _timbre;
+        int _type;
+        bool _inited;
+        void updateSample();
 };
 
 #endif

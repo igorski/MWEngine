@@ -20,29 +20,36 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ROUTEABLEOSCILLATOR_H_INCLUDED__
-#define __ROUTEABLEOSCILLATOR_H_INCLUDED__
+#ifndef __FM_H_INCLUDED__
+#define __FM_H_INCLUDED__
 
-#include "lfo.h"
-#include "processors/baseprocessor.h"
+#include "baseprocessor.h"
+#include "../global.h"
+#include "../lfo.h"
 
-class RouteableOscillator
+class FrequencyModulator : public BaseProcessor, public LFO
 {
     public:
-        RouteableOscillator();
-        ~RouteableOscillator();
-        int destination;
-        float speed;
-        int wave;
+        FrequencyModulator( int aWaveForm, float aRate );
+        void process( AudioBuffer* sampleBuffer, bool isMonosource );
 
-        void linkOscillator();
-        void unlinkOscillator();
-        bool isLinked();
-        LFO *getLinkedOscillator();
+        // these are here only for SWIG purposes so we can "multiple inherit" from LFO, bit fugly... but hey
+        #ifdef SWIG
+        float getRate();
+        void setRate( float value );
+        int getWave();
+        void setWave( int value );
+        void generate( int aLength );
+        int getLength();
+        void setLength( int value );
+        #endif
 
     private:
-        bool _hasOscillator;
-        LFO* _oscillator;
+        SAMPLE_TYPE* _buffer; // cached buffer
+        SAMPLE_TYPE modulator;
+        SAMPLE_TYPE carrier;
+        SAMPLE_TYPE fmamp;
+        SAMPLE_TYPE AMP_MULTIPLIER;
 };
 
 #endif

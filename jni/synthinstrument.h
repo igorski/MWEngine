@@ -28,8 +28,8 @@
 #include "audiochannel.h"
 #include "processingchain.h"
 #include "routeableoscillator.h"
-#include "baseaudioevent.h"
-#include "basecacheableaudioevent.h"
+#include <events/baseaudioevent.h>
+#include <events/basecacheableaudioevent.h>
 
 class SynthInstrument
 {

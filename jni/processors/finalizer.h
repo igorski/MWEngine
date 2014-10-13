@@ -20,32 +20,22 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BASEPROCESSOR_H_INCLUDED__
-#define __BASEPROCESSOR_H_INCLUDED__
+#ifndef __FINALIZER_H_INCLUDED__
+#define __FINALIZER_H_INCLUDED__
 
-#include "global.h"
-#include "audiobuffer.h"
+#include "limiter.h"
+#include "../audiobuffer.h"
+#include "../global.h"
 
-class BaseProcessor
+class Finalizer : public Limiter
 {
     public:
-        BaseProcessor();
-        ~BaseProcessor();
+        Finalizer( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
+        ~Finalizer();
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
-        /**
-         * @param {audioBuffer*} sampleBuffer the buffer to write into
-         * @param {bool} isMonoSource whether the source signal is mono (save CPU cycles
-         *               by solely processing a single channel and writing its values into the
-         *               remaining channels
-         */
-        virtual void process( AudioBuffer* sampleBuffer, bool isMonoSource );
-
-        /**
-         * if this processors effect is non-dynamic its output
-         * can be cached to omit unnecessary repeated calculations
-         * consuming unnecessary CPU cycles
-         */
-        virtual bool isCacheable();
+    private:
+        SAMPLE_TYPE* _lastSamples;
 };
 
 #endif
