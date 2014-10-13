@@ -26,18 +26,16 @@
 
 /* constructor / destructor */
 
-AudioChannel::AudioChannel( ProcessingChain *aChain, float aMixVolume )
+AudioChannel::AudioChannel( float aMixVolume )
 {
-    processingChain   = aChain;
     mixVolume         = aMixVolume;
     maxBufferPosition = 0;
 
     init();
 }
 
-AudioChannel::AudioChannel( ProcessingChain *aChain, float aMixVolume, int aMaxBufferPosition )
+AudioChannel::AudioChannel( float aMixVolume, int aMaxBufferPosition )
 {
-    processingChain   = aChain;
     mixVolume         = aMixVolume;
     maxBufferPosition = aMaxBufferPosition;
 
@@ -47,6 +45,8 @@ AudioChannel::AudioChannel( ProcessingChain *aChain, float aMixVolume, int aMaxB
 AudioChannel::~AudioChannel()
 {
     reset();
+
+    delete processingChain;
 }
 
 /* public methods */
@@ -164,4 +164,6 @@ void AudioChannel::init()
     _cacheWritePointer = 0;
     _cacheStartOffset  = 0;
     _cacheEndOffset    = 0;
+
+    processingChain   = new ProcessingChain();
 }

@@ -39,7 +39,6 @@ processors/waveshaper.cpp \
 bufferutility.cpp \
 bulkcacher.cpp \
 diskwriter.cpp \
-druminstrument.cpp \
 drumpattern.cpp \
 envelopefollower.cpp \
 lfo.cpp \
@@ -49,6 +48,8 @@ ringbuffer.cpp \
 samplemanager.cpp \
 sequencer.cpp \
 sequencer_api.cpp \
+baseinstrument.cpp \
+druminstrument.cpp \
 synthinstrument.cpp \
 wavewriter.cpp \
 routeableoscillator.cpp \

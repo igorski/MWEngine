@@ -25,10 +25,9 @@
 
 #include "bulkcacher.h"
 #include "audiochannel.h"
+#include "druminstrument.h"
 #include "sampledinstrument.h"
 #include "synthinstrument.h"
-#include "druminstrument.h"
-#include "drumpattern.h"
 #include <events/basecacheableaudioevent.h>
 #include <events/baseaudioevent.h>
 #include <vector>
@@ -48,12 +47,9 @@ namespace sequencer
 
     // collect all audio events which should be rendered at the given buffer range
     extern std::vector<AudioChannel*> getAudioEvents( std::vector<AudioChannel*> channels, int bufferPosition, int bufferEnd, bool addLiveInstruments );
+
+    extern void updateEvents();
     extern void clearEvents();
-
-    // TODO : all drum patterns and associated audio events should be migrated to DRUM INSTRUMENT !!
-
-    extern std::vector<DrumPattern*> drumPatterns;
-    extern int activeDrumPattern;
 
     extern BulkCacher* bulkCacher;
 

@@ -23,15 +23,15 @@
 #ifndef __SYNTHINSTRUMENT_H_INCLUDED__
 #define __SYNTHINSTRUMENT_H_INCLUDED__
 
+#include "baseinstrument.h"
 #include "adsr.h"
 #include "arpeggiator.h"
 #include "audiochannel.h"
-#include "processingchain.h"
 #include "routeableoscillator.h"
 #include <events/baseaudioevent.h>
 #include <events/basecacheableaudioevent.h>
 
-class SynthInstrument
+class SynthInstrument : public BaseInstrument
 {
     public:
         SynthInstrument();
@@ -44,8 +44,6 @@ class SynthInstrument
         float volume;
         float keyboardVolume;
         RouteableOscillator *rOsc;
-        ProcessingChain *processingChain;
-        AudioChannel *audioChannel;
 
         bool osc2active;
         int osc2waveform;
@@ -55,6 +53,9 @@ class SynthInstrument
 
         Arpeggiator* arpeggiator;
         bool arpeggiatorActive;
+
+        bool hasEvents();
+        void updateEvents();  // updates all events after changing synth properties
 
         std::vector<BaseCacheableAudioEvent*>* audioEvents;
         std::vector<BaseAudioEvent*>* liveEvents;

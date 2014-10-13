@@ -121,7 +121,7 @@ void SequencerAPI::setPlaying( bool aIsPlaying )
 
 void SequencerAPI::setActiveDrumPattern( int activePattern )
 {
-    sequencer::activeDrumPattern = activePattern;
+    sequencer::drummachine->activeDrumPattern = activePattern;
 }
 
 void SequencerAPI::rewind()

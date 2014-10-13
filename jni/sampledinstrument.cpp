@@ -30,8 +30,7 @@
 
 SampledInstrument::SampledInstrument()
 {
-    processingChain = new ProcessingChain();
-    audioChannel    = new AudioChannel( processingChain, .75, bytes_per_bar );
+    audioChannel    = new AudioChannel( .75, bytes_per_bar );
     audioEvents     = new std::vector<SampleEvent*>();
 
     sequencer::samplers.push_back( this );  // register instrument inside the sequencer
@@ -53,6 +52,12 @@ SampledInstrument::~SampledInstrument()
     audioEvents->clear();
     delete audioEvents;
 
-    delete audioChannel;
     delete processingChain;
+}
+
+/* public methods */
+
+bool SampledInstrument::hasEvents()
+{
+    return audioEvents->size() > 0;
 }

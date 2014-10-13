@@ -399,6 +399,9 @@ namespace AudioEngine
         // make sure relative positions remain in sync
         bufferPosition = ( int ) llround( max_buffer_position * oldPosition );
 
+        // inform sequencer of the update
+        sequencer::updateEvents();
+
         // broadcast update (so the Sequencer can invoke a re-calculation
         // on all existing audio events to match the new tempo / time signature)
 

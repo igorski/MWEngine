@@ -32,8 +32,8 @@ class AudioChannel
 {
     public:
 
-        AudioChannel( ProcessingChain *aChain, float aMixVolume );
-        AudioChannel( ProcessingChain *aChain, float aMixVolume, int aMaxBufferPosition );
+        AudioChannel( float aMixVolume );
+        AudioChannel( float aMixVolume, int aMaxBufferPosition );
         ~AudioChannel();
 
         // queried and modified by sequencer

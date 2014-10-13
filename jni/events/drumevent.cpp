@@ -33,16 +33,16 @@
  *
  * @param aPosition    {int} the step position in the sequencer
  * @param aDrumType    {int} the PercussionType to synthesize
- * @param aInstrument  {DrumInstrument*} the instruments properties
+ * @param aDrumTimbre  {int} the drum machine's timbre
  */
-DrumEvent::DrumEvent( int aPosition, int aDrumType, DrumInstrument* aInstrument )
+DrumEvent::DrumEvent( int aPosition, int aDrumType, int aDrumTimbre )
 {
     _inited = false;
 
     position = aPosition;
 
     setType  ( aDrumType );
-    setTimbre( aInstrument->drumTimbre );
+    setTimbre( aDrumTimbre );
 
     init();
 

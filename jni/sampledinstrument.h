@@ -23,18 +23,16 @@
 #ifndef __SAMPLEDINSTRUMENT_H_INCLUDED__
 #define __SAMPLEDINSTRUMENT_H_INCLUDED__
 
-#include "audiochannel.h"
-#include "processingchain.h"
+#include "baseinstrument.h"
 #include <events/sampleevent.h>
 
-class SampledInstrument
+class SampledInstrument : public BaseInstrument
 {
     public:
         SampledInstrument();
         ~SampledInstrument();
 
-        ProcessingChain *processingChain;
-        AudioChannel *audioChannel;
+        bool hasEvents();
 
         int index;  // index in Sequencers sampler Vector
         std::vector<SampleEvent*> *audioEvents;

@@ -24,6 +24,7 @@
 #include "global.h"
 #include "sequencer.h"
 #include "utils.h"
+#include <events/basesynthevent.h>
 #include <cstddef>
 
 // constructor
@@ -41,8 +42,6 @@ SynthInstrument::~SynthInstrument()
 
     delete adsr;
     delete rOsc;
-    delete audioChannel;
-    delete processingChain;
     delete audioEvents;
     delete liveEvents;
 
@@ -53,6 +52,25 @@ SynthInstrument::~SynthInstrument()
             sequencer::synthesizers.erase( sequencer::synthesizers.begin() + i );
             break;
         }
+    }
+}
+
+bool SynthInstrument::hasEvents()
+{
+    return audioEvents->size() > 0 || liveEvents->size() > 0;
+}
+
+void SynthInstrument::updateEvents()
+{
+    for ( int i = 0, l = audioEvents->size(); i < l; ++i )
+    {
+        BaseSynthEvent* event = ( BaseSynthEvent* ) ( audioEvents->at( i ) );
+        event->invalidateProperties( event->position, event->length, this );
+    }
+    for ( int i = 0, l = liveEvents->size(); i < l; ++i )
+    {
+        BaseSynthEvent* event = ( BaseSynthEvent* ) ( liveEvents->at( i ) );
+        event->invalidateProperties( event->position, event->length, this );
     }
 }
 
@@ -78,8 +96,7 @@ void SynthInstrument::init()
     osc2detune      = 0.0;
 
     rOsc            = new RouteableOscillator();
-    processingChain = new ProcessingChain();
-    audioChannel    = new AudioChannel( processingChain, this->volume );
+    audioChannel    = new AudioChannel( this->volume );
 
     audioEvents = new std::vector<BaseCacheableAudioEvent*>();
     liveEvents  = new std::vector<BaseAudioEvent*>();

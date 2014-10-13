@@ -23,7 +23,6 @@
 #ifndef __DRUMPATTERN_H_INCLUDED__
 #define __DRUMPATTERN_H_INCLUDED__
 
-#include "druminstrument.h"
 #include <events/drumevent.h>
 #include <vector>
 
@@ -38,8 +37,8 @@ class DrumPattern
         std::vector<DrumEvent*> *audioEvents;
 
         void updateTimbre( int newTimbre );
-        void cacheEvents( DrumInstrument* aInstrument );
-        void addDrumEvent( int aPosition, int aDrumType, DrumInstrument* aInstrument );
+        void cacheEvents( int aDrumTimbre );
+        void addDrumEvent( int aPosition, int aDrumType, int aDrumTimbre );
         void removeDrumEvent( int aPosition, int aType );
         void destroy();
 

@@ -20,36 +20,21 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMINSTRUMENT_H_INCLUDED__
-#define __DRUMINSTRUMENT_H_INCLUDED__
+#ifndef __BASEINSTRUMENT_H_INCLUDED__
+#define __BASEINSTRUMENT_H_INCLUDED__
 
-#include "baseinstrument.h"
 #include "audiochannel.h"
-#include "routeableoscillator.h"
-#include "drumpattern.h"
-#include <events/drumevent.h>
-#include <vector>
 
-class DrumInstrument : public BaseInstrument
+class BaseInstrument
 {
     public:
-        DrumInstrument();
-        ~DrumInstrument();
+        BaseInstrument();
+        ~BaseInstrument();
 
-        bool hasEvents();
-        void updateEvents();
-        void clearEvents();
+        virtual bool hasEvents();     // whether the instrument has events to sequence
+        virtual void updateEvents();  // updates all associated events after changing instrument properties
 
-        std::vector<DrumEvent*>* getEventsForPattern( int patternNum );
-        std::vector<DrumEvent*>* getEventsForActivePattern();
-
-        float volume;
-        int drumTimbre;
-
-        std::vector<DrumPattern*> *drumPatterns;
-        int activeDrumPattern;
-
-        RouteableOscillator *rOsc;
+        AudioChannel *audioChannel;
 };
 
 #endif

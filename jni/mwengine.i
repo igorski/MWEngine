@@ -32,11 +32,12 @@
 #include "processors/phaser.h"
 #include "processingchain.h"
 #include "samplemanager.h"
-#include "synthinstrument.h"
 #include "bufferutility.h"
 #include "bulkcacher.h"
 #include "drumpattern.h"
+#include "baseinstrument.h"
 #include "druminstrument.h"
+#include "synthinstrument.h"
 %}
 
 // Enable the JNI class to load the required native library.
@@ -80,8 +81,9 @@
 %include "processors/waveshaper.h"
 %include "processingchain.h"
 %include "samplemanager.h"
-%include "synthinstrument.h"
 %include "bufferutility.h"
 %include "bulkcacher.h"
+%include "baseinstrument.h"
 %include "druminstrument.h"
+%include "synthinstrument.h"
 %include "drumpattern.h"

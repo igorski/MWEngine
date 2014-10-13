@@ -110,13 +110,20 @@ public class MWEngineActivity extends Activity
             _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
         }
 
-        public void onStartTrackingTouch( SeekBar seekBar ) {
+        public void onStartTrackingTouch( SeekBar seekBar ) {}
+        public void onStopTrackingTouch ( SeekBar seekBar ) {}
+    }
 
+    private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener
+    {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
+        {
+            _synth1.getAdsr().setDecay( progress / 100f );
+            _synth1.updateEvents(); // update all synth events to match new ADSR properties
         }
 
-        public void onStopTrackingTouch( SeekBar seekBar ) {
-
-        }
+        public void onStartTrackingTouch( SeekBar seekBar ) {}
+        public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
     /**
@@ -129,13 +136,8 @@ public class MWEngineActivity extends Activity
             _delay.setFeedback( progress / 100f );
         }
 
-        public void onStartTrackingTouch( SeekBar seekBar ) {
-
-        }
-
-        public void onStopTrackingTouch( SeekBar seekBar ) {
-
-        }
+        public void onStartTrackingTouch( SeekBar seekBar ) {}
+        public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
     /**
@@ -151,23 +153,10 @@ public class MWEngineActivity extends Activity
             final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
 
             _audioRenderer.setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
-
-            // update all audio events (re-renders their contents to match the new tempo)
-
-            for ( final SynthEvent audioEvent : _synth1Events )
-                audioEvent.invalidateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth1 );
-
-            for ( final SynthEvent audioEvent : _synth2Events )
-                audioEvent.invalidateProperties( audioEvent.getPosition(), audioEvent.getLength(), _synth2 );
         }
 
-        public void onStartTrackingTouch( SeekBar seekBar ) {
-
-        }
-
-        public void onStopTrackingTouch( SeekBar seekBar ) {
-
-        }
+        public void onStartTrackingTouch( SeekBar seekBar ) {}
+        public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
     /* private methods */
@@ -221,15 +210,15 @@ public class MWEngineActivity extends Activity
         maxFilterCutoff = ( float ) sampleRate / 8;
 
         _filter = new Filter( maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ), minFilterCutoff, maxFilterCutoff, 0f, 1 );
-        _synth1.getProcessingChain().addProcessor( _filter );
+        _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
 
         // add a phaser to synth 1
         _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );
-        _synth1.getProcessingChain().addProcessor( _phaser );
+        _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
 
         // add some funky delay to synth 2
         _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
-        _synth2.getProcessingChain().addProcessor( _delay );
+        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // STEP 3 : let's create some music !
 
@@ -275,6 +264,9 @@ public class MWEngineActivity extends Activity
 
         final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
         filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
+
+        final SeekBar decaySlider = ( SeekBar ) findViewById( R.id.SynthDecaySlider );
+        decaySlider.setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
 
         final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
         feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );

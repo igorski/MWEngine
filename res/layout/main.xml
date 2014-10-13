@@ -25,6 +25,14 @@
              android:layout_width="200dip"
              android:layout_height="wrap_content" />
 
+    <SeekBar android:id="@+id/SynthDecaySlider"
+             android:progress="90"
+             android:layout_marginLeft="5dip"
+             android:layout_marginRight="5dip"
+             android:layout_marginBottom="5dip"
+             android:layout_width="200dip"
+             android:layout_height="wrap_content" />
+
     <SeekBar android:id="@+id/MixSlider"
              android:progress="50"
              android:layout_marginLeft="5dip"

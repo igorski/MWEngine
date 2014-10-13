@@ -329,7 +329,7 @@ void BaseSynthEvent::render( AudioBuffer* aOutputBuffer )
 {
     // override in your custom subclass, note that
     // the body of the function will look somewhat like this:
-    DebugTool::log("MAY NEVER SEE THIS!"); // QQQ
+
     _rendering = true;
 
     int bufferLength      = aOutputBuffer->bufferSize;

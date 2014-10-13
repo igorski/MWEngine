@@ -20,36 +20,28 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMINSTRUMENT_H_INCLUDED__
-#define __DRUMINSTRUMENT_H_INCLUDED__
-
 #include "baseinstrument.h"
-#include "audiochannel.h"
-#include "routeableoscillator.h"
-#include "drumpattern.h"
-#include <events/drumevent.h>
-#include <vector>
 
-class DrumInstrument : public BaseInstrument
+/* constructor / destructor */
+
+BaseInstrument::BaseInstrument()
 {
-    public:
-        DrumInstrument();
-        ~DrumInstrument();
 
-        bool hasEvents();
-        void updateEvents();
-        void clearEvents();
+}
 
-        std::vector<DrumEvent*>* getEventsForPattern( int patternNum );
-        std::vector<DrumEvent*>* getEventsForActivePattern();
+BaseInstrument::~BaseInstrument()
+{
+    delete audioChannel;
+}
 
-        float volume;
-        int drumTimbre;
+/* public methods */
 
-        std::vector<DrumPattern*> *drumPatterns;
-        int activeDrumPattern;
+bool BaseInstrument::hasEvents()
+{
+    return false;   // override in derived class
+}
 
-        RouteableOscillator *rOsc;
-};
-
-#endif
+void BaseInstrument::updateEvents()
+{
+    // override in derived class
+}

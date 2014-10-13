@@ -32,9 +32,6 @@ namespace sequencer
     std::vector<SampledInstrument*> samplers;
     DrumInstrument* drummachine;
 
-    std::vector<DrumPattern*> drumPatterns;
-
-    int activeDrumPattern  = 0;
     BulkCacher* bulkCacher = new BulkCacher( true ); // sequential to spare CPU sources
 
     std::vector<AudioChannel*> getAudioEvents( std::vector<AudioChannel*> channels, int bufferPosition,
@@ -95,6 +92,18 @@ namespace sequencer
         return channels;
     }
 
+    void updateEvents()
+    {
+        for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
+            sequencer::synthesizers.at( i )->updateEvents();
+
+        for ( int i = 0, l = sequencer::samplers.size(); i < l; ++i )
+            sequencer::samplers.at( i )->updateEvents();
+
+        if ( sequencer::drummachine != 0 )
+            sequencer::drummachine->updateEvents();
+    }
+
     void clearEvents()
     {
         for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
@@ -107,8 +116,7 @@ namespace sequencer
             if ( synthesizer->liveEvents != 0 )
                 synthesizer->liveEvents->clear();
         }
-        sequencer::drumPatterns.clear();
-        sequencer::activeDrumPattern = 0;
+        sequencer::drummachine->clearEvents();
     }
 
     /**
@@ -259,7 +267,7 @@ namespace sequencer
 
     void collectDrumEvents( AudioChannel *channel, int bufferPosition, int bufferEnd )
     {
-        if ( sequencer::drumPatterns.size() > 0 )
+        if ( sequencer::drummachine->hasEvents() )
         {
             // drums loop by pattern, recalculate buffer position by subtracting
             // all measures above the first
@@ -271,12 +279,12 @@ namespace sequencer
                 bufferEnd      -= bytesPerBar;
             }
 
-            DrumPattern* pattern = sequencer::drumPatterns[ sequencer::activeDrumPattern ];
+            std::vector<DrumEvent*>* drumEvents = sequencer::drummachine->getEventsForActivePattern();
 
             int i = 0;
-            for ( i; i < pattern->audioEvents->size(); i++ )
+            for ( i; i < drumEvents->size(); i++ )
             {
-                BaseAudioEvent* audioEvent = pattern->audioEvents->at( i );
+                BaseAudioEvent* audioEvent = drumEvents->at( i );
 
                 int sampleStart = audioEvent->getSampleStart();
                 int sampleEnd   = audioEvent->getSampleEnd();
