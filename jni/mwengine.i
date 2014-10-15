@@ -35,9 +35,9 @@
 #include "bufferutility.h"
 #include "bulkcacher.h"
 #include "drumpattern.h"
-#include "baseinstrument.h"
-#include "druminstrument.h"
-#include "synthinstrument.h"
+#include "instruments/baseinstrument.h"
+#include "instruments/druminstrument.h"
+#include "instruments/synthinstrument.h"
 %}
 
 // Enable the JNI class to load the required native library.
@@ -83,7 +83,7 @@
 %include "samplemanager.h"
 %include "bufferutility.h"
 %include "bulkcacher.h"
-%include "baseinstrument.h"
-%include "druminstrument.h"
-%include "synthinstrument.h"
+%include "instruments/baseinstrument.h"
+%include "instruments/druminstrument.h"
+%include "instruments/synthinstrument.h"
 %include "drumpattern.h"

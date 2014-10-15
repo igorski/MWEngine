@@ -25,9 +25,9 @@
 
 #include "bulkcacher.h"
 #include "audiochannel.h"
-#include "druminstrument.h"
-#include "sampledinstrument.h"
-#include "synthinstrument.h"
+#include <instruments/druminstrument.h>
+#include <instruments/sampledinstrument.h>
+#include <instruments/synthinstrument.h>
 #include <events/basecacheableaudioevent.h>
 #include <events/baseaudioevent.h>
 #include <vector>

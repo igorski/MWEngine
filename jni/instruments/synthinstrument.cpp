@@ -21,9 +21,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "synthinstrument.h"
-#include "global.h"
-#include "sequencer.h"
-#include "utils.h"
+#include "../global.h"
+#include "../sequencer.h"
+#include "../utils.h"
 #include <events/basesynthevent.h>
 #include <cstddef>
 

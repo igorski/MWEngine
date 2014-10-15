@@ -20,36 +20,48 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMINSTRUMENT_H_INCLUDED__
-#define __DRUMINSTRUMENT_H_INCLUDED__
+#ifndef __SYNTHINSTRUMENT_H_INCLUDED__
+#define __SYNTHINSTRUMENT_H_INCLUDED__
 
 #include "baseinstrument.h"
-#include "audiochannel.h"
-#include "routeableoscillator.h"
-#include "drumpattern.h"
-#include <events/drumevent.h>
-#include <vector>
+#include "../adsr.h"
+#include "../arpeggiator.h"
+#include "../audiochannel.h"
+#include "../routeableoscillator.h"
+#include <events/baseaudioevent.h>
+#include <events/basecacheableaudioevent.h>
 
-class DrumInstrument : public BaseInstrument
+class SynthInstrument : public BaseInstrument
 {
     public:
-        DrumInstrument();
-        ~DrumInstrument();
+        SynthInstrument();
+        ~SynthInstrument();
+
+        int waveform;
+        int octave;
+        int keyboardOctave;
+        ADSR* adsr;
+        float volume;
+        float keyboardVolume;
+        RouteableOscillator *rOsc;
+
+        bool osc2active;
+        int osc2waveform;
+        float osc2detune;
+        int osc2octaveShift;
+        int osc2fineShift;
+
+        Arpeggiator* arpeggiator;
+        bool arpeggiatorActive;
 
         bool hasEvents();
-        void updateEvents();
-        void clearEvents();
+        void updateEvents();  // updates all events after changing synth properties
 
-        std::vector<DrumEvent*>* getEventsForPattern( int patternNum );
-        std::vector<DrumEvent*>* getEventsForActivePattern();
+        std::vector<BaseCacheableAudioEvent*>* audioEvents;
+        std::vector<BaseAudioEvent*>* liveEvents;
 
-        float volume;
-        int drumTimbre;
-
-        std::vector<DrumPattern*> *drumPatterns;
-        int activeDrumPattern;
-
-        RouteableOscillator *rOsc;
+    protected:
+        void init();
 };
 
 #endif

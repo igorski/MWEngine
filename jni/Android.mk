@@ -48,9 +48,9 @@ ringbuffer.cpp \
 samplemanager.cpp \
 sequencer.cpp \
 sequencer_api.cpp \
-baseinstrument.cpp \
-druminstrument.cpp \
-synthinstrument.cpp \
+instruments/baseinstrument.cpp \
+instruments/druminstrument.cpp \
+instruments/synthinstrument.cpp \
 wavewriter.cpp \
 routeableoscillator.cpp \
 

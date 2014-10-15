@@ -20,44 +20,21 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "sampledinstrument.h"
-#include "global.h"
-#include "sequencer.h"
-#include "utils.h"
-#include <cstddef>
+#ifndef __BASEINSTRUMENT_H_INCLUDED__
+#define __BASEINSTRUMENT_H_INCLUDED__
 
-/* constructor / destructor */
+#include "../audiochannel.h"
 
-SampledInstrument::SampledInstrument()
+class BaseInstrument
 {
-    audioChannel    = new AudioChannel( .75, bytes_per_bar );
-    audioEvents     = new std::vector<SampleEvent*>();
+    public:
+        BaseInstrument();
+        ~BaseInstrument();
 
-    sequencer::samplers.push_back( this );  // register instrument inside the sequencer
-    index = sequencer::samplers.size() - 1; // the index this instrument is registered at in the sequencer
-}
+        virtual bool hasEvents();     // whether the instrument has events to sequence
+        virtual void updateEvents();  // updates all associated events after changing instrument properties
 
-SampledInstrument::~SampledInstrument()
-{
-    DebugTool::log( "SampledInstrument::DESTRUCT" );
+        AudioChannel *audioChannel;
+};
 
-    for ( int i; i < sequencer::samplers.size(); i++ )
-    {
-        if ( sequencer::samplers[ i ] == this )
-        {
-            sequencer::samplers.erase( sequencer::samplers.begin() + i );
-            break;
-        }
-    }
-    audioEvents->clear();
-    delete audioEvents;
-
-    delete processingChain;
-}
-
-/* public methods */
-
-bool SampledInstrument::hasEvents()
-{
-    return audioEvents->size() > 0;
-}
+#endif

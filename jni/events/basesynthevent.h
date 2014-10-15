@@ -25,8 +25,8 @@
 
 #include "basecacheableaudioevent.h"
 #include "../adsr.h"
-#include "../synthinstrument.h"
 #include "../global.h"
+#include <instruments/synthinstrument.h>
 
 /**
  * a SynthEvent describes a (cacheable) AudioEvent that can render

@@ -318,6 +318,7 @@ void BaseSynthEvent::updateProperties()
     calculateBuffers();
 
     _update = false; // we're in sync now :)
+    _cancel = false;
 }
 
 /**

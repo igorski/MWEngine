@@ -239,9 +239,9 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #include "bufferutility.h"
 #include "bulkcacher.h"
 #include "drumpattern.h"
-#include "baseinstrument.h"
-#include "druminstrument.h"
-#include "synthinstrument.h"
+#include "instruments/baseinstrument.h"
+#include "instruments/druminstrument.h"
+#include "instruments/synthinstrument.h"
 
 
 static int *new_int_array(int nelements) { 

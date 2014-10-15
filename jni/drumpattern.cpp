@@ -24,8 +24,8 @@
 
 #include "global.h"
 #include "sequencer.h"
-#include "druminstrument.h"
 #include "utils.h"
+#include <instruments/druminstrument.h>
 
 /* constructor / destructor */
 
