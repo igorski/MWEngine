@@ -291,16 +291,8 @@ namespace AudioEngine
             {
                 for ( ci = 0; ci < outputChannels; ci++ )
                 {
-                    float sample = ( float ) inbuffer->getBufferForChannel( ci )[ i ] * volume; // apply master volume
-
-                    // extreme limiting (still above the thresholds?)
-                    if ( sample < -MAX_PHASE )
-                        sample = -MAX_PHASE;
-
-                    else if ( sample > +MAX_PHASE )
-                        sample = +MAX_PHASE;
-
-                    outbuffer[ c + ci ] = sample;
+                    // apply master volume here
+                    outbuffer[ c + ci ] = ( float ) inbuffer->getBufferForChannel( ci )[ i ] * volume;
                 }
 
                 // update the buffer pointers and sequencer position

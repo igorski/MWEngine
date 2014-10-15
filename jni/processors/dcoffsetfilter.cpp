@@ -38,7 +38,7 @@ DCOffsetFilter::DCOffsetFilter( int amountOfChannels )
         _lastOutSamples[ i ] = 0.0;
     }
     SAMPLE_TYPE baseFrequency = 65.41; // is a C2 note
-    R = 1.0 - ( TWO_PI * baseFrequency / AudioEngineProps::SAMPLE_RATE );
+    R = MAX_PHASE - ( TWO_PI * baseFrequency / AudioEngineProps::SAMPLE_RATE );
 }
 
 DCOffsetFilter::~DCOffsetFilter()

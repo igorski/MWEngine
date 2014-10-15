@@ -30,16 +30,16 @@
 
 LFO::LFO()
 {
-    _wave               = WaveForms::SINE_WAVE;
+    _wave               = WaveForms::SINE;
     _phase              = 0.0;
     _phaseIncr          = 0.0;
     _length             = 0;
     _readOffset         = 0;
 
-    int bufferSize      = BufferUtil::calculateBufferLength( MIN_LFO_RATE );
-    _buffer             = new float[ bufferSize ];
+    _maxBufferLength    = BufferUtil::calculateBufferLength( MIN_LFO_RATE );
+    _buffer             = new float[ _maxBufferLength ];
 
-    for ( int i = 0; i < bufferSize; ++i )
+    for ( int i = 0; i < _maxBufferLength; ++i )
         _buffer[ i ] = 0.0f;
 
     setRate( MIN_LFO_RATE );
@@ -111,9 +111,9 @@ void LFO::generate( int aLength )
 
     for ( int i = 0; i < aLength; ++i )
     {
-        switch( _wave )
+        switch ( _wave )
         {
-            case WaveForms::SINE_WAVE:
+            case WaveForms::SINE:
 
                 if ( _phase < .5 )
                 {
@@ -137,7 +137,7 @@ void LFO::generate( int aLength )
                     output = 3 - output;
                 break;
 
-            case WaveForms::SQUARE_WAVE:
+            case WaveForms::SQUARE:
 
                 if ( _phase < .5 )
                 {
@@ -159,10 +159,11 @@ void LFO::generate( int aLength )
 
         // restore _phase, max range is 0 - 1 ( float )
         // note this should be the end of the generate-range...
-        if ( _phase > 1.0f )
-            _phase -= 1.0f;
+        if ( _phase > MAX_PHASE )
+            _phase -= MAX_PHASE;
 
-        _buffer[ i ] = output;
+        if ( i < _maxBufferLength )
+            _buffer[ i ] = output;
     }
 }
 

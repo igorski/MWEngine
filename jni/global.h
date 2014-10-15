@@ -68,10 +68,10 @@ extern void *print_message( void* );
 class WaveForms
 {
     public:
-        enum WaveFormTypes { SINE_WAVE,
+        enum WaveFormTypes { SINE,
                              TRIANGLE,
                              SAWTOOTH,
-                             SQUARE_WAVE,
+                             SQUARE,
                              NOISE,
                              PWM,
                              KARPLUS_STRONG };

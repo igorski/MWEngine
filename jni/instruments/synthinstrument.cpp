@@ -90,7 +90,7 @@ void SynthInstrument::init()
     waveform        = WaveForms::SAWTOOTH;
 
     osc2active      = false;
-    osc2waveform    = WaveForms::SINE_WAVE;
+    osc2waveform    = WaveForms::SINE;
     osc2octaveShift = 0;
     osc2fineShift   = 0;
     osc2detune      = 0.0;

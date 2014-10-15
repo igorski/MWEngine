@@ -28,7 +28,7 @@
 
 RouteableOscillator::RouteableOscillator()
 {
-    wave           = WaveForms::SINE_WAVE;
+    wave           = WaveForms::SINE;
     speed          = 5;  // in Hz
     destination    = -1; // is enumeration
 

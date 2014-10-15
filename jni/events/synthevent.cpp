@@ -286,7 +286,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
     {
         switch ( _type )
         {
-            case WaveForms::SINE_WAVE:
+            case WaveForms::SINE:
 
                 // ---- Sine wave
 
@@ -310,7 +310,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
 
                 break;
 
-            case WaveForms::SQUARE_WAVE:
+            case WaveForms::SQUARE:
 
                 // ---- Square wave
                 if ( _phase < .5 )

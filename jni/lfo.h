@@ -46,16 +46,17 @@ class LFO
         float peek();
 
     protected:
-        float TWO_PI_OVER_SR;
-        float TWO_PI;
 
+        float TWO_PI_OVER_SR;
         float _phase;
         float _phaseIncr;
         float _rate;
+
         float* _buffer; // cached buffer
         int _wave;
         int _length;
         int _readOffset;
+        int _maxBufferLength;
 
         int calculateBufferLength( float aMinRate );
 };
