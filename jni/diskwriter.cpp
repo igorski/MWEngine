@@ -38,12 +38,12 @@ namespace DiskWriter
      */
     void prepare( std::string aOutputDir, int aBufferSize, int amountOfChannels )
     {
-        DiskWriter::outputDirectory  = aOutputDir;
+        outputDirectory  = aOutputDir;
 
         // PCM : write each sample for each channel one after the other channel sample
         // (as opposed to unique buffers per channel like in the AudioBuffer)
-        DiskWriter::outputBufferSize = aBufferSize * amountOfChannels;
-        DiskWriter::generateOutputBuffer();
+        outputBufferSize = aBufferSize * amountOfChannels;
+        generateOutputBuffer();
     }
 
     /**
@@ -51,34 +51,34 @@ namespace DiskWriter
      */
     void generateOutputBuffer()
     {
-        int bufferSize = DiskWriter::outputBufferSize;
+        int bufferSize = outputBufferSize;
 
-        DiskWriter::flushOutput(); // free previous contents
-        DiskWriter::cachedBuffer = new short int[ bufferSize ];
+        flushOutput(); // free previous contents
+        cachedBuffer = new short int[ bufferSize ];
 
         // fill buffer with silence
         for ( int i = 0; i < bufferSize; ++i )
         {
             // VERY poor mans check if no flushing operation occurred during creation
-            if ( DiskWriter::cachedBuffer != 0 )
-                DiskWriter::cachedBuffer[ i ] = 0;
+            if ( cachedBuffer != 0 )
+                cachedBuffer[ i ] = 0;
         }
-        DiskWriter::outputWriterIndex = 0;
+        outputWriterIndex = 0;
     }
 
     /**
-     * append a AudioBuffer into the write buffer
+     * append an AudioBuffer into the write buffer
      */
     void appendBuffer( AudioBuffer* aBuffer )
     {
         int bufferSize    = aBuffer->bufferSize;
         int channelAmount = aBuffer->amountOfChannels;
 
-        if ( DiskWriter::cachedBuffer == 0 )
+        if ( cachedBuffer == 0 )
             generateOutputBuffer();
 
-        int writerIndex = DiskWriter::outputWriterIndex;
-        int MAX_VALUE   = 32767; // convert samples to shorts
+        int writerIndex     = outputWriterIndex;
+        short int MAX_VALUE = 32767; // convert samples to shorts
 
         // write samples into PCM short buffer
         for ( int i = 0; i < bufferSize; ++i, writerIndex += channelAmount )
@@ -89,16 +89,47 @@ namespace DiskWriter
 
                 short int sample = ( short int )( channelBuffer[ i ] * MAX_VALUE );
 
-                if ( sample > MAX_VALUE )
-                    sample = MAX_VALUE;
+                if ( sample > +MAX_VALUE )
+                    sample = +MAX_VALUE;
 
                 else if ( sample < -MAX_VALUE )
                     sample = -MAX_VALUE;
 
-                DiskWriter::cachedBuffer[ writerIndex + c ] = sample;
+                cachedBuffer[ writerIndex + c ] = sample;
             }
         }
-        DiskWriter::outputWriterIndex = writerIndex;
+        outputWriterIndex = writerIndex;
+    }
+    
+    /**
+     * append the actual output buffer from the engine
+     * into the write buffer
+     */
+    void appendBuffer( float* aBuffer, int aBufferSize, int amountOfChannels )
+    {
+        if ( cachedBuffer == 0 )
+            generateOutputBuffer();
+
+        int writerIndex     = outputWriterIndex;
+        short int MAX_VALUE = 32767; // convert samples to shorts
+
+        // write samples into PCM short buffer
+        for ( int i = 0; i < aBufferSize; ++i, writerIndex += amountOfChannels )
+        {
+            for ( int c = 0; c < amountOfChannels; ++c )
+            {
+                short int sample = ( short int )( aBuffer[ i + c ] * MAX_VALUE );
+
+                if ( sample > +MAX_VALUE )
+                    sample = +MAX_VALUE;
+
+                else if ( sample < -MAX_VALUE )
+                    sample = -MAX_VALUE;
+
+                cachedBuffer[ writerIndex + c ] = sample;
+            }
+        }
+        outputWriterIndex = writerIndex;
     }
 
     /**
@@ -106,7 +137,7 @@ namespace DiskWriter
      */
     bool bufferFull()
     {
-        return DiskWriter::outputWriterIndex >= DiskWriter::outputBufferSize;
+        return outputWriterIndex >= outputBufferSize;
     }
 
     /**
@@ -114,12 +145,12 @@ namespace DiskWriter
      */
     void flushOutput()
     {
-        if ( DiskWriter::cachedBuffer != 0 )
+        if ( cachedBuffer != 0 )
         {
-            delete[] DiskWriter::cachedBuffer;
-            DiskWriter::cachedBuffer = 0;
+            delete[] cachedBuffer;
+            cachedBuffer = 0;
         }
-        DiskWriter::outputWriterIndex = 0;
+        outputWriterIndex = 0;
     }
 
     /**
@@ -131,7 +162,7 @@ namespace DiskWriter
     void writeBufferToFile( int aSampleRate, int aNumChannels, bool broadcastUpdate )
     {
         // quick assertion
-        if ( DiskWriter::cachedBuffer == 0 )
+        if ( cachedBuffer == 0 )
             return;
 
         // we can improve the use of the CPU resources
@@ -142,19 +173,19 @@ namespace DiskWriter
         //pthread_create( &t1, NULL, &print_message, NULL );
 
         // copy string contents for appending of filename
-        std::string outputFile = std::string( DiskWriter::outputDirectory.c_str());
+        std::string outputFile = std::string( outputDirectory.c_str());
 
-        int bufferSize = DiskWriter::outputBufferSize;
+        int bufferSize = outputBufferSize;
 
         // uh oh.. recorded less than maximum available in buffer ? cut silence
-        if ( DiskWriter::outputWriterIndex < bufferSize )
+        if ( outputWriterIndex < bufferSize )
         {
-            bufferSize = DiskWriter::outputWriterIndex;
+            bufferSize = outputWriterIndex;
 
             short int* tempBuffer = new short int[ bufferSize ];
 
             for ( int i = 0; i < bufferSize; ++i )
-                tempBuffer[ i ] = DiskWriter::cachedBuffer[ i ];
+                tempBuffer[ i ] = cachedBuffer[ i ];
 
             write_wav( outputFile.append( SSTR( AudioEngine::recordingFileId )),
                        bufferSize, tempBuffer, aSampleRate, aNumChannels );
@@ -163,10 +194,10 @@ namespace DiskWriter
         }
         else {
             write_wav( outputFile.append( SSTR( AudioEngine::recordingFileId )),
-                       bufferSize, DiskWriter::cachedBuffer, aSampleRate, aNumChannels );
+                       bufferSize, cachedBuffer, aSampleRate, aNumChannels );
         }
 
-        DiskWriter::flushOutput(); // free memory
+        flushOutput(); // free memory
 
         if ( broadcastUpdate )
         {

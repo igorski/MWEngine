@@ -70,8 +70,8 @@ void Finalizer::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             if ( theSample < -MAX_PHASE )
                 theSample = -MAX_PHASE;
 
-            else if ( theSample > +MAX_PHASE )
-                theSample = +MAX_PHASE;
+            else if ( theSample > MAX_PHASE )
+                theSample = MAX_PHASE;
 
             lastSample         = theSample;
             channelBuffer[ i ] = theSample;

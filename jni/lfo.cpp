@@ -23,6 +23,7 @@
 #include "lfo.h"
 #include "global.h"
 #include "audioengine.h"
+#include "bufferutility.h"
 #include "utils.h"
 #include <math.h>
 
@@ -36,8 +37,8 @@ LFO::LFO()
     _length             = 0;
     _readOffset         = 0;
 
-    _maxBufferLength    = BufferUtil::calculateBufferLength( MIN_LFO_RATE );
-    _buffer             = new float[ _maxBufferLength ];
+    _maxBufferLength    = BufferUtility::calculateBufferLength( MIN_LFO_RATE );
+    _buffer             = new SAMPLE_TYPE[ _maxBufferLength ];
 
     for ( int i = 0; i < _maxBufferLength; ++i )
         _buffer[ i ] = 0.0f;
@@ -68,7 +69,7 @@ void LFO::setRate( float value )
     _phaseIncr     = value / AudioEngineProps::SAMPLE_RATE;
     TWO_PI_OVER_SR = TWO_PI / AudioEngineProps::SAMPLE_RATE;
 
-    setLength( BufferUtil::calculateBufferLength( value )); // will invoke generation of cycle
+    setLength( BufferUtility::calculateBufferLength( value )); // will invoke generation of cycle
 }
 
 int LFO::getWave()
@@ -106,8 +107,8 @@ void LFO::setLength( int value )
 
 void LFO::generate( int aLength )
 {
-    float output = 0.0;
-    float tmp;
+    SAMPLE_TYPE output = 0.0;
+    SAMPLE_TYPE tmp;
 
     for ( int i = 0; i < aLength; ++i )
     {
@@ -181,9 +182,9 @@ void LFO::setReadOffset( int value )
  * return a value at the current read pointer
  * from the cached buffer
  */
-float LFO::peek()
+SAMPLE_TYPE LFO::peek()
 {
-    float value = _buffer[ _readOffset ];
+    SAMPLE_TYPE value = _buffer[ _readOffset ];
 
     if ( ++_readOffset == _length )
         _readOffset = 0;

@@ -23,14 +23,16 @@
 #ifndef __LFO_H_INCLUDED__
 #define __LFO_H_INCLUDED__
 
+#include "global.h"
+
 class LFO
 {
     public:
         LFO();
         ~LFO();
 
-        static const float MAX_LFO_RATE = 10;   // the maximum rate of oscillation in Hz
-        static const float MIN_LFO_RATE = .1;   // the minimum rate of oscillation in Hz
+        static const double MAX_LFO_RATE = 10;   // the maximum rate of oscillation in Hz
+        static const double MIN_LFO_RATE = .1;   // the minimum rate of oscillation in Hz
 
         float getRate();
         void setRate( float value );
@@ -43,16 +45,16 @@ class LFO
         int getReadOffset();
         void setReadOffset( int value );
 
-        float peek();
+        SAMPLE_TYPE peek();
 
     protected:
 
-        float TWO_PI_OVER_SR;
-        float _phase;
-        float _phaseIncr;
-        float _rate;
+        SAMPLE_TYPE TWO_PI_OVER_SR;
+        SAMPLE_TYPE _phase;
+        SAMPLE_TYPE _phaseIncr;
+        SAMPLE_TYPE _rate;
 
-        float* _buffer; // cached buffer
+        SAMPLE_TYPE* _buffer; // cached buffer
         int _wave;
         int _length;
         int _readOffset;

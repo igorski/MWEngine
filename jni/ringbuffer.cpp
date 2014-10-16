@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "ringbuffer.h"
+#include "bufferutility.h"
 #include "utils.h"
 
 /* constructor / destructor */
@@ -28,7 +29,7 @@
 RingBuffer::RingBuffer( int capacity )
 {
     bufferLength = capacity;
-    _buffer      = BufferUtil::generateSilentBuffer( bufferLength );
+    _buffer      = BufferUtility::generateSilentBuffer( bufferLength );
 
     first        = 0;
     last         = 0;

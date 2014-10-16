@@ -22,7 +22,7 @@
  */
 #include "fm.h"
 #include "../global.h"
-#include "../utils.h"
+#include "../bufferutility.h"
 #include <math.h>
 
 // constructor
@@ -33,7 +33,7 @@ FrequencyModulator::FrequencyModulator( int aWaveForm, float aRate )
     _phase         = 0.0;
     _phaseIncr     = 0.0;
     _length        = 0;
-    _buffer        = BufferUtil::generateSilentBuffer( BufferUtil::calculateBufferLength( MIN_LFO_RATE ));
+    _buffer        = BufferUtility::generateSilentBuffer( BufferUtility::calculateBufferLength( MIN_LFO_RATE ));
     modulator      = 0.0;
     carrier        = 0.0;
     fmamp          = 10;

@@ -82,6 +82,8 @@ class SynthEvent : public BaseSynthEvent
         SAMPLE_TYPE _baseFrequency;
         SAMPLE_TYPE TWO_PI_OVER_SR;
         int _type;
+        int _fadeInDuration;
+        int _fadeOutDuration;
 
         // specific to Pulse Width Modulation
         float pwr;

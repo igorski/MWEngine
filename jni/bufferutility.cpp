@@ -129,3 +129,34 @@ int BufferUtility::getSamplesPerBar( int sampleRate, double tempo, int beatAmoun
     int samplesPerDoubleFourTime = getSamplesPerBeat( sampleRate, tempo ) * 4;
     return samplesPerDoubleFourTime / beatUnit * beatAmount;
 }
+
+SAMPLE_TYPE* BufferUtility::generateSilentBuffer( int aBufferSize )
+{
+    SAMPLE_TYPE* out = new SAMPLE_TYPE[ aBufferSize ];
+
+    for ( int i = 0; i < aBufferSize; ++i )
+        out[ i ] = 0.0;
+
+    return out;
+}
+
+/**
+ * calculate the amount of samples a single cycle of a waveform
+ * will hold at a give rate in Hz, at the current sample rate
+ *
+ * @param aMinRate {SAMPLE_TYPE} length in Hz for the waveform
+ */
+int BufferUtility::calculateBufferLength( SAMPLE_TYPE aMinRate )
+{
+    SAMPLE_TYPE phaseStep = aMinRate / AudioEngineProps::SAMPLE_RATE;
+    return ceil( 1.0 / phaseStep );
+}
+
+/**
+ * calculate the amount of samples necessary for
+ * writing the given amount in milliseconds
+ */
+int BufferUtility::calculateBufferLength( int milliSeconds )
+{
+    return milliSeconds * ( AudioEngineProps::SAMPLE_RATE / 1000 );
+}

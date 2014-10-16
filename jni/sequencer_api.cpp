@@ -70,17 +70,17 @@ void SequencerAPI::setLoopPoint( int aStartPosition, int aEndPosition, int aStep
     AudioEngine::max_buffer_position = aEndPosition;
 
     // keep current buffer read pointer within the new loop range
-    if ( AudioEngine::bufferPosition < AudioEngine::min_buffer_position ||
-         AudioEngine::bufferPosition > AudioEngine::max_buffer_position )
+    if ( AudioEngine::bufferPosition <  AudioEngine::min_buffer_position ||
+         AudioEngine::bufferPosition >= AudioEngine::max_buffer_position )
     {
         AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
     }
-    AudioEngine::min_step_position = ( aStartPosition      / AudioEngine::bytes_per_bar ) * aStepsPerBar;
-    AudioEngine::max_step_position = (( aEndPosition + 1 ) / AudioEngine::bytes_per_bar ) * aStepsPerBar;
+    AudioEngine::min_step_position = ( aStartPosition / AudioEngine::bytes_per_bar ) * aStepsPerBar;
+    AudioEngine::max_step_position = ( aEndPosition   / AudioEngine::bytes_per_bar ) * aStepsPerBar;
 
     // keep current sequencer step within the new loop range
-    if ( AudioEngine::stepPosition < AudioEngine::min_step_position ||
-         AudioEngine::stepPosition > AudioEngine::max_step_position )
+    if ( AudioEngine::stepPosition <  AudioEngine::min_step_position ||
+         AudioEngine::stepPosition >= AudioEngine::max_step_position )
     {
         AudioEngine::stepPosition = AudioEngine::min_step_position;
     }
@@ -90,9 +90,7 @@ void SequencerAPI::updateMeasures( int aValue, int aStepsPerBar )
 {
     AudioEngine::amount_of_bars      = aValue;
     AudioEngine::max_step_position   = aStepsPerBar * AudioEngine::amount_of_bars;
-
-    // -1 as we use array look-ups and start at 0 !
-    AudioEngine::max_buffer_position = ( AudioEngine::bytes_per_bar * AudioEngine::amount_of_bars ) - 1;
+    AudioEngine::max_buffer_position = AudioEngine::bytes_per_bar * AudioEngine::amount_of_bars;
 }
 
 void SequencerAPI::setTempo( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )

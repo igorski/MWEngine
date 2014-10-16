@@ -94,8 +94,8 @@ namespace AudioEngine
         }
         // audio hardware available, start render thread
 
-        int buffer_size, i, c, ci;
-        buffer_size        = AudioEngineProps::BUFFER_SIZE;
+        int bufferSize, i, c, ci;
+        bufferSize         = AudioEngineProps::BUFFER_SIZE;
         int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
         bool isMono        = outputChannels == 1;
         std::vector<AudioChannel*> channels;
@@ -105,13 +105,13 @@ namespace AudioEngine
         int loopOffset = 0;         // the offset within the current buffer where we start reading from the current loops start offset
         int loopAmount = 0;         // amount of samples we must read from the current loops start offset
 
-        float recbufferIn   [ buffer_size ];                  // used for recording from device input
-        float outbuffer     [ buffer_size * outputChannels ]; // the output buffer rendered by the hardware
+        float recbufferIn   [ bufferSize ];                  // used for recording from device input
+        float outbuffer     [ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
 
         // generate buffers for temporary channel buffer writes
-        AudioBuffer* channelBuffer = new AudioBuffer( outputChannels, buffer_size );
-        AudioBuffer* inbuffer      = new AudioBuffer( outputChannels, buffer_size ); // accumulates all channels ("master strip")
-        AudioBuffer* recbuffer     = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, buffer_size );
+        AudioBuffer* channelBuffer = new AudioBuffer( outputChannels, bufferSize );
+        AudioBuffer* inbuffer      = new AudioBuffer( outputChannels, bufferSize ); // accumulates all channels ("master strip")
+        AudioBuffer* recbuffer     = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, bufferSize );
 
         thread = 1;
 
@@ -121,14 +121,14 @@ namespace AudioEngine
             inbuffer->silenceBuffers();
 
             // gather the audio events by the buffer range currently being processed
-            int endPosition = bufferPosition + buffer_size;
+            int endPosition = bufferPosition + bufferSize;
             channels        = sequencer::getAudioEvents( channels, bufferPosition, endPosition, true );
 
             // read pointer exceeds maximum allowed offset ? => sequencer has started its loop
             // we must now also gather extra events at the start position of the seq. range
             loopStarted = endPosition > max_buffer_position;
-            loopOffset  = (( max_buffer_position + 1 ) - bufferPosition );
-            loopAmount  = buffer_size - loopOffset;
+            loopOffset  = max_buffer_position - bufferPosition;
+            loopAmount  = bufferSize - loopOffset;
 
             if ( loopStarted )
             {
@@ -145,7 +145,7 @@ namespace AudioEngine
                 else
                 {
                     endPosition -= max_buffer_position;
-                    channels2 = sequencer::getAudioEvents( channels2, min_buffer_position, min_buffer_position + buffer_size, false );
+                    channels2 = sequencer::getAudioEvents( channels2, min_buffer_position, min_buffer_position + bufferSize, false );
 
                     // er? the channels are magically merged by above invocation..., performing the insert below adds the same events TWICE*POP*!?!?
                     //channels.insert( channels.end(), channels2.begin(), channels2.end() ); // merge the channels into one
@@ -192,14 +192,14 @@ namespace AudioEngine
                 // clear previous channel buffer content
                 channelBuffer->silenceBuffers();
 
-                bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
-                int maxBufferPosition = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
+                bool useChannelRange    = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
+                int maxBufferPosition   = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
 
                 // we make a copy of the current buffer position indicator
                 int bufferPos = bufferPosition;
 
                 // ...in case the AudioChannels maxBufferPosition differs from the sequencer loop range
-                // note that these buffer positions are always a full bar in length (as we loop measures)
+                // note that these buffer positions are always a full measure in length (as we loop by measures)
                 while ( bufferPos > maxBufferPosition )
                     bufferPos -= bytes_per_bar;
 
@@ -242,7 +242,7 @@ namespace AudioEngine
                     for ( int k = 0; k < lAmount; ++k )
                     {
                         BaseAudioEvent* vo = channel->liveEvents[ k ];
-                        channelBuffer->mergeBuffers( vo->synthesize( buffer_size ), 0, 0, lAmp );
+                        channelBuffer->mergeBuffers( vo->synthesize( bufferSize ), 0, 0, lAmp );
                     }
                 }
 
@@ -287,12 +287,21 @@ namespace AudioEngine
             }
 
             // write the accumulated buffers into the output buffer
-            for ( i = 0, c = 0; i < buffer_size; i++, c += outputChannels )
+            for ( i = 0, c = 0; i < bufferSize; i++, c += outputChannels )
             {
                 for ( ci = 0; ci < outputChannels; ci++ )
                 {
-                    // apply master volume here
-                    outbuffer[ c + ci ] = ( float ) inbuffer->getBufferForChannel( ci )[ i ] * volume;
+                    // we apply the master volume here
+                    float sample = ( float ) inbuffer->getBufferForChannel( ci )[ i ] * volume;
+
+                    // and a fail-safe in extreme limiting (hitting the ceiling?)
+                    if ( sample < -MAX_PHASE )
+                        sample = -MAX_PHASE;
+
+                    else if ( sample > +MAX_PHASE )
+                        sample = +MAX_PHASE;
+
+                    outbuffer[ c + ci ] = sample;
                 }
 
                 // update the buffer pointers and sequencer position
@@ -301,14 +310,14 @@ namespace AudioEngine
                     if ( ++bufferPosition % bytes_per_tick == 0 )
                        handleSequencerPositionUpdate( android_GetTimestamp( p ));
 
-                    if ( bufferPosition > max_buffer_position )
+                    if ( bufferPosition >= max_buffer_position )
                         bufferPosition = min_buffer_position;
                }
             }
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
             // makes it both unnecessarily audible and stalls this thread's execution
             if ( !bouncing )
-                android_AudioOut( p, outbuffer, buffer_size * AudioEngineProps::OUTPUT_CHANNELS );
+                android_AudioOut( p, outbuffer, bufferSize * AudioEngineProps::OUTPUT_CHANNELS );
 
             // record the output if recording state is active
             if ( playing && ( recordOutput || recordFromDevice ))
@@ -316,7 +325,7 @@ namespace AudioEngine
                 if ( recordFromDevice ) // recording from device input ? > write the record buffer
                     DiskWriter::appendBuffer( recbuffer );
                 else                    // recording global output ? > write the combined buffer
-                    DiskWriter::appendBuffer( inbuffer );
+                    DiskWriter::appendBuffer( outbuffer, bufferSize, AudioEngineProps::OUTPUT_CHANNELS );
 
                 // exceeded maximum recording buffer amount ? > write current recording
                 if ( DiskWriter::bufferFull() || haltRecording )
@@ -380,13 +389,13 @@ namespace AudioEngine
         float oldPosition     = ( float ) bufferPosition / ( float ) max_buffer_position;  // pct of loop offset
         float tempBytesPerBar = ((( float ) AudioEngineProps::SAMPLE_RATE * 60 ) / tempo ) * 4; // a full bar at 4 beats per measure
 
-        bytes_per_beat         = ( int ) ( tempBytesPerBar / ( float ) time_sig_beat_unit );
+        bytes_per_beat        = ( int ) ( tempBytesPerBar / ( float ) time_sig_beat_unit );
 
         // bytes per tick equals the smallest note size the sequencer acknowledges (i.e. 8ths, 16ths, 32nds, 64ths, etc.)
         bytes_per_tick        = bytes_per_beat / beat_subdivision;
         bytes_per_bar         = ( int ) ( tempBytesPerBar / ( float ) time_sig_beat_unit * ( float ) time_sig_beat_amount ); // in case of non-equals amount vs. unit
 
-        max_buffer_position = ( bytes_per_bar * amount_of_bars ) - 1; // -1 as we use array lookups and start at 0 // TODO: single time sig for all bars!!
+        max_buffer_position = ( bytes_per_bar * amount_of_bars ); // TODO: this implies single time sig for all bars!!
 
         // make sure relative positions remain in sync
         bufferPosition = ( int ) llround( max_buffer_position * oldPosition );
@@ -411,14 +420,6 @@ namespace AudioEngine
         if ( stepPosition >= max_step_position )
             stepPosition = min_step_position;
 
-        /* // the OBL way
-        if ( _soundChannel != null )
-            _latency = ( e.position * 2.267573696145e-02 ) - _soundChannel.position;
-
-         sample latency = (latency in milliseconds / 1000) * SAMPLE_RATE
-
-        _timelines[ i ].updatePosition( MathTool.roundPos(( _position + _latency ) / BYTES_PER_TICK ) - 1 );
-        */
         Observer::broadcastStepPosition();
     }
 

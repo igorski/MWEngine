@@ -60,18 +60,18 @@ class Filter : public BaseProcessor
 
         // used internally
 
-        float a1;
-        float a2;
-        float a3;
-        float b1;
-        float b2;
-        float c;
-        float output;
+        SAMPLE_TYPE a1;
+        SAMPLE_TYPE a2;
+        SAMPLE_TYPE a3;
+        SAMPLE_TYPE b1;
+        SAMPLE_TYPE b2;
+        SAMPLE_TYPE c;
+        SAMPLE_TYPE output;
 
-        float* in1;
-        float* in2;
-        float* out1;
-        float* out2;
+        SAMPLE_TYPE* in1;
+        SAMPLE_TYPE* in2;
+        SAMPLE_TYPE* out1;
+        SAMPLE_TYPE* out2;
 
     private:
         bool _hasLFO;

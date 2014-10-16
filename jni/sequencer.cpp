@@ -44,9 +44,9 @@ namespace sequencer
 
         // 1. the sequenced synthesizers, note we update their mix properties here as they might change during playback
 
-        for ( i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
+        for ( i = 0, l = synthesizers.size(); i < l; ++i )
         {
-            SynthInstrument* synthesizer = sequencer::synthesizers.at( i );
+            SynthInstrument* synthesizer = synthesizers.at( i );
             AudioChannel* synthChannel   = synthesizer->audioChannel;
 
             synthChannel->reset();
@@ -62,9 +62,9 @@ namespace sequencer
 
         // 2. the samplers
 
-        for ( i = 0, l = sequencer::samplers.size(); i < l; ++i )
+        for ( i = 0, l = samplers.size(); i < l; ++i )
         {
-            SampledInstrument* sampler   = sequencer::samplers.at( i );
+            SampledInstrument* sampler   = samplers.at( i );
             AudioChannel* samplerChannel = sampler->audioChannel;
 
             samplerChannel->reset();
@@ -78,12 +78,12 @@ namespace sequencer
 
         // 3. drum machine, note we update its properties here as they might change during playback
 
-        if ( sequencer::drummachine != 0 )
+        if ( drummachine != 0 )
         {
-            AudioChannel* drumChannel = sequencer::drummachine->audioChannel;
+            AudioChannel* drumChannel = drummachine->audioChannel;
 
             drumChannel->reset();
-            drumChannel->mixVolume         = sequencer::drummachine->volume;
+            drumChannel->mixVolume         = drummachine->volume;
             drumChannel->maxBufferPosition = AudioEngine::bytes_per_bar;
             collectDrumEvents( drumChannel, bufferPosition, bufferEnd );
 
@@ -94,21 +94,21 @@ namespace sequencer
 
     void updateEvents()
     {
-        for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
-            sequencer::synthesizers.at( i )->updateEvents();
+        for ( int i = 0, l = synthesizers.size(); i < l; ++i )
+            synthesizers.at( i )->updateEvents();
 
-        for ( int i = 0, l = sequencer::samplers.size(); i < l; ++i )
-            sequencer::samplers.at( i )->updateEvents();
+        for ( int i = 0, l = samplers.size(); i < l; ++i )
+            samplers.at( i )->updateEvents();
 
-        if ( sequencer::drummachine != 0 )
-            sequencer::drummachine->updateEvents();
+        if ( drummachine != 0 )
+            drummachine->updateEvents();
     }
 
     void clearEvents()
     {
-        for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
+        for ( int i = 0, l = synthesizers.size(); i < l; ++i )
         {
-            SynthInstrument* synthesizer = sequencer::synthesizers.at( i );
+            SynthInstrument* synthesizer = synthesizers.at( i );
 
             if ( synthesizer->audioEvents != 0 )
                 synthesizer->audioEvents->clear();
@@ -116,7 +116,7 @@ namespace sequencer
             if ( synthesizer->liveEvents != 0 )
                 synthesizer->liveEvents->clear();
         }
-        sequencer::drummachine->clearEvents();
+        drummachine->clearEvents();
     }
 
     /**
@@ -144,7 +144,7 @@ namespace sequencer
             int sampleEnd   = audioEvent->getSampleEnd();
 
             if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                ( sampleStart < bufferPosition  && sampleEnd >= bufferPosition ))
+                ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
             {
                 if ( !audioEvent->deletable())
                     channel->addEvent( audioEvent );
@@ -232,7 +232,7 @@ namespace sequencer
 
                 if ( audioEvent->getLoopeable() ||
                    ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                   ( sampleStart < bufferPosition  && sampleEnd >= bufferPosition ))
+                   ( sampleStart <  bufferPosition  && sampleEnd >= bufferPosition ))
                 {
                     if ( !audioEvent->deletable())
                         channel->addEvent( audioEvent );
@@ -267,7 +267,7 @@ namespace sequencer
 
     void collectDrumEvents( AudioChannel *channel, int bufferPosition, int bufferEnd )
     {
-        if ( sequencer::drummachine->hasEvents() )
+        if ( drummachine->hasEvents() )
         {
             // drums loop by pattern, recalculate buffer position by subtracting
             // all measures above the first
@@ -279,7 +279,7 @@ namespace sequencer
                 bufferEnd      -= bytesPerBar;
             }
 
-            std::vector<DrumEvent*>* drumEvents = sequencer::drummachine->getEventsForActivePattern();
+            std::vector<DrumEvent*>* drumEvents = drummachine->getEventsForActivePattern();
 
             int i = 0;
             for ( i; i < drumEvents->size(); i++ )
@@ -289,8 +289,8 @@ namespace sequencer
                 int sampleStart = audioEvent->getSampleStart();
                 int sampleEnd   = audioEvent->getSampleEnd();
 
-                if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd )
-                        || ( sampleStart < bufferPosition && sampleEnd >= bufferPosition ))
+                if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
+                    ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
                 {
                     if ( !audioEvent->deletable())
                         channel->addEvent( audioEvent );
@@ -317,9 +317,9 @@ namespace sequencer
         //DebugTool::log("check for events at start range %d", bufferPosition);
         //DebugTool::log("until %d", bufferEnd );
 
-        for ( int i = 0, l = sequencer::synthesizers.size(); i < l; ++i )
+        for ( int i = 0, l = synthesizers.size(); i < l; ++i )
         {
-            std::vector<BaseCacheableAudioEvent*>* audioEvents = sequencer::synthesizers.at( i )->audioEvents;
+            std::vector<BaseCacheableAudioEvent*>* audioEvents = synthesizers.at( i )->audioEvents;
             int amount = audioEvents->size();
 
             for ( int j = 0; j < amount; j++ )

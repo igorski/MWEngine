@@ -25,6 +25,7 @@
 #include "../sequencer.h"
 #include "../utils.h"
 #include "../global.h"
+#include "../bufferutility.h"
 #include <cmath>
 
 /* constructor / destructor */
@@ -116,7 +117,7 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
     float currentFreq = _frequency;
     _frequency        = aFrequency;
     _phaseIncr        = aFrequency / AudioEngineProps::SAMPLE_RATE;
-    //_phase            = 0.0f; // resetting will create nasty pop if another freq was playing previously
+    //_phase            = 0.0f; // resetting will create a nasty pop if another freq was playing previously
 
     // store as base frequency (acts as a reference "return point" for pitch shifting modules)
     if ( storeAsBaseFrequency )
@@ -299,8 +300,20 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     tmp = ( _phase * 4.0 - 3.0 );
                     amp = ( tmp * tmp - 1.0 );
                 }
-                amp *= .7;  // sines distorted easily when overlapping
 
+                // sines need some extra love :
+                // for one: a fade-in and fade-out at the start to prevent POP!ping...
+
+                if ( isSequenced )
+                {
+                    int curWritePos = _cacheWriteIndex + i;
+
+                    if ( curWritePos < _fadeInDuration )
+                        amp *= ( SAMPLE_TYPE ) curWritePos / ( SAMPLE_TYPE ) _fadeInDuration;
+
+                    else if ( curWritePos >= ( maxSampleIndex - _fadeOutDuration ))
+                        amp *= ( SAMPLE_TYPE ) ( maxSampleIndex - ( curWritePos  )) / ( SAMPLE_TYPE ) _fadeOutDuration;
+                }
                 break;
 
             case WaveForms::SAWTOOTH:
@@ -322,7 +335,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     tmp = TWO_PI * ( _phase * 4.0 - 3.0 );
                     amp = ( tmp * tmp - 1.0 );
                 }
-                amp *= .01; // these get loud ! 0.005
+                amp *= .01; // these get loud !
                 break;
 
             case WaveForms::TRIANGLE:
@@ -331,11 +344,11 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                 if ( _phase < .5 )
                 {
                     tmp = ( _phase * 4.0 - 1.0 );
-                    amp = ( 1.0 - tmp * tmp ) * .75;
+                    amp = ( 1.0 - tmp * tmp );
                 }
                 else {
                     tmp = ( _phase * 4.0 - 3.0 );
-                    amp = ( tmp * tmp - 1.0 ) * .75;
+                    amp = ( tmp * tmp - 1.0 );
                 }
                 // the actual triangulation function
                 amp = amp < 0 ? -amp : amp;
@@ -504,6 +517,10 @@ void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosi
     _pwmValue              = 0.0;
     _phase                 = 0.0;
     _type                  = aInstrument->waveform;
+
+    // starting/stopping a waveform mid cycle can cause nasty pops, this is used for a smoother inaudible fade in
+    _fadeInDuration  = BufferUtility::millisecondsToBuffer( 20, AudioEngineProps::SAMPLE_RATE );
+    _fadeOutDuration = BufferUtility::millisecondsToBuffer( 30, AudioEngineProps::SAMPLE_RATE );
 
     // create the secondary oscillator
 

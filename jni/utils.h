@@ -44,15 +44,6 @@ namespace VolumeUtil
     extern float log2lin( float dLogarithmic );
 }
 
-/* buffer util */
-
-namespace BufferUtil
-{
-    extern SAMPLE_TYPE* generateSilentBuffer( int aBufferSize );
-    extern int calculateBufferLength( float aMinRate );
-    extern int calculateBufferLength( int milliSeconds );
-}
-
 /* convenience methods */
 
 // note this will not work on pointers (yes, that means arrays passed as arguments too ;-)

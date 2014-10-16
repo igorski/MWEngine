@@ -45,6 +45,7 @@ namespace DiskWriter
     extern void generateOutputBuffer();
     extern void flushOutput();
     extern void appendBuffer( AudioBuffer* aBuffer );
+    extern void appendBuffer( float* aBuffer, int aBufferSize, int amountOfChannels );
     extern bool bufferFull();
     extern void writeBufferToFile( int aSampleRate, int aNumChannels, bool broadcastUpdate );
 }

@@ -79,7 +79,7 @@ BaseSynthEvent::~BaseSynthEvent()
  * will only occur for a sequenced BaseSynthEvent
  */
 void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
-                            bool loopStarted, int loopOffset, bool useChannelRange )
+                                bool loopStarted, int loopOffset, bool useChannelRange )
 {
     // is EVENT_CACHING is enabled, read from cached buffer
 

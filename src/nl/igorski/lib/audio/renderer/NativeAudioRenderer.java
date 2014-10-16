@@ -117,9 +117,13 @@ public final class NativeAudioRenderer extends Thread
         if ( Build.FINGERPRINT.startsWith( "generic" ))
             SAMPLE_RATE = 8000;
 
+        // defaults during initialization
+        final float tempo = 120.0f;
+        BYTES_PER_BAR = ( int )(( SAMPLE_RATE * 60 ) / tempo * 4 );
+
         _api = new SequencerAPI();
 
-        _api.prepare( BUFFER_SIZE, SAMPLE_RATE, 120.0f, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT ); // start w/ default of 120 BPM in 4/4 time
+        _api.prepare( BUFFER_SIZE, SAMPLE_RATE, tempo, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT ); // start w/ default of 120 BPM in 4/4 time
     }
 
     /**
@@ -408,7 +412,7 @@ public final class NativeAudioRenderer extends Thread
         if ( INSTANCE._initialCreation )
         {
             INSTANCE._initialCreation = false;
-            INSTANCE.setLoopPoint( 0, BYTES_PER_BAR - 1 );
+            INSTANCE.setLoopPoint( 0, BYTES_PER_BAR );
         }
 
         Logger.log( "NativeAudioRenderer::handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );

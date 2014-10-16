@@ -23,6 +23,8 @@
 #ifndef __BUFFER_UTILITY_H_INCLUDED__
 #define __BUFFER_UTILITY_H_INCLUDED__
 
+#include "global.h"
+
 /**
  * BufferUtility provides several functions
  * for basic time / BPM related calculations
@@ -40,6 +42,9 @@ class BufferUtility
         static int calculateSamplesPerBeatDivision( int sampleRate, double tempo, int subdivision );
         static int getSamplesPerBeat( int sampleRate, double tempo );
         static int getSamplesPerBar( int sampleRate, double tempo, int beatAmount, int beatUnit );
+        static SAMPLE_TYPE* generateSilentBuffer( int aBufferSize );
+        static int calculateBufferLength( SAMPLE_TYPE aMinRate );
+        static int calculateBufferLength( int milliSeconds );
 };
 
 #endif

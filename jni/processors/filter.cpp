@@ -32,7 +32,9 @@
  * @param aLfoRate {float} LFO speed in Hz, 0 for OFF
  * @param numChannels {int} amount of output channels
  */
-Filter::Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float aMaxFreq, float aLfoRate, int numChannels )
+Filter::Filter( float aCutoffFrequency, float aResonance,
+                float aMinFreq, float aMaxFreq,
+                float aLfoRate, int numChannels )
 {
     fs            = AudioEngineProps::SAMPLE_RATE;
     _tempCutoff   = 0;    // used for reading when automating via LFO
@@ -46,10 +48,10 @@ Filter::Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float 
     maxFreq    = aMaxFreq;
     lfoRange   = ( maxFreq / 2 ) - minFreq;
 
-    in1  = new float[ numChannels ];
-    in2  = new float[ numChannels ];
-    out1 = new float[ numChannels ];
-    out2 = new float[ numChannels ];
+    in1  = new SAMPLE_TYPE[ numChannels ];
+    in2  = new SAMPLE_TYPE[ numChannels ];
+    out1 = new SAMPLE_TYPE[ numChannels ];
+    out2 = new SAMPLE_TYPE[ numChannels ];
 
     for ( int i = 0; i < numChannels; ++i )
     {
@@ -76,8 +78,8 @@ Filter::~Filter()
 void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize       = sampleBuffer->bufferSize;
-    int initialLFOoffset = _hasLFO ? _lfo->getReadOffset() : 0;
-    float orgCutoff     = _tempCutoff;
+    int initialLFOOffset = _hasLFO ? _lfo->getReadOffset() : 0;
+    float orgCutoff      = _tempCutoff;
 
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
@@ -86,15 +88,15 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         // each channel needs the same offset to get the same LFO movement ;)
         if ( _hasLFO && i > 0 )
         {
-            _lfo->setReadOffset( initialLFOoffset );
+            _lfo->setReadOffset( initialLFOOffset );
             _tempCutoff = orgCutoff;
             calculateParameters();
         }
 
         for ( int j = 0; j < bufferSize; ++j )
         {
-            float input = channelBuffer[ j ];
-            output       = a1 * input + a2 * in1[ i ] + a3 * in2[ i ] - b1 * out1[ i ] - b2 * out2[ i ];
+            SAMPLE_TYPE input = channelBuffer[ j ];
+            output            = a1 * input + a2 * in1[ i ] + a3 * in2[ i ] - b1 * out1[ i ] - b2 * out2[ i ];
 
             in2 [ i ] = in1[ i ];
             in1 [ i ] = input;

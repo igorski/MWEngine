@@ -79,42 +79,6 @@ namespace VolumeUtil
     }
 }
 
-/* buffer util */
-
-namespace BufferUtil
-{
-    SAMPLE_TYPE* generateSilentBuffer( int aBufferSize )
-    {
-        SAMPLE_TYPE* out = new SAMPLE_TYPE[ aBufferSize ];
-
-        for ( int i = 0; i < aBufferSize; ++i )
-            out[ i ] = 0.0;
-
-        return out;
-    }
-
-    /**
-     * calculate the amount of samples a single cycle of a waveform
-     * will hold at a give rate in Hz, at the current sample rate
-     *
-     * @param aMinRate {float} length in Hz for the waveform
-     */
-    int calculateBufferLength( float aMinRate )
-    {
-        float phaseStep = aMinRate / AudioEngineProps::SAMPLE_RATE;
-        return ceil( 1.0 / phaseStep );
-    }
-
-    /**
-     * calculate the amount of samples necessary for
-     * writing the given amount in milliseconds
-     */
-    int calculateBufferLength( int milliSeconds )
-    {
-        return milliSeconds * ( AudioEngineProps::SAMPLE_RATE * .001 );
-    }
-}
-
 /* logging */
 
 namespace DebugTool
