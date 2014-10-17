@@ -113,10 +113,11 @@ bool BaseAudioEvent::isLocked()
     return _locked;
 }
 
-void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
+void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
+                                int minBufferPosition, int maxBufferPosition,
                                 bool loopStarted, int loopOffset, bool useChannelRange )
 {
-    lock(); // prevents buffer mutations (from other thread) during this read cycle
+    lock(); // prevents buffer mutations (from outside threads) during this read cycle
 
     // read from the pre-cached buffer for sequenced notes
 

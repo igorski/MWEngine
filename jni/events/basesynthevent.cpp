@@ -78,21 +78,35 @@ BaseSynthEvent::~BaseSynthEvent()
 /**
  * will only occur for a sequenced BaseSynthEvent
  */
-void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
+void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
+                                int minBufferPosition, int maxBufferPosition,
                                 bool loopStarted, int loopOffset, bool useChannelRange )
 {
     // is EVENT_CACHING is enabled, read from cached buffer
 
     if ( AudioEngineProps::EVENT_CACHING )
     {
-        BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition, loopStarted, loopOffset, useChannelRange );
+        BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition,
+                                   loopStarted, loopOffset, useChannelRange );
     }
     else
     {
+        // EVENT_CACHING is disabled, synthesize on the fly
+
+        lock();
+
+        // over the max position ? read from the start ( implies that sequence has started loop )
+        if ( bufferPos >= maxBufferPosition )
+        {
+            if ( useChannelRange )
+                bufferPos -= maxBufferPosition;
+
+            else if ( !loopStarted )
+                bufferPos -= ( maxBufferPosition - minBufferPosition );
+        }
+
         int bufferEndPos = bufferPos + AudioEngineProps::BUFFER_SIZE;
 
-        // EVENT_CACHING is disabled, synthesize on the fly
-        // ex. : START 200 | END 2000 | LENGTH 1800 | CURRENT BUFFER POS 0 @ BUFFER SIZE 512
         if (( bufferPos >= _sampleStart || bufferEndPos > _sampleStart ) &&
               bufferPos < _sampleEnd )
         {
@@ -107,7 +121,23 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int mi
             if ( _cacheWriteIndex >= _sampleLength )
                 calculateBuffers();
         }
-        // TODO : loop start seamless reading required ?
+
+        if ( loopStarted && bufferPos >= loopOffset )
+        {
+            bufferPos = minBufferPosition + loopOffset;
+
+            if ( bufferPos >= _sampleStart && bufferPos <= _sampleEnd )
+            {
+                _cacheWriteIndex = 0; // render the snippet from the start
+                render( _buffer );    // overwrites old buffer contents
+                outputBuffer->mergeBuffers( _buffer, 0, loopOffset, MAX_PHASE );
+
+                // reset of properties at end of write
+                if ( _cacheWriteIndex >= _sampleLength )
+                    calculateBuffers();
+            }
+        }
+        unlock();
     }
 }
 
@@ -156,7 +186,7 @@ void BaseSynthEvent::invalidateProperties( int aPosition, float aLength, SynthIn
     if ( AudioEngineProps::EVENT_CACHING && !_cachingCompleted ) _cancel = true;
 
     if ( _rendering )
-        _update = true;     // we're rendering, request update from render loop
+        _update = true;     // we're rendering, request update from within render loop
     else
         updateProperties(); // instant update as we're not rendering
 }
@@ -414,9 +444,9 @@ void BaseSynthEvent::setDeletable( bool value )
 void BaseSynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
                        int aLength, bool aIsSequenced )
 {
-    _destroyableBuffer = true;  // always unique and managed by this instance !
+    _destroyableBuffer = true;  // synth event buffer is always unique and managed by this instance !
     _instrument        = aInstrument;
-    _adsr              = _instrument->adsr->clone();
+    _adsr              = aInstrument->adsr != 0 ? aInstrument->adsr->clone() : new ADSR();
 
     // when instrument has no fixed length and the decay is short
     // we deactivate the decay envelope completely (for now)

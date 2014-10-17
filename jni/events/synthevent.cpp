@@ -123,7 +123,7 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
     if ( storeAsBaseFrequency )
         _baseFrequency = aFrequency;
 
-    if ( /*!isSequenced &&*/ _type == WaveForms::KARPLUS_STRONG )
+    if ( _type == WaveForms::KARPLUS_STRONG )
         initKarplusStrong();
 
     // update properties of secondary oscillator, note that OSC2 can
@@ -247,13 +247,20 @@ void SynthEvent::updateProperties()
 {
     // secondary oscillator
 
-    if ( _instrument->osc2active )
+    bool doOSC2 = !hasParent && _instrument->osc2active;
+
+    if ( doOSC2 )
         createOSC2( position, length, _instrument );
     else
         destroyOSC2();
 
     applyModules( _instrument );        // modules
     BaseSynthEvent::updateProperties(); // base method
+
+    if ( doOSC2 ) {
+        _osc2->_update = false;
+        _osc2->_cancel = false;
+    }
 }
 
 /**
@@ -307,7 +314,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                 // sines need some extra love :
                 // for one: a fade-in and fade-out at the start to prevent POP!ping...
 
-                if ( isSequenced )
+                if ( isSequenced && !hasParent ) // unless this isn't the main oscillator
                 {
                     int curWritePos = _cacheWriteIndex + i;
 
@@ -317,9 +324,6 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     else if ( curWritePos >= ( maxSampleIndex - _fadeOutDuration ))
                         amp *= ( SAMPLE_TYPE ) ( maxSampleIndex - ( curWritePos  )) / ( SAMPLE_TYPE ) _fadeOutDuration;
                 }
-
-                if ( hasParent )
-                    amp *= .7;  // attenuate for OSC2
 
                 break;
 
@@ -446,7 +450,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         int tempLength = ( AudioEngineProps::EVENT_CACHING && isSequenced ) ? ( renderEndOffset - _cacheWriteIndex ) : bufferLength;
         AudioBuffer* tempBuffer = new AudioBuffer( aOutputBuffer->amountOfChannels, tempLength );
         _osc2->render( tempBuffer );
-        aOutputBuffer->mergeBuffers( tempBuffer, 0, renderStartOffset, MAX_PHASE );
+        aOutputBuffer->mergeBuffers( tempBuffer, 0, renderStartOffset, MAX_PHASE * .5 );
 
         delete tempBuffer; // free allocated memory
     }
@@ -507,7 +511,7 @@ void SynthEvent::setDeletable( bool value )
  * @param aIsSequenced whether this event is sequenced and only audible in a specific sequence range
  */
 void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
-                         int aLength, bool aIsSequenced, bool aHasParent )
+                       int aLength, bool aIsSequenced, bool aHasParent )
 {
     _ringBuffer     = 0;
     _ringBufferSize = 0;
@@ -609,12 +613,6 @@ void SynthEvent::createOSC2( int aPosition, int aLength, SynthInstrument *aInstr
             lfo2freq += fineShift;
 
         _osc2->setFrequency( lfo2freq );
-
-        if ( AudioEngineProps::EVENT_CACHING )
-        {
-            if ( _osc2->_caching && !_osc2->_cachingCompleted )
-                _osc2->_cancel = true;
-        }
     }
 }
 
