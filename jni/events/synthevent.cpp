@@ -317,6 +317,10 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     else if ( curWritePos >= ( maxSampleIndex - _fadeOutDuration ))
                         amp *= ( SAMPLE_TYPE ) ( maxSampleIndex - ( curWritePos  )) / ( SAMPLE_TYPE ) _fadeOutDuration;
                 }
+
+                if ( hasParent )
+                    amp *= .7;  // attenuate for OSC2
+
                 break;
 
             case WaveForms::SAWTOOTH:
