@@ -191,8 +191,8 @@ void BaseSynthEvent::calculateBuffers()
         _sampleEnd    = _sampleStart + _sampleLength;
     }
     else {
-        // quick releases of the key should at least ring for a 32nd note
-        _minLength    = AudioEngine::bytes_per_bar / 32;
+        // quick releases of a noteOn-instruction should ring for at least a 64th note
+        _minLength    = AudioEngine::bytes_per_bar / 64;
         _sampleLength = AudioEngine::bytes_per_bar;     // important for amplitude swell in
         oldLength     = AudioEngineProps::BUFFER_SIZE;  // buffer is as long as the engine's buffer size
         _hasMinLength = false;                          // keeping track if the min length has been rendered
@@ -204,13 +204,14 @@ void BaseSynthEvent::calculateBuffers()
     // create buffer for (new) sample length
     if ( _sampleLength != oldLength || _buffer == 0 )
     {
-        destroyBuffer();
-
         // note that when event caching is enabled, the buffer is as large as
         // the total event length requires
 
         if ( AudioEngineProps::EVENT_CACHING && isSequenced )
+        {
+            destroyBuffer(); // clear previous buffer contents
             _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, _sampleLength );
+        }
         else
             _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
     }
@@ -233,7 +234,7 @@ void BaseSynthEvent::calculateBuffers()
 AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
 {
     // in case buffer length is unequal to cached length, create new write buffer
-    if ( aBufferLength != AudioEngineProps::BUFFER_SIZE )
+    if ( aBufferLength != AudioEngineProps::BUFFER_SIZE || _buffer == 0 )
     {
         destroyBuffer();
         _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
@@ -257,8 +258,8 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
         {
             int amt = ceil( aBufferLength / 4 );
 
-            float envIncr = MAX_PHASE / amt;
-            float amp     = MAX_PHASE;
+            SAMPLE_TYPE envIncr = MAX_PHASE / amt;
+            SAMPLE_TYPE amp     = MAX_PHASE;
 
             for ( int i = aBufferLength - amt; i < aBufferLength; ++i )
             {

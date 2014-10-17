@@ -148,9 +148,10 @@ void SynthEvent::invalidateProperties( int aPosition, float aLength, SynthInstru
     if ( aInstrument != 0 )
         _type = _instrument->waveform;
 
-    if ( AudioEngineProps::EVENT_CACHING && _rendering && !_cachingCompleted )
+    // additional magic for secondary oscillator
+    if ( _osc2 != 0 )
     {
-        if ( _osc2 != 0 && _osc2->_rendering )
+        if ( AudioEngineProps::EVENT_CACHING && !_osc2->_cachingCompleted )
             _osc2->_cancel = true;
     }
     BaseSynthEvent::invalidateProperties( aPosition, aLength, aInstrument );
@@ -179,8 +180,8 @@ void SynthEvent::calculateBuffers()
         _sampleEnd    = _sampleStart + _sampleLength;
     }
     else {
-        // quick releases of the key should at least ring for a 32nd note
-        _minLength    = AudioEngine::bytes_per_bar / 32;
+        // quick releases of a noteOn-instruction should ring for at least a 64th note
+        _minLength    = AudioEngine::bytes_per_bar / 64;
         _sampleLength = AudioEngine::bytes_per_bar;     // important for amplitude swell in
         oldLength     = AudioEngineProps::BUFFER_SIZE;  // buffer is as long as the engine's buffer size
         _hasMinLength = false;                          // keeping track if the min length has been rendered
@@ -190,10 +191,8 @@ void SynthEvent::calculateBuffers()
 
     // sample length changed (f.i. tempo change) or buffer not yet created ?
     // create buffer for (new) sample length
-    if ( _sampleLength != oldLength || _buffer == 0 )
+    if ( _sampleLength != oldLength )
     {
-        destroyBuffer(); // clear previous buffer contents
-
         // OSC2 generates no buffer (writes into parent buffer, saves memory)
         if ( !hasParent )
         {
@@ -201,11 +200,14 @@ void SynthEvent::calculateBuffers()
             // the total event length requires
 
             if ( AudioEngineProps::EVENT_CACHING && isSequenced )
+            {
+                destroyBuffer(); // clear previous buffer contents
                 _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, _sampleLength );
+            }
             else
                 _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
         }
-     }
+    }
 
     if ( isSequenced )
     {
@@ -250,7 +252,7 @@ void SynthEvent::updateProperties()
     else
         destroyOSC2();
 
-    applyModules( _instrument );    // modules
+    applyModules( _instrument );        // modules
     BaseSynthEvent::updateProperties(); // base method
 }
 
@@ -280,7 +282,8 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
     if ( renderEndOffset > maxSampleIndex )
     {
         renderEndOffset = maxSampleIndex;
-        aOutputBuffer->silenceBuffers(); // as we tend to overwrite the incoming buffer
+        // silence buffers as we won't overwrite the remainder beyond above offset
+        aOutputBuffer->silenceBuffers();
     }
 
     for ( i = renderStartOffset; i < renderEndOffset; ++i )
@@ -397,7 +400,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
 
                 // --- Karplus-Strong algorithm for plucked string-sound (0.990f being energy decay factor)
                 _ringBuffer->enqueue(( 0.990f * (( _ringBuffer->dequeue() + _ringBuffer->peek()) / 2 )));
-                amp = _ringBuffer->peek(); // * .7; gets the level down a bit, 'tis loud
+                amp = _ringBuffer->peek();
 
                 break;
         }

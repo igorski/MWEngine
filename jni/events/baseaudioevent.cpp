@@ -184,7 +184,9 @@ AudioBuffer* BaseAudioEvent::getBuffer()
 
 AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
 {
-    // override in subclass as this requires memory cleanup (and is basically silence ;-) ... ) !
+    // override in subclass as this memory allocation requires cleanup
+    // (and basically contains nothing but silence ;-) ... !
+
     return new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
 }
 
