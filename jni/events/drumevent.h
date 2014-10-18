@@ -32,6 +32,8 @@ class DrumEvent : public SampleEvent
         DrumEvent( int aPosition, int aDrumType, int aDrumTimbre );
         ~DrumEvent();
 
+        int position;
+
         int getTimbre();
         void setTimbre( int aTimbre );
         int getType();

@@ -29,15 +29,6 @@
 
 SampleEvent::SampleEvent()
 {
-    position = 0;
-
-    init();
-}
-
-SampleEvent::SampleEvent( int aPosition )
-{
-    position = aPosition;
-
     init();
 }
 
@@ -151,15 +142,6 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
     return _buffer;
 }
 
-bool SampleEvent::isCached()
-{
-    return _cachingCompleted;
-}
-
-void SampleEvent::setAutoCache( bool aValue )
-{
-    // nowt... sample is always a finite buffer
-}
 
 void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 {
@@ -185,9 +167,7 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 
     _buffer->loopeable = _loopeable;
     _sampleLength      = sampleLength;
-    _cachingCompleted  = true;
 
-    _sampleStart       = position * AudioEngine::bytes_per_tick;
     _sampleEnd         = _sampleStart + _sampleLength;
     _bufferRangeStart  = _sampleStart;
     _bufferRangeEnd    = _sampleEnd;
@@ -198,11 +178,6 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 
     if ( !wasLocked )
         _locked = false;
-}
-
-void SampleEvent::cache()
-{
-    // nowt... nothing to cache
 }
 
 void SampleEvent::addToSequencer( int samplerNum )
@@ -290,8 +265,9 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 void SampleEvent::init()
 {
     _deleteMe          = false;
-    _cancel            = false;
     _buffer            = 0;
+    _sampleStart       = 0;
+    _sampleEnd         = 0;
     _sampleLength      = 0;
     _bufferRangeLength = 0;
     _locked            = false;

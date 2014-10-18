@@ -23,17 +23,13 @@
 #ifndef __SAMPLEEVENT_H_INCLUDED__
 #define __SAMPLEEVENT_H_INCLUDED__
 
-#include "basecacheableaudioevent.h"
+#include "baseaudioevent.h"
 
-class SampleEvent : public BaseCacheableAudioEvent
+class SampleEvent : public BaseAudioEvent
 {
     public:
         SampleEvent();
-        SampleEvent( int aPosition );
         virtual ~SampleEvent();
-
-        // used by view representation
-        int position;
 
         virtual int getSampleLength();
         virtual int getSampleStart();
@@ -54,9 +50,7 @@ class SampleEvent : public BaseCacheableAudioEvent
 
         virtual AudioBuffer* getBuffer();
         virtual AudioBuffer* synthesize( int aBufferLength );
-        virtual bool isCached();
-        virtual void setAutoCache( bool aValue );
-        virtual void cache();
+
         virtual void setSample( AudioBuffer* sampleBuffer );
         virtual void addToSequencer( int aSamplerNum );
         virtual void removeFromSequencer();
@@ -86,8 +80,6 @@ class SampleEvent : public BaseCacheableAudioEvent
         // the AudioEvent for removal
 
         bool _deleteMe;
-        bool _cancel;            // whether we should cancel caching
-        bool _cachingCompleted;  // whether we're done caching
         bool _addedToSequencer;  // whether this event is part of a sequence
 
         void init();

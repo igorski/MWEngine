@@ -217,7 +217,7 @@ namespace sequencer
                                         int bufferPosition, int bufferEnd )
     {
         // removal queue
-        std::vector<BaseCacheableAudioEvent*> removes;
+        std::vector<BaseAudioEvent*> removes;
 
         int i = 0;
         int amount = audioEvents->size();
@@ -249,7 +249,7 @@ namespace sequencer
             int i = 0;
             for ( i; i < removes.size(); i++ )
             {
-                BaseCacheableAudioEvent* audioEvent = removes[ i ];
+                BaseAudioEvent* audioEvent = removes[ i ];
 
                 // remove audio event from sequencer (if it was present)
                 if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
