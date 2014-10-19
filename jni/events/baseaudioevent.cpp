@@ -31,6 +31,7 @@ BaseAudioEvent::BaseAudioEvent()
     _buffer            = 0;
     _enabled           = true;
     _destroyableBuffer = true;
+    _loopeable         = false;
     _locked            = false;
 }
 
@@ -70,6 +71,19 @@ int BaseAudioEvent::getSampleEnd()
 void BaseAudioEvent::setSampleEnd( int value )
 {
     _sampleEnd = value;
+}
+
+bool BaseAudioEvent::getLoopeable()
+{
+    return _loopeable;
+}
+
+void BaseAudioEvent::setLoopeable( bool value )
+{
+    _loopeable = value;
+
+    if ( _buffer != 0 )
+        _buffer->loopeable = _loopeable;
 }
 
 bool BaseAudioEvent::deletable()

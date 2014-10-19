@@ -24,6 +24,7 @@
 #define __BASEINSTRUMENT_H_INCLUDED__
 
 #include "../audiochannel.h"
+#include <events/baseaudioevent.h>
 
 class BaseInstrument
 {
@@ -32,8 +33,19 @@ class BaseInstrument
         ~BaseInstrument();
 
         virtual bool hasEvents();     // whether the instrument has events to sequence
+        virtual bool hasLiveEvents(); // whether the instruments has events to synthesize on the fly
         virtual void updateEvents();  // updates all associated events after changing instrument properties
 
+        virtual std::vector<BaseAudioEvent*>* getEvents();
+        virtual std::vector<BaseAudioEvent*>* getLiveEvents();
+
+        virtual void clearEvents();   // clears all events
+        virtual bool removeEvent( BaseAudioEvent* aEvent ); // invoked by Sequencer when event can safely be removed
+
+        void registerInSequencer();
+        void unregisterFromSequencer();
+
+        float volume;
         AudioChannel *audioChannel;
 };
 

@@ -484,18 +484,18 @@ void BaseSynthEvent::addToSequencer()
     if ( isSequenced )
         _instrument->audioEvents->push_back( this );
     else
-        _instrument->liveEvents->push_back( this );
+        _instrument->liveAudioEvents->push_back( this );
 }
 
 void BaseSynthEvent::removeFromSequencer()
 {
     if ( !isSequenced )
     {
-        for ( int i; i < _instrument->liveEvents->size(); i++ )
+        for ( int i; i < _instrument->liveAudioEvents->size(); i++ )
         {
-            if ( _instrument->liveEvents->at( i ) == this )
+            if ( _instrument->liveAudioEvents->at( i ) == this )
             {
-                _instrument->liveEvents->erase( _instrument->liveEvents->begin() + i );
+                _instrument->liveAudioEvents->erase( _instrument->liveAudioEvents->begin() + i );
                 break;
             }
         }

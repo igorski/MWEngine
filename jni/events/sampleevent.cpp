@@ -24,12 +24,18 @@
 #include "../audioengine.h"
 #include "../sequencer.h"
 #include "../utils.h"
+#include <instruments/sampledinstrument.h>
 
 /* constructor / destructor */
 
 SampleEvent::SampleEvent()
 {
-    init();
+    init( 0 );
+}
+
+SampleEvent::SampleEvent( BaseInstrument* aInstrument )
+{
+    init( aInstrument );
 }
 
 SampleEvent::~SampleEvent()
@@ -108,19 +114,6 @@ void SampleEvent::playNow()
     setEnabled( true );
 }
 
-bool SampleEvent::getLoopeable()
-{
-    return _loopeable;
-}
-
-void SampleEvent::setLoopeable( bool value )
-{
-    _loopeable = value;
-
-    if ( _buffer != 0 )
-        _buffer->loopeable = _loopeable;
-}
-
 bool SampleEvent::deletable()
 {
     return _deleteMe;
@@ -180,13 +173,11 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
         _locked = false;
 }
 
-void SampleEvent::addToSequencer( int samplerNum )
+void SampleEvent::addToSequencer()
 {
-    _samplerNum = samplerNum;
-
     if ( !_addedToSequencer )
     {
-        sequencer::samplers.at( _samplerNum )->audioEvents->push_back( this );
+        (( SampledInstrument* ) _instrument )->audioEvents->push_back( this );
     }
     _addedToSequencer = true;
 }
@@ -195,7 +186,7 @@ void SampleEvent::removeFromSequencer()
 {
     if ( _addedToSequencer )
     {
-        SampledInstrument* sampler = sequencer::samplers.at( _samplerNum );
+        SampledInstrument* sampler = (( SampledInstrument* ) _instrument );
 
         for ( int i; i < sampler->audioEvents->size(); i++ )
         {
@@ -262,7 +253,7 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 
 /* protected methods */
 
-void SampleEvent::init()
+void SampleEvent::init( BaseInstrument* instrument )
 {
     _deleteMe          = false;
     _buffer            = 0;
@@ -276,4 +267,5 @@ void SampleEvent::init()
     _rangePointer      = 0;
     _loopeable         = false;
     _destroyableBuffer = false; // is referenced via SampleManager !
+    _instrument        = instrument;
 }

@@ -60,6 +60,9 @@ class BaseAudioEvent
         virtual void setSampleStart( int value );
         virtual void setSampleEnd( int value );
 
+        virtual bool getLoopeable();
+        virtual void setLoopeable( bool value );
+
         virtual bool deletable();   // query whether this event is queued for deletion
         virtual void setDeletable( bool value );
 
@@ -80,6 +83,7 @@ class BaseAudioEvent
         int _sampleLength;
 
         bool _enabled;
+        bool _loopeable;
 
         // cached buffer
         AudioBuffer* _buffer;

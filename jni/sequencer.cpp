@@ -28,11 +28,10 @@
 
 namespace sequencer
 {
-    std::vector<SynthInstrument*> synthesizers;
-    std::vector<SampledInstrument*> samplers;
-    DrumInstrument* drummachine;
+    std::vector<BaseInstrument*> instruments;
+    BulkCacher* bulkCacher = new BulkCacher( true );
 
-    BulkCacher* bulkCacher = new BulkCacher( true ); // sequential to spare CPU sources
+    /* public methods */
 
     std::vector<AudioChannel*> getAudioEvents( std::vector<AudioChannel*> channels, int bufferPosition,
                                                int bufferEnd, bool addLiveInstruments )
@@ -44,79 +43,37 @@ namespace sequencer
 
         // 1. the sequenced synthesizers, note we update their mix properties here as they might change during playback
 
-        for ( i = 0, l = synthesizers.size(); i < l; ++i )
+        for ( i = 0, l = instruments.size(); i < l; ++i )
         {
-            SynthInstrument* synthesizer = synthesizers.at( i );
-            AudioChannel* synthChannel   = synthesizer->audioChannel;
+            BaseInstrument* instrument      = instruments.at( i );
+            AudioChannel* instrumentChannel = instrument->audioChannel;
 
-            synthChannel->reset();
-            synthChannel->mixVolume = synthesizer->volume;
-            collectSequencedEvents( synthChannel, synthesizer->audioEvents, bufferPosition, bufferEnd );
+            instrumentChannel->reset();
+            instrumentChannel->mixVolume = instrument->volume;
 
-            // the live keyboard
-            if ( addLiveInstruments )
-                collectLiveEvents( synthChannel, synthesizer->liveEvents );
-
-            channels.push_back( synthChannel );
-        }
-
-        // 2. the samplers
-
-        for ( i = 0, l = samplers.size(); i < l; ++i )
-        {
-            SampledInstrument* sampler   = samplers.at( i );
-            AudioChannel* samplerChannel = sampler->audioChannel;
-
-            samplerChannel->reset();
-
-            if ( !samplerChannel->muted )
+            if ( !instrumentChannel->muted )
             {
-                collectSequencerSamplerEvents( samplerChannel, sampler->audioEvents, bufferPosition, bufferEnd );
-                channels.push_back( samplerChannel );
+                collectSequencedEvents( instrument, bufferPosition, bufferEnd );
+
+                if ( addLiveInstruments && instrument->hasLiveEvents() )
+                    collectLiveEvents( instrument );
+
+                channels.push_back( instrumentChannel );
             }
-        }
-
-        // 3. drum machine, note we update its properties here as they might change during playback
-
-        if ( drummachine != 0 )
-        {
-            AudioChannel* drumChannel = drummachine->audioChannel;
-
-            drumChannel->reset();
-            drumChannel->mixVolume         = drummachine->volume;
-            drumChannel->maxBufferPosition = AudioEngine::bytes_per_bar;
-            collectDrumEvents( drumChannel, bufferPosition, bufferEnd );
-
-            channels.push_back( drumChannel );
         }
         return channels;
     }
 
     void updateEvents()
     {
-        for ( int i = 0, l = synthesizers.size(); i < l; ++i )
-            synthesizers.at( i )->updateEvents();
-
-        for ( int i = 0, l = samplers.size(); i < l; ++i )
-            samplers.at( i )->updateEvents();
-
-        if ( drummachine != 0 )
-            drummachine->updateEvents();
+        for ( int i = 0, l = instruments.size(); i < l; ++i )
+            instruments.at( i )->updateEvents();
     }
 
     void clearEvents()
     {
-        for ( int i = 0, l = synthesizers.size(); i < l; ++i )
-        {
-            SynthInstrument* synthesizer = synthesizers.at( i );
-
-            if ( synthesizer->audioEvents != 0 )
-                synthesizer->audioEvents->clear();
-
-            if ( synthesizer->liveEvents != 0 )
-                synthesizer->liveEvents->clear();
-        }
-        drummachine->clearEvents();
+        for ( int i = 0, l = instruments.size(); i < l; ++i )
+            instruments.at( i )->clearEvents();
     }
 
     /**
@@ -124,32 +81,53 @@ namespace sequencer
      * the present AudioEvents against the requested position
      * and updates and flushes the removal queue
      *
-     * @param channel        {AudioChannel} AudioChannel to append events to
-     * @param audioEvents    {std::vector<BaseCacheableAudioEvent*>*} audioEvents to query
+     * @param instrument     {BaseInstrument*} instrument to gather events from
      * @param bufferPosition {int} the current buffers start pointer
      * @param bufferEnd      {int} the current buffers end pointer
      */
-    void collectSequencedEvents( AudioChannel *channel, std::vector<BaseCacheableAudioEvent*>* audioEvents, int bufferPosition, int bufferEnd )
+    void collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd )
     {
-        // removal queue
-        std::vector<BaseCacheableAudioEvent*> removes;
+        if ( !instrument->hasEvents() )
+            return;
 
-        int i = 0;
-        int amount = audioEvents->size();
+        AudioChannel* channel                     = instrument->audioChannel;
+        std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
+
+        // removal queue
+        std::vector<BaseAudioEvent*> removes;
+
+        // channel has an internal loop (e.g. drum machine) ? recalculate requested
+        // buffer position by subtracting all measures above the first
+        if ( channel->maxBufferPosition > 0 )
+        {
+            int bytesPerBar = AudioEngine::bytes_per_bar;
+
+            while ( bufferPosition >= bytesPerBar )
+            {
+                bufferPosition -= bytesPerBar;
+                bufferEnd      -= bytesPerBar;
+            }
+        }
+
+        int i = 0, amount = audioEvents->size();
         for ( i; i < amount; i++ )
         {
-            BaseCacheableAudioEvent* audioEvent = audioEvents->at( i );
+            BaseAudioEvent* audioEvent = audioEvents->at( i );
 
-            int sampleStart = audioEvent->getSampleStart();
-            int sampleEnd   = audioEvent->getSampleEnd();
-
-            if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
+            if ( audioEvent->isEnabled() )
             {
-                if ( !audioEvent->deletable())
-                    channel->addEvent( audioEvent );
-                else
-                    removes.push_back( audioEvent );
+                int sampleStart = audioEvent->getSampleStart();
+                int sampleEnd   = audioEvent->getSampleEnd();
+
+                if ( audioEvent->getLoopeable() ||
+                   ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
+                   ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
+                {
+                    if ( !audioEvent->deletable())
+                        channel->addEvent( audioEvent );
+                    else
+                        removes.push_back( audioEvent );
+                }
             }
         }
         // removal queue filled ? process it so we can safely
@@ -159,24 +137,23 @@ namespace sequencer
             int i = 0;
             for ( i; i < removes.size(); i++ )
             {
-                BaseCacheableAudioEvent* audioEvent = removes[ i ];
+                BaseAudioEvent* audioEvent = removes[ i ];
 
                 // remove audio event from the list
                 if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
                 {
                     audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
                 }
-#ifndef USE_JNI
-                // when using JNI, we let SWIG invoke destructors when Java references are finalized
-                delete audioEvent;
-                audioEvent = 0;
-#endif
+                instrument->removeEvent( audioEvent );
             }
         }
     }
 
-    void collectLiveEvents( AudioChannel *channel, std::vector<BaseAudioEvent*>* liveEvents )
+    void collectLiveEvents( BaseInstrument* instrument )
     {
+        AudioChannel* channel                    = instrument->audioChannel;
+        std::vector<BaseAudioEvent*>* liveEvents = instrument->getLiveEvents();
+
         // removal queue
         std::vector<BaseAudioEvent*> removes;
 
@@ -204,99 +181,7 @@ namespace sequencer
                 {
                     liveEvents->erase( std::find( liveEvents->begin(), liveEvents->end(), audioEvent ));
                 }
-#ifndef USE_JNI
-                // when using JNI, we let SWIG invoke destructors when Java references are finalized
-                delete audioEvent;
-                audioEvent = 0;
-#endif
-            }
-        }
-    }
-
-    void collectSequencerSamplerEvents( AudioChannel *channel, std::vector<SampleEvent*> *audioEvents,
-                                        int bufferPosition, int bufferEnd )
-    {
-        // removal queue
-        std::vector<BaseAudioEvent*> removes;
-
-        int i = 0;
-        int amount = audioEvents->size();
-        for ( i; i < amount; i++ )
-        {
-            SampleEvent* audioEvent = audioEvents->at( i );
-
-            if ( audioEvent->isEnabled() )
-            {
-                int sampleStart = audioEvent->getSampleStart();
-                int sampleEnd   = audioEvent->getSampleEnd();
-
-                if ( audioEvent->getLoopeable() ||
-                   ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                   ( sampleStart <  bufferPosition  && sampleEnd >= bufferPosition ))
-                {
-                    if ( !audioEvent->deletable())
-                        channel->addEvent( audioEvent );
-                    else
-                        removes.push_back( audioEvent );
-                }
-            }
-        }
-        // removal queue filled ? process it so we can safely
-        // remove "deleted" AudioEvents without read errors occurring
-
-        if ( removes.size() > 0 )
-        {
-            int i = 0;
-            for ( i; i < removes.size(); i++ )
-            {
-                BaseAudioEvent* audioEvent = removes[ i ];
-
-                // remove audio event from sequencer (if it was present)
-                if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
-                {
-                    audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
-                }
-#ifndef USE_JNI
-                // when using JNI, we let SWIG invoke destructors when Java references are finalized
-                delete audioEvent;
-                audioEvent = 0;
-#endif
-            }
-        }
-    }
-
-    void collectDrumEvents( AudioChannel *channel, int bufferPosition, int bufferEnd )
-    {
-        if ( drummachine->hasEvents() )
-        {
-            // drums loop by pattern, recalculate buffer position by subtracting
-            // all measures above the first
-            int bytesPerBar = AudioEngine::bytes_per_bar;
-
-            while ( bufferPosition >= bytesPerBar )
-            {
-                bufferPosition -= bytesPerBar;
-                bufferEnd      -= bytesPerBar;
-            }
-
-            std::vector<DrumEvent*>* drumEvents = drummachine->getEventsForActivePattern();
-
-            int i = 0;
-            for ( i; i < drumEvents->size(); i++ )
-            {
-                BaseAudioEvent* audioEvent = drumEvents->at( i );
-
-                int sampleStart = audioEvent->getSampleStart();
-                int sampleEnd   = audioEvent->getSampleEnd();
-
-                if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                    ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
-                {
-                    if ( !audioEvent->deletable())
-                        channel->addEvent( audioEvent );
-                    //else
-                    //    audioEvent->destroy(); // should've been destroyed by the 'remove event' in DrumPattern...
-                }
+                instrument->removeEvent( audioEvent );
             }
         }
     }
@@ -314,26 +199,27 @@ namespace sequencer
     {
         std::vector<BaseCacheableAudioEvent*>* events = new std::vector<BaseCacheableAudioEvent*>();
 
-        //DebugTool::log("check for events at start range %d", bufferPosition);
-        //DebugTool::log("until %d", bufferEnd );
-
-        for ( int i = 0, l = synthesizers.size(); i < l; ++i )
+        for ( int i = 0, l = instruments.size(); i < l; ++i )
         {
-            std::vector<BaseCacheableAudioEvent*>* audioEvents = synthesizers.at( i )->audioEvents;
+            std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
             int amount = audioEvents->size();
 
             for ( int j = 0; j < amount; j++ )
             {
-                BaseCacheableAudioEvent* audioEvent = audioEvents->at( j );
+                BaseAudioEvent* audioEvent = audioEvents->at( j );
 
-                int sampleStart = audioEvent->getSampleStart();
-                int sampleEnd   = audioEvent->getSampleEnd();
-
-                if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                    ( sampleStart < bufferPosition && sampleEnd >= bufferPosition ))
+                // if event is an instance of BaseCacheableAudioEvent add it to the list
+                if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != NULL )
                 {
-                    if ( !audioEvent->deletable())
-                        events->push_back( audioEvent );
+                    int sampleStart = audioEvent->getSampleStart();
+                    int sampleEnd   = audioEvent->getSampleEnd();
+
+                    if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
+                        ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
+                    {
+                        if ( !audioEvent->deletable())
+                            events->push_back(( BaseCacheableAudioEvent* ) audioEvent );
+                    }
                 }
             }
         }

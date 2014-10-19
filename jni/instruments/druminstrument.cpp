@@ -31,23 +31,20 @@
 
 DrumInstrument::DrumInstrument()
 {
-    rOsc = 0;// new RouteableOscillator();  // currently unused...
-    audioChannel = new AudioChannel( this->volume, AudioEngine::bytes_per_bar );
-
-    volume    = .5;
-    drumTimbre = DrumSynthTimbres::LIGHT;
+    volume            = .5;
+    drumTimbre        = DrumSynthTimbres::LIGHT;
+    rOsc              = 0;// new RouteableOscillator();  // currently unused...
+    audioChannel      = new AudioChannel( volume, AudioEngine::bytes_per_bar );
 
     activeDrumPattern = 0;
     drumPatterns      = new std::vector<DrumPattern*>();
 
-    sequencer::drummachine = this;  // auto-register instrument inside the sequencer
+    registerInSequencer(); // auto-register instrument inside the sequencer
 }
 
 DrumInstrument::~DrumInstrument()
 {
     DebugTool::log( "DrumInstrument::DESTRUCT" );
-
-    sequencer::drummachine = 0;
 
     delete rOsc;
     delete[] drumPatterns;
@@ -57,7 +54,11 @@ DrumInstrument::~DrumInstrument()
 
 bool DrumInstrument::hasEvents()
 {
-    return drumPatterns->size() > 0;
+    if ( drumPatterns->size() > 0 )
+    {
+        return getEventsForActivePattern()->size() > 0;
+    }
+    return false;
 }
 
 void DrumInstrument::updateEvents()
@@ -72,13 +73,18 @@ void DrumInstrument::clearEvents()
     activeDrumPattern = 0;
 }
 
-std::vector<DrumEvent*>* DrumInstrument::getEventsForPattern( int patternNum )
+std::vector<BaseAudioEvent*>* DrumInstrument::getEvents()
+{
+    return getEventsForActivePattern();
+}
+
+std::vector<BaseAudioEvent*>* DrumInstrument::getEventsForPattern( int patternNum )
 {
     DrumPattern* pattern = drumPatterns->at( patternNum );
     return pattern->audioEvents;
 }
 
-std::vector<DrumEvent*>* DrumInstrument::getEventsForActivePattern()
+std::vector<BaseAudioEvent*>* DrumInstrument::getEventsForActivePattern()
 {
     return getEventsForPattern( activeDrumPattern );
 }

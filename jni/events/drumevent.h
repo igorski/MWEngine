@@ -24,12 +24,13 @@
 #define __DRUMEVENT_H_INCLUDED__
 
 #include "sampleevent.h"
+#include <instruments/baseinstrument.h>
 #include <string>
 
 class DrumEvent : public SampleEvent
 {
     public:
-        DrumEvent( int aPosition, int aDrumType, int aDrumTimbre );
+        DrumEvent( int aPosition, int aDrumType, int aDrumTimbre, BaseInstrument* aInstrument );
         ~DrumEvent();
 
         int position;

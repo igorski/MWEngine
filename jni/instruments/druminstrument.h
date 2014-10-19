@@ -27,7 +27,7 @@
 #include "../audiochannel.h"
 #include "../routeableoscillator.h"
 #include "../drumpattern.h"
-#include <events/drumevent.h>
+#include <events/baseaudioevent.h>
 #include <vector>
 
 class DrumInstrument : public BaseInstrument
@@ -36,20 +36,24 @@ class DrumInstrument : public BaseInstrument
         DrumInstrument();
         ~DrumInstrument();
 
-        bool hasEvents();
-        void updateEvents();
-        void clearEvents();
+        std::vector<BaseAudioEvent*>* getEventsForPattern( int patternNum );
+        std::vector<BaseAudioEvent*>* getEventsForActivePattern();
 
-        std::vector<DrumEvent*>* getEventsForPattern( int patternNum );
-        std::vector<DrumEvent*>* getEventsForActivePattern();
-
-        float volume;
         int drumTimbre;
 
         std::vector<DrumPattern*> *drumPatterns;
         int activeDrumPattern;
 
         RouteableOscillator *rOsc;
+
+        // base class overrides
+        // note we don't override 'removeEvents' as DrumPatterns manage the events
+
+        bool hasEvents();
+        void updateEvents();
+        void clearEvents();
+        std::vector<BaseAudioEvent*>* getEvents();
+
 };
 
 #endif

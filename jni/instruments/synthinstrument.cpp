@@ -33,7 +33,7 @@ SynthInstrument::SynthInstrument()
 {
     init();
 
-    sequencer::synthesizers.push_back( this );  // register instrument inside the sequencer
+    registerInSequencer(); // registers instrument inside the sequencer
 }
 
 SynthInstrument::~SynthInstrument()
@@ -43,21 +43,27 @@ SynthInstrument::~SynthInstrument()
     delete adsr;
     delete rOsc;
     delete audioEvents;
-    delete liveEvents;
-
-   for ( int i; i < sequencer::synthesizers.size(); i++ )
-   {
-        if ( sequencer::synthesizers.at( i ) == this )
-        {
-            sequencer::synthesizers.erase( sequencer::synthesizers.begin() + i );
-            break;
-        }
-    }
+    delete liveAudioEvents;
 }
 
 bool SynthInstrument::hasEvents()
 {
-    return audioEvents->size() > 0 || liveEvents->size() > 0;
+    return audioEvents->size() > 0;
+}
+
+bool SynthInstrument::hasLiveEvents()
+{
+    return liveAudioEvents->size() > 0;
+}
+
+std::vector<BaseAudioEvent*>* SynthInstrument::getEvents()
+{
+    return audioEvents;
+}
+
+std::vector<BaseAudioEvent*>* SynthInstrument::getLiveEvents()
+{
+    return liveAudioEvents;
 }
 
 void SynthInstrument::updateEvents()
@@ -67,11 +73,30 @@ void SynthInstrument::updateEvents()
         BaseSynthEvent* event = ( BaseSynthEvent* ) ( audioEvents->at( i ) );
         event->invalidateProperties( event->position, event->length, this );
     }
-    for ( int i = 0, l = liveEvents->size(); i < l; ++i )
+    for ( int i = 0, l = liveAudioEvents->size(); i < l; ++i )
     {
-        BaseSynthEvent* event = ( BaseSynthEvent* ) ( liveEvents->at( i ) );
+        BaseSynthEvent* event = ( BaseSynthEvent* ) ( liveAudioEvents->at( i ) );
         event->invalidateProperties( event->position, event->length, this );
     }
+}
+
+void SynthInstrument::clearEvents()
+{
+    if ( audioEvents != 0 )
+        audioEvents->clear();
+
+    if ( liveAudioEvents != 0 )
+        liveAudioEvents->clear();
+}
+
+bool SynthInstrument::removeEvent( BaseAudioEvent* aEvent )
+{
+    // when using JNI, we let SWIG invoke destructors when Java references are finalized
+    // otherwise we delete and dispose the events directly from this instrument
+#ifndef USE_JNI
+    delete audioEvent;
+    audioEvent = 0;
+#endif
 }
 
 /* protected methods */
@@ -96,10 +121,10 @@ void SynthInstrument::init()
     osc2detune      = 0.0;
 
     rOsc            = new RouteableOscillator();
-    audioChannel    = new AudioChannel( this->volume );
+    audioChannel    = new AudioChannel( volume );
 
-    audioEvents = new std::vector<BaseCacheableAudioEvent*>();
-    liveEvents  = new std::vector<BaseAudioEvent*>();
+    audioEvents       = new std::vector<BaseAudioEvent*>();
+    liveAudioEvents   = new std::vector<BaseAudioEvent*>();
 
     arpeggiator       = new Arpeggiator();
     arpeggiatorActive = false;

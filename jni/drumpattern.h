@@ -23,18 +23,20 @@
 #ifndef __DRUMPATTERN_H_INCLUDED__
 #define __DRUMPATTERN_H_INCLUDED__
 
+#include <events/baseaudioevent.h>
 #include <events/drumevent.h>
+#include <instruments/baseinstrument.h>
 #include <vector>
 
 class DrumPattern
 {
     public:
-        DrumPattern( int aNum );
+        DrumPattern( int aNum, BaseInstrument* aInstrument );
         ~DrumPattern();
 
         int num;
         int eventAmount;
-        std::vector<DrumEvent*> *audioEvents;
+        std::vector<BaseAudioEvent*> *audioEvents;
 
         void updateTimbre( int newTimbre );
         void cacheEvents( int aDrumTimbre );
@@ -62,6 +64,7 @@ class DrumPattern
         int* stickPattern;
         int* hatPattern;
         void destroyAudioEvents();
+        BaseInstrument* _instrument;
 };
 
 #endif

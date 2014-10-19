@@ -117,11 +117,6 @@ void SequencerAPI::setPlaying( bool aIsPlaying )
     AudioEngine::playing = aIsPlaying;
 }
 
-void SequencerAPI::setActiveDrumPattern( int activePattern )
-{
-    sequencer::drummachine->activeDrumPattern = activePattern;
-}
-
 void SequencerAPI::rewind()
 {
     AudioEngine::bufferPosition = AudioEngine::min_buffer_position;

@@ -30,25 +30,18 @@
 
 SampledInstrument::SampledInstrument()
 {
-    audioChannel    = new AudioChannel( .75, bytes_per_bar );
+    volume          = 1;
+    audioChannel    = new AudioChannel( volume, bytes_per_bar );
     audioEvents     = new std::vector<SampleEvent*>();
 
-    sequencer::samplers.push_back( this );  // register instrument inside the sequencer
-    index = sequencer::samplers.size() - 1; // the index this instrument is registered at in the sequencer
+    registerInSequencer();                     // register instrument inside the sequencer
+    index = sequencer::instruments.size() - 1; // the index this instrument is registered at in the sequencer
 }
 
 SampledInstrument::~SampledInstrument()
 {
     DebugTool::log( "SampledInstrument::DESTRUCT" );
 
-    for ( int i; i < sequencer::samplers.size(); i++ )
-    {
-        if ( sequencer::samplers[ i ] == this )
-        {
-            sequencer::samplers.erase( sequencer::samplers.begin() + i );
-            break;
-        }
-    }
     audioEvents->clear();
     delete audioEvents;
 
@@ -60,4 +53,9 @@ SampledInstrument::~SampledInstrument()
 bool SampledInstrument::hasEvents()
 {
     return audioEvents->size() > 0;
+}
+
+std::vector<BaseAudioEvent*>* SampledInstrument::getEvents()
+{
+    return audioEvents;
 }

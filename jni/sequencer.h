@@ -25,9 +25,7 @@
 
 #include "bulkcacher.h"
 #include "audiochannel.h"
-#include <instruments/druminstrument.h>
-#include <instruments/sampledinstrument.h>
-#include <instruments/synthinstrument.h>
+#include <instruments/baseinstrument.h>
 #include <events/basecacheableaudioevent.h>
 #include <events/baseaudioevent.h>
 #include <vector>
@@ -41,9 +39,7 @@
  */
 namespace sequencer
 {
-    extern std::vector<SynthInstrument*> synthesizers;
-    extern std::vector<SampledInstrument*> samplers;
-    extern DrumInstrument* drummachine;
+    extern std::vector<BaseInstrument*> instruments;
 
     // collect all audio events which should be rendered at the given buffer range
     extern std::vector<AudioChannel*> getAudioEvents( std::vector<AudioChannel*> channels, int bufferPosition, int bufferEnd, bool addLiveInstruments );
@@ -53,11 +49,12 @@ namespace sequencer
 
     extern BulkCacher* bulkCacher;
 
-    extern void collectSequencedEvents( AudioChannel *channel, std::vector<BaseCacheableAudioEvent*>* audioEvents, int bufferPosition, int bufferEnd );
+    // internal methods to collect audio events by their instruments type
+
+    extern void collectSequencedEvents( BaseInstrument* aInstrument, int bufferPosition, int bufferEnd );
+    extern void collectLiveEvents     ( BaseInstrument* aInstrument );
+
     extern std::vector<BaseCacheableAudioEvent*>* collectCacheableSequencerEvents( int bufferPosition, int bufferEnd );
-    extern void collectLiveEvents( AudioChannel *channel, std::vector<BaseAudioEvent*>* liveEvents );
-    extern void collectSequencerSamplerEvents( AudioChannel *channel, std::vector<SampleEvent*> *audioEvents, int bufferPosition, int bufferEnd );
-    extern void collectDrumEvents( AudioChannel *channel, int bufferPosition, int bufferEnd );
 }
 
 #endif

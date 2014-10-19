@@ -29,7 +29,6 @@
 #include "../audiochannel.h"
 #include "../routeableoscillator.h"
 #include <events/baseaudioevent.h>
-#include <events/basecacheableaudioevent.h>
 
 class SynthInstrument : public BaseInstrument
 {
@@ -41,7 +40,6 @@ class SynthInstrument : public BaseInstrument
         int octave;
         int keyboardOctave;
         ADSR* adsr;
-        float volume;
         float keyboardVolume;
         RouteableOscillator *rOsc;
 
@@ -54,11 +52,19 @@ class SynthInstrument : public BaseInstrument
         Arpeggiator* arpeggiator;
         bool arpeggiatorActive;
 
-        bool hasEvents();
-        void updateEvents();  // updates all events after changing synth properties
+        std::vector<BaseAudioEvent*>* audioEvents;
+        std::vector<BaseAudioEvent*>* liveAudioEvents;
 
-        std::vector<BaseCacheableAudioEvent*>* audioEvents;
-        std::vector<BaseAudioEvent*>* liveEvents;
+        // overrides
+
+        bool hasEvents();
+        bool hasLiveEvents();
+        void updateEvents();  // updates all events after changing synth properties
+        void clearEvents();
+        bool removeEvent( BaseAudioEvent* aEvent );
+
+        std::vector<BaseAudioEvent*>* getEvents();
+        std::vector<BaseAudioEvent*>* getLiveEvents();
 
     protected:
         void init();

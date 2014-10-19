@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "baseinstrument.h"
+#include "../sequencer.h"
 
 /* constructor / destructor */
 
@@ -31,6 +32,7 @@ BaseInstrument::BaseInstrument()
 
 BaseInstrument::~BaseInstrument()
 {
+    unregisterFromSequencer();
     delete audioChannel;
 }
 
@@ -41,7 +43,58 @@ bool BaseInstrument::hasEvents()
     return false;   // override in derived class
 }
 
+bool BaseInstrument::hasLiveEvents()
+{
+    return false;   // override in derived class
+}
+
 void BaseInstrument::updateEvents()
 {
     // override in derived class
+}
+
+void BaseInstrument::clearEvents()
+{
+    // override in derived class
+}
+
+bool BaseInstrument::removeEvent( BaseAudioEvent* aEvent )
+{
+    return false;   // override in derived class
+}
+
+void BaseInstrument::registerInSequencer()
+{
+    bool wasPresent = false; // prevent double addition
+
+    for ( int i = 0; i < sequencer::instruments.size(); i++ )
+    {
+        if ( sequencer::instruments.at( i ) == this )
+            wasPresent = true;
+    }
+
+    if ( !wasPresent )
+        sequencer::instruments.push_back( this );
+}
+
+void BaseInstrument::unregisterFromSequencer()
+{
+    for ( int i = 0; i < sequencer::instruments.size(); i++ )
+    {
+        if ( sequencer::instruments.at( i ) == this )
+        {
+            sequencer::instruments.erase( sequencer::instruments.begin() + i );
+            break;
+        }
+    }
+}
+
+std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
+{
+    return 0; // override in derived class
+}
+
+std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
+{
+    return 0; // override in derived class
 }

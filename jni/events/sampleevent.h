@@ -24,11 +24,13 @@
 #define __SAMPLEEVENT_H_INCLUDED__
 
 #include "baseaudioevent.h"
+#include <instruments/baseinstrument.h>
 
 class SampleEvent : public BaseAudioEvent
 {
     public:
         SampleEvent();
+        SampleEvent( BaseInstrument* aInstrument );
         virtual ~SampleEvent();
 
         virtual int getSampleLength();
@@ -41,8 +43,6 @@ class SampleEvent : public BaseAudioEvent
         virtual void setBufferRangeEnd( int value );
         virtual int getBufferRangeLength();
         virtual void setBufferRangeLength( int value );
-        virtual bool getLoopeable();
-        virtual void setLoopeable( bool value );
         virtual int getReadPointer();
 
         virtual bool deletable();
@@ -52,7 +52,7 @@ class SampleEvent : public BaseAudioEvent
         virtual AudioBuffer* synthesize( int aBufferLength );
 
         virtual void setSample( AudioBuffer* sampleBuffer );
-        virtual void addToSequencer( int aSamplerNum );
+        virtual void addToSequencer();
         virtual void removeFromSequencer();
 
         bool getBufferForRange( AudioBuffer* buffer, int readPos );
@@ -66,14 +66,13 @@ class SampleEvent : public BaseAudioEvent
 
         int _readPointer;
         int _rangePointer;
-        bool _loopeable;
 
         // sample buffer regions (i.e. what is played)
         int _bufferRangeStart;
         int _bufferRangeEnd;
         int _bufferRangeLength;
 
-        int _samplerNum; // identifier of the sampler playing this event
+        BaseInstrument* _instrument;    // the SampledInstrument this event belongs to
 
         // removal of AudioEvents must occur outside of the
         // cache loop, by activating this boolean we're queuing
@@ -82,7 +81,7 @@ class SampleEvent : public BaseAudioEvent
         bool _deleteMe;
         bool _addedToSequencer;  // whether this event is part of a sequence
 
-        void init();
+        void init( BaseInstrument* aInstrument );
 };
 
 #endif

@@ -23,18 +23,17 @@
 #include "drumpattern.h"
 
 #include "global.h"
-#include "sequencer.h"
 #include "utils.h"
 #include <instruments/druminstrument.h>
 
 /* constructor / destructor */
 
-DrumPattern::DrumPattern( int aNum )
+DrumPattern::DrumPattern( int aNum, BaseInstrument* aInstrument )
 {
     num         = aNum;
     eventAmount = 0;
 
-    audioEvents  = new std::vector<DrumEvent*>();
+    audioEvents  = new std::vector<BaseAudioEvent*>();
 
     kickPattern  = new int[ 0 ];
     snarePattern = new int[ 0 ];
@@ -45,8 +44,9 @@ DrumPattern::DrumPattern( int aNum )
     snarePatternLength = 0;
     stickPatternLength = 0;
     hatPatternLength   = 0;
+    _instrument        = aInstrument;
 
-    sequencer::drummachine->drumPatterns->push_back( this );  // add the pattern to the sequencer so it can be heard
+    (( DrumInstrument* ) _instrument )->drumPatterns->push_back( this );  // add the pattern to the sequencer so it can be heard
 }
 
 DrumPattern::~DrumPattern()
@@ -128,8 +128,7 @@ void DrumPattern::updateTimbre( int newTimbre )
     int i = 0;
     for ( i; i < audioEvents->size(); i++ )
     {
-        DrumEvent* vo = audioEvents->at( i );
-        vo->setTimbre( newTimbre );
+        (( DrumEvent* ) audioEvents->at( i ))->setTimbre( newTimbre );
     }
 }
 
@@ -161,7 +160,7 @@ void DrumPattern::cacheEvents( int aDrumTimbre )
 
 void DrumPattern::addDrumEvent( int aPosition, int aDrumType, int aDrumTimbre )
 {
-    audioEvents->push_back( new DrumEvent( aPosition, aDrumType, aDrumTimbre ));
+    audioEvents->push_back( new DrumEvent( aPosition, aDrumType, aDrumTimbre, _instrument ));
     eventAmount = audioEvents->size();
 }
 
@@ -170,7 +169,7 @@ void DrumPattern::removeDrumEvent( int aPosition, int aType )
     int i = 0;
     for ( i; i < audioEvents->size(); i++ )
     {
-        DrumEvent* vo = audioEvents->at( i );
+        DrumEvent* vo = (( DrumEvent* ) audioEvents->at( i ));
 
         if ( vo->position == aPosition && vo->getType() == aType )
         {
@@ -187,15 +186,16 @@ void DrumPattern::destroy()
 {
     DebugTool::log( "DrumPattern::destroy num %d", num );
 
-    // remove pattern from sequencer
-    DrumInstrument* drumMachine = sequencer::drummachine;
+    // remove pattern from sequence
+
+    DrumInstrument* instrument = (( DrumInstrument* ) _instrument );
 
     int i = 0;
-    for ( i; i < drumMachine->drumPatterns->size(); i++ )
+    for ( i; i < instrument->drumPatterns->size(); i++ )
     {
-        if ( drumMachine->drumPatterns->at( i ) == this )
+        if ( instrument->drumPatterns->at( i ) == this )
         {
-            drumMachine->drumPatterns->erase( drumMachine->drumPatterns->begin() + i );
+            instrument->drumPatterns->erase( instrument->drumPatterns->begin() + i );
             break;
         }
     }
@@ -213,7 +213,7 @@ void DrumPattern::destroyAudioEvents()
     int i = 0;
     for ( i; i < audioEvents->size(); i++ )
     {
-        DrumEvent* vo = audioEvents->at( i );
+        BaseAudioEvent* vo = audioEvents->at( i );
         delete vo;
     }
     audioEvents->clear();

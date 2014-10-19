@@ -46,7 +46,6 @@ class SequencerAPI
         void setVolume           ( float aVolume );
         void setPlaying          ( bool aPlaying );
         void rewind              ();
-        void setActiveDrumPattern( int activePattern );
 
         BulkCacher* getBulkCacher();
         void cacheAudioEventsForMeasure( int aMeasure );
