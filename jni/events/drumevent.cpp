@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "drumevent.h"
+#include "../audioengine.h"
 #include "../global.h"
 #include "../samplemanager.h"
 #include <cstdlib>
@@ -47,6 +48,8 @@ DrumEvent::DrumEvent( int aPosition, int aDrumType, int aDrumTimbre )
     init();
 
     _inited = true;
+
+    _sampleStart = position * AudioEngine::bytes_per_tick;
     updateSample();
 }
 
