@@ -251,8 +251,9 @@ void SynthEvent::updateProperties()
 
     if ( doOSC2 )
         createOSC2( position, length, _instrument );
-    else
-        destroyOSC2();
+    // we don't destroy oscillator 2 during the events lifetime
+    //else
+    //    destroyOSC2();
 
     applyModules( _instrument );        // modules
     BaseSynthEvent::updateProperties(); // base method
@@ -278,7 +279,7 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
     SAMPLE_TYPE amp = 0.0;
     SAMPLE_TYPE tmp, am, dpw, pmv;
 
-    bool hasOSC2 = _osc2 != 0;
+    bool hasOSC2 = !hasParent && _instrument->osc2active; // no 0-check on _osc2 here as it might just be inactive
 
     int renderStartOffset = AudioEngineProps::EVENT_CACHING && isSequenced ? _cacheWriteIndex : 0;
 
@@ -324,6 +325,9 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
                     else if ( curWritePos >= ( maxSampleIndex - _fadeOutDuration ))
                         amp *= ( SAMPLE_TYPE ) ( maxSampleIndex - ( curWritePos  )) / ( SAMPLE_TYPE ) _fadeOutDuration;
                 }
+
+                if ( !isSequenced )
+                    amp *= .7;  // we're anticipating multi timbral use, bring down the level a tad.
 
                 break;
 

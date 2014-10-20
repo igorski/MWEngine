@@ -102,7 +102,7 @@ namespace sequencer
         {
             int bytesPerBar = AudioEngine::bytes_per_bar;
 
-            while ( bufferPosition >= bytesPerBar )
+            while ( bufferPosition >= channel->maxBufferPosition )
             {
                 bufferPosition -= bytesPerBar;
                 bufferEnd      -= bytesPerBar;
