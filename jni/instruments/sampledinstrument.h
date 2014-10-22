@@ -36,7 +36,7 @@ class SampledInstrument : public BaseInstrument
         std::vector<BaseAudioEvent*>* getEvents();
 
         int index;  // index in Sequencers sampler Vector
-        std::vector<SampleEvent*>* audioEvents;
+        std::vector<BaseAudioEvent*>* audioEvents;
 };
 
 #endif

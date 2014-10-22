@@ -50,6 +50,7 @@ sequencer.cpp \
 sequencer_api.cpp \
 instruments/baseinstrument.cpp \
 instruments/druminstrument.cpp \
+instruments/sampledinstrument.cpp \
 instruments/synthinstrument.cpp \
 wavewriter.cpp \
 routeableoscillator.cpp \

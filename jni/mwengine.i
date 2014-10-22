@@ -37,6 +37,7 @@
 #include "drumpattern.h"
 #include "instruments/baseinstrument.h"
 #include "instruments/druminstrument.h"
+#include "instruments/sampledinstrument.h"
 #include "instruments/synthinstrument.h"
 %}
 
@@ -85,5 +86,6 @@
 %include "bulkcacher.h"
 %include "instruments/baseinstrument.h"
 %include "instruments/druminstrument.h"
+%include "instruments/sampledinstrument.h"
 %include "instruments/synthinstrument.h"
 %include "drumpattern.h"

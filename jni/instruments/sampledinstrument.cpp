@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "sampledinstrument.h"
+#include "../audioengine.h"
 #include "../global.h"
 #include "../sequencer.h"
 #include "../utils.h"
@@ -31,8 +32,8 @@
 SampledInstrument::SampledInstrument()
 {
     volume          = 1;
-    audioChannel    = new AudioChannel( volume, bytes_per_bar );
-    audioEvents     = new std::vector<SampleEvent*>();
+    audioChannel    = new AudioChannel( volume, AudioEngine::bytes_per_bar );
+    audioEvents     = new std::vector<BaseAudioEvent*>();
 
     registerInSequencer();                     // register instrument inside the sequencer
     index = sequencer::instruments.size() - 1; // the index this instrument is registered at in the sequencer
@@ -44,8 +45,6 @@ SampledInstrument::~SampledInstrument()
 
     audioEvents->clear();
     delete audioEvents;
-
-    delete processingChain;
 }
 
 /* public methods */
