@@ -45,21 +45,6 @@ SampleEvent::~SampleEvent()
 
 /* public methods */
 
-int SampleEvent::getSampleLength()
-{
-    return _sampleLength;
-}
-
-int SampleEvent::getSampleStart()
-{
-    return _sampleStart;
-}
-
-int SampleEvent::getSampleEnd()
-{
-    return _sampleEnd;
-}
-
 int SampleEvent::getBufferRangeStart()
 {
     return _bufferRangeStart;
@@ -114,27 +99,11 @@ void SampleEvent::playNow()
     setEnabled( true );
 }
 
-bool SampleEvent::deletable()
-{
-    return _deleteMe;
-}
-
-void SampleEvent::setDeletable( bool value )
-{
-    _deleteMe = value;
-}
-
-AudioBuffer* SampleEvent::getBuffer()
-{
-    return _buffer;
-}
-
 AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 {
     // nowt... no live synthesis as sample contains a finite buffer
     return _buffer;
 }
-
 
 void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 {

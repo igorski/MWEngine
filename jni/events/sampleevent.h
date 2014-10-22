@@ -33,10 +33,6 @@ class SampleEvent : public BaseAudioEvent
         SampleEvent( BaseInstrument* aInstrument );
         virtual ~SampleEvent();
 
-        virtual int getSampleLength();
-        virtual int getSampleStart();
-        virtual int getSampleEnd();
-
         virtual int getBufferRangeStart();
         virtual void setBufferRangeStart( int value );
         virtual int getBufferRangeEnd();
@@ -45,10 +41,6 @@ class SampleEvent : public BaseAudioEvent
         virtual void setBufferRangeLength( int value );
         virtual int getReadPointer();
 
-        virtual bool deletable();
-        virtual void setDeletable( bool value );
-
-        virtual AudioBuffer* getBuffer();
         virtual AudioBuffer* synthesize( int aBufferLength );
 
         virtual void setSample( AudioBuffer* sampleBuffer );
