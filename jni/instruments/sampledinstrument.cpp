@@ -21,7 +21,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "sampledinstrument.h"
-#include "../audioengine.h"
 #include "../global.h"
 #include "../sequencer.h"
 #include "../utils.h"
@@ -32,7 +31,7 @@
 SampledInstrument::SampledInstrument()
 {
     volume          = 1;
-    audioChannel    = new AudioChannel( volume, AudioEngine::bytes_per_bar );
+    audioChannel    = new AudioChannel( volume );
     audioEvents     = new std::vector<BaseAudioEvent*>();
 
     registerInSequencer();                     // register instrument inside the sequencer
