@@ -34,20 +34,23 @@ class DrumPattern
         DrumPattern( int aNum, BaseInstrument* aInstrument );
         ~DrumPattern();
 
+        static const int AMOUNT_OF_STEPS = 16; // work as sixteen step sequencer
+        static const int EVENT_OFF       = 0;
+        static const int EVENT_ON        = 1;
+
         int num;
         int eventAmount;
-        std::vector<BaseAudioEvent*> *audioEvents;
+        std::vector<BaseAudioEvent*>* audioEvents;
+
+        void addToInstrument();
+        void removeFromInstrument();
 
         void updateTimbre( int newTimbre );
         void cacheEvents( int aDrumTimbre );
         void addDrumEvent( int aPosition, int aDrumType, int aDrumTimbre );
         void removeDrumEvent( int aPosition, int aType );
-        void destroy();
-
-        int kickPatternLength;
-        int snarePatternLength;
-        int stickPatternLength;
-        int hatPatternLength;
+        bool hasContent();
+        void clear();
 
         int* getKickPattern();
         int* getSnarePattern();
@@ -63,8 +66,8 @@ class DrumPattern
         int* snarePattern;
         int* stickPattern;
         int* hatPattern;
-        void destroyAudioEvents();
         BaseInstrument* _instrument;
+        void destroyAudioEvents();
 };
 
 #endif

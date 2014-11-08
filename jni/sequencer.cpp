@@ -53,7 +53,8 @@ namespace sequencer
 
             if ( !instrumentChannel->muted )
             {
-                collectSequencedEvents( instrument, bufferPosition, bufferEnd );
+                if ( AudioEngine::playing )
+                    collectSequencedEvents( instrument, bufferPosition, bufferEnd );
 
                 if ( addLiveInstruments && instrument->hasLiveEvents() )
                     collectLiveEvents( instrument );
@@ -108,7 +109,6 @@ namespace sequencer
                 bufferEnd      -= bytesPerBar;
             }
         }
-
         int i = 0, amount = audioEvents->size();
         for ( i; i < amount; i++ )
         {
@@ -139,7 +139,7 @@ namespace sequencer
             {
                 BaseAudioEvent* audioEvent = removes[ i ];
 
-                // remove audio event from the list
+                // remove audio event from the instruments event list
                 if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
                 {
                     audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));

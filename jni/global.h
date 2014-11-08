@@ -77,20 +77,4 @@ class WaveForms
                              KARPLUS_STRONG };
 };
 
-class PercussionTypes
-{
-    public:
-        enum Types { KICK_808,
-                     STICK,
-                     SNARE,
-                     HI_HAT };
-};
-
-class DrumSynthTimbres
-{
-    public:
-        enum Timbres { LIGHT,
-                       GRAVEL };
-};
-
 #endif

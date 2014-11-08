@@ -43,7 +43,7 @@ class SampleEvent : public BaseAudioEvent
 
         virtual AudioBuffer* synthesize( int aBufferLength );
 
-        virtual void setSample( AudioBuffer* sampleBuffer );
+        void setSample( AudioBuffer* sampleBuffer );
         virtual void addToSequencer();
         virtual void removeFromSequencer();
 
@@ -51,10 +51,8 @@ class SampleEvent : public BaseAudioEvent
         void playNow(); // enable the event and set it at the current sequencer position (auditioning purposes)
 
     protected:
+
         // total sample range
-        int _sampleStart;
-        int _sampleEnd;
-        int _sampleLength;
 
         int _readPointer;
         int _rangePointer;
@@ -70,7 +68,6 @@ class SampleEvent : public BaseAudioEvent
         // cache loop, by activating this boolean we're queuing
         // the AudioEvent for removal
 
-        bool _deleteMe;
         bool _addedToSequencer;  // whether this event is part of a sequence
 
         void init( BaseInstrument* aInstrument );

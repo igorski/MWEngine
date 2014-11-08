@@ -44,8 +44,25 @@ class DrumEvent : public SampleEvent
     private:
         int _timbre;
         int _type;
-        bool _inited;
         void updateSample();
+};
+
+// shared enumerations
+
+class PercussionTypes
+{
+    public:
+        enum Types { KICK_808,
+                     STICK,
+                     SNARE,
+                     HI_HAT };
+};
+
+class DrumTimbres
+{
+    public:
+        enum Timbres { LIGHT,
+                       GRAVEL };
 };
 
 #endif

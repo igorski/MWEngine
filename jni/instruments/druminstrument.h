@@ -36,6 +36,7 @@ class DrumInstrument : public BaseInstrument
         DrumInstrument();
         ~DrumInstrument();
 
+        std::vector<BaseAudioEvent*>* getEvents();
         std::vector<BaseAudioEvent*>* getEventsForPattern( int patternNum );
         std::vector<BaseAudioEvent*>* getEventsForActivePattern();
 
@@ -52,7 +53,9 @@ class DrumInstrument : public BaseInstrument
         bool hasEvents();
         void updateEvents();
         void clearEvents();
-        std::vector<BaseAudioEvent*>* getEvents();
+        bool removeEvent( BaseAudioEvent* aEvent );
+        DrumPattern* getDrumPattern( int patternNum );
+        int setDrumPattern( DrumPattern* pattern );
 
 };
 

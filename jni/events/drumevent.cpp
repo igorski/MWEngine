@@ -39,18 +39,14 @@
  */
 DrumEvent::DrumEvent( int aPosition, int aDrumType, int aDrumTimbre, BaseInstrument* aInstrument )
 {
-    _inited = false;
+    init( aInstrument );
 
-    position = aPosition;
+    position     = aPosition;
+    _sampleStart = position * AudioEngine::bytes_per_tick;
 
     setType  ( aDrumType );
     setTimbre( aDrumTimbre );
 
-    init( aInstrument );
-
-    _inited = true;
-
-    _sampleStart = position * AudioEngine::bytes_per_tick;
     updateSample();
 }
 
@@ -70,13 +66,10 @@ void DrumEvent::setTimbre( int aTimbre )
 {
     _timbre = aTimbre;
 
-    if ( _inited )
-    {
-        if ( !_locked )
-            updateSample();
-        else
-            _updateAfterUnlock = true;
-    }
+    if ( !_locked )
+        updateSample();
+    else
+        _updateAfterUnlock = true;
 }
 
 int DrumEvent::getType()
@@ -88,13 +81,10 @@ void DrumEvent::setType( int aType )
 {
     _type = aType;
 
-    if ( _inited )
-    {
-        if ( !_locked )
-            updateSample();
-        else
-            _updateAfterUnlock = true;
-    }
+    if ( !_locked )
+        updateSample();
+    else
+        _updateAfterUnlock = true;
 }
 
 void DrumEvent::unlock()
@@ -117,7 +107,7 @@ void DrumEvent::updateSample()
     {
         case PercussionTypes::KICK_808:
 
-            if ( _timbre == DrumSynthTimbres::GRAVEL )
+            if ( _timbre == DrumTimbres::GRAVEL )
                 smp = "kdg";
             else
                 smp = "kd";
@@ -125,7 +115,7 @@ void DrumEvent::updateSample()
 
         case PercussionTypes::STICK:
 
-            if ( _timbre == DrumSynthTimbres::GRAVEL )
+            if ( _timbre == DrumTimbres::GRAVEL )
                 smp = "stg";
             else
                 smp = "st";
@@ -133,7 +123,7 @@ void DrumEvent::updateSample()
 
         case PercussionTypes::SNARE:
 
-            if ( _timbre == DrumSynthTimbres::GRAVEL )
+            if ( _timbre == DrumTimbres::GRAVEL )
                 smp = "sng";
             else
                 smp = "sn";
@@ -141,7 +131,7 @@ void DrumEvent::updateSample()
 
         case PercussionTypes::HI_HAT:
 
-            if ( _timbre == DrumSynthTimbres::GRAVEL )
+            if ( _timbre == DrumTimbres::GRAVEL )
                 smp = "hhg";
             else
                 smp = "hh";

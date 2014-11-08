@@ -258,10 +258,8 @@ void SynthEvent::updateProperties()
     applyModules( _instrument );        // modules
     BaseSynthEvent::updateProperties(); // base method
 
-    if ( doOSC2 ) {
-        _osc2->_update = false;
+    if ( doOSC2 )
         _osc2->_cancel = false;
-    }
 }
 
 /**

@@ -35,26 +35,54 @@ DrumPattern::DrumPattern( int aNum, BaseInstrument* aInstrument )
 
     audioEvents  = new std::vector<BaseAudioEvent*>();
 
-    kickPattern  = new int[ 0 ];
-    snarePattern = new int[ 0 ];
-    stickPattern = new int[ 0 ];
-    hatPattern   = new int[ 0 ];
+    kickPattern  = new int[ AMOUNT_OF_STEPS ];
+    snarePattern = new int[ AMOUNT_OF_STEPS ];
+    stickPattern = new int[ AMOUNT_OF_STEPS ];
+    hatPattern   = new int[ AMOUNT_OF_STEPS ];
 
-    kickPatternLength  = 0;
-    snarePatternLength = 0;
-    stickPatternLength = 0;
-    hatPatternLength   = 0;
-    _instrument        = aInstrument;
+    _instrument  = aInstrument;
 
-    (( DrumInstrument* ) _instrument )->drumPatterns->push_back( this );  // add the pattern to the sequencer so it can be heard
+    clear();    // acts as an init
 }
 
 DrumPattern::~DrumPattern()
 {
-    destroy();
+    DebugTool::log( "DrumPattern::destroy num %d", num );
+
+    destroyAudioEvents();
+    delete audioEvents;
+
+    removeFromInstrument();
+
+    delete[] kickPattern;
+    delete[] snarePattern;
+    delete[] stickPattern;
+    delete[] hatPattern;
 }
 
 /* public methods */
+
+void DrumPattern::addToInstrument()
+{
+    // adds the pattern to the sequencer so its contents can be heard
+
+    (( DrumInstrument* ) _instrument )->setDrumPattern( this );
+}
+
+void DrumPattern::removeFromInstrument()
+{
+    DrumInstrument* instrument = (( DrumInstrument* ) _instrument );
+
+    int i = 0;
+    for ( i; i < instrument->drumPatterns->size(); i++ )
+    {
+        if ( instrument->drumPatterns->at( i ) == this )
+        {
+            instrument->drumPatterns->erase( instrument->drumPatterns->begin() + i );
+            break;
+        }
+    }
+}
 
 int* DrumPattern::getKickPattern()
 {
@@ -63,12 +91,6 @@ int* DrumPattern::getKickPattern()
 
 void DrumPattern::setKickPattern( int* aDrumPattern, int arrayLength )
 {
-    kickPatternLength = arrayLength;
-
-    delete[] kickPattern;
-
-    kickPattern = new int[ arrayLength ];
-
     for ( unsigned int i = 0; i < arrayLength; ++i )
         kickPattern[ i ] = aDrumPattern[ i ];
 }
@@ -80,11 +102,6 @@ int* DrumPattern::getSnarePattern()
 
 void DrumPattern::setSnarePattern( int* aDrumPattern, int arrayLength )
 {
-    snarePatternLength = arrayLength;
-    delete[] snarePattern;
-
-    snarePattern = new int[ arrayLength ];
-
     for ( unsigned int i = 0; i < arrayLength; ++i )
         snarePattern[ i ] = aDrumPattern[ i ];
 }
@@ -96,12 +113,6 @@ int* DrumPattern::getStickPattern()
 
 void DrumPattern::setStickPattern( int* aDrumPattern, int arrayLength )
 {
-    stickPatternLength = arrayLength;
-
-    delete[] stickPattern;
-
-    stickPattern = new int[ arrayLength ];
-
     for ( unsigned int i = 0; i < arrayLength; ++i )
         stickPattern[ i ] = aDrumPattern[ i ];
 }
@@ -113,12 +124,6 @@ int* DrumPattern::getHatPattern()
 
 void DrumPattern::setHatPattern( int* aDrumPattern, int arrayLength )
 {
-    hatPatternLength = arrayLength;
-
-    delete[] hatPattern;
-
-    hatPattern = new int[ arrayLength ];
-
     for ( unsigned int i = 0; i < arrayLength; ++i )
         hatPattern[ i ] = aDrumPattern[ i ];
 }
@@ -143,19 +148,20 @@ void DrumPattern::cacheEvents( int aDrumTimbre )
     // clear previous vector contents
     destroyAudioEvents();
 
-    int i;
+    for ( unsigned int i = 0; i < AMOUNT_OF_STEPS; ++i )
+    {
+        if ( kickPattern[ i ] == EVENT_ON )
+            addDrumEvent( i, PercussionTypes::KICK_808, aDrumTimbre );
 
-    for ( i = 0; i < kickPatternLength; ++i )
-        addDrumEvent( kickPattern[ i ], PercussionTypes::KICK_808, aDrumTimbre );
+        if ( snarePattern[ i ] == EVENT_ON )
+            addDrumEvent( i, PercussionTypes::SNARE, aDrumTimbre );
 
-    for ( i = 0; i < snarePatternLength; ++i )
-        addDrumEvent( snarePattern[ i ], PercussionTypes::SNARE, aDrumTimbre );
+        if ( stickPattern[ i ] == EVENT_ON )
+            addDrumEvent( i, PercussionTypes::STICK, aDrumTimbre );
 
-    for ( i = 0; i < stickPatternLength; ++i )
-        addDrumEvent( stickPattern[ i ], PercussionTypes::STICK, aDrumTimbre );
-
-    for ( i = 0; i < hatPatternLength; ++i )
-        addDrumEvent( hatPattern[ i ], PercussionTypes::HI_HAT, aDrumTimbre );
+        if ( hatPattern[ i ] == EVENT_ON )
+            addDrumEvent( i, PercussionTypes::HI_HAT, aDrumTimbre );
+    }
 }
 
 void DrumPattern::addDrumEvent( int aPosition, int aDrumType, int aDrumTimbre )
@@ -166,47 +172,53 @@ void DrumPattern::addDrumEvent( int aPosition, int aDrumType, int aDrumTimbre )
 
 void DrumPattern::removeDrumEvent( int aPosition, int aType )
 {
-    int i = 0;
-    for ( i; i < audioEvents->size(); i++ )
+    int removed = 0;
+
+    for ( int i = 0; i < audioEvents->size(); i++ )
     {
         DrumEvent* vo = (( DrumEvent* ) audioEvents->at( i ));
 
         if ( vo->position == aPosition && vo->getType() == aType )
         {
-            vo->setDeletable( true );
-            audioEvents->erase( audioEvents->begin() + i );
-            delete vo;
+            vo->setDeletable( true ); // actual removal is invoked by the sequencer
+            removed = 1;
             break;
         }
     }
-    eventAmount = audioEvents->size();
+    eventAmount = audioEvents->size() - removed;
 }
 
-void DrumPattern::destroy()
+bool DrumPattern::hasContent()
 {
-    DebugTool::log( "DrumPattern::destroy num %d", num );
-
-    // remove pattern from sequence
-
-    DrumInstrument* instrument = (( DrumInstrument* ) _instrument );
-
-    int i = 0;
-    for ( i; i < instrument->drumPatterns->size(); i++ )
+    for ( int i = 0; i < AMOUNT_OF_STEPS; ++i )
     {
-        if ( instrument->drumPatterns->at( i ) == this )
-        {
-            instrument->drumPatterns->erase( instrument->drumPatterns->begin() + i );
-            break;
-        }
+        if ( kickPattern [ i ] == EVENT_ON ||
+             snarePattern[ i ] == EVENT_ON ||
+             stickPattern[ i ] == EVENT_ON ||
+             hatPattern  [ i ] == EVENT_ON )
+         {
+             return true;
+         }
     }
-    destroyAudioEvents();
-    delete audioEvents;
-
-    delete[] kickPattern;
-    delete[] snarePattern;
-    delete[] stickPattern;
-    delete[] hatPattern;
+    return false;
 }
+
+void DrumPattern::clear()
+{
+    destroyAudioEvents();
+
+    // XOX-style... 0 = off, 1 = on
+
+    for ( int i = 0; i < AMOUNT_OF_STEPS; ++i )
+    {
+        kickPattern [ i ] = EVENT_OFF;
+        snarePattern[ i ] = EVENT_OFF;
+        stickPattern[ i ] = EVENT_OFF;
+        hatPattern  [ i ] = EVENT_OFF;
+    }
+}
+
+/* private methods */
 
 void DrumPattern::destroyAudioEvents()
 {

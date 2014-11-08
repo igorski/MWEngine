@@ -96,7 +96,9 @@ bool SynthInstrument::removeEvent( BaseAudioEvent* aEvent )
 #ifndef USE_JNI
     delete audioEvent;
     audioEvent = 0;
+    return true;
 #endif
+    return false;
 }
 
 /* protected methods */

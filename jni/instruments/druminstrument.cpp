@@ -32,7 +32,7 @@
 DrumInstrument::DrumInstrument()
 {
     volume            = .5;
-    drumTimbre        = DrumSynthTimbres::LIGHT;
+    drumTimbre        = DrumTimbres::LIGHT;
     rOsc              = 0;// new RouteableOscillator();  // currently unused...
     audioChannel      = new AudioChannel( volume, AudioEngine::bytes_per_bar );
 
@@ -55,9 +55,8 @@ DrumInstrument::~DrumInstrument()
 bool DrumInstrument::hasEvents()
 {
     if ( drumPatterns->size() > 0 )
-    {
         return getEventsForActivePattern()->size() > 0;
-    }
+
     return false;
 }
 
@@ -69,8 +68,29 @@ void DrumInstrument::updateEvents()
 
 void DrumInstrument::clearEvents()
 {
-    drumPatterns->clear();
+    if ( drumPatterns != 0 )
+    {
+        for ( int i = 0, l = drumPatterns->size(); i < l; ++i )
+        {
+            DrumPattern* pattern = drumPatterns->at( i );
+            pattern->clear();   // pool the pattern but lose the events
+            //pattern->removeFromInstrument();
+            //delete pattern;
+        }
+//        drumPatterns->clear();
+    }
     activeDrumPattern = 0;
+}
+
+bool DrumInstrument::removeEvent( BaseAudioEvent* audioEvent )
+{
+    if ( audioEvent != 0 )
+    {
+        delete audioEvent;
+        audioEvent = 0;
+        return true;
+    }
+    return false;
 }
 
 std::vector<BaseAudioEvent*>* DrumInstrument::getEvents()
@@ -87,4 +107,21 @@ std::vector<BaseAudioEvent*>* DrumInstrument::getEventsForPattern( int patternNu
 std::vector<BaseAudioEvent*>* DrumInstrument::getEventsForActivePattern()
 {
     return getEventsForPattern( activeDrumPattern );
+}
+
+DrumPattern* DrumInstrument::getDrumPattern( int patternNum )
+{
+    return drumPatterns->at( patternNum );
+}
+
+int DrumInstrument::setDrumPattern( DrumPattern* pattern )
+{
+    // make sure we don't allow double additions of the same pattern
+    for ( int i; i < drumPatterns->size(); i++ )
+    {
+        if ( drumPatterns->at( i ) == pattern )
+            return i;
+    }
+    drumPatterns->push_back( pattern );
+    return ( int ) ( drumPatterns->size() ) - 1; // return index of pattern
 }
