@@ -46,6 +46,7 @@ class SampleEvent : public BaseAudioEvent
         void setSample( AudioBuffer* sampleBuffer );
         virtual void addToSequencer();
         virtual void removeFromSequencer();
+        virtual void swapInstrument( BaseInstrument* aInstrument );
 
         bool getBufferForRange( AudioBuffer* buffer, int readPos );
         void playNow(); // enable the event and set it at the current sequencer position (auditioning purposes)

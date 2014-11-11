@@ -169,6 +169,24 @@ void SampleEvent::removeFromSequencer()
     _addedToSequencer = false;
 }
 
+void SampleEvent::swapInstrument( BaseInstrument* aInstrument )
+{
+    // swap instrument if new one is different to existing reference
+    if ( _instrument != aInstrument )
+    {
+        bool readdToSequencer = _addedToSequencer;
+        removeFromSequencer();
+        
+        _instrument = aInstrument;
+        
+        // if event was added to the Sequencer, re-add it so
+        // it can now playback over the new instrument
+        
+        if ( readdToSequencer )
+            addToSequencer();
+    }
+}
+
 bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 {
     int bufferSize          = buffer->bufferSize;
