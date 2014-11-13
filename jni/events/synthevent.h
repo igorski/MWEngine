@@ -50,6 +50,7 @@ class SynthEvent : public BaseSynthEvent
         // properties
         void setFrequency( float aFrequency );
         void setFrequency( float aFrequency, bool allOscillators, bool storeAsBaseFrequency );
+        float getBaseFrequency();   // return "root" frequency (frequency can be modulated by pitch modules)
 
         // render related
         void invalidateProperties( int aPosition, float aLength, SynthInstrument *aInstrument );

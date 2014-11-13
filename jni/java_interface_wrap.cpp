@@ -2681,6 +2681,21 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
+SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1getBaseFrequency(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jfloat jresult = 0 ;
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
+  float result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SynthEvent **)&jarg1; 
+  result = (float)(arg1)->getBaseFrequency();
+  jresult = (jfloat)result; 
+  return jresult;
+}
+
+
 SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1invalidateProperties(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jfloat jarg3, jlong jarg4, jobject jarg4_) {
   SynthEvent *arg1 = (SynthEvent *) 0 ;
   int arg2 ;

@@ -136,6 +136,11 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
     }
 }
 
+float SynthEvent::getBaseFrequency()
+{
+    return _baseFrequency;
+}
+
 /**
  * @param aPosition position in the sequencer where this event starts playing
  * @param aLength length (in sequencer steps) of this event
