@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
  *
- * adapted from source by Matt @ hackmeopen.com
+ * wave table generation adapted from sources by Matt @ hackmeopen.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -80,7 +80,7 @@ namespace WaveGenerator
                             tmp     = ( sample >= 0.0 ) ? MAX_PHASE : -MAX_PHASE;
                             break;
                     }
-                    outputBuffer[ t ] = sample;
+                    outputBuffer[ t ] = tmp;
                 }
             }
         }
