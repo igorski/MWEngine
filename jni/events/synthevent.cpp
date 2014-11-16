@@ -136,6 +136,14 @@ void SynthEvent::setFrequency( float aFrequency, bool allOscillators, bool store
     }
 }
 
+void SynthEvent::enqueueFrequency( float aFrequency )
+{
+    if ( !_rendering )
+        setFrequency( aFrequency );
+    else
+        _queuedFrequency = aFrequency;
+}
+
 float SynthEvent::getBaseFrequency()
 {
     return _baseFrequency;
@@ -435,7 +443,14 @@ void SynthEvent::render( AudioBuffer* aOutputBuffer )
         {
             // step the arpeggiator to the next position
             if ( _arpeggiator->peek())
-                setFrequency( _arpeggiator->getPitchForStep( _arpeggiator->getStep(), _baseFrequency ), true, false );
+                _queuedFrequency = _arpeggiator->getPitchForStep( _arpeggiator->getStep(), _baseFrequency );
+        }
+
+        // frequency update operations (Karplus Strong buffer might be re-initialized)
+        if ( _queuedFrequency != 0 )
+        {
+            setFrequency( _queuedFrequency, true, false );
+            _queuedFrequency = 0;
         }
 
         if ( _update ) updateProperties(); // if an update was requested, do it now (prior to committing to buffer)
@@ -520,12 +535,13 @@ void SynthEvent::setDeletable( bool value )
 void SynthEvent::init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
                        int aLength, bool aIsSequenced, bool aHasParent )
 {
-    _ringBuffer     = 0;
-    _ringBufferSize = 0;
-    _osc2           = 0;
-    _frequency      = aFrequency;
-    _baseFrequency  = aFrequency;
-    hasParent       = aHasParent;
+    _ringBuffer      = 0;
+    _ringBufferSize  = 0;
+    _osc2            = 0;
+    _frequency       = aFrequency;
+    _baseFrequency   = aFrequency;
+    _queuedFrequency = 0;
+    hasParent        = aHasParent;
 
     // constants used by waveform generators
 

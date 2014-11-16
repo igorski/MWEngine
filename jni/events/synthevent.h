@@ -48,8 +48,9 @@ class SynthEvent : public BaseSynthEvent
         ~SynthEvent();
 
         // properties
-        void setFrequency( float aFrequency );
-        void setFrequency( float aFrequency, bool allOscillators, bool storeAsBaseFrequency );
+        void setFrequency    ( float aFrequency );
+        void setFrequency    ( float aFrequency, bool allOscillators, bool storeAsBaseFrequency );
+        void enqueueFrequency( float aFrequency );
         float getBaseFrequency();   // return "root" frequency (frequency can be modulated by pitch modules)
 
         // render related
@@ -89,18 +90,19 @@ class SynthEvent : public BaseSynthEvent
         // specific to Pulse Width Modulation
         float pwr;
         float pwAmp;
+        float _pwmValue;
 
         // specific to Karplus-Strong synthesis
 
         RingBuffer* _ringBuffer;
         int _ringBufferSize;
         void initKarplusStrong();
+        float _queuedFrequency;
 
         // oscillators
 
         SynthEvent *_osc2;  // secondary oscillator
         bool hasParent;
-        float _pwmValue;
         void createOSC2( int aPosition, int aLength, SynthInstrument *aInstrument );
         void destroyOSC2();
 
