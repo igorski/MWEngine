@@ -126,7 +126,7 @@ namespace AudioEngine
 
             // read pointer exceeds maximum allowed offset ? => sequencer has started its loop
             // we must now also gather extra events at the start position of the seq. range
-            loopStarted = endPosition > max_buffer_position;
+            loopStarted = endPosition >= max_buffer_position;
             loopOffset  = max_buffer_position - bufferPosition;
             loopAmount  = bufferSize - loopOffset;
 
