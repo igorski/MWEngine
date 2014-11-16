@@ -23,9 +23,9 @@
 #ifndef __SEQUENCERAPI_H_INCLUDED__
 #define __SEQUENCERAPI_H_INCLUDED__
 
-#include "bulkcacher.h"
 #include "sequencer.h"
 #include "observer.h"
+#include <utilities/bulkcacher.h>
 
 /**
  * SequencerAPI is to be used as a bridge to

@@ -78,7 +78,7 @@ Filter::~Filter()
 void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize       = sampleBuffer->bufferSize;
-    int initialLFOOffset = _hasLFO ? _lfo->getReadOffset() : 0;
+    int initialLFOOffset = _hasLFO ? _lfo->getTable()->getAccumulator() : 0;
     float orgCutoff      = _tempCutoff;
 
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
@@ -88,7 +88,7 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         // each channel needs the same offset to get the same LFO movement ;)
         if ( _hasLFO && i > 0 )
         {
-            _lfo->setReadOffset( initialLFOOffset );
+            _lfo->getTable()->setAccumulator( initialLFOOffset );
             _tempCutoff = orgCutoff;
             calculateParameters();
         }
@@ -109,7 +109,7 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
             if ( _hasLFO )
             {
-                _tempCutoff = _cutoff + ( lfoRange * _lfo->peek() );
+                _tempCutoff = _cutoff + ( lfoRange * _lfo->getTable()->peek() );
 
                 if ( _tempCutoff > maxFreq )
                     _tempCutoff = maxFreq;

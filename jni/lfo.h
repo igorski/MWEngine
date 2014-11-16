@@ -24,6 +24,7 @@
 #define __LFO_H_INCLUDED__
 
 #include "global.h"
+#include "wavetable.h"
 
 class LFO
 {
@@ -31,34 +32,24 @@ class LFO
         LFO();
         ~LFO();
 
-        static const double MAX_LFO_RATE = 10;   // the maximum rate of oscillation in Hz
-        static const double MIN_LFO_RATE = .1;   // the minimum rate of oscillation in Hz
+        static const double MAX_LFO_RATE      = 10;  // the maximum rate of oscillation in Hz
+        static const double MIN_LFO_RATE      = .1;  // the minimum rate of oscillation in Hz
+        static const int WAVE_TABLE_PRECISION = 128; // the amount of samples in the wave table
 
         float getRate();
         void setRate( float value );
         int getWave();
         void setWave( int value );
-        void generate( int aLength );
-        int getLength();
-        void setLength( int value );
 
-        int getReadOffset();
-        void setReadOffset( int value );
-
-        SAMPLE_TYPE peek();
+        void generate();
+        WaveTable* getTable();
 
     protected:
 
-        SAMPLE_TYPE TWO_PI_OVER_SR;
-        SAMPLE_TYPE _phase;
-        SAMPLE_TYPE _phaseIncr;
         SAMPLE_TYPE _rate;
 
-        SAMPLE_TYPE* _buffer; // cached buffer
         int _wave;
-        int _length;
-        int _readOffset;
-        int _maxBufferLength;
+        WaveTable* _table;
 
         int calculateBufferLength( float aMinRate );
 };

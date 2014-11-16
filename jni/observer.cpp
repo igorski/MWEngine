@@ -22,7 +22,7 @@
  */
 #include "observer.h"
 #include "audioengine.h"
-#include "utils.h"
+#include <utilities/utils.h>
 
 #ifndef USE_JNI
 

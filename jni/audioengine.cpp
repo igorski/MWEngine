@@ -23,13 +23,13 @@
 #include "audioengine.h"
 #include "global.h"
 #include "audiochannel.h"
-#include "diskwriter.h"
 #include "processingchain.h"
 #include "sequencer.h"
 #include "opensl_io.h"
 #include "observer.h"
-#include "utils.h"
 #include <events/baseaudioevent.h>
+#include <utilities/diskwriter.h>
+#include <utilities/utils.h>
 #include <vector>
 
 namespace AudioEngine

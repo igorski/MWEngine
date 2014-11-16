@@ -22,7 +22,7 @@
  */
 #include "fm.h"
 #include "../global.h"
-#include "../bufferutility.h"
+#include "../utilities/bufferutility.h"
 #include <math.h>
 
 // constructor
@@ -30,14 +30,11 @@
 FrequencyModulator::FrequencyModulator( int aWaveForm, float aRate )
 {
     _wave          = aWaveForm;
-    _phase         = 0.0;
-    _phaseIncr     = 0.0;
-    _length        = 0;
-    _buffer        = BufferUtility::generateSilentBuffer( BufferUtility::calculateBufferLength( MIN_LFO_RATE ));
     modulator      = 0.0;
     carrier        = 0.0;
     fmamp          = 10;
     AMP_MULTIPLIER = 0.15;
+    TWO_PI_OVER_SR = TWO_PI / AudioEngineProps::SAMPLE_RATE;
 
     setRate( aRate );
 }

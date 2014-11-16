@@ -23,11 +23,11 @@
 #ifndef __SEQUENCER_H_INCLUDED__
 #define __SEQUENCER_H_INCLUDED__
 
-#include "bulkcacher.h"
 #include "audiochannel.h"
 #include <instruments/baseinstrument.h>
 #include <events/basecacheableaudioevent.h>
 #include <events/baseaudioevent.h>
+#include <utilities/bulkcacher.h>
 #include <vector>
 
 /**

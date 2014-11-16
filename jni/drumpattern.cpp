@@ -23,7 +23,7 @@
 #include "drumpattern.h"
 
 #include "global.h"
-#include "utils.h"
+#include <utilities/utils.h>
 #include <instruments/druminstrument.h>
 
 /* constructor / destructor */

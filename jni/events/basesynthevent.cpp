@@ -23,8 +23,8 @@
 #include "basesynthevent.h"
 #include "../audioengine.h"
 #include "../sequencer.h"
-#include "../utils.h"
 #include "../global.h"
+#include "../utilities/utils.h"
 #include <cmath>
 
 /* constructor / destructor */

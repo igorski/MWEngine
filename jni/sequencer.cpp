@@ -22,7 +22,7 @@
  */
 #include "sequencer.h"
 #include "audioengine.h"
-#include "utils.h"
+#include <utilities/utils.h>
 #include <algorithm>
 #include <vector>
 

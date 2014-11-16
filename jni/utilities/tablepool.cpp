@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,34 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FM_H_INCLUDED__
-#define __FM_H_INCLUDED__
+#include "tablepool.h"
+#include "../generators/wavegenerator.h"
 
-#include "baseprocessor.h"
-#include "../global.h"
-#include "../lfo.h"
-
-class FrequencyModulator : public BaseProcessor, public LFO
+namespace TablePool
 {
-    public:
-        FrequencyModulator( int aWaveForm, float aRate );
-        void process( AudioBuffer* sampleBuffer, bool isMonosource );
+    std::map<int, WaveTable*> _cachedTables;
 
-        // these are here only for SWIG purposes so we can "multiple inherit" from LFO, bit fugly... but hey
-        #ifdef SWIG
-        float getRate();
-        void setRate( float value );
-        int getWave();
-        void setWave( int value );
-        #endif
+    void getTable( WaveTable* waveTable, int waveformType )
+    {
+        std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
 
-    private:
-        SAMPLE_TYPE* _buffer; // cached buffer
-        SAMPLE_TYPE modulator;
-        SAMPLE_TYPE carrier;
-        SAMPLE_TYPE fmamp;
-        SAMPLE_TYPE AMP_MULTIPLIER;
-        SAMPLE_TYPE TWO_PI_OVER_SR;
-};
+        if ( it != _cachedTables.end())
+        {
+            // table existed, load the pooled version
+            waveTable->cloneTable(( WaveTable* )( it->second )); // map key stored in first, map value stored in second
+        }
+        else
+        {
+            // wave table hasn't been generated yet, generate it on the fly
+            WaveGenerator::generate( waveTable, waveformType );
 
-#endif
+            // insert a clone of the generated table into the pools table map
+            _cachedTables.insert( std::pair<int, WaveTable*>( waveformType, waveTable->clone() ));
+        }
+    }
+}

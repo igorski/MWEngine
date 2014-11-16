@@ -23,7 +23,7 @@
 #include "sampleevent.h"
 #include "../audioengine.h"
 #include "../sequencer.h"
-#include "../utils.h"
+#include "../utilities/utils.h"
 #include <instruments/sampledinstrument.h>
 
 /* constructor / destructor */
@@ -176,12 +176,12 @@ void SampleEvent::swapInstrument( BaseInstrument* aInstrument )
     {
         bool readdToSequencer = _addedToSequencer;
         removeFromSequencer();
-        
+
         _instrument = aInstrument;
-        
+
         // if event was added to the Sequencer, re-add it so
         // it can now playback over the new instrument
-        
+
         if ( readdToSequencer )
             addToSequencer();
     }

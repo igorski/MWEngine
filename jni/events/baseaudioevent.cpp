@@ -22,7 +22,7 @@
  */
 #include "baseaudioevent.h"
 #include "../global.h"
-#include "../utils.h"
+#include "../utilities/utils.h"
 
 // constructor / destructor
 

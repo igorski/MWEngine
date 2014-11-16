@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,34 +20,22 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FM_H_INCLUDED__
-#define __FM_H_INCLUDED__
+#ifndef __TABLEPOOL_H_INCLUDED__
+#define __TABLEPOOL_H_INCLUDED__
 
-#include "baseprocessor.h"
-#include "../global.h"
-#include "../lfo.h"
+#include "../wavetable.h"
+#include <map>
 
-class FrequencyModulator : public BaseProcessor, public LFO
+namespace TablePool
 {
-    public:
-        FrequencyModulator( int aWaveForm, float aRate );
-        void process( AudioBuffer* sampleBuffer, bool isMonosource );
+    // generates a WaveTable for the given waveform type
+    // and store a clone of the table in a private map
+    // each subsequent request for equal waveformTypes for
+    // tables of an equal size are using the stored clone
+    // of the previous generated table
 
-        // these are here only for SWIG purposes so we can "multiple inherit" from LFO, bit fugly... but hey
-        #ifdef SWIG
-        float getRate();
-        void setRate( float value );
-        int getWave();
-        void setWave( int value );
-        #endif
-
-    private:
-        SAMPLE_TYPE* _buffer; // cached buffer
-        SAMPLE_TYPE modulator;
-        SAMPLE_TYPE carrier;
-        SAMPLE_TYPE fmamp;
-        SAMPLE_TYPE AMP_MULTIPLIER;
-        SAMPLE_TYPE TWO_PI_OVER_SR;
-};
+    extern void getTable( WaveTable* waveTable, int waveformType );
+    extern std::map<int, WaveTable*> _cachedTables;
+}
 
 #endif

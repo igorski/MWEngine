@@ -11,7 +11,7 @@ audioengine.cpp \
 java_interface_wrap.cpp \
 javabridge.cpp \
 global.cpp \
-utils.cpp \
+utilities/utils.cpp \
 opensl_io.c \
 adsr.cpp \
 audiobuffer.cpp \
@@ -36,23 +36,26 @@ processors/limiter.cpp \
 processors/lpfhpfilter.cpp \
 processors/phaser.cpp \
 processors/waveshaper.cpp \
-bufferutility.cpp \
-bulkcacher.cpp \
-diskwriter.cpp \
+generators/wavegenerator.cpp \
+utilities/bufferutility.cpp \
+utilities/bulkcacher.cpp \
+utilities/diskwriter.cpp \
+utilities/samplemanager.cpp \
+utilities/tablepool.cpp \
+utilities/wavewriter.cpp \
 drumpattern.cpp \
 envelopefollower.cpp \
 lfo.cpp \
 observer.cpp \
 processingchain.cpp \
 ringbuffer.cpp \
-samplemanager.cpp \
 sequencer.cpp \
 sequencer_api.cpp \
+wavetable.cpp \
 instruments/baseinstrument.cpp \
 instruments/druminstrument.cpp \
 instruments/sampledinstrument.cpp \
 instruments/synthinstrument.cpp \
-wavewriter.cpp \
 routeableoscillator.cpp \
 
 LOCAL_LDLIBS := -llog -lOpenSLES

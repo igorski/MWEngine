@@ -23,7 +23,7 @@
 #include "druminstrument.h"
 #include "../audioengine.h"
 #include "../sequencer.h"
-#include "../utils.h"
+#include "../utilities/utils.h"
 #include <cstddef>
 #include <vector>
 

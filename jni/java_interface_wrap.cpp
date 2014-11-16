@@ -235,9 +235,9 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #include "processors/lpfhpfilter.h"
 #include "processors/phaser.h"
 #include "processingchain.h"
-#include "samplemanager.h"
-#include "bufferutility.h"
-#include "bulkcacher.h"
+#include "utilities/samplemanager.h"
+#include "utilities/bufferutility.h"
+#include "utilities/bulkcacher.h"
 #include "drumpattern.h"
 #include "instruments/baseinstrument.h"
 #include "instruments/druminstrument.h"
@@ -2681,6 +2681,19 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1enqueueFrequency(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jfloat jarg2) {
+  SynthEvent *arg1 = (SynthEvent *) 0 ;
+  float arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SynthEvent **)&jarg1; 
+  arg2 = (float)jarg2; 
+  (arg1)->enqueueFrequency(arg2);
+}
+
+
 SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SynthEvent_1getBaseFrequency(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jfloat jresult = 0 ;
   SynthEvent *arg1 = (SynthEvent *) 0 ;
@@ -2784,6 +2797,18 @@ SWIGEXPORT jdouble JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngi
 }
 
 
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1WAVE_1TABLE_1PRECISION_1get(JNIEnv *jenv, jclass jcls) {
+  jint jresult = 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (int)LFO::WAVE_TABLE_PRECISION;
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
 SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getRate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jfloat jresult = 0 ;
   LFO *arg1 = (LFO *) 0 ;
@@ -2840,86 +2865,28 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1generate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1generate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   LFO *arg1 = (LFO *) 0 ;
-  int arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   arg1 = *(LFO **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->generate(arg2);
+  (arg1)->generate();
 }
 
 
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  LFO *arg1 = (LFO *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  result = (int)(arg1)->getLength();
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  LFO *arg1 = (LFO *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->setLength(arg2);
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getReadOffset(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  LFO *arg1 = (LFO *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  result = (int)(arg1)->getReadOffset();
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1setReadOffset(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  LFO *arg1 = (LFO *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(LFO **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->setReadOffset(arg2);
-}
-
-
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1peek(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_LFO_1getTable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jlong jresult = 0 ;
   LFO *arg1 = (LFO *) 0 ;
-  SAMPLE_TYPE result;
+  WaveTable *result = 0 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   arg1 = *(LFO **)&jarg1; 
-  result = (arg1)->peek();
-  *(SAMPLE_TYPE **)&jresult = new SAMPLE_TYPE((const SAMPLE_TYPE &)result); 
+  result = (WaveTable *)(arg1)->getTable();
+  *(WaveTable **)&jresult = result; 
   return jresult;
 }
 
@@ -3994,47 +3961,6 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
   arg1 = *(FrequencyModulator **)&jarg1; 
   arg2 = (int)jarg2; 
   (arg1)->setWave(arg2);
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_FrequencyModulator_1generate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  FrequencyModulator *arg1 = (FrequencyModulator *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(FrequencyModulator **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->generate(arg2);
-}
-
-
-SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_FrequencyModulator_1getLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  jint jresult = 0 ;
-  FrequencyModulator *arg1 = (FrequencyModulator *) 0 ;
-  int result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(FrequencyModulator **)&jarg1; 
-  result = (int)(arg1)->getLength();
-  jresult = (jint)result; 
-  return jresult;
-}
-
-
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_FrequencyModulator_1setLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
-  FrequencyModulator *arg1 = (FrequencyModulator *) 0 ;
-  int arg2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(FrequencyModulator **)&jarg1; 
-  arg2 = (int)jarg2; 
-  (arg1)->setLength(arg2);
 }
 
 

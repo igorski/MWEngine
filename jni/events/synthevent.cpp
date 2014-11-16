@@ -23,9 +23,9 @@
 #include "synthevent.h"
 #include "../audioengine.h"
 #include "../sequencer.h"
-#include "../utils.h"
 #include "../global.h"
-#include "../bufferutility.h"
+#include "../utilities/utils.h"
+#include "../utilities/bufferutility.h"
 #include <cmath>
 
 /* constructor / destructor */

@@ -22,7 +22,7 @@
  */
 #include "delay.h"
 #include "../global.h"
-#include "../utils.h"
+#include "../utilities/utils.h"
 #include <math.h>
 
 /* constructor / destructor */

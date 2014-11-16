@@ -23,8 +23,8 @@
 #include "sequencer_api.h"
 #include "sequencer.h"
 #include "audioengine.h"
-#include "utils.h"
-#include "diskwriter.h"
+#include <utilities/utils.h>
+#include <utilities/diskwriter.h>
 
 /* constructor / destructor */
 

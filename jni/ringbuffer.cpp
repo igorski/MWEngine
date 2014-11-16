@@ -21,8 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "ringbuffer.h"
-#include "bufferutility.h"
-#include "utils.h"
+#include <utilities/bufferutility.h>
+#include <utilities/utils.h>
 
 /* constructor / destructor */
 

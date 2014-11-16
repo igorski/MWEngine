@@ -22,7 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "formantfilter.h"
-#include "../utils.h"
+#include "../utilities/utils.h"
 #include <cmath>
 
 /* constructor / destructor */

@@ -22,7 +22,7 @@
  */
 #include "audiochannel.h"
 
-#include "utils.h"
+#include <utilities/utils.h>
 
 /* constructor / destructor */
 

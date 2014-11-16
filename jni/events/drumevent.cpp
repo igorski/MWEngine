@@ -23,7 +23,7 @@
 #include "drumevent.h"
 #include "../audioengine.h"
 #include "../global.h"
-#include "../samplemanager.h"
+#include "../utilities/samplemanager.h"
 #include <cstdlib>
 
 /* constructor / destructor */

@@ -23,7 +23,7 @@
 #include "sampledinstrument.h"
 #include "../global.h"
 #include "../sequencer.h"
-#include "../utils.h"
+#include "../utilities/utils.h"
 #include <cstddef>
 
 /* constructor / destructor */
