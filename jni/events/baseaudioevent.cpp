@@ -140,6 +140,12 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
     int sampleLength = getSampleLength();
     int bufferSize   = outputBuffer->bufferSize;
 
+    // if the output channel amount differs from this events channel amount, we might
+    // potentially have a bad time (e.g. engine has mono output while this event is stereo)
+    // ideally events should never hold more channels than AudioEngineProps::OUTPUT_CHANNELS
+
+    int outputChannels = std::min( _buffer->amountOfChannels, outputBuffer->amountOfChannels );
+
     for ( int i = 0; i < bufferSize; ++i )
     {
         int readPointer = i + bufferPos;
@@ -160,7 +166,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
             // the startOffset defines where the event is positioned in the sequencer )
             readPointer -= startOffset;
 
-            for ( int c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
+            for ( int c = 0; c < outputChannels; ++c )
             {
                 SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
                 SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
