@@ -158,9 +158,6 @@ float SynthEvent::getBaseFrequency()
  */
 void SynthEvent::invalidateProperties( int aPosition, float aLength, SynthInstrument *aInstrument )
 {
-    if ( aInstrument != 0 )
-        _type = _instrument->waveform;
-
     // additional magic for secondary oscillator
     if ( _osc2 != 0 )
     {
@@ -258,6 +255,8 @@ void SynthEvent::cache( bool doCallback )
 
 void SynthEvent::updateProperties()
 {
+    _type = _instrument->waveform;
+
     // secondary oscillator
 
     bool doOSC2 = !hasParent && _instrument->osc2active;

@@ -45,7 +45,7 @@ BaseSynthEvent::BaseSynthEvent()
  *                     only available if AudioEngineProps::EVENT_CACHING is true
  */
 BaseSynthEvent::BaseSynthEvent( float aFrequency, int aPosition, float aLength,
-                        SynthInstrument *aInstrument, bool aAutoCache )
+                                SynthInstrument *aInstrument, bool aAutoCache )
 {
     init( aInstrument, aFrequency, aPosition, aLength, true );
     setAutoCache( aAutoCache );
