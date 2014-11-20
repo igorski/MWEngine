@@ -4848,20 +4848,6 @@ SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
-SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1generateSilentBuffer(JNIEnv *jenv, jclass jcls, jint jarg1) {
-  jlong jresult = 0 ;
-  int arg1 ;
-  SAMPLE_TYPE *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (int)jarg1; 
-  result = (SAMPLE_TYPE *)BufferUtility::generateSilentBuffer(arg1);
-  *(SAMPLE_TYPE **)&jresult = result; 
-  return jresult;
-}
-
-
 SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1calculateBufferLength_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1) {
   jint jresult = 0 ;
   SAMPLE_TYPE arg1 ;
@@ -4893,6 +4879,39 @@ SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
   result = (int)BufferUtility::calculateBufferLength(arg1);
   jresult = (jint)result; 
   return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1generateSilentBuffer(JNIEnv *jenv, jclass jcls, jint jarg1) {
+  jlong jresult = 0 ;
+  int arg1 ;
+  SAMPLE_TYPE *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  result = (SAMPLE_TYPE *)BufferUtility::generateSilentBuffer(arg1);
+  *(SAMPLE_TYPE **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_BufferUtility_1bufferToFile(JNIEnv *jenv, jclass jcls, jstring jarg1, jlong jarg2, jint jarg3) {
+  char *arg1 = (char *) 0 ;
+  SAMPLE_TYPE *arg2 = (SAMPLE_TYPE *) 0 ;
+  int arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = 0;
+  if (jarg1) {
+    arg1 = (char *)jenv->GetStringUTFChars(jarg1, 0);
+    if (!arg1) return ;
+  }
+  arg2 = *(SAMPLE_TYPE **)&jarg2; 
+  arg3 = (int)jarg3; 
+  BufferUtility::bufferToFile((char const *)arg1,arg2,arg3);
+  if (arg1) jenv->ReleaseStringUTFChars(jarg1, (const char *)arg1);
 }
 
 

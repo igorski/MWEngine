@@ -21,6 +21,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <utilities/bufferutility.h>
+#include <sstream>
+#include <fstream>
+#include <iostream>
 
 /* public methods */
 
@@ -159,4 +162,30 @@ int BufferUtility::calculateBufferLength( SAMPLE_TYPE aMinRate )
 int BufferUtility::calculateBufferLength( int milliSeconds )
 {
     return milliSeconds * ( AudioEngineProps::SAMPLE_RATE / 1000 );
+}
+
+/**
+ * write the contents of a buffer
+ * into a file onto the file system
+ */
+void BufferUtility::bufferToFile( const char* aFileName, SAMPLE_TYPE* aBuffer, int aBufferSize )
+{
+    std::ofstream myFile;
+
+    //This is the file the wavetable is going to show up in.
+    myFile.open( aFileName );
+    myFile << "{ ";
+
+    for ( int i = 0; i < aBufferSize; ++i )
+    {
+        SAMPLE_TYPE tmp = aBuffer[ i ];
+        myFile << tmp;
+
+        if ( i < ( aBufferSize - 1 ))
+            myFile << ", ";
+    }
+    myFile << " } ";
+    myFile << std::endl;
+
+    myFile.close();
 }

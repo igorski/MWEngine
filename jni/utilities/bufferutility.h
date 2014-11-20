@@ -42,9 +42,10 @@ class BufferUtility
         static int calculateSamplesPerBeatDivision( int sampleRate, double tempo, int subdivision );
         static int getSamplesPerBeat( int sampleRate, double tempo );
         static int getSamplesPerBar( int sampleRate, double tempo, int beatAmount, int beatUnit );
-        static SAMPLE_TYPE* generateSilentBuffer( int aBufferSize );
         static int calculateBufferLength( SAMPLE_TYPE aMinRate );
         static int calculateBufferLength( int milliSeconds );
+        static SAMPLE_TYPE* generateSilentBuffer( int aBufferSize );
+        static void bufferToFile( const char* aFileName, SAMPLE_TYPE* aBuffer, int aBufferLength );
 };
 
 #endif
