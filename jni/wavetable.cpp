@@ -27,8 +27,9 @@
 
 WaveTable::WaveTable( int aTableLength, float aFrequency )
 {
-    tableLength = aTableLength;
-    _buffer     = BufferUtility::generateSilentBuffer( tableLength );
+    tableLength  = aTableLength;
+    _accumulator = 0.0;
+    _buffer      = BufferUtility::generateSilentBuffer( tableLength );
     setFrequency( aFrequency );
 
     SR_OVER_LENGTH = AudioEngineProps::SAMPLE_RATE / ( SAMPLE_TYPE ) tableLength;
@@ -49,6 +50,16 @@ void WaveTable::setFrequency( float aFrequency )
 float WaveTable::getFrequency()
 {
     return _frequency;
+}
+
+bool WaveTable::hasContent()
+{
+    for ( int i = 0; i < tableLength; ++i )
+    {
+        if ( _buffer[ i ] != 0.0 )
+            return true;
+    }
+    return false;
 }
 
 void WaveTable::setAccumulator( SAMPLE_TYPE value )
@@ -108,7 +119,7 @@ void WaveTable::cloneTable( WaveTable* waveTable )
 
 WaveTable* WaveTable::clone()
 {
-    WaveTable* out   = new WaveTable( tableLength, _frequency );
+    WaveTable* out    = new WaveTable( tableLength, _frequency );
     out->_accumulator = _accumulator;
     out->cloneTable( this );
 

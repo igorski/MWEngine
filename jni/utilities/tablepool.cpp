@@ -38,8 +38,9 @@ namespace TablePool
         }
         else
         {
-            // wave table hasn't been generated yet, generate it on the fly
-            WaveGenerator::generate( waveTable, waveformType );
+            // wave table hasn't been generated yet ? generate its contents on the fly
+            if ( !waveTable->hasContent() )
+                WaveGenerator::generate( waveTable, waveformType );
 
             // insert a clone of the generated table into the pools table map
             _cachedTables.insert( std::pair<int, WaveTable*>( waveformType, waveTable->clone() ));

@@ -35,7 +35,7 @@ namespace WaveGenerator
         int numberOfSamples       = waveTable->tableLength;
 
         int tempValue, partials;
-        SAMPLE_TYPE frequency, gibbs, sample, tmp;
+        SAMPLE_TYPE frequency, gibbs, sample, tmp, maxValue;
         SAMPLE_TYPE power, baseFrequency = 440, nyquist = ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE / 2.0;
 
         // every other MIDI note (127 values)
@@ -45,10 +45,11 @@ namespace WaveGenerator
             tempValue   = baseFrequency * pow( 2, power );
             frequency   = round( tempValue );
             partials    = nyquist / frequency;
-            
+            maxValue    = 0.0;
+
             for ( int t = 0; t < numberOfSamples; t++ )
             {
-                sample = 0, tmp = 0;
+                sample = 0.0, tmp = 0.0;
                 
                 // summing of the Fourier series for harmonics up to half the sample rate (Nyquist frequency)
                 for ( int s = 1; s <= partials; ++s )
@@ -67,7 +68,7 @@ namespace WaveGenerator
 
                         case WaveForms::TRIANGLE:
                             sample += sin(( SAMPLE_TYPE ) s * TWO_PI * ( SAMPLE_TYPE ) t / numberOfSamples );
-                            tmp     = MAX_PHASE - ( SAMPLE_TYPE ) ( std::abs( sample - .5 )) * 4.0;
+                            tmp     = MAX_PHASE - ( SAMPLE_TYPE ) ( std::abs( sample - ( MAX_PHASE / 2 ) )) * ( MAX_PHASE * 4.0 );
                             break;
 
                         case WaveForms::SAWTOOTH:
@@ -80,9 +81,17 @@ namespace WaveGenerator
                             tmp     = ( sample >= 0.0 ) ? MAX_PHASE : -MAX_PHASE;
                             break;
                     }
-                    outputBuffer[ t ] = tmp;
                 }
+                outputBuffer[ t ] = tmp;
+
+                if ( tmp > maxValue )
+                    maxValue = tmp;
             }
+            SAMPLE_TYPE factor = MAX_PHASE / maxValue;
+
+            // normalize values
+            for ( int j = 0; j < numberOfSamples; ++j )
+                outputBuffer[ j ] *= factor;
         }
     }
 }

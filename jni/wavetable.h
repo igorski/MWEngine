@@ -37,6 +37,8 @@ class WaveTable
         void setFrequency( float aFrequency );
         float getFrequency();
 
+        bool hasContent();
+
         // accumulators are used to retrieve a sample from the wave table
 
         SAMPLE_TYPE getAccumulator();

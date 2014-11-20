@@ -133,16 +133,6 @@ int BufferUtility::getSamplesPerBar( int sampleRate, double tempo, int beatAmoun
     return samplesPerDoubleFourTime / beatUnit * beatAmount;
 }
 
-SAMPLE_TYPE* BufferUtility::generateSilentBuffer( int aBufferSize )
-{
-    SAMPLE_TYPE* out = new SAMPLE_TYPE[ aBufferSize ];
-
-    for ( int i = 0; i < aBufferSize; ++i )
-        out[ i ] = 0.0;
-
-    return out;
-}
-
 /**
  * calculate the amount of samples a single cycle of a waveform
  * will hold at a give rate in Hz, at the current sample rate
@@ -164,6 +154,16 @@ int BufferUtility::calculateBufferLength( int milliSeconds )
     return milliSeconds * ( AudioEngineProps::SAMPLE_RATE / 1000 );
 }
 
+SAMPLE_TYPE* BufferUtility::generateSilentBuffer( int aBufferSize )
+{
+    SAMPLE_TYPE* out = new SAMPLE_TYPE[ aBufferSize ];
+
+    for ( int i = 0; i < aBufferSize; ++i )
+        out[ i ] = 0.0;
+
+    return out;
+}
+
 /**
  * write the contents of a buffer
  * into a file onto the file system
@@ -172,7 +172,6 @@ void BufferUtility::bufferToFile( const char* aFileName, SAMPLE_TYPE* aBuffer, i
 {
     std::ofstream myFile;
 
-    //This is the file the wavetable is going to show up in.
     myFile.open( aFileName );
     myFile << "{ ";
 
