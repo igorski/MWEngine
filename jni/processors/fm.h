@@ -46,7 +46,6 @@ class FrequencyModulator : public BaseProcessor, public LFO
         SAMPLE_TYPE modulator;
         SAMPLE_TYPE carrier;
         SAMPLE_TYPE fmamp;
-        SAMPLE_TYPE AMP_MULTIPLIER;
         SAMPLE_TYPE TWO_PI_OVER_SR;
 };
 

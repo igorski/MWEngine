@@ -37,7 +37,7 @@ WaveTable::WaveTable( int aTableLength, float aFrequency )
 
 WaveTable::~WaveTable()
 {
-    delete _buffer;
+    delete[] _buffer;
 }
 
 /* public methods */

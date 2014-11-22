@@ -33,8 +33,8 @@ FrequencyModulator::FrequencyModulator( int aWaveForm, float aRate )
     modulator      = 0.0;
     carrier        = 0.0;
     fmamp          = 10;
-    AMP_MULTIPLIER = 0.15;
     TWO_PI_OVER_SR = TWO_PI / AudioEngineProps::SAMPLE_RATE;
+    _table         = new WaveTable( WAVE_TABLE_PRECISION, _rate );
 
     setRate( aRate );
 }
@@ -43,11 +43,16 @@ FrequencyModulator::FrequencyModulator( int aWaveForm, float aRate )
 
 void FrequencyModulator::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int bufferSize = sampleBuffer->bufferSize;
+    int bufferSize       = sampleBuffer->bufferSize;
+    int initialLFOOffset = _table->getAccumulator();
 
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
+
+        // each channel needs the same offset to get the same LFO movement ;)
+        if ( c > 0 )
+            _table->setAccumulator( initialLFOOffset );
 
         for ( int i = 0; i < bufferSize; ++i )
         {
@@ -55,7 +60,7 @@ void FrequencyModulator::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             modulator = modulator < TWO_PI ? modulator : modulator - TWO_PI;
 
             carrier            = channelBuffer[ i ];
-            channelBuffer[ i ] = ( carrier * cos( carrier + fmamp * cos( modulator )))/* * AMP_MULTIPLIER*/;
+            channelBuffer[ i ] = ( carrier * _table->peek() ) * cos( carrier + fmamp * cos( modulator ));
         }
         // save CPU cycles when source is mono
         if ( isMonoSource )
