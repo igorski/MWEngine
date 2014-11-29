@@ -215,7 +215,7 @@ namespace AudioEngine
                         {
                             BaseAudioEvent* audioEvent = audioEvents[ k ];
 
-                            if ( !audioEvent->isLocked())   // make sure we are allowed to query the contents
+                            if ( audioEvent != 0 && !audioEvent->isLocked()) // make sure we're allowed to query the contents
                             {
                                 audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
                                                        maxBufferPosition, loopStarted, loopOffset, useChannelRange );
