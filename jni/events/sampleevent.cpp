@@ -187,6 +187,19 @@ void SampleEvent::swapInstrument( BaseInstrument* aInstrument )
     }
 }
 
+void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
+                             bool loopStarted, int loopOffset, bool useChannelRange )
+{
+    // if we have a range length that is unequal to the total sample duration, read from the range
+    // otherwise invoke the base mixBuffer method
+
+    if ( _bufferRangeLength != _sampleLength )
+        getBufferForRange( outputBuffer, bufferPos );
+    else
+        BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition,
+                                   loopStarted, loopOffset, useChannelRange );
+}
+
 bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 {
     int bufferSize          = buffer->bufferSize;

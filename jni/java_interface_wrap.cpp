@@ -2360,6 +2360,31 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
 }
 
 
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SampleEvent_1mixBuffer(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3, jint jarg4, jint jarg5, jboolean jarg6, jint jarg7, jboolean jarg8) {
+  SampleEvent *arg1 = (SampleEvent *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  int arg3 ;
+  int arg4 ;
+  int arg5 ;
+  bool arg6 ;
+  int arg7 ;
+  bool arg8 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SampleEvent **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = (int)jarg3; 
+  arg4 = (int)jarg4; 
+  arg5 = (int)jarg5; 
+  arg6 = jarg6 ? true : false; 
+  arg7 = (int)jarg7; 
+  arg8 = jarg8 ? true : false; 
+  (arg1)->mixBuffer(arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+}
+
+
 SWIGEXPORT jboolean JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_SampleEvent_1getBufferForRange(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jint jarg3) {
   jboolean jresult = 0 ;
   SampleEvent *arg1 = (SampleEvent *) 0 ;
