@@ -24,6 +24,7 @@ package nl.igorski.lib.audio.renderer;
 
 import android.content.Context;
 import android.os.Build;
+import nl.igorski.lib.audio.nativeaudio.BufferUtility;
 import nl.igorski.lib.audio.nativeaudio.NativeAudioEngine;
 import nl.igorski.lib.audio.nativeaudio.ProcessingChain;
 import nl.igorski.lib.audio.nativeaudio.SequencerAPI;
@@ -220,6 +221,13 @@ public final class NativeAudioRenderer extends Thread
         _api.updateMeasures( aValue, BAR_SUBDIVISIONS );
     }
 
+    /**
+     * records the live output of the engine
+     *
+     * this keeps recording until setRecordingState is invoked with value false
+     * given outputDirectory will contain several .WAV files each at the buffer
+     * length returned by the "calculateMaxBuffers"-method
+     */
     public void setRecordingState( boolean value, String outputDirectory )
     {
         int maxRecordBuffers = 0;
@@ -231,6 +239,27 @@ public final class NativeAudioRenderer extends Thread
 
         _recordOutput = value;
         _api.setRecordingState( _recordOutput, maxRecordBuffers, outputDirectory );
+    }
+
+    /**
+     * records the input channel of the Android device, note this can be done
+     * while the engine is running a sequence / synthesizing audio
+     *
+     * given outputDirectory will contain a .WAV file at the buffer length
+     * representing given maxDurationInMilliSeconds
+     */
+    public void setRecordFromDeviceInputState( boolean value, String outputDirectory, int maxDurationInMilliSeconds )
+    {
+        int maxRecordBuffers = 0;
+
+        // create / reset the recorded buffer when
+        // hitting the record button
+
+        if ( value )
+            maxRecordBuffers = BufferUtility.millisecondsToBuffer( maxDurationInMilliSeconds, SAMPLE_RATE );
+
+        _recordOutput = value;
+        _api.setRecordingFromDeviceState( _recordOutput, maxRecordBuffers, outputDirectory );
     }
 
     public boolean getRecordingState()
