@@ -91,7 +91,7 @@ void SampleEvent::playNow()
     // loopeable samples play from their range start, whereas
     // non-loopeable samples are enqueued to the current sequencer position
 
-    if ( getLoopeable() )
+    if ( _loopeable )
         _rangePointer = _bufferRangeStart;
     else
         _sampleStart = AudioEngine::bufferPosition;
@@ -193,7 +193,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBu
     // if we have a range length that is unequal to the total sample duration, read from the range
     // otherwise invoke the base mixBuffer method
 
-    if ( _bufferRangeLength != _sampleLength )
+    if ( _loopeable || _bufferRangeLength != _sampleLength )
         getBufferForRange( outputBuffer, bufferPos );
     else
         BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition,
