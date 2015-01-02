@@ -1,7 +1,7 @@
 /**
  * this file describes which native classes will
  * be made available to the Java using a SWIG wrapper
- * note the audio engine itself is not directly available
+ * note: the audio engine itself is not directly available
  * but only through javajni.h and sequencer_api.h
  */
 %module NativeAudioEngine
@@ -53,8 +53,15 @@
     }
   }
 %}
-%include carrays.i                 // enable passing of arrays via JNI
-%array_functions(int, int_array)   // int arrays
+
+// JNI specific wrappers for passing data types from Java to C++
+%include carrays.i                 // enables passing of arrays via JNI
+%array_functions(int, int_array)   // enables int arrays
+%include "std_string.i"            // enables using Java Strings as std::string
+#include <string>
+
+// MWEngine library contents
+
 %include "javabridge_api.h"
 %include "sequencer_api.h"
 %include "adsr.h"
