@@ -56,6 +56,11 @@ void SampleEvent::setBufferRangeStart( int value )
 
     if ( _rangePointer < _bufferRangeStart )
         _rangePointer = _bufferRangeStart;
+
+    if ( _bufferRangeEnd <= _bufferRangeStart )
+        _bufferRangeEnd = std::min( _bufferRangeStart + 1, _sampleLength );
+
+    _bufferRangeLength = _bufferRangeEnd - _bufferRangeStart;
 }
 
 int SampleEvent::getBufferRangeEnd()
@@ -69,16 +74,11 @@ void SampleEvent::setBufferRangeEnd( int value )
 
     if ( _rangePointer > _bufferRangeEnd )
         _rangePointer = _bufferRangeEnd;
-}
 
-int SampleEvent::getBufferRangeLength()
-{
-    return _bufferRangeLength;
-}
+    if ( _bufferRangeStart >= _bufferRangeEnd )
+        _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
-void SampleEvent::setBufferRangeLength( int value )
-{
-    _bufferRangeLength = value;
+    _bufferRangeLength = _bufferRangeEnd - _bufferRangeStart;
 }
 
 int SampleEvent::getReadPointer()

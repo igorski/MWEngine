@@ -37,8 +37,6 @@ class SampleEvent : public BaseAudioEvent
         virtual void setBufferRangeStart( int value );
         virtual int getBufferRangeEnd();
         virtual void setBufferRangeEnd( int value );
-        virtual int getBufferRangeLength();
-        virtual void setBufferRangeLength( int value );
         virtual int getReadPointer();
 
         virtual AudioBuffer* synthesize( int aBufferLength );
