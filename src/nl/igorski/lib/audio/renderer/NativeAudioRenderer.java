@@ -375,18 +375,7 @@ public final class NativeAudioRenderer extends Thread
             // the remainder of this function body is actually blocked
             // as long as the native thread is running
 
-            // native thread halted
-
-            // this shouldn't occur, should it !?
-            if ( canRetry() )
-            {
-                Logger.log( "NativeAudioRenderer::ERROR > Java thread remains running while native layer " +
-                            "thread has stopped > restarting native thread" );
-                _openSLrunning = false; // forces restart of engine on next iteration
-            }
-            else {
-                dispose();
-            }
+            _openSLrunning = false;
 
             synchronized ( _pauseLock )
             {
