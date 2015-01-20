@@ -52,11 +52,11 @@ public final class NativeAudioRenderer extends Thread
 
     public static int TIME_SIG_BEAT_AMOUNT  = 4; // upper numeral in time signature (i.e. the "3" in 3/4)
     public static int TIME_SIG_BEAT_UNIT    = 4; // lower numeral in time signature (i.e. the "4" in 3/4)
-    private float _tempo;
+    private float     _tempo;
 
     // we CAN multiply the output the volume to decrease it, preventing rapidly distorting audio ( especially on filters )
     private static final float VOLUME_MULTIPLIER = 1;
-    private static float _volume = .85f /* assumed default level */ * VOLUME_MULTIPLIER;
+    private static float      _volume            = .85f /* assumed default level */ * VOLUME_MULTIPLIER;
 
     // we make these available across classes
 
@@ -74,14 +74,16 @@ public final class NativeAudioRenderer extends Thread
 
     private boolean _recordOutput = false;
 
+    /* native layer connection related */
+
     private boolean _openSLrunning   = false;
     private boolean _initialCreation = true;
-    private int _openSLRetry         = 0;
+    private int     _openSLRetry     = 0;
 
     /* threading related */
 
     protected boolean _isRunning = false;
-    protected Object _pauseLock;
+    protected Object  _pauseLock;
     protected boolean _paused;
 
     /**
@@ -338,6 +340,7 @@ public final class NativeAudioRenderer extends Thread
     public void reset()
     {
         NativeAudioEngine.reset();
+        _openSLRetry = 0;
     }
 
     // due to Object pooling we keep the thread alive by just pausing its execution, NOT actual cleanup
@@ -347,7 +350,6 @@ public final class NativeAudioRenderer extends Thread
         pause();
 
         _openSLrunning = false;
-        _openSLRetry   = 0;
 
         NativeAudioEngine.stop();   // halt the Native audio thread
 
@@ -376,12 +378,16 @@ public final class NativeAudioRenderer extends Thread
             // native thread halted
 
             // this shouldn't occur, should it !?
-            if ( ++_openSLRetry > 5 )
+            if ( canRetry() )
             {
-                // ERROR > Java thread remains running while native layer thread has stopped > RESTART native thread
-                _openSLrunning = false; // force restart of engine
-                _openSLRetry = 0;
+                Logger.log( "NativeAudioRenderer::ERROR > Java thread remains running while native layer " +
+                            "thread has stopped > restarting native thread" );
+                _openSLrunning = false; // forces restart of engine on next iteration
             }
+            else {
+                dispose();
+            }
+
             synchronized ( _pauseLock )
             {
                 while ( _paused )
@@ -403,6 +409,18 @@ public final class NativeAudioRenderer extends Thread
 
         // convert milliseconds to sample buffer size
         return ( int ) (( amountOfMinutes * 60000 ) * ( SAMPLE_RATE / 1000 ));
+    }
+
+    /**
+     * queries whether we can try to restart the engine
+     * in case an error has occurred, note this will also
+     * increment the amount of retries
+     *
+     * @return {boolean}
+     */
+    private boolean canRetry()
+    {
+        return ++_openSLRetry < 5;
     }
 
     /* native bridge methods */
@@ -470,13 +488,18 @@ public final class NativeAudioRenderer extends Thread
 
     public static void handleOpenSLError()
     {
-        Logger.log( "NativeAudioRenderer::error occurred during OpenSL initialization" );
+        Logger.log( "NativeAudioRenderer::ERROR > received Open SL error callback from native layer" );
 
         // re-initialize thread
-        INSTANCE.dispose();
-        INSTANCE._openSLrunning = false;
-        INSTANCE._openSLRetry = 0;
-        INSTANCE.createOutput( SAMPLE_RATE, BUFFER_SIZE );
-        INSTANCE.start();
+        if ( INSTANCE.canRetry() )
+        {
+            INSTANCE.dispose();
+            INSTANCE._openSLrunning = false;
+            INSTANCE.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+            INSTANCE.start();
+        }
+        else {
+            Logger.log( "exceeded maximum amount of retries. Cannot continue using NativeaudioRenderer" );
+        }
     }
 }
