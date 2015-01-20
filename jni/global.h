@@ -36,7 +36,7 @@
 
 namespace AudioEngineProps
 {
-    const int INPUT_CHANNELS   = 1;
+    const int INPUT_CHANNELS   = 0;      // requires android.permission.MODIFY_AUDIO_SETTINGS
     const int OUTPUT_CHANNELS  = 1;      // min 1 (mono)
     const bool CHANNEL_CACHING = false;  // whether to cache AudioChannels and their compatible modules in their ProcessingChain
     const bool EVENT_CACHING   = false;  // whether to cache AudioBuffers within non-sample based AudioEvents (consumes memory!)
