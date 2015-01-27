@@ -28,7 +28,7 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
     loopeable        = false;
     amountOfChannels = aAmountOfChannels;
     bufferSize       = aBufferSize;
-    _buffers         = new std::vector<SAMPLE_TYPE*>();//[ amountOfChannels ];
+    _buffers         = new std::vector<SAMPLE_TYPE*>( amountOfChannels );
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {
@@ -37,8 +37,7 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
         for ( int j = 0; j < bufferSize; ++j )
             buffer[ j ] = 0.0;
 
-        _buffers->push_back( buffer );
-        //(*_buffers)[ i ] = buffer;
+        _buffers->at( i ) = buffer;
     }
 }
 
@@ -48,6 +47,7 @@ AudioBuffer::~AudioBuffer()
     {
         delete _buffers->back(), _buffers->pop_back();
     }
+    delete _buffers;
 }
 
 /* public methods */
