@@ -41,6 +41,9 @@ public class MWEngineActivity extends Activity
     private float minFilterCutoff = 50.0f;
     private float maxFilterCutoff;
 
+    private int SAMPLE_RATE;
+    private int BUFFER_SIZE;
+
     /* public methods */
 
     /**
@@ -55,6 +58,122 @@ public class MWEngineActivity extends Activity
         Logger.setLogTag( "MWENGINE" ); // set the log tag for easy identification in logcat
 
         init();
+    }
+
+    private void init()
+    {
+        if ( _inited )
+            return;
+
+        Logger.log( "initing MWEngineActivity" );
+
+        // STEP 1 : preparing the native audio engine
+
+        _audioRenderer = new NativeAudioRenderer( getApplicationContext(), new StateObserver() );
+
+        // get the recommended buffer size for this device (NOTE : lower buffer sizes may
+        // provide lower latency, but make sure all buffer sizes are powers of two of
+        // the recommended buffer size (overcomes glitching in buffer callbacks )
+        // getting the correct sample rate upfront will omit having audio going past the system
+        // resampler reducing overall latency
+
+        BUFFER_SIZE = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
+        SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
+
+        _audioRenderer.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+        _audioRenderer.updateMeasures( 1 ); // we'll loop just a single measure
+        _audioRenderer.start(); // start render thread (NOTE : sequencer is still paused!)
+
+        final int outputChannels = 1;   // see global.h
+
+        // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
+        _lpfhpf    = new LPFHPFilter(( float )  NativeAudioRenderer.SAMPLE_RATE, 55, outputChannels );
+        _finalizer = new Finalizer  ( 2f, 500f, NativeAudioRenderer.SAMPLE_RATE,     outputChannels );
+
+        final ProcessingChain masterBus = _audioRenderer.getMasterBusProcessors();
+        masterBus.addProcessor( _finalizer );
+        masterBus.addProcessor( _lpfhpf );
+
+        // STEP 2 : let's create some instruments =D
+
+        _synth1 = new SynthInstrument();
+        _synth2 = new SynthInstrument();
+
+        _synth1.setWaveform( 2 );   // sawtooth (see global.h for enumerations)
+        _synth2.setWaveform(5);   // pulse width modulation
+
+        // a high decay for synth 1 (bubblier effect)
+        _synth1.getAdsr().setDecay( .9f );
+
+        // add a filter to synth 1
+        maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
+
+        _filter = new Filter( maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ), minFilterCutoff, maxFilterCutoff, 0f, 1 );
+        _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
+
+        // add a phaser to synth 1
+        _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );
+        _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
+
+        // add some funky delay to synth 2
+        _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
+        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
+
+        // STEP 3 : let's create some music !
+
+        _synth1Events = new Vector<SynthEvent>();   // remember : strong references!
+        _synth2Events = new Vector<SynthEvent>();   // remember : strong references!
+        _audioRenderer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM at 4/4 time
+
+        // bubbly sixteenth note bass line for synth 1
+
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
+        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
+
+        // off-beat minor seventh chord stabs for synth 2
+
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
+        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
+
+        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+
+        // STEP 4 : attach event handler to the UI elements (see main.xml layout)
+
+        final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
+        playPauseButton.setOnClickListener( new PlayClickHandler() );
+
+        final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
+        filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
+
+        final SeekBar decaySlider = ( SeekBar ) findViewById( R.id.SynthDecaySlider );
+        decaySlider.setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
+
+        final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
+        feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
+
+        final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
+        tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
+
+        _inited = true;
     }
 
     /* protected methods */
@@ -159,123 +278,48 @@ public class MWEngineActivity extends Activity
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    /* private methods */
+    /* state change message listener */
 
-    private void init()
+    private class StateObserver implements NativeAudioRenderer.IObserver
     {
-        if ( _inited )
-            return;
+        // cache the enumerations (from native layer) as integer Array
 
-        Logger.log( "initing MWEngineActivity" );
+        private final Notifications.ids[] _notificationEnums = Notifications.ids.values();
 
-        // STEP 1 : preparing the native audio engine
+        public void handleNotification( int aNotificationId )
+        {
+            switch ( _notificationEnums[ aNotificationId ])
+            {
+                case ERROR_HARDWARE_UNAVAILABLE:
 
-        _audioRenderer = new NativeAudioRenderer( getApplicationContext() );
+                    Logger.log( "NativeAudioRenderer::ERROR > received Open SL error callback from native layer" );
 
-        // get the recommended buffer size for this device (NOTE : lower buffer sizes may
-        // provide lower latency, but make sure all buffer sizes are powers of two of
-        // the recommended buffer size (overcomes glitching in buffer callbacks )
-        // getting the correct sample rate upfront will omit having audio going past the system
-        // resampler reducing overall latency
+                    // re-initialize thread
+                    if ( _audioRenderer.canRestartEngine() )
+                    {
+                        _audioRenderer.dispose();
+                        _audioRenderer.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+                        _audioRenderer.start();
+                    }
+                    else {
+                        Logger.log( "exceeded maximum amount of retries. Cannot continue using audio engine" );
+                    }
+                    break;
+            }
+        }
 
-        final int bufferSize = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
-        final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
-
-        _audioRenderer.createOutput( sampleRate, bufferSize );
-        _audioRenderer.updateMeasures( 1 ); // we'll loop just a single measure
-        _audioRenderer.start(); // start render thread (NOTE : sequencer is still paused!)
-
-        final int outputChannels = 1;   // see global.h
-
-        // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
-        _lpfhpf    = new LPFHPFilter(( float )  NativeAudioRenderer.SAMPLE_RATE, 55, outputChannels );
-        _finalizer = new Finalizer  ( 2f, 500f, NativeAudioRenderer.SAMPLE_RATE,     outputChannels );
-
-        final ProcessingChain masterBus = _audioRenderer.getMasterBusProcessors();
-        masterBus.addProcessor( _finalizer );
-        masterBus.addProcessor( _lpfhpf );
-
-        // STEP 2 : let's create some instruments =D
-
-        _synth1 = new SynthInstrument();
-        _synth2 = new SynthInstrument();
-
-        _synth1.setWaveform( 2 );   // sawtooth (see global.h for enumerations)
-        _synth2.setWaveform( 5 );   // pulse width modulation
-
-        // a high decay for synth 1 (bubblier effect)
-        _synth1.getAdsr().setDecay( .9f );
-
-        // add a filter to synth 1
-        maxFilterCutoff = ( float ) sampleRate / 8;
-
-        _filter = new Filter( maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ), minFilterCutoff, maxFilterCutoff, 0f, 1 );
-        _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
-
-        // add a phaser to synth 1
-        _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );
-        _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
-
-        // add some funky delay to synth 2
-        _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
-        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
-
-        // STEP 3 : let's create some music !
-
-        _synth1Events = new Vector<SynthEvent>();   // remember : strong references!
-        _synth2Events = new Vector<SynthEvent>();   // remember : strong references!
-        _audioRenderer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM at 4/4 time
-
-        // bubbly sixteenth note bass line for synth 1
-
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
-        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
-
-        // off-beat minor seventh chord stabs for synth 2
-
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
-        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
-
-        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
-
-        // STEP 4 : attach event handler to the UI elements (see main.xml layout)
-
-        final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
-        playPauseButton.setOnClickListener( new PlayClickHandler() );
-
-        final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
-        filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
-
-        final SeekBar decaySlider = ( SeekBar ) findViewById( R.id.SynthDecaySlider );
-        decaySlider.setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
-
-        final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
-        feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
-
-        final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
-        tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
-
-        _inited = true;
+        public void handleNotification( int aNotificationId, int aNotificationValue )
+        {
+            switch ( _notificationEnums[ aNotificationId ])
+            {
+                case SEQUENCER_POSITION_UPDATED:
+                    Logger.log( "sequencer position : " + aNotificationValue );
+                    break;
+            }
+        }
     }
+
+    /* private methods */
 
     /**
      * convenience method for creating a new SynthEvent (a "musical instruction") for a given

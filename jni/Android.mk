@@ -7,9 +7,9 @@ LOCAL_C_INCLUDES  := $(LOCAL_PATH)
 LOCAL_CFLAGS      := -O3
 LOCAL_CPPFLAGS    := $(LOCAL_CFLAGS)
 LOCAL_SRC_FILES   := \
-audioengine.cpp \
 java_interface_wrap.cpp \
-javabridge.cpp \
+audioengine.cpp \
+jni/javabridge.cpp \
 global.cpp \
 utilities/utils.cpp \
 opensl_io.c \
@@ -43,10 +43,11 @@ utilities/diskwriter.cpp \
 utilities/samplemanager.cpp \
 utilities/tablepool.cpp \
 utilities/wavewriter.cpp \
+messaging/notifier.cpp \
+messaging/observer.cpp \
 drumpattern.cpp \
 envelopefollower.cpp \
 lfo.cpp \
-observer.cpp \
 processingchain.cpp \
 ringbuffer.cpp \
 sequencer.cpp \

@@ -24,10 +24,7 @@ package nl.igorski.lib.audio.renderer;
 
 import android.content.Context;
 import android.os.Build;
-import nl.igorski.lib.audio.nativeaudio.BufferUtility;
-import nl.igorski.lib.audio.nativeaudio.NativeAudioEngine;
-import nl.igorski.lib.audio.nativeaudio.ProcessingChain;
-import nl.igorski.lib.audio.nativeaudio.SequencerAPI;
+import nl.igorski.lib.audio.nativeaudio.*;
 import nl.igorski.lib.debug.Logger;
 
 /**
@@ -39,7 +36,16 @@ import nl.igorski.lib.debug.Logger;
  */
 public final class NativeAudioRenderer extends Thread
 {
+    // interface to receive state change messages from the engine
+
+    public interface IObserver
+    {
+        void handleNotification( int aNotificationId );
+        void handleNotification( int aNotificationId, int aNotificationValue );
+    }
+
     private static NativeAudioRenderer INSTANCE;
+    private IObserver                  _observer;
 
     private SequencerAPI _api;       // hold reference (prevents garbage collection) to native sequencer providing audio
 
@@ -66,10 +72,6 @@ public final class NativeAudioRenderer extends Thread
     public static int BYTES_PER_TICK;
     public static int BAR_SUBDIVISIONS = 16;   // amount of steps per bar (defaults to sixteen step sequencing)
 
-    // handle sequencer positions
-
-    private int _stepPosition = 0;
-
     /* recording buffer specific */
 
     private boolean _recordOutput = false;
@@ -92,9 +94,11 @@ public final class NativeAudioRenderer extends Thread
      *
      * @param aContext   {Context} current application context
      */
-    public NativeAudioRenderer( Context aContext )
+    public NativeAudioRenderer( Context aContext, IObserver aObserver )
     {
         INSTANCE   = this;
+        _observer  = aObserver;
+
         _pauseLock = new Object();
         _paused    = false;
 
@@ -280,19 +284,6 @@ public final class NativeAudioRenderer extends Thread
         _api.setLoopPoint( aStartPosition, aEndPosition, BAR_SUBDIVISIONS );
     }
 
-    /**
-     * get the sequencers current position (is a step point
-     * between the sequencers loop range), we should never
-     * return buffer positions as it is the AudioRenderer's
-     * job to handle these
-     *
-     * @return {int}
-     */
-    public int getPosition()
-    {
-        return _stepPosition;
-    }
-
     @Override
     public void start()
     {
@@ -341,6 +332,18 @@ public final class NativeAudioRenderer extends Thread
     {
         NativeAudioEngine.reset();
         _openSLRetry = 0;
+    }
+
+    /**
+     * queries whether we can try to restart the engine
+     * in case an error has occurred, note this will also
+     * increment the amount of retries
+     *
+     * @return {boolean}
+     */
+    public boolean canRestartEngine()
+    {
+        return ++_openSLRetry < 5;
     }
 
     // due to Object pooling we keep the thread alive by just pausing its execution, NOT actual cleanup
@@ -400,24 +403,13 @@ public final class NativeAudioRenderer extends Thread
         return ( int ) (( amountOfMinutes * 60000 ) * ( SAMPLE_RATE / 1000 ));
     }
 
-    /**
-     * queries whether we can try to restart the engine
-     * in case an error has occurred, note this will also
-     * increment the amount of retries
-     *
-     * @return {boolean}
-     */
-    private boolean canRetry()
-    {
-        return ++_openSLRetry < 5;
-    }
-
     /* native bridge methods */
 
     /**
      * all these methods are static and provide a bridge from C++ back into Java
      * these methods are used by the native audio engine for updating states and
-     * requesting data
+     * requesting data, as such they are invoked from the native layer code and
+     * not through any Java call !
      *
      * Java method IDs need to be supplied to C++ in order te make the callbacks, you
      * can discover the IDs by building the Java project and running the following
@@ -433,7 +425,20 @@ public final class NativeAudioRenderer extends Thread
         Logger.log( "NativeAudioRenderer::connected to JNI bridge" );
     }
 
-    public static void handleTempoUpdated( float aNewTempo, int aBytesPerBeat, int aBytesPerTick, int aBytesPerBar, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+    public static void handleNotification( int aNotificationId )
+    {
+        if ( INSTANCE._observer != null )
+            INSTANCE._observer.handleNotification( aNotificationId );
+    }
+
+    public static void handleNotificationWithData( int aNotificationId, int aNotificationData )
+    {
+        if ( INSTANCE._observer != null )
+            INSTANCE._observer.handleNotification( aNotificationId, aNotificationData );
+    }
+
+    public static void handleTempoUpdated( float aNewTempo, int aBytesPerBeat, int aBytesPerTick,
+                                           int aBytesPerBar, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
     {
         INSTANCE._tempo = aNewTempo;
 
@@ -450,45 +455,6 @@ public final class NativeAudioRenderer extends Thread
             INSTANCE._initialCreation = false;
             INSTANCE.setLoopPoint( 0, BYTES_PER_BAR );
         }
-
         Logger.log( "NativeAudioRenderer::handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
-    }
-
-    public static void handleSequencerPositionUpdate( int aStepPosition )
-    {
-        INSTANCE._stepPosition = aStepPosition;
-
-        //Logger.log( "NativeAudioRenderer::handleSequencerPositionUpdate position > " + aStepPosition );
-    }
-
-    public static void handleRecordingUpdate( int aRecordedFileNum )
-    {
-        // invoked after engine has recorded the given buffer length
-
-        Logger.log( "NativeAudioRenderer::handleRecordingUpdate recorded next fragment with num > " + aRecordedFileNum );
-    }
-
-    public static void handleBounceComplete( int aIdentifier )
-    {
-        // invoked after bouncing of audio has completed
-
-        Logger.log( "NativeAudioRenderer::handleBounceComplete finished bouncing of audio for id > " + aIdentifier );
-    }
-
-    public static void handleOpenSLError()
-    {
-        Logger.log( "NativeAudioRenderer::ERROR > received Open SL error callback from native layer" );
-
-        // re-initialize thread
-        if ( INSTANCE.canRetry() )
-        {
-            INSTANCE.dispose();
-            INSTANCE._openSLrunning = false;
-            INSTANCE.createOutput( SAMPLE_RATE, BUFFER_SIZE );
-            INSTANCE.start();
-        }
-        else {
-            Logger.log( "exceeded maximum amount of retries. Cannot continue using NativeaudioRenderer" );
-        }
     }
 }

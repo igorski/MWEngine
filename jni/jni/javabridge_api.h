@@ -20,47 +20,33 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __UTILS_H_INCLUDED__
-#define __UTILS_H_INCLUDED__
+#ifndef JAVABRIDGE_API_H_INCLUDED
+#define JAVABRIDGE_API_H_INCLUDED
 
-#include <math.h>
-#include <sstream>
-#include "global.h"
+#include <jni/javabridge.h>
+#include "processingchain.h"
 
-/* convenience methods */
+/**
+ * javabridge_api.h is used to establish a two-way communication (together with javabridge.h)
+ * to allow the AudioEngine to send messages to the Java VM, if you do not need
+ * to send messages TO Java and are using the engine only in a native environment,
+ * simple omit adding this header file in the "native_audio_lib.i"-file which
+ * describes the SWIG-enabled classes for the JNI environment
+ */
 
-float scale( float value, float maxValue, float maxCompareValue );
-float randomFloat();
-float now_ms();
-
-/* volume util */
-
-namespace VolumeUtil
+/**
+ * these are the same methods as declared in the AudioEngine namespace, but
+ * re-declared so we can call them from Java without having to resort to
+ * go through a lot of trouble declaring the JNIEnv* en jobject arguments
+ * which otherwise wouldn't survive the SWIG wrapping...
+ */
+extern "C"
 {
-    extern float FACTOR1;
-    extern float FACTOR2;
-
-    extern float lin2log( float dLinear );
-    extern float log2lin( float dLogarithmic );
-}
-
-/* convenience methods */
-
-// numbers to string
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
- ( std::ostringstream() << std::dec << x ) ).str()
-
-/* convenience log methods */
-
-#define LOGTAG "MWENGINE"
-
-namespace DebugTool
-{
-    extern void log( char const* aMessage );
-    extern void log( char const* aMessage, char const* aValue );
-    extern void log( char const* aMessage, int aValue );
-    extern void log( char const* aMessage, float aValue );
-    extern void log( char const* aMessage, double aValue );
+    void init();
+    void start();
+    void stop();
+    void reset();
+    ProcessingChain* getMasterBusProcessors();
 }
 
 #endif

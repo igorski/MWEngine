@@ -24,7 +24,8 @@
 #include "audioengine.h"
 #include "wavewriter.h"
 #include "utils.h"
-#include "observer.h"
+#include <definitions/notifications.h>
+#include <messaging/notifier.h>
 
 namespace DiskWriter
 {
@@ -199,11 +200,10 @@ namespace DiskWriter
 
         flushOutput(); // free memory
 
+        // broadcast update, pass buffer identifier to identify last recording
         if ( broadcastUpdate )
-        {
-            // broadcast update via JNI, pass buffer identifier to identify last recording
-            Observer::broadcastRecordingUpdate( AudioEngine::recordingFileId );
-        }
+            Notifier::broadcast( Notifications::RECORDING_STATE_UPDATED, AudioEngine::recordingFileId );
+
         //void* result;
         //pthread_join( t1, &result );
     }

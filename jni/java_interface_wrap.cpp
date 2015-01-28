@@ -211,11 +211,12 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #define SWIG_contract_assert(nullreturn, expr, msg) if (!(expr)) {SWIG_JavaThrowException(jenv, SWIG_JavaIllegalArgumentException, msg); return nullreturn; } else
 
 
-#include "javabridge_api.h"
+#include "jni/javabridge_api.h"
 #include "sequencer_api.h"
 #include "adsr.h"
 #include "arpeggiator.h"
 #include "audiochannel.h"
+#include "definitions/notifications.h"
 #include "events/basesynthevent.h"
 #include "events/sampleevent.h"
 #include "events/drumevent.h"
@@ -1457,6 +1458,28 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJ
   arg2 = *(AudioBuffer **)&jarg2; 
   arg3 = (int)jarg3; 
   (arg1)->writeCache(arg2,arg3);
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_new_1Notifications(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  Notifications *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (Notifications *)new Notifications();
+  *(Notifications **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_NativeAudioEngineJNI_delete_1Notifications(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Notifications *arg1 = (Notifications *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(Notifications **)&jarg1; 
+  delete arg1;
 }
 
 

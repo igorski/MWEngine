@@ -4,7 +4,7 @@
 export ANDROID_NDK_ROOT=/Library/AndroidNDK
 
 # the input folders for the C++ sources
-INPUT="-I./jni -I./jni/events -I./jni/processors"
+INPUT="-I./jni"
 
 rm -rf src/nl/igorski/lib/audio/nativeaudio
 mkdir -p src/nl/igorski/lib/audio/nativeaudio

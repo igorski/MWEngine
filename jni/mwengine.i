@@ -7,11 +7,12 @@
 %module NativeAudioEngine
 
 %{
-#include "javabridge_api.h"
+#include "jni/javabridge_api.h"
 #include "sequencer_api.h"
 #include "adsr.h"
 #include "arpeggiator.h"
 #include "audiochannel.h"
+#include "definitions/notifications.h"
 #include "events/basesynthevent.h"
 #include "events/sampleevent.h"
 #include "events/drumevent.h"
@@ -55,6 +56,7 @@
 %}
 
 // JNI specific wrappers for passing data types from Java to C++
+%include "enums.swg"               // will convert enumerations to Java enums
 %include carrays.i                 // enables passing of arrays via JNI
 %array_functions(int, int_array)   // enables int arrays
 %include "std_string.i"            // enables using Java Strings as std::string
@@ -62,11 +64,12 @@
 
 // MWEngine library contents
 
-%include "javabridge_api.h"
+%include "jni/javabridge_api.h"
 %include "sequencer_api.h"
 %include "adsr.h"
 %include "arpeggiator.h"
 %include "audiochannel.h"
+%include "definitions/notifications.h"
 %include "events/baseaudioevent.h"
 %include "events/basecacheableaudioevent.h"
 %include "events/basesynthevent.h"

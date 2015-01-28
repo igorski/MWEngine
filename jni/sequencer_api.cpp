@@ -23,6 +23,8 @@
 #include "sequencer_api.h"
 #include "sequencer.h"
 #include "audioengine.h"
+#include <definitions/notifications.h>
+#include <messaging/notifier.h>
 #include <utilities/utils.h>
 #include <utilities/diskwriter.h>
 
@@ -122,7 +124,7 @@ void SequencerAPI::rewind()
     AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
     AudioEngine::stepPosition   = AudioEngine::min_step_position;
 
-    Observer::broadcastStepPosition();
+    Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED );
 }
 
 /**

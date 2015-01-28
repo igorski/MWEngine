@@ -26,11 +26,19 @@
 #include "processingchain.h"
 #include "sequencer.h"
 #include "opensl_io.h"
-#include "observer.h"
+#include <definitions/notifications.h>
+#include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
 #include <utilities/diskwriter.h>
 #include <utilities/utils.h>
 #include <vector>
+
+#ifdef USE_JNI
+
+#include <jni.h>
+#include <jni/javabridge.h>
+
+#endif
 
 namespace AudioEngine
 {
@@ -89,7 +97,7 @@ namespace AudioEngine
         // hardware unavailable ? halt thread, trigger JNI callback for error handler
         if ( p == NULL )
         {
-            Observer::handleHardwareUnavailable();
+            Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
             return;
         }
         // audio hardware available, start render thread
@@ -138,7 +146,7 @@ namespace AudioEngine
                     DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, false );
 
                     // broadcast update via JNI, pass buffer identifier name to identify last recording
-                    Observer::handleBounceComplete( 1 );
+                    Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
                     thread = 0; // stop thread, halts rendering
                     break;
                 }
@@ -408,7 +416,29 @@ namespace AudioEngine
 
         if ( broadcastUpdate )
         {
-            Observer::broadcastTempoUpdate();
+#ifdef USE_JNI
+
+            // when using the engine through JNI with Java, we don't broadcast using
+            // the Notifier, but instantly invoke a callback directly on the bridge
+            // as it allows us to update multiple parameters at once
+
+            jmethodID native_method_id = JavaBridge::getJavaMethod( JavaAPIs::TEMPO_UPDATED );
+
+            if ( native_method_id != 0 )
+            {
+                JNIEnv* env = JavaBridge::getEnvironment();
+
+                if ( env != 0 )
+                {
+                    env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id,
+                                               AudioEngine::tempo, AudioEngine::bytes_per_beat,
+                                               AudioEngine::bytes_per_tick, AudioEngine::bytes_per_bar,
+                                               AudioEngine::time_sig_beat_amount, AudioEngine::time_sig_beat_unit );
+                }
+            }
+#else
+            Notifier::broadcast( Notifications::SEQUENCER_TEMPO_UPDATED );
+#endif
         }
     }
 
@@ -420,7 +450,7 @@ namespace AudioEngine
         if ( stepPosition >= max_step_position )
             stepPosition = min_step_position;
 
-        Observer::broadcastStepPosition();
+        Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, stepPosition );
     }
 
     bool writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )
@@ -436,15 +466,11 @@ namespace AudioEngine
 }
 
 /**
- * this is only in use if javajni.h is included in the SWIG .i-definitions file
- * it provides a proxied hook into the methods of the AudioEngine that allow
- * us to grab a reference to the VM and Java object, so we can send messages
- * to it via the Java Bridge
+ * the remainder is only in use when USE_JNI is set to true to allow using
+ * the engine from Java. These method provide a proxied hook into the
+ * public methods of the AudioEngine
  */
 #ifdef USE_JNI
-
-#include <jni.h>
-#include "javabridge.h"
 
 /**
  * registers the calling Object and its environment

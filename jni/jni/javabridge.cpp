@@ -20,8 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "javabridge.h"
-#include "audioengine.h"
+#include <jni/javabridge.h>
 #include <string.h>
 
 static JavaVM*  _vm    = 0;
@@ -117,15 +116,6 @@ jclass JavaBridge::getJavaInterface()
         return 0;
 
     return _class; // we have a cached reference!
-
-    /*
-    jclass javaClass = env->FindClass( JAVA_CLASS );
-
-    if ( javaClass != 0 )
-        return javaClass;
-    else
-        return 0;
-    */
 }
 
 JNIEnv* JavaBridge::getEnvironment()
@@ -137,10 +127,4 @@ JNIEnv* JavaBridge::getEnvironment()
         return env;
     else
         return 0;
-    /*
-    JNIEnv* env;
-    ( getVM() )->GetEnv(( void** ) &env, JNI_VERSION_1_6 );
-
-    return env;
-    */
 }

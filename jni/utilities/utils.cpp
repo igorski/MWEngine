@@ -89,7 +89,7 @@ namespace DebugTool
      */
     void log( char const* aMessage )
     {
-        __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, "%s", aMessage );
+        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, "%s", aMessage );
     }
 
     /**
@@ -100,7 +100,7 @@ namespace DebugTool
      */
     void log( char const* aMessage, char const* aValue )
     {
-        __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, aMessage, aValue );
+        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
     }
     /**
      * same as above, but traces contents of an int
@@ -110,7 +110,7 @@ namespace DebugTool
      */
     void log( char const* aMessage, int aValue )
     {
-        __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, aMessage, aValue );
+        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
     }
 
     /**
@@ -121,7 +121,7 @@ namespace DebugTool
      */
     void log( char const* aMessage, float aValue )
     {
-        __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, aMessage, aValue );
+        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
     }
 
     /**
@@ -132,6 +132,6 @@ namespace DebugTool
      */
     void log( char const* aMessage, double aValue )
     {
-        __android_log_print( ANDROID_LOG_VERBOSE, APPNAME, aMessage, aValue );
+        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
     }
 }
