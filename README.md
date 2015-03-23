@@ -20,9 +20,13 @@ out-of-the-box possibilities are:
 ### SWIG / What about Java ?
 
 Though the library is written in C++ (and can be used solely within this context), the library is built using JNI
-(Java Native Interface) allowing its methods to be called from Java while still operating in a native layer outside of
-the Dalvik (or ART) VM. In other words : high performance of the engine is ensured by the native layer code execution, while
+(Java Native Interface) allowing its methods to be exposed to Java while still executing in a native layer outside of
+the Dalvik/ART VM. In other words : high performance of the engine is ensured by the native layer operations, while
 ease of development is ensured by keeping application logic / UI within the realm of the Android Java SDK.
+
+If you intend to use the MWEngine for sample based playback / use the built-in synthesizer and processors you will not need to write any additional C++ code. If you however intend to create your own processors or synthesis routines (which is fun!), you must write them in C++, but can rely on SWIG for making them usable in Java.
+
+#### A note on garbage collection and SWIG
 
 It is important to note that when a Java object finalizes (i.e. all its references are broken and is garbage collected), the
 destructors of the native objects are invoked, which can lead to unpredictable results if you happen to overlook this!
@@ -31,10 +35,9 @@ strong references during their lifecycle.
 
 ### Build instructions
 
-The makefile (/jni/Android.mk) has been written to build the library using the Android NDK (Native Development Kit) in conjunction with SWIG.
+The makefile (_/jni/Android.mk_) has been written to build the library by default using SWIG, making it available to both C++- and Java codebases. The SWIG interface file (_jni/mwengine.i_) includes all the engine's actors that should be exposed to Java.
 
-Those of a Unix-bent can immediately run the _build.sh_-file in the /src-folder, just make sure ANDROID_NDK_ROOT points to the correct installation
-directory on your system!
+Those of a Unix-bent can immediately run the _build.sh_-file in the /src-folder, just make sure ANDROID_NDK_ROOT points to the correct installation directory on your system!
 
 For the unfortunate on Windows, adjusting the shell script to a .BAT-file shouldn't be too troublesome.
 
