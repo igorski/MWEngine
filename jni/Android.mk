@@ -7,9 +7,10 @@ LOCAL_C_INCLUDES  := $(LOCAL_PATH)
 LOCAL_CFLAGS      := -O3
 LOCAL_CPPFLAGS    := $(LOCAL_CFLAGS)
 LOCAL_SRC_FILES   := \
-java_interface_wrap.cpp \
-audioengine.cpp \
+jni/java_interface_wrap.cpp \
 jni/javabridge.cpp \
+jni/javautilities.cpp \
+audioengine.cpp \
 global.cpp \
 utilities/utils.cpp \
 opensl_io.c \
