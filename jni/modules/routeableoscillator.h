@@ -20,57 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "lfo.h"
-#include "global.h"
-#include "audioengine.h"
-#include <utilities/utils.h>
-#include <utilities/tablepool.h>
-#include <math.h>
+#ifndef __ROUTEABLEOSCILLATOR_H_INCLUDED__
+#define __ROUTEABLEOSCILLATOR_H_INCLUDED__
 
-// constructor / destructor
+#include <modules/lfo.h>
+#include "processors/baseprocessor.h"
 
-LFO::LFO()
+class RouteableOscillator
 {
-    _wave  = WaveForms::SINE;
-    _rate  = MIN_LFO_RATE;
-    _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
-}
+    public:
+        RouteableOscillator();
+        ~RouteableOscillator();
+        int destination;
+        float speed;
+        int wave;
 
-LFO::~LFO()
-{
-    delete _table;
-}
+        void linkOscillator();
+        void unlinkOscillator();
+        bool isLinked();
+        LFO *getLinkedOscillator();
 
-/* public methods */
+    private:
+        bool _hasOscillator;
+        LFO* _oscillator;
+};
 
-float LFO::getRate()
-{
-    return _rate;
-}
-
-void LFO::setRate( float value )
-{
-    _rate = value;
-    _table->setFrequency( _rate );
-}
-
-int LFO::getWave()
-{
-    return _wave;
-}
-
-void LFO::setWave( int value )
-{
-    _wave = value;
-    generate();
-}
-
-void LFO::generate()
-{
-    TablePool::getTable( _table, _wave );
-}
-
-WaveTable* LFO::getTable()
-{
-    return _table;
-}
+#endif

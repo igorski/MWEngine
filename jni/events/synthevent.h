@@ -24,8 +24,8 @@
 #define __SYNTHEVENT_H_INCLUDED__
 
 #include "basesynthevent.h"
-#include "../arpeggiator.h"
 #include "../ringbuffer.h"
+#include <modules/arpeggiator.h>
 
 /**
  * SynthEvent is an example of a BaseSynthEvent that uses

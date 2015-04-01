@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,50 +20,21 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "routeableoscillator.h"
-#include "global.h"
-#include <utilities/utils.h>
+#ifndef __WAVEFORMS_H_INCLUDED__
+#define __WAVEFORMS_H_INCLUDED__
 
-// constructor
-
-RouteableOscillator::RouteableOscillator()
+class WaveForms
 {
-    wave           = WaveForms::SINE;
-    speed          = 5;  // in Hz
-    destination    = -1; // is enumeration
+    public:
+        enum types {
+            SINE,
+            TRIANGLE,
+            SAWTOOTH,
+            SQUARE,
+            NOISE,
+            PWM,
+            KARPLUS_STRONG
+        };
+};
 
-    _oscillator    = new LFO(); // pre-create > Object pooling
-    _hasOscillator = false;
-}
-
-RouteableOscillator::~RouteableOscillator()
-{
-    delete _oscillator;
-}
-
-/* public methods */
-
-/**
- * as we're now using Object pooing and the Routeable Oscillator
- * (currently) has no switchable targets, we can use the link- and
- * unlink methods to toggle the oscillated effect on and off
- */
-void RouteableOscillator::linkOscillator()
-{
-    _hasOscillator = true;
-}
-
-void RouteableOscillator::unlinkOscillator()
-{
-    _hasOscillator = false;
-}
-
-bool RouteableOscillator::isLinked()
-{
-    return _hasOscillator;
-}
-
-LFO* RouteableOscillator::getLinkedOscillator()
-{
-    return _oscillator;
-}
+#endif

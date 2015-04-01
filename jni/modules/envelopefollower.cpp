@@ -20,29 +20,27 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ROUTEABLEOSCILLATOR_H_INCLUDED__
-#define __ROUTEABLEOSCILLATOR_H_INCLUDED__
+#include <modules/envelopefollower.h>
+#include <cmath>
 
-#include "lfo.h"
-#include "processors/baseprocessor.h"
+// constructor
 
-class RouteableOscillator
+EnvelopeFollower::EnvelopeFollower( float maxGain, float attackMs, float releaseMs, int sampleRate )
 {
-    public:
-        RouteableOscillator();
-        ~RouteableOscillator();
-        int destination;
-        float speed;
-        int wave;
+    envelope = 0.0;
 
-        void linkOscillator();
-        void unlinkOscillator();
-        bool isLinked();
-        LFO *getLinkedOscillator();
+    _attack  = pow( 0.01, maxGain / ( attackMs  * sampleRate / 1000 ));
+    _release = pow( 0.01, maxGain / ( releaseMs * sampleRate / 1000 ));
+}
 
-    private:
-        bool _hasOscillator;
-        LFO* _oscillator;
-};
+/* public methods */
 
-#endif
+void EnvelopeFollower::process( SAMPLE_TYPE src )
+{
+    SAMPLE_TYPE v = std::abs( src );
+
+    if ( v > envelope )
+        envelope = _attack * ( envelope - v ) + v;
+    else
+        envelope = _release * ( envelope - v ) + v;
+}

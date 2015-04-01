@@ -20,27 +20,58 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "envelopefollower.h"
-#include <cmath>
+#include <modules/lfo.h>
+#include "global.h"
+#include "audioengine.h"
+#include <definitions/waveforms.h>
+#include <utilities/utils.h>
+#include <utilities/tablepool.h>
+#include <math.h>
 
-// constructor
+// constructor / destructor
 
-EnvelopeFollower::EnvelopeFollower( float maxGain, float attackMs, float releaseMs, int sampleRate )
+LFO::LFO()
 {
-    envelope = 0.0;
+    _wave  = WaveForms::SINE;
+    _rate  = MIN_LFO_RATE;
+    _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+}
 
-    _attack  = pow( 0.01, maxGain / ( attackMs  * sampleRate / 1000 ));
-    _release = pow( 0.01, maxGain / ( releaseMs * sampleRate / 1000 ));
+LFO::~LFO()
+{
+    delete _table;
 }
 
 /* public methods */
 
-void EnvelopeFollower::process( SAMPLE_TYPE src )
+float LFO::getRate()
 {
-    SAMPLE_TYPE v = std::abs( src );
+    return _rate;
+}
 
-    if ( v > envelope )
-        envelope = _attack * ( envelope - v ) + v;
-    else
-        envelope = _release * ( envelope - v ) + v;
+void LFO::setRate( float value )
+{
+    _rate = value;
+    _table->setFrequency( _rate );
+}
+
+int LFO::getWave()
+{
+    return _wave;
+}
+
+void LFO::setWave( int value )
+{
+    _wave = value;
+    generate();
+}
+
+void LFO::generate()
+{
+    TablePool::getTable( _table, _wave );
+}
+
+WaveTable* LFO::getTable()
+{
+    return _table;
 }

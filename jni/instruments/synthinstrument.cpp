@@ -23,7 +23,8 @@
 #include "synthinstrument.h"
 #include "../global.h"
 #include "../sequencer.h"
-#include "../utilities/utils.h"
+#include <definitions/waveforms.h>
+#include <utilities/utils.h>
 #include <events/basesynthevent.h>
 #include <cstddef>
 
@@ -42,6 +43,13 @@ SynthInstrument::~SynthInstrument()
 
     delete adsr;
     delete rOsc;
+
+    while ( audioEvents->size() > 0 )
+        delete audioEvents->back();
+
+    while ( liveAudioEvents->size() > 0 )
+        delete liveAudioEvents->back();
+
     delete audioEvents;
     delete liveAudioEvents;
 }

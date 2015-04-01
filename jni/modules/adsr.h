@@ -68,15 +68,20 @@ class ADSR
         void setSustain( float aValue );
         void setRelease( float aValue );
 
+        SAMPLE_TYPE getLastEnvelope();
+        void setLastEnvelope( SAMPLE_TYPE lastEnvelope );
+
         /**
          * applies all envelopes onto given AudioBuffer* inputBuffer
          * in case the given buffer represents a smaller range of
          * a larger buffer (of an AudioEvent for instance), int eventOffset
          * describes at what offset of the total buffer/event the given
          * buffer starts
+         *
+         * returns last envelope value
          */
-        void apply( AudioBuffer* inputBuffer );
-        void apply( AudioBuffer* inputBuffer, int eventOffset );
+        SAMPLE_TYPE apply( AudioBuffer* inputBuffer );
+        SAMPLE_TYPE apply( AudioBuffer* inputBuffer, int eventOffset );
 
     protected:
 

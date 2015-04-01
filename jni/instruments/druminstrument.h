@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,9 +25,9 @@
 
 #include "baseinstrument.h"
 #include "../audiochannel.h"
-#include "../routeableoscillator.h"
 #include "../drumpattern.h"
 #include <events/baseaudioevent.h>
+#include <modules/routeableoscillator.h>
 #include <vector>
 
 class DrumInstrument : public BaseInstrument
@@ -37,12 +37,14 @@ class DrumInstrument : public BaseInstrument
         ~DrumInstrument();
 
         std::vector<BaseAudioEvent*>* getEvents();
+        std::vector<BaseAudioEvent*>* getLiveEvents();
         std::vector<BaseAudioEvent*>* getEventsForPattern( int patternNum );
         std::vector<BaseAudioEvent*>* getEventsForActivePattern();
 
         int drumTimbre;
 
-        std::vector<DrumPattern*> *drumPatterns;
+        std::vector<DrumPattern*>*    drumPatterns;
+        std::vector<BaseAudioEvent*>* liveAudioEvents;
         int activeDrumPattern;
 
         RouteableOscillator *rOsc;
@@ -51,6 +53,7 @@ class DrumInstrument : public BaseInstrument
         // note we don't override 'removeEvents' as DrumPatterns manage the events
 
         bool hasEvents();
+        bool hasLiveEvents();
         void updateEvents();
         void clearEvents();
         bool removeEvent( BaseAudioEvent* aEvent );

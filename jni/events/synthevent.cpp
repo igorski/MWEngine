@@ -24,8 +24,9 @@
 #include "../audioengine.h"
 #include "../sequencer.h"
 #include "../global.h"
-#include "../utilities/utils.h"
-#include "../utilities/bufferutility.h"
+#include <definitions/waveforms.h>
+#include <utilities/utils.h>
+#include <utilities/bufferutility.h>
 #include <cmath>
 
 /* constructor / destructor */

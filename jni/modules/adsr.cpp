@@ -20,7 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "adsr.h"
+#include <modules/adsr.h>
 #include <utilities/utils.h>
 
 /* constructors / destructor */
@@ -99,16 +99,26 @@ void ADSR::setRelease( float aValue )
     setEnvelopesInternal( getAttack(), getDecay(), getSustain(), aValue );
 }
 
-void ADSR::apply( AudioBuffer* inputBuffer )
+SAMPLE_TYPE ADSR::getLastEnvelope()
 {
-    apply( inputBuffer, 0 );
+    return _lastEnvelope;
 }
 
-void ADSR::apply( AudioBuffer* inputBuffer, int eventOffset )
+void ADSR::setLastEnvelope( SAMPLE_TYPE aEnvelope )
+{
+    _lastEnvelope = aEnvelope;
+}
+
+SAMPLE_TYPE ADSR::apply( AudioBuffer* inputBuffer )
+{
+    return apply( inputBuffer, 0 );
+}
+
+SAMPLE_TYPE ADSR::apply( AudioBuffer* inputBuffer, int eventOffset )
 {
     // nothing to do
     if ( eventOffset > _bufferLength && _lastEnvelope == MAX_PHASE )
-        return;
+        return _lastEnvelope;
 
     int bufferSize     = inputBuffer->bufferSize;
     int eventEndOffset = eventOffset + bufferSize;
@@ -130,7 +140,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, int eventOffset )
         if ( _lastEnvelope < MAX_PHASE )
             inputBuffer->adjustBufferVolumes( _lastEnvelope );
 
-        return;
+        return _lastEnvelope;
     }
 
     for ( int cn = 0, ca = inputBuffer->amountOfChannels; cn < ca; ++cn )
@@ -161,6 +171,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, int eventOffset )
             targetBuffer[ i ] *= _lastEnvelope;
         }
     }
+    return _lastEnvelope;
 }
 
 ADSR* ADSR::clone()

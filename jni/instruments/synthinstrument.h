@@ -24,11 +24,11 @@
 #define __SYNTHINSTRUMENT_H_INCLUDED__
 
 #include "baseinstrument.h"
-#include "../adsr.h"
-#include "../arpeggiator.h"
 #include "../audiochannel.h"
-#include "../routeableoscillator.h"
 #include <events/baseaudioevent.h>
+#include <modules/adsr.h>
+#include <modules/arpeggiator.h>
+#include <modules/routeableoscillator.h>
 
 class SynthInstrument : public BaseInstrument
 {

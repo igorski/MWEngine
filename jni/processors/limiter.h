@@ -24,8 +24,8 @@
 #define __LIMITER_H_INCLUDED__
 
 #include "baseprocessor.h"
-#include "../envelopefollower.h"
 #include "../audiobuffer.h"
+#include <modules/envelopefollower.h>
 #include <vector>
 
 class Limiter : public BaseProcessor

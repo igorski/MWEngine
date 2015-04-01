@@ -14,16 +14,19 @@ audioengine.cpp \
 global.cpp \
 utilities/utils.cpp \
 opensl_io.c \
-adsr.cpp \
 audiobuffer.cpp \
 audiochannel.cpp \
-arpeggiator.cpp \
 events/baseaudioevent.cpp \
 events/basecacheableaudioevent.cpp \
 events/basesynthevent.cpp \
 events/drumevent.cpp \
 events/sampleevent.cpp \
 events/synthevent.cpp \
+modules/adsr.cpp \
+modules/arpeggiator.cpp \
+modules/envelopefollower.cpp \
+modules/lfo.cpp \
+modules/routeableoscillator.cpp \
 processors/baseprocessor.cpp \
 processors/bitcrusher.cpp \
 processors/dcoffsetfilter.cpp \
@@ -47,8 +50,6 @@ utilities/wavewriter.cpp \
 messaging/notifier.cpp \
 messaging/observer.cpp \
 drumpattern.cpp \
-envelopefollower.cpp \
-lfo.cpp \
 processingchain.cpp \
 ringbuffer.cpp \
 sequencer.cpp \
@@ -58,7 +59,6 @@ instruments/baseinstrument.cpp \
 instruments/druminstrument.cpp \
 instruments/sampledinstrument.cpp \
 instruments/synthinstrument.cpp \
-routeableoscillator.cpp \
 
 LOCAL_LDLIBS := -llog -lOpenSLES
 

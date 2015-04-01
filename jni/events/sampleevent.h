@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -49,7 +49,7 @@ class SampleEvent : public BaseAudioEvent
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
         bool getBufferForRange( AudioBuffer* buffer, int readPos );
-        void playNow(); // enable the event and set it at the current sequencer position (auditioning purposes)
+        void play(); // enable the event and play it back immediately (for auditioning purposes)
 
     protected:
 
@@ -63,7 +63,9 @@ class SampleEvent : public BaseAudioEvent
         int _bufferRangeEnd;
         int _bufferRangeLength;
 
-        BaseInstrument* _instrument;    // the SampledInstrument this event belongs to
+        BaseInstrument* _instrument;    // the BaseInstrument this event belongs to
+        AudioBuffer*    _liveBuffer;
+        int _lastLiveBufferPosition;
 
         // removal of AudioEvents must occur outside of the
         // cache loop, by activating this boolean we're queuing
@@ -72,6 +74,7 @@ class SampleEvent : public BaseAudioEvent
         bool _addedToSequencer;  // whether this event is part of a sequence
 
         void init( BaseInstrument* aInstrument );
+        void removeLiveEvent();
 };
 
 #endif

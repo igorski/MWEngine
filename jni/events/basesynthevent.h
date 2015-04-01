@@ -24,8 +24,8 @@
 #define __BASESYNTHEVENT_H_INCLUDED__
 
 #include "basecacheableaudioevent.h"
-#include "../adsr.h"
 #include "../global.h"
+#include <modules/adsr.h>
 #include <instruments/synthinstrument.h>
 
 /**

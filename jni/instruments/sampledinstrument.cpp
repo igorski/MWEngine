@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,6 +33,7 @@ SampledInstrument::SampledInstrument()
     volume          = 1;
     audioChannel    = new AudioChannel( volume );
     audioEvents     = new std::vector<BaseAudioEvent*>();
+    liveAudioEvents = new std::vector<BaseAudioEvent*>();
 
     registerInSequencer();                     // register instrument inside the sequencer
     index = sequencer::instruments.size() - 1; // the index this instrument is registered at in the sequencer
@@ -42,8 +43,14 @@ SampledInstrument::~SampledInstrument()
 {
     DebugTool::log( "SampledInstrument::DESTRUCT" );
 
-    audioEvents->clear();
+    while ( audioEvents->size() > 0 )
+        delete audioEvents->back();
+
+    while ( liveAudioEvents->size() > 0 )
+        delete liveAudioEvents->back();
+
     delete audioEvents;
+    delete liveAudioEvents;
 }
 
 /* public methods */
@@ -56,4 +63,14 @@ bool SampledInstrument::hasEvents()
 std::vector<BaseAudioEvent*>* SampledInstrument::getEvents()
 {
     return audioEvents;
+}
+
+bool SampledInstrument::hasLiveEvents()
+{
+    return liveAudioEvents->size() > 0;
+}
+
+std::vector<BaseAudioEvent*>* SampledInstrument::getLiveEvents()
+{
+    return liveAudioEvents;
 }

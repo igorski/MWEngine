@@ -20,7 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "arpeggiator.h"
+#include <modules/arpeggiator.h>
 #include <utilities/utils.h>
 #include <cmath>
 
@@ -85,6 +85,11 @@ int Arpeggiator::getStep()
     return _step;
 }
 
+void Arpeggiator::setStep( int value )
+{
+    _step = value;
+}
+
 bool Arpeggiator::peek()
 {
     bool stepped = false;
@@ -95,7 +100,7 @@ bool Arpeggiator::peek()
         _bufferPosition = 0;
 
         // increment step, but keep step in range
-        if ( ++_step == _stepAmount )
+        if ( ++_step >= _stepAmount )
             _step = 0;
 
         stepped = true;
@@ -123,6 +128,16 @@ float Arpeggiator::getPitchForStep( int step, float basePitch )
             pitch *= 0.9439;
     }
     return pitch;
+}
+
+int Arpeggiator::getBufferPosition()
+{
+    return _bufferPosition;
+}
+
+void Arpeggiator::setBufferPosition( int position )
+{
+    _bufferPosition = position;
 }
 
 void Arpeggiator::cloneProperties( Arpeggiator* source )

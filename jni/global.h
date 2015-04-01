@@ -63,18 +63,4 @@ const SAMPLE_TYPE TWO_PI = PI * 2.0;
 
 extern void *print_message( void* );
 
-// enumerations
-
-class WaveForms
-{
-    public:
-        enum WaveFormTypes { SINE,
-                             TRIANGLE,
-                             SAWTOOTH,
-                             SQUARE,
-                             NOISE,
-                             PWM,
-                             KARPLUS_STRONG };
-};
-
 #endif

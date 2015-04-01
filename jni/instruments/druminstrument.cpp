@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -38,6 +38,7 @@ DrumInstrument::DrumInstrument()
 
     activeDrumPattern = 0;
     drumPatterns      = new std::vector<DrumPattern*>();
+    liveAudioEvents   = new std::vector<BaseAudioEvent*>();
 
     registerInSequencer(); // auto-register instrument inside the sequencer
 }
@@ -48,6 +49,11 @@ DrumInstrument::~DrumInstrument()
 
     delete rOsc;
     delete[] drumPatterns;
+
+    while ( liveAudioEvents->size() > 0 )
+        delete liveAudioEvents->back();
+
+    delete liveAudioEvents;
 }
 
 /* public methods */
@@ -58,6 +64,16 @@ bool DrumInstrument::hasEvents()
         return getEventsForActivePattern()->size() > 0;
 
     return false;
+}
+
+bool DrumInstrument::hasLiveEvents()
+{
+    return liveAudioEvents->size() > 0;
+}
+
+std::vector<BaseAudioEvent*>* DrumInstrument::getLiveEvents()
+{
+    return liveAudioEvents;
 }
 
 void DrumInstrument::updateEvents()

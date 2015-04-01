@@ -20,44 +20,51 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ARPEGGIATOR_H_INCLUDED__
-#define __ARPEGGIATOR_H_INCLUDED__
+#include "global.h"
+#include <definitions/waveforms.h>
+#include <modules/routeableoscillator.h>
+#include <utilities/utils.h>
 
-class Arpeggiator
+// constructor
+
+RouteableOscillator::RouteableOscillator()
 {
-    public:
-        Arpeggiator();
-        ~Arpeggiator();
+    wave           = WaveForms::SINE;
+    speed          = 5;  // in Hz
+    destination    = -1; // is enumeration
 
-        // the amount of steps (i.e. notes) the arpeggio will cycle through
-        // the size defines the buffer length for a single step (i.e. "speed"),
-        // while the shift defines the semi-note pitch shift
+    _oscillator    = new LFO(); // pre-create > Object pooling
+    _hasOscillator = false;
+}
 
-        static const int MAX_STEPS = 16;
+RouteableOscillator::~RouteableOscillator()
+{
+    delete _oscillator;
+}
 
-        int getStepSize();
-        void setStepSize( int value );
-        int getAmountOfSteps();
-        void setAmountOfSteps( int value );
-        int getShiftForStep( int step );
-        void setShiftForStep( int step, int shift );
-        int getStep();
+/* public methods */
 
-        // increment the current buffer position, will return
-        // a boolean indicating whether the arpeggiator has moved to the next step
-        bool peek();
+/**
+ * as we're now using Object pooing and the Routeable Oscillator
+ * (currently) has no switchable targets, we can use the link- and
+ * unlink methods to toggle the oscillated effect on and off
+ */
+void RouteableOscillator::linkOscillator()
+{
+    _hasOscillator = true;
+}
 
-        float getPitchForStep( int step, float basePitch );
+void RouteableOscillator::unlinkOscillator()
+{
+    _hasOscillator = false;
+}
 
-        void cloneProperties( Arpeggiator* source );
-        Arpeggiator* clone();
+bool RouteableOscillator::isLinked()
+{
+    return _hasOscillator;
+}
 
-    private:
-        int _step;
-        int _stepAmount;
-        int _stepSize;
-        int _stepShifts[ MAX_STEPS ];
-        int _bufferPosition;
-};
-
-#endif
+LFO* RouteableOscillator::getLinkedOscillator()
+{
+    return _oscillator;
+}

@@ -25,7 +25,7 @@
 
 #include "baseprocessor.h"
 #include "../global.h"
-#include "../lfo.h"
+#include <modules/lfo.h>
 
 class FrequencyModulator : public BaseProcessor, public LFO
 {

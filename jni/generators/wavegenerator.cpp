@@ -24,6 +24,7 @@
  */
 #include "wavegenerator.h"
 #include "../global.h"
+#include <definitions/waveforms.h>
 #include <math.h>
 #include <cmath>
 

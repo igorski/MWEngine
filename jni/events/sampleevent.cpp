@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,9 +22,9 @@
  */
 #include "sampleevent.h"
 #include "../audioengine.h"
+#include "../global.h"
 #include "../sequencer.h"
 #include "../utilities/utils.h"
-#include <instruments/sampledinstrument.h>
 
 /* constructor / destructor */
 
@@ -41,6 +41,7 @@ SampleEvent::SampleEvent( BaseInstrument* aInstrument )
 SampleEvent::~SampleEvent()
 {
     removeFromSequencer();
+    delete _liveBuffer;
 }
 
 /* public methods */
@@ -86,23 +87,31 @@ int SampleEvent::getReadPointer()
     return _readPointer;
 }
 
-void SampleEvent::playNow()
+void SampleEvent::play()
 {
-    // loopeable samples play from their range start, whereas
-    // non-loopeable samples are enqueued to the current sequencer position
-
-    if ( _loopeable )
-        _rangePointer = _bufferRangeStart;
-    else
-        _sampleStart = AudioEngine::bufferPosition;
-
+    _lastLiveBufferPosition = 0;
+    _instrument->getLiveEvents()->push_back( this );
     setEnabled( true );
 }
 
+/**
+ * only invoked for a live event (see sequencer.cpp and audioengine.cpp)
+ */
 AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 {
-    // nowt... no live synthesis as sample contains a finite buffer
-    return _buffer;
+    if ( _liveBuffer == 0 )
+        _liveBuffer = new AudioBuffer( _buffer->amountOfChannels, AudioEngineProps::BUFFER_SIZE );
+    else
+        _liveBuffer->silenceBuffers();  // clear previous contents
+
+    _liveBuffer->mergeBuffers( _buffer, _lastLiveBufferPosition, 0, 1 );
+
+    // remove from sequencer if we have exceeded the sample length (e.g. played it in its entirety)
+
+    if (( _lastLiveBufferPosition += aBufferLength ) > _buffer->bufferSize )
+        removeLiveEvent();
+
+    return _liveBuffer;
 }
 
 void SampleEvent::setSample( AudioBuffer* sampleBuffer )
@@ -146,7 +155,7 @@ void SampleEvent::addToSequencer()
 {
     if ( !_addedToSequencer )
     {
-        (( SampledInstrument* ) _instrument )->audioEvents->push_back( this );
+        _instrument->getEvents()->push_back( this );
     }
     _addedToSequencer = true;
 }
@@ -155,16 +164,17 @@ void SampleEvent::removeFromSequencer()
 {
     if ( _addedToSequencer )
     {
-        SampledInstrument* sampler = (( SampledInstrument* ) _instrument );
+        std::vector<BaseAudioEvent*>* audioEvents = _instrument->getEvents();
 
-        for ( int i; i < sampler->audioEvents->size(); i++ )
+        for ( int i; i < audioEvents->size(); i++ )
         {
-            if ( sampler->audioEvents->at( i ) == this )
+            if ( audioEvents->at( i ) == this )
             {
-                sampler->audioEvents->erase( sampler->audioEvents->begin() + i );
+                audioEvents->erase( audioEvents->begin() + i );
                 break;
             }
         }
+        removeLiveEvent();
     }
     _addedToSequencer = false;
 }
@@ -255,17 +265,32 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 
 void SampleEvent::init( BaseInstrument* instrument )
 {
-    _deleteMe          = false;
-    _buffer            = 0;
-    _sampleStart       = 0;
-    _sampleEnd         = 0;
-    _sampleLength      = 0;
-    _bufferRangeLength = 0;
-    _locked            = false;
-    _addedToSequencer  = false;
-    _readPointer       = 0;
-    _rangePointer      = 0;
-    _loopeable         = false;
-    _destroyableBuffer = false; // is referenced via SampleManager !
-    _instrument        = instrument;
+    _deleteMe               = false;
+    _buffer                 = 0;
+    _sampleStart            = 0;
+    _sampleEnd              = 0;
+    _sampleLength           = 0;
+    _bufferRangeLength      = 0;
+    _locked                 = false;
+    _addedToSequencer       = false;
+    _readPointer            = 0;
+    _rangePointer           = 0;
+    _lastLiveBufferPosition = 0;
+    _loopeable              = false;
+    _destroyableBuffer      = false; // is referenced via SampleManager !
+    _instrument             = instrument;
+}
+
+void SampleEvent::removeLiveEvent()
+{
+    std::vector<BaseAudioEvent*>* liveAudioEvents = _instrument->getLiveEvents();
+
+    for ( int i; i < liveAudioEvents->size(); i++ )
+    {
+        if ( liveAudioEvents->at( i ) == this )
+        {
+            liveAudioEvents->erase( liveAudioEvents->begin() + i );
+            break;
+        }
+    }
 }
