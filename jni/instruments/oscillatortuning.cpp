@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,30 +20,19 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "tablepool.h"
-#include <generators/wavegenerator.h>
+#include "oscillatortuning.h"
 
-namespace TablePool
+/* constructor / destructor */
+
+OscillatorTuning::OscillatorTuning( int aWaveform, float aDetune, int aOctaveShift, int aFineShift )
 {
-    std::map<int, WaveTable*> _cachedTables;
+    waveform    = aWaveform;
+    detune      = aDetune;
+    octaveShift = aOctaveShift;
+    fineShift   = aFineShift;
+}
 
-    void getTable( WaveTable* waveTable, int waveformType )
-    {
-        std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
+OscillatorTuning::~OscillatorTuning()
+{
 
-        if ( it != _cachedTables.end())
-        {
-            // table existed, load the pooled version
-            waveTable->cloneTable(( WaveTable* )( it->second ));
-        }
-        else
-        {
-            // wave table hasn't been generated yet ? generate its contents on the fly
-            if ( !waveTable->hasContent() )
-                WaveGenerator::generate( waveTable, waveformType );
-
-            // insert a clone of the generated table into the pools table map
-            _cachedTables.insert( std::pair<int, WaveTable*>( waveformType, waveTable->clone() ));
-        }
-    }
 }

@@ -102,6 +102,7 @@ namespace DebugTool
     {
         __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
     }
+
     /**
      * same as above, but traces contents of an int
      * @param aValue {int} optional numerical value
@@ -111,6 +112,17 @@ namespace DebugTool
     void log( char const* aMessage, int aValue )
     {
         __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
+    }
+
+    /**
+     * same as above, but traces contents of an int
+     * @param aValue {int} optional numerical value
+     *
+     * to trace numerical values pass "%d" in aMessage to show aValue
+     */
+    void log( char const* aMessage, unsigned int aValue )
+    {
+        DebugTool::log( aMessage, ( int ) aValue );
     }
 
     /**

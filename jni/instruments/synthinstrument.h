@@ -25,7 +25,9 @@
 
 #include "baseinstrument.h"
 #include "../audiochannel.h"
+#include <instruments/oscillatortuning.h>
 #include <events/baseaudioevent.h>
+#include <generators/synthesizer.h>
 #include <modules/adsr.h>
 #include <modules/arpeggiator.h>
 #include <modules/routeableoscillator.h>
@@ -36,21 +38,26 @@ class SynthInstrument : public BaseInstrument
         SynthInstrument();
         ~SynthInstrument();
 
-        int waveform;
         int octave;
         int keyboardOctave;
-        ADSR* adsr;
         float keyboardVolume;
-        RouteableOscillator *rOsc;
 
-        bool osc2active;
-        int osc2waveform;
-        float osc2detune;
-        int osc2octaveShift;
-        int osc2fineShift;
+        Synthesizer* synthesizer;
+
+        // amount of oscillators
+
+        int getOscillatorAmount ();
+        void setOscillatorAmount( int aAmount );
+        void reserveOscillators ( int aAmount );
+        OscillatorTuning* getTuningForOscillator( int aOscillatorNum );
+
+        // modules
 
         Arpeggiator* arpeggiator;
         bool arpeggiatorActive;
+
+        RouteableOscillator *rOsc;
+        ADSR* adsr;
 
         std::vector<BaseAudioEvent*>* audioEvents;
         std::vector<BaseAudioEvent*>* liveAudioEvents;
@@ -67,6 +74,10 @@ class SynthInstrument : public BaseInstrument
         std::vector<BaseAudioEvent*>* getLiveEvents();
 
     protected:
+
+        int oscAmount;      // amount of oscillators, minimum == 1
+        std::vector<OscillatorTuning*> oscillators;
+
         void init();
 };
 

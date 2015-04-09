@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,30 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "tablepool.h"
-#include <generators/wavegenerator.h>
+#include "../audiobuffer.h"
+#include <string>
 
-namespace TablePool
+class WaveReader
 {
-    std::map<int, WaveTable*> _cachedTables;
-
-    void getTable( WaveTable* waveTable, int waveformType )
-    {
-        std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
-
-        if ( it != _cachedTables.end())
-        {
-            // table existed, load the pooled version
-            waveTable->cloneTable(( WaveTable* )( it->second ));
-        }
-        else
-        {
-            // wave table hasn't been generated yet ? generate its contents on the fly
-            if ( !waveTable->hasContent() )
-                WaveGenerator::generate( waveTable, waveformType );
-
-            // insert a clone of the generated table into the pools table map
-            _cachedTables.insert( std::pair<int, WaveTable*>( waveformType, waveTable->clone() ));
-        }
-    }
-}
+    public:
+        // opens the File at the given path, read its WAV data and
+        // returns an AudioBuffer representing this file, NOTE : if
+        // file doesn't exist / is not a valid WAV file, a null
+        // pointer is returned
+        static AudioBuffer* fileToBuffer( std::string inputFile );
+};

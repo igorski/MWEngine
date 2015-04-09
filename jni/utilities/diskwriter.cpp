@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,7 +32,7 @@ namespace DiskWriter
     std::string outputDirectory;
     unsigned long outputBufferSize  = 0;
     unsigned long outputWriterIndex = 0;
-    short int* cachedBuffer         = 0;
+    AudioBuffer*  cachedBuffer      = 0;
 
     /**
      * prepare a new iteration of recording
@@ -40,30 +40,19 @@ namespace DiskWriter
     void prepare( std::string aOutputDir, int aBufferSize, int amountOfChannels )
     {
         outputDirectory  = aOutputDir;
+        outputBufferSize = aBufferSize;
 
-        // PCM : write each sample for each channel one after the other channel sample
-        // (as opposed to unique buffers per channel like in the AudioBuffer)
-        outputBufferSize = aBufferSize * amountOfChannels;
-        generateOutputBuffer();
+        generateOutputBuffer( amountOfChannels );
     }
 
     /**
      * allocates a new buffer for the next write iterations
      */
-    void generateOutputBuffer()
+    void generateOutputBuffer( int amountOfChannels )
     {
-        int bufferSize = outputBufferSize;
-
         flushOutput(); // free previous contents
-        cachedBuffer = new short int[ bufferSize ];
+        cachedBuffer = new AudioBuffer( amountOfChannels, outputBufferSize );
 
-        // fill buffer with silence
-        for ( int i = 0; i < bufferSize; ++i )
-        {
-            // VERY poor mans check if no flushing operation occurred during creation
-            if ( cachedBuffer != 0 )
-                cachedBuffer[ i ] = 0;
-        }
         outputWriterIndex = 0;
     }
 
@@ -76,30 +65,10 @@ namespace DiskWriter
         int channelAmount = aBuffer->amountOfChannels;
 
         if ( cachedBuffer == 0 )
-            generateOutputBuffer();
+            generateOutputBuffer( channelAmount );
 
-        int writerIndex     = outputWriterIndex;
-        short int MAX_VALUE = 32767; // convert samples to shorts
-
-        // write samples into PCM short buffer
-        for ( int i = 0; i < bufferSize; ++i, writerIndex += channelAmount )
-        {
-            for ( int c = 0; c < channelAmount; ++c )
-            {
-                SAMPLE_TYPE* channelBuffer = aBuffer->getBufferForChannel( c );
-
-                short int sample = ( short int )( channelBuffer[ i ] * MAX_VALUE );
-
-                if ( sample > +MAX_VALUE )
-                    sample = +MAX_VALUE;
-
-                else if ( sample < -MAX_VALUE )
-                    sample = -MAX_VALUE;
-
-                cachedBuffer[ writerIndex + c ] = sample;
-            }
-        }
-        outputWriterIndex = writerIndex;
+        cachedBuffer->mergeBuffers( aBuffer, 0, outputWriterIndex, MAX_PHASE );
+        outputWriterIndex += bufferSize;
     }
     
     /**
@@ -109,28 +78,15 @@ namespace DiskWriter
     void appendBuffer( float* aBuffer, int aBufferSize, int amountOfChannels )
     {
         if ( cachedBuffer == 0 )
-            generateOutputBuffer();
+            generateOutputBuffer( amountOfChannels );
 
-        int writerIndex     = outputWriterIndex;
-        short int MAX_VALUE = 32767; // convert samples to shorts
+        // write samples into cache buffers
 
-        // write samples into PCM short buffer
-        for ( int i = 0; i < aBufferSize; ++i, writerIndex += amountOfChannels )
+        for ( int i = 0, c = 0; i < aBufferSize; ++i, ++outputWriterIndex, c += amountOfChannels )
         {
-            for ( int c = 0; c < amountOfChannels; ++c )
-            {
-                short int sample = ( short int )( aBuffer[ i + c ] * MAX_VALUE );
-
-                if ( sample > +MAX_VALUE )
-                    sample = +MAX_VALUE;
-
-                else if ( sample < -MAX_VALUE )
-                    sample = -MAX_VALUE;
-
-                cachedBuffer[ writerIndex + c ] = sample;
-            }
+            for ( int ci = 0; ci < amountOfChannels; ++ci )
+                cachedBuffer->getBufferForChannel( ci )[ outputWriterIndex ] = aBuffer[ c + ci ];
         }
-        outputWriterIndex = writerIndex;
     }
 
     /**
@@ -147,10 +103,9 @@ namespace DiskWriter
     void flushOutput()
     {
         if ( cachedBuffer != 0 )
-        {
-            delete[] cachedBuffer;
-            cachedBuffer = 0;
-        }
+            delete cachedBuffer;
+
+        cachedBuffer      = 0;
         outputWriterIndex = 0;
     }
 
@@ -166,36 +121,37 @@ namespace DiskWriter
         if ( cachedBuffer == 0 )
             return;
 
-        // we can improve the use of the CPU resources
-        // by creating a local thread
-        // TODO: do it ? (this non-threading blocks the renderer, but nicely omits issue w/ continuous writes ;) )
-
-        //pthread_t t1;
-        //pthread_create( &t1, NULL, &print_message, NULL );
-
         // copy string contents for appending of filename
         std::string outputFile = std::string( outputDirectory.c_str());
 
         int bufferSize = outputBufferSize;
 
-        // uh oh.. recorded less than maximum available in buffer ? cut silence
+        // recorded less than maximum available in buffer ? cut silence
+        // by writing recording into temporary buffers
+
         if ( outputWriterIndex < bufferSize )
         {
             bufferSize = outputWriterIndex;
 
-            short int* tempBuffer = new short int[ bufferSize ];
+            AudioBuffer* tempBuffer = new AudioBuffer( aNumChannels, bufferSize );
 
             for ( int i = 0; i < bufferSize; ++i )
-                tempBuffer[ i ] = cachedBuffer[ i ];
+            {
+                for ( int c = 0; c < aNumChannels; ++c )
+                    tempBuffer->getBufferForChannel( c )[ i ] = cachedBuffer->getBufferForChannel( c )[ i ];
+            }
 
-            write_wav( outputFile.append( SSTR( AudioEngine::recordingFileId )),
-                       bufferSize, tempBuffer, aSampleRate, aNumChannels );
+            WaveWriter::bufferToFile( outputFile.append( SSTR( AudioEngine::recordingFileId )),
+                                      tempBuffer, aSampleRate );
 
-            delete[] tempBuffer; // free memory of temporary buffer
+            // free memory allocated by temporary buffer
+
+            delete tempBuffer;
         }
-        else {
-            write_wav( outputFile.append( SSTR( AudioEngine::recordingFileId )),
-                       bufferSize, cachedBuffer, aSampleRate, aNumChannels );
+        else
+        {
+            WaveWriter::bufferToFile( outputFile.append( SSTR( AudioEngine::recordingFileId )),
+                                      cachedBuffer, aSampleRate );
         }
 
         flushOutput(); // free memory
@@ -203,8 +159,5 @@ namespace DiskWriter
         // broadcast update, pass buffer identifier to identify last recording
         if ( broadcastUpdate )
             Notifier::broadcast( Notifications::RECORDING_STATE_UPDATED, AudioEngine::recordingFileId );
-
-        //void* result;
-        //pthread_join( t1, &result );
     }
 }

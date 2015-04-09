@@ -154,6 +154,10 @@ int BufferUtility::calculateBufferLength( int milliSeconds )
     return milliSeconds * ( AudioEngineProps::SAMPLE_RATE / 1000 );
 }
 
+/**
+ * creates a new buffer of given aBufferSize in length
+ * containing nothing but silence
+ */
 SAMPLE_TYPE* BufferUtility::generateSilentBuffer( int aBufferSize )
 {
     SAMPLE_TYPE* out = new SAMPLE_TYPE[ aBufferSize ];

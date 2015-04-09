@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,8 +25,15 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
+#include "../audiobuffer.h"
+#include "../global.h"
 
-void write_wav( std::string outputFile, unsigned long num_samples, short int * buffer, int sample_rate, int num_channels );
+class WaveWriter
+{
+    public:
+        static void bufferToFile( std::string outputFile, AudioBuffer* buffer, int sampleRate );
+};
 
 /**
  * Fri Jun 18 16:36:23 PDT 2010 Kevin Karplus

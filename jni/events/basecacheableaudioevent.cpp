@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "basecacheableaudioevent.h"
+#include "../sequencer.h"
 
 /* constructor / destructor */
 
@@ -52,15 +53,26 @@ void BaseCacheableAudioEvent::setAutoCache( bool aValue )
 }
 
 /**
- * @param doCallback whether to execute a callback command on copmletion
+ * (pre-)cache the contents of the BaseSynthEvent in its entirety
+ * this can be done in idle time to make optimum use of resources
  */
 void BaseCacheableAudioEvent::cache( bool doCallback )
 {
-    // override in subclass
+    if ( _buffer == 0 ) return; // cache request likely invoked after destruction
+
+    _caching = true;
+
+    // custom  derived class cache implementation here
+
+    if ( doCallback )
+        sequencer::bulkCacher->cacheQueue();
+
+    _caching = false;
 }
 
 void BaseCacheableAudioEvent::resetCache()
 {
     _cacheWriteIndex  = 0;
     _cachingCompleted = false;
+    _caching          = false;
 }

@@ -37,8 +37,7 @@ class SequencerAPI
         SequencerAPI();
         ~SequencerAPI();
         
-        void prepare             ( int aBufferSize, int aSampleRate, float aQueuedTempo,
-                                   int aTimeSigBeatAmount, int aTimeSigBeatUnit );
+        void prepare             ( int aBufferSize, int aSampleRate, float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
         void setLoopPoint        ( int aStartPosition, int aEndPosition, int aStepsPerBar );
         void updateMeasures      ( int aAmount, int aStepsPerBar );
         void setTempo            ( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );

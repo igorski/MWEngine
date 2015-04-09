@@ -30,6 +30,7 @@ class RingBuffer
     public:
         RingBuffer( int capacity );
         ~RingBuffer();
+        int getBufferLength();
         int getSize();
         bool isEmpty();
         bool isFull();
@@ -40,9 +41,9 @@ class RingBuffer
 
     protected:
         SAMPLE_TYPE* _buffer;
-        int bufferLength;
-        int first;
-        int last;
+        int _bufferLength;
+        int _first;
+        int _last;
 };
 
 #endif

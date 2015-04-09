@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 
 #include "audiobuffer.h"
 #include <string>
+#include <vector>
 
 /**
  * DiskWriter is a util that will record audio for a given buffer length
@@ -36,13 +37,13 @@
 namespace DiskWriter
 {
     // output directory to write to
-    extern std::string outputDirectory;
+    extern std::string   outputDirectory;
     extern unsigned long outputBufferSize;
     extern unsigned long outputWriterIndex;
-    extern short int* cachedBuffer;
+    extern AudioBuffer*  cachedBuffer;
 
     extern void prepare( std::string aOutputDir, int aBufferSize, int amountOfChannels );
-    extern void generateOutputBuffer();
+    extern void generateOutputBuffer( int amountOfChannels );
     extern void flushOutput();
     extern void appendBuffer( AudioBuffer* aBuffer );
     extern void appendBuffer( float* aBuffer, int aBufferSize, int amountOfChannels );

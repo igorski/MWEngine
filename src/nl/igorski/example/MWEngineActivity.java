@@ -99,8 +99,8 @@ public class MWEngineActivity extends Activity
         _synth1 = new SynthInstrument();
         _synth2 = new SynthInstrument();
 
-        _synth1.setWaveform( 2 );   // sawtooth (see global.h for enumerations)
-        _synth2.setWaveform(5);   // pulse width modulation
+        _synth1.getTuningForOscillator( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
+        _synth2.getTuningForOscillator( 0 ).setWaveform( 5 ); // pulse width modulation
 
         // a high decay for synth 1 (bubblier effect)
         _synth1.getAdsr().setDecay( .9f );
@@ -118,6 +118,9 @@ public class MWEngineActivity extends Activity
         // add some funky delay to synth 2
         _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
+
+        // prepare synthesizer volumes
+        _synth2.setVolume( .7f );
 
         // STEP 3 : let's create some music !
 
@@ -332,7 +335,7 @@ public class MWEngineActivity extends Activity
     private void createSynthEvent( SynthInstrument synth, double frequency, int position )
     {
         final int duration     = 1; // 16th note at a BAR_SUBDIVISION of 16 (see NativeAudioRenderer)
-        final SynthEvent event = new SynthEvent(( float ) frequency, position, duration, synth, false );
+        final SynthEvent event = new SynthEvent(( float ) frequency, position, duration, synth );
 
         event.calculateBuffers();
 

@@ -59,6 +59,7 @@ namespace DebugTool
     extern void log( char const* aMessage );
     extern void log( char const* aMessage, char const* aValue );
     extern void log( char const* aMessage, int aValue );
+    extern void log( char const* aMessage, unsigned int aValue );
     extern void log( char const* aMessage, float aValue );
     extern void log( char const* aMessage, double aValue );
 }

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,10 +25,44 @@
 #include "utils.h"
 #include <fstream>
 
- void write_wav( std::string outputFile, unsigned long num_samples, short int * buffer, int sample_rate, int num_channels )
+void WaveWriter::bufferToFile( std::string outputFile, AudioBuffer* buffer, int sampleRate )
 {
+    int writerIndex      = 0;
+    int bufferSize       = buffer->bufferSize;
+    int amountOfChannels = buffer->amountOfChannels;
+
+    // convert floating point buffer samples to interleaved shorts (PCM audio)
+
+    short int* outputBuffer = new short int[ bufferSize * amountOfChannels ];
+    short int MAX_VALUE     = 32767;
+
+    // write samples into PCM short buffer
+
+    for ( int i = 0; i < bufferSize; ++i, writerIndex += amountOfChannels )
+    {
+        for ( int c = 0; c < amountOfChannels; ++c )
+        {
+            short int sample = ( short int )( buffer->getBufferForChannel( c )[ i ] * MAX_VALUE );
+
+            // keep sample within range
+
+            if ( sample > +MAX_VALUE )
+                sample = +MAX_VALUE;
+
+            else if ( sample < -MAX_VALUE )
+                sample = -MAX_VALUE;
+
+            outputBuffer[ writerIndex + c ] = sample;
+        }
+    }
+
     unsigned int bytes_per_sample = sizeof( short int );
     const char* filename          = outputFile.c_str();
 
-    writeWAVData( filename, buffer, bytes_per_sample * num_samples * num_channels, sample_rate, ( short ) num_channels );
+    // actual writing of the file
+
+    writeWAVData( filename, outputBuffer, bytes_per_sample * bufferSize * amountOfChannels,
+                  sampleRate, ( short ) amountOfChannels );
+
+    delete[] outputBuffer;  // free allocated memory
 }

@@ -25,91 +25,24 @@
 
 #include "basesynthevent.h"
 #include "../ringbuffer.h"
-#include <modules/arpeggiator.h>
 
 /**
- * SynthEvent is an example of a BaseSynthEvent that uses
- * one or more oscillators to render output. It is completely equal
- * to the rendering used in MikroWave
+ * SynthEvent is a example-extension of BaseSynthEvent which implements
+ * custom overrides to work with Karplus-Strong synthesis
  *
- * https://play.google.com/store/apps/details?id=nl.igorski.mikrowave&hl=en
+ * It is the same class used for the synthesizers in MikroWave
+ *
+ * see: https://play.google.com/store/apps/details?id=nl.igorski.mikrowave&hl=en
  */
 class SynthEvent : public BaseSynthEvent
 {
     public:
         // construct as a sequenced event
-        SynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument *aInstrument, bool aAutoCache );
-        SynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument *aInstrument, bool aAutoCache, bool hasParent );
+        SynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument* aInstrument );
 
         // construct as live event (for instance: a keyboard noteOn)
-        SynthEvent( float aFrequency, SynthInstrument *aInstrument );
-        SynthEvent( float aFrequency, SynthInstrument *aInstrument, bool hasParent );
-
+        SynthEvent( float aFrequency, SynthInstrument* aInstrument );
         ~SynthEvent();
-
-        // properties
-        void setFrequency    ( float aFrequency );
-        void setFrequency    ( float aFrequency, bool allOscillators, bool storeAsBaseFrequency );
-        void enqueueFrequency( float aFrequency );
-        float getBaseFrequency();   // return "root" frequency (frequency can be modulated by pitch modules)
-
-        // render related
-        void invalidateProperties( int aPosition, float aLength, SynthInstrument *aInstrument );
-        void calculateBuffers();
-
-        // cache related
-        void cache( bool doCallback );
-
-    protected:
-
-        // setup related
-        void init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
-                   int aLength, bool aIsSequenced, bool aHasParent );
-
-        void addToSequencer();
-        void setDeletable( bool value );
-
-        // render related
-        void render( AudioBuffer* outputBuffer );
-        void updateProperties();
-
-        // caching
-        void resetCache();
-
-    private:
-
-        // used for waveform generation
-        SAMPLE_TYPE _phase;
-        SAMPLE_TYPE _phaseIncr;
-        SAMPLE_TYPE _baseFrequency;
-        SAMPLE_TYPE TWO_PI_OVER_SR;
-        int _type;
-        int _fadeInDuration;
-        int _fadeOutDuration;
-
-        // specific to Pulse Width Modulation
-        float pwr;
-        float pwAmp;
-        float _pwmValue;
-
-        // specific to Karplus-Strong synthesis
-
-        RingBuffer* _ringBuffer;
-        int _ringBufferSize;
-        void initKarplusStrong();
-        float _queuedFrequency;
-
-        // oscillators
-
-        SynthEvent *_osc2;  // secondary oscillator
-        bool hasParent;
-        void createOSC2( int aPosition, int aLength, SynthInstrument *aInstrument );
-        void destroyOSC2();
-
-        // modules
-
-        void applyModules( SynthInstrument* instrument );
-        Arpeggiator* _arpeggiator;
 };
 
 #endif

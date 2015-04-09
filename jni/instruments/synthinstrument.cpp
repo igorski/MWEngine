@@ -24,11 +24,11 @@
 #include "../global.h"
 #include "../sequencer.h"
 #include <definitions/waveforms.h>
-#include <utilities/utils.h>
 #include <events/basesynthevent.h>
+#include <utilities/utils.h>
 #include <cstddef>
 
-// constructor
+/* constructor / destructor */
 
 SynthInstrument::SynthInstrument()
 {
@@ -39,10 +39,10 @@ SynthInstrument::SynthInstrument()
 
 SynthInstrument::~SynthInstrument()
 {
-    DebugTool::log( "SynthInstrument::DESTRUCT" );
-
     delete adsr;
     delete rOsc;
+    delete arpeggiator;
+    delete synthesizer;
 
     while ( audioEvents->size() > 0 )
         delete audioEvents->back();
@@ -50,9 +50,14 @@ SynthInstrument::~SynthInstrument()
     while ( liveAudioEvents->size() > 0 )
         delete liveAudioEvents->back();
 
+    while ( oscillators.size() > 0 )
+        delete oscillators.back();
+
     delete audioEvents;
     delete liveAudioEvents;
 }
+
+/* public methods */
 
 bool SynthInstrument::hasEvents()
 {
@@ -86,6 +91,7 @@ void SynthInstrument::updateEvents()
         BaseSynthEvent* event = ( BaseSynthEvent* ) ( liveAudioEvents->at( i ) );
         event->invalidateProperties( event->position, event->length, this );
     }
+    synthesizer->updateProperties();
 }
 
 void SynthInstrument::clearEvents()
@@ -102,11 +108,46 @@ bool SynthInstrument::removeEvent( BaseAudioEvent* aEvent )
     // when using JNI, we let SWIG invoke destructors when Java references are finalized
     // otherwise we delete and dispose the events directly from this instrument
 #ifndef USE_JNI
-    delete audioEvent;
-    audioEvent = 0;
+    delete aEvent;
+    aEvent = 0;
     return true;
 #endif
     return false;
+}
+
+int SynthInstrument::getOscillatorAmount()
+{
+    return oscAmount;
+}
+
+void SynthInstrument::setOscillatorAmount( int aAmount )
+{
+    oscAmount = aAmount;
+
+    if ( oscillators.size() < oscAmount )
+        reserveOscillators( oscAmount );
+
+    synthesizer->updateProperties();
+}
+
+void SynthInstrument::reserveOscillators( int aAmount )
+{
+    if ( oscillators.size() < aAmount )
+    {
+        while ( oscillators.size() < aAmount )
+            oscillators.push_back( new OscillatorTuning( WaveForms::SINE, 0.0, 0, 0 ) );
+    }
+    else {
+        while ( oscillators.size() > aAmount ) {
+            delete oscillators.back();
+            oscillators.pop_back();
+        }
+    }
+}
+
+OscillatorTuning* SynthInstrument::getTuningForOscillator( int aOscillatorNum )
+{
+    return oscillators.at( aOscillatorNum );
 }
 
 /* protected methods */
@@ -114,28 +155,29 @@ bool SynthInstrument::removeEvent( BaseAudioEvent* aEvent )
 void SynthInstrument::init()
 {
     adsr = new ADSR();
-    adsr->setAttack ( 0.01 );
-    adsr->setDecay  ( 0.01 );
+    adsr->setAttack( 0.01 );
+    adsr->setDecay ( 0.01 );
 
     // default values
     octave          = 4;
     keyboardOctave  = 4;
     volume          = 0.8;
     keyboardVolume  = 0.5;
-    waveform        = WaveForms::SAWTOOTH;
 
-    osc2active      = false;
-    osc2waveform    = WaveForms::SINE;
-    osc2octaveShift = 0;
-    osc2fineShift   = 0;
-    osc2detune      = 0.0;
+    // modules
 
-    rOsc            = new RouteableOscillator();
-    audioChannel    = new AudioChannel( volume );
+    rOsc              = new RouteableOscillator();
+    audioChannel      = new AudioChannel( volume );
+    synthesizer       = new Synthesizer( this, 0 );
+    arpeggiator       = new Arpeggiator();
+    arpeggiatorActive = false;
+
+    // start out with a single oscillator
+
+    setOscillatorAmount( 1 );
+
+    // events
 
     audioEvents       = new std::vector<BaseAudioEvent*>();
     liveAudioEvents   = new std::vector<BaseAudioEvent*>();
-
-    arpeggiator       = new Arpeggiator();
-    arpeggiatorActive = false;
 }

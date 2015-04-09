@@ -21,6 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "audiobuffer.h"
+#include <utilities/bufferpool.h>
+#include <utilities/bufferutility.h>
 #include <algorithm>
 
 AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
@@ -30,14 +32,31 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
     bufferSize       = aBufferSize;
     _buffers         = new std::vector<SAMPLE_TYPE*>( amountOfChannels );
 
-    for ( int i = 0; i < amountOfChannels; ++i )
+    // if the buffer size equals the BUFFER_SIZE of the engine, we will
+    // create an existing "silent buffer" we can easily clone as this
+    // buffer seems to be part of a ring- or temp buffer
+
+    if ( aBufferSize == AudioEngineProps::BUFFER_SIZE )
     {
-        SAMPLE_TYPE* buffer = new SAMPLE_TYPE[ bufferSize ];
+        // lazily create / retrieve pointer to existing silent buffer
+        SAMPLE_TYPE* silentBuffer = BufferPool::getSilentBuffer( bufferSize );
 
-        for ( int j = 0; j < bufferSize; ++j )
-            buffer[ j ] = 0.0;
+        // clone silent buffers for each audio channel
+        for ( int i = 0; i < amountOfChannels; ++i )
+        {
+            SAMPLE_TYPE* targetBuffer = new SAMPLE_TYPE[ bufferSize ];
+            memcpy( targetBuffer, silentBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
 
-        _buffers->at( i ) = buffer;
+            _buffers->at( i ) = targetBuffer;
+        }
+    }
+    else {
+
+        // assume AudioBuffer will hold a large sample file, don't pool
+        // these potentially huge buffers, generate (temporarily silent) buffer inline
+
+        for ( int i = 0; i < amountOfChannels; ++i )
+            _buffers->at( i ) = BufferUtility::generateSilentBuffer( aBufferSize );
     }
 }
 
@@ -98,12 +117,25 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
  */
 void AudioBuffer::silenceBuffers()
 {
-    for ( int i = 0; i < amountOfChannels; ++i )
-    {
-        SAMPLE_TYPE* buffer = getBufferForChannel( i );
+    SAMPLE_TYPE* silentBuffer;
 
-        for ( int j = 0; j < bufferSize; ++j )
-            buffer[ j ] = 0.0;
+    // use memory copy in case this buffer can use the pooled silent buffer
+
+    if ( bufferSize == AudioEngineProps::BUFFER_SIZE )
+    {
+        silentBuffer = BufferPool::getSilentBuffer( bufferSize );
+
+        // use memory copy to quickly erase existing buffer contents
+        for ( int i = 0; i < amountOfChannels; ++i )
+            memcpy( getBufferForChannel( i ), silentBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
+    }
+    else
+    {
+        for ( int i = 0; i < amountOfChannels; ++i )
+        {
+            SAMPLE_TYPE* channelBuffer = getBufferForChannel( i );
+            std::fill( channelBuffer, channelBuffer + bufferSize, 0.0 );
+        }
     }
 }
 

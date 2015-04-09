@@ -23,25 +23,41 @@
 #ifndef __BASESYNTHEVENT_H_INCLUDED__
 #define __BASESYNTHEVENT_H_INCLUDED__
 
-#include "basecacheableaudioevent.h"
+#include "baseaudioevent.h"
 #include "../global.h"
-#include <modules/adsr.h>
-#include <instruments/synthinstrument.h>
+
+class SynthInstrument;  // forward declaration, see <instruments/synthinstrument.h>
+
+// will hold references to last known values (see <generators/synthesizer.cpp>)
+
+typedef struct
+{
+    SAMPLE_TYPE ADSRenvelope;
+    SAMPLE_TYPE phaseIncr;
+    int arpeggioPosition;
+    int arpeggioStep;
+
+    std::vector<SAMPLE_TYPE> oscillatorPhases;
+
+} CachedProperties;
 
 /**
- * a SynthEvent describes a (cacheable) AudioEvent that can render
+ * a SynthEvent describes an AudioEvent that can render
  * its audio when needed, it should basically combine rendering logic
  * into the basic AudioEvent interface
  */
-class BaseSynthEvent : public BaseCacheableAudioEvent
+class BaseSynthEvent : public BaseAudioEvent
 {
     public:
+
         // constructors for base class, sequenced event and live-synthesis event
         BaseSynthEvent();
-        BaseSynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument *aInstrument, bool aAutoCache );
-        BaseSynthEvent( float aFrequency, SynthInstrument *aInstrument );
+        BaseSynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument* aInstrument );
+        BaseSynthEvent( float aFrequency, SynthInstrument* aInstrument );
 
         ~BaseSynthEvent();
+
+        unsigned int instanceId;
 
         // sequenced related properties
         bool isSequenced;
@@ -49,56 +65,63 @@ class BaseSynthEvent : public BaseCacheableAudioEvent
         float length;
 
         // synthesis properties
-        ADSR* getADSR();
+
+        float getFrequency();     // return current event frequency (frequency can be modulated by pitch modules, legato, etc.)
+
+        float getBaseFrequency(); // return "root" frequency
+
+        void setFrequency( float aFrequency );
+        void setFrequency( float aFrequency, bool storeAsBaseFrequency );
+
         float getVolume();
-        void setVolume( float aValue );
-        float getFrequency();
-        virtual void setFrequency( float aFrequency );
+        void setVolume( float value );
+
+        CachedProperties cachedProps;
+
+        // reference to last phase for a given oscillator render (see synthesizer.h)
+
+        SAMPLE_TYPE getPhaseForOscillator( int aOscillatorNum );
+        void setPhaseForOscillator( int aOscillatorNum, SAMPLE_TYPE aPhase );
+
+        int lastWriteIndex;
 
         // render related
-        virtual void invalidateProperties( int aPosition, float aLength, SynthInstrument *aInstrument );
-        virtual void calculateBuffers();
-        virtual void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
-                                bool loopStarted, int loopOffset, bool useChannelRange );
+        void invalidateProperties( int aPosition, float aLength, SynthInstrument* aInstrument );
+        void calculateBuffers();
+        void mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
+                        int minBufferPosition, int maxBufferPosition,
+                        bool loopStarted, int loopOffset, bool useChannelRange );
 
-        AudioBuffer* getBuffer();
         AudioBuffer* synthesize( int aBufferLength );
 
-        // cache related
-        virtual void cache( bool doCallback );
         void unlock();
 
     protected:
 
+        static unsigned int INSTANCE_COUNT;
+
         // synthesis properties
         SynthInstrument* _instrument;
-        SAMPLE_TYPE _frequency;
+
+        // used for waveform generation
+        SAMPLE_TYPE _frequency, _baseFrequency;
         float _volume;
-        ADSR* _adsr;
 
         // properties for non-sequenced synthesis
 
         int _minLength;
-        bool _hasMinLength;
-        bool _queuedForDeletion;
+        bool _hasMinLength, _queuedForDeletion;
 
         // setup related
 
-        void init( SynthInstrument *aInstrument, float aFrequency, int aPosition,
-                   int aLength, bool aIsSequenced );
+        void init( SynthInstrument* aInstrument, float aFrequency, int aPosition, int aLength, bool aIsSequenced );
 
         virtual void addToSequencer();
         virtual void removeFromSequencer();
         virtual void setDeletable( bool value );
 
         // render related
-        virtual void render( AudioBuffer* outputBuffer );
         virtual void updateProperties();
-        bool _rendering;
-        bool _update;
-
-        // caching
-        void doCache();
 };
 
 #endif

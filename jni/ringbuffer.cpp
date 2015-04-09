@@ -28,11 +28,11 @@
 
 RingBuffer::RingBuffer( int capacity )
 {
-    bufferLength = capacity;
-    _buffer      = BufferUtility::generateSilentBuffer( bufferLength );
+    _bufferLength = capacity;
+    _buffer       = BufferUtility::generateSilentBuffer( _bufferLength );
 
-    first        = 0;
-    last         = 0;
+    _first        = 0;
+    _last         = 0;
 }
 
 RingBuffer::~RingBuffer()
@@ -46,9 +46,14 @@ RingBuffer::~RingBuffer()
 
 /* public methods */
 
+int RingBuffer::getBufferLength()
+{
+    return _bufferLength;
+}
+
 int RingBuffer::getSize()
 {
-    return ( last - first );
+    return ( _last - _first );
 }
 
 bool RingBuffer::isEmpty()
@@ -58,17 +63,17 @@ bool RingBuffer::isEmpty()
 
 bool RingBuffer::isFull()
 {
-    return ( getSize() == bufferLength );
+    return ( getSize() == _bufferLength );
 }
 
 void RingBuffer::flush()
 {
-    first = 0;
-    last  = 0;
+    _first = 0;
+    _last  = 0;
 
     if ( _buffer != 0 )
     {
-        for ( int i = 0; i < bufferLength; i++ )
+        for ( int i = 0; i < _bufferLength; ++i )
             _buffer[ i ] = 0.0;
     }
 }
@@ -78,10 +83,10 @@ void RingBuffer::enqueue( SAMPLE_TYPE aSample )
     if ( _buffer == 0 )
         return;
 
-    _buffer[ last ] = aSample;
+    _buffer[ _last ] = aSample;
 
-    if ( ++last >= bufferLength )
-        last = 0;
+    if ( ++_last >= _bufferLength )
+        _last = 0;
 }
 
 SAMPLE_TYPE RingBuffer::dequeue()
@@ -91,10 +96,10 @@ SAMPLE_TYPE RingBuffer::dequeue()
     if ( _buffer == 0 )
         return ( SAMPLE_TYPE ) randomFloat();
     else
-        item = _buffer[ first ];
+        item = _buffer[ _first ];
 
-    if ( ++first >= bufferLength )
-        first = 0;
+    if ( ++_first >= _bufferLength )
+        _first = 0;
 
     return item;
 }
@@ -104,5 +109,5 @@ SAMPLE_TYPE RingBuffer::peek()
     if ( _buffer == 0 )
         return ( SAMPLE_TYPE ) randomFloat();
 
-    return _buffer[ first ];
+    return _buffer[ _first ];
 }

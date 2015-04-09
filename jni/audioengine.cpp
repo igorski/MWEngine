@@ -309,7 +309,7 @@ namespace AudioEngine
                     else if ( sample > +MAX_PHASE )
                         sample = +MAX_PHASE;
 
-                    outbuffer[ c + ci ] = sample;
+                    outbuffer[ c + ci ] = sample; // interleaved output
                 }
 
                 // update the buffer pointers and sequencer position
@@ -343,7 +343,7 @@ namespace AudioEngine
 
                     if ( !haltRecording )
                     {
-                        DiskWriter::generateOutputBuffer(); // allocate new buffer for next iteration
+                        DiskWriter::generateOutputBuffer( outputChannels ); // allocate new buffer for next iteration
                         ++recordingFileId;
                     }
                     else {
