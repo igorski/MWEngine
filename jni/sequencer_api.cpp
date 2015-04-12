@@ -173,8 +173,8 @@ void SequencerAPI::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOut
  *
  * aRecording        {bool} toggles the recording state
  * aMaxBuffers        {int} the maximum amount of buffers (each will hold BUFFER_SIZE in length) to store
- *                          before broadcasting the RECORDING_UPDATE message back via the JNI
- * aOutputDirectory {char*} name of the folder to write int
+ *                          before broadcasting the RECORDING_UPDATE message back via the Observers
+ * aOutputDirectory {char*} name of the folder to write into
  */
 void SequencerAPI::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {

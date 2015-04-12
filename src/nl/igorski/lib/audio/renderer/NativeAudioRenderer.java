@@ -188,7 +188,7 @@ public final class NativeAudioRenderer extends Thread
      *
      * @param value {int}
      */
-    public void setBarSubdivions( int value )
+    public void setBarSubdivisions( int value )
     {
         BAR_SUBDIVISIONS = value;
     }
