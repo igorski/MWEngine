@@ -18,6 +18,7 @@ audiobuffer.cpp \
 audiochannel.cpp \
 instruments/baseinstrument.cpp \
 instruments/druminstrument.cpp \
+instruments/sampledinstrument.cpp \
 instruments/synthinstrument.cpp \
 instruments/oscillatortuning.cpp \
 drumpattern.cpp \

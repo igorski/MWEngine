@@ -25,8 +25,33 @@
 #include "..//wavetable.h"
 #include <utilities/samplemanager.h>
 #include <utilities/tablepool.h>
+#include <utilities/wavereader.h>
 
 /* SampleManager hooks */
+
+bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
+{
+    // convert jstring describing aWAVFilePath to std::string
+    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aWAVFilePath, NULL );
+    std::string thePath = s;
+    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aWAVFilePath, s );
+
+    AudioBuffer* sampleBuffer = WaveReader::fileToBuffer( thePath );
+
+    // error during loading of WAV file ?
+
+    if ( sampleBuffer == NULL )
+        return false;
+
+    // convert jstring describing aKey to std::string
+    s = JavaBridge::getEnvironment()->GetStringUTFChars( aKey, NULL );
+    std::string theKey = s;
+    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aKey, s );
+
+    SampleManager::setSample( theKey, sampleBuffer );
+
+    return true;
+}
 
 void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, jint aChannelAmount, jdoubleArray aBuffer, jdoubleArray aOptRightBuffer )
 {
@@ -35,7 +60,7 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
     int i = 0;
 
     // get a pointer to the Java array
-    jdouble *c_array;
+    jdouble* c_array;
     c_array = JavaBridge::getEnvironment()->GetDoubleArrayElements( aBuffer, 0 );
 
     // exception checking
@@ -72,7 +97,7 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
     }
 
     // convert jstring to std::string
-    const char *s = JavaBridge::getEnvironment()->GetStringUTFChars( aKey, NULL );
+    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aKey, NULL );
     std::string theKey = s;
     JavaBridge::getEnvironment()->ReleaseStringUTFChars( aKey, s );
 
@@ -94,7 +119,7 @@ void JavaUtilities::cacheTable( jint tableLength, jint waveformType, jdoubleArra
     SAMPLE_TYPE* buffer  = tempTable->getBuffer();
 
     // get a pointer to the Java array
-    jdouble *c_array;
+    jdouble* c_array;
     c_array = JavaBridge::getEnvironment()->GetDoubleArrayElements( aBuffer, 0 );
 
     // exception checking

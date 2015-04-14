@@ -21,10 +21,12 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "sampledinstrument.h"
+#include "../audioengine.h"
 #include "../global.h"
 #include "../sequencer.h"
 #include "../utilities/utils.h"
 #include <cstddef>
+#include <events/sampleevent.h>
 
 /* constructor / destructor */
 

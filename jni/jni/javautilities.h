@@ -33,6 +33,12 @@
 class JavaUtilities
 {
     public:
+
+        // creates an AudioBuffer from a given WAV file and stores it inside
+        // the SampleManager under given key "aKey"
+
+        static bool createSampleFromFile( jstring aKey, jstring aWAVFilePath );
+
         // creates an AudioBuffer from given sample buffers and stores it inside
         // the SampleManager under given key "aKey", aOptRightBuffer can be null
 

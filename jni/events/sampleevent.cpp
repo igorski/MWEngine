@@ -118,6 +118,7 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 {
     // make sure we lock read/write operations as setting a large sample
     // while the engine is running is a tad dangerous ;)
+
     bool wasLocked = _locked;
     _locked        = true;
 
@@ -279,6 +280,7 @@ void SampleEvent::init( BaseInstrument* instrument )
     _loopeable              = false;
     _destroyableBuffer      = false; // is referenced via SampleManager !
     _instrument             = instrument;
+    _liveBuffer             = 0;
 }
 
 void SampleEvent::removeLiveEvent()
