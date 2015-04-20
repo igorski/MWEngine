@@ -89,9 +89,15 @@ int SampleEvent::getReadPointer()
 
 void SampleEvent::play()
 {
-    _lastLiveBufferPosition = 0;
+    _lastLiveBufferPosition = _bufferRangeStart;
     _instrument->getLiveEvents()->push_back( this );
     setEnabled( true );
+}
+
+void SampleEvent::stop()
+{
+    removeLiveEvent();
+    setEnabled( false );
 }
 
 /**
@@ -106,11 +112,16 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 
     _liveBuffer->mergeBuffers( _buffer, _lastLiveBufferPosition, 0, 1 );
 
-    // remove from sequencer if we have exceeded the sample length (e.g. played it in its entirety)
+    if (( _lastLiveBufferPosition += aBufferLength ) > _bufferRangeEnd )
+    {
+        // if this is a one-shot SampleEvent, remove it from the sequencer when we have exceeded
+        // the sample length (e.g. played it in its entirety)
 
-    if (( _lastLiveBufferPosition += aBufferLength ) > _buffer->bufferSize )
-        removeLiveEvent();
-
+        if ( !_loopeable )
+            removeLiveEvent();
+        else
+            _lastLiveBufferPosition = _bufferRangeStart;
+    }
     return _liveBuffer;
 }
 
