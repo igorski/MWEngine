@@ -2,14 +2,14 @@
  * this file describes which native classes will
  * be made available to the Java using a SWIG wrapper
  * NOTE : the audio engine itself is not directly available
- * but only through javajni.h and sequencer_api.h which are
- * wrapped in the NativeAudioRenderer class
+ * but only through javajni.h and sequencercontroller.h which are
+ * wrapped in the nl.igorski.lib.audio.MWEngine class
  *
  * optional Java-specific utilities can be included by adding
  * the respective files from the jni/-folder (be sure to add
  * these to Android.mk to ensure they are built into the library)
  */
-%module NativeAudioEngine
+%module MWEngineCore
 
 %{
 #include "jni/javabridge_api.h"
@@ -48,7 +48,7 @@
 #include "events/basecacheableaudioevent.h"
 #include "events/basesynthevent.h"
 #include "events/synthevent.h"
-#include "sequencer_api.h"
+#include "sequencercontroller.h"
 %}
 
 // Enable the JNI class to load the required native library.
@@ -107,4 +107,4 @@
 %include "events/sampleevent.h"
 %include "events/drumevent.h"
 %include "events/synthevent.h"
-%include "sequencer_api.h"
+%include "sequencercontroller.h"

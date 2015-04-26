@@ -33,9 +33,10 @@
 /**
  * Sequencer is the brain that collects
  * AudioEvents for all AudioChannels for the
- * AudioEngine to play at the given "playback head" offset
- *
- * It shouldn't be used directly, but rather via the SequencerAPI
+ * AudioEngine to play at the given "playback head" offset, as such
+ * Sequencer is an internal tool and shouldn't be used directly for
+ * song position / length / tempo manipulations, for these purposes
+ * you should be using the methods exposed by the SequencerController instead
  */
 namespace sequencer
 {

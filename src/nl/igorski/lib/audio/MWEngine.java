@@ -20,12 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package nl.igorski.lib.audio.renderer;
+package nl.igorski.lib.audio;
 
 import android.content.Context;
 import android.os.Build;
-import nl.igorski.lib.audio.nativeaudio.*;
-import nl.igorski.lib.debug.Logger;
+import android.util.Log;
+import nl.igorski.lib.audio.nativeaudio.BufferUtility;
+import nl.igorski.lib.audio.nativeaudio.MWEngineCore;
+import nl.igorski.lib.audio.nativeaudio.ProcessingChain;
+import nl.igorski.lib.audio.nativeaudio.SequencerController;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,7 +37,7 @@ import nl.igorski.lib.debug.Logger;
  * Time: 20:16
  * To change this template use File | Settings | File Templates.
  */
-public final class NativeAudioRenderer extends Thread
+public final class MWEngine extends Thread
 {
     // interface to receive state change messages from the engine
 
@@ -44,10 +47,10 @@ public final class NativeAudioRenderer extends Thread
         void handleNotification( int aNotificationId, int aNotificationValue );
     }
 
-    private static NativeAudioRenderer INSTANCE;
+    private static MWEngine INSTANCE;
     private IObserver                  _observer;
 
-    private SequencerAPI _api;       // hold reference (prevents garbage collection) to native sequencer providing audio
+    private SequencerController _sequencerController;       // hold reference (prevents garbage collection) to native sequencer providing audio
 
     /* audio generation related, calculated on platform-specific basis in constructor */
 
@@ -89,12 +92,12 @@ public final class NativeAudioRenderer extends Thread
     protected boolean _paused;
 
     /**
-     * AudioRenderer synthesizes all audio
-     * created in the sequencer
+     * The Java-side bridge to manage all native layer components
+     * of the MWEngine audio engine
      *
      * @param aContext   {Context} current application context
      */
-    public NativeAudioRenderer( Context aContext, IObserver aObserver )
+    public MWEngine( Context aContext, IObserver aObserver )
     {
         INSTANCE   = this;
         _observer  = aObserver;
@@ -112,7 +115,7 @@ public final class NativeAudioRenderer extends Thread
     // (re-)registers interface to match current/updated JNI environment
     public void initJNI()
     {
-        NativeAudioEngine.init();
+        MWEngineCore.init();
     }
 
     public void createOutput( int aSampleRate, int aBufferSize )
@@ -128,9 +131,8 @@ public final class NativeAudioRenderer extends Thread
         final float tempo = 120.0f;
         BYTES_PER_BAR = ( int )(( SAMPLE_RATE * 60 ) / tempo * 4 );
 
-        _api = new SequencerAPI();
-
-        _api.prepare( BUFFER_SIZE, SAMPLE_RATE, tempo, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT ); // start w/ default of 120 BPM in 4/4 time
+        _sequencerController = new SequencerController();
+        _sequencerController.prepare(BUFFER_SIZE, SAMPLE_RATE, tempo, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT); // start w/ default of 120 BPM in 4/4 time
     }
 
     /**
@@ -140,17 +142,17 @@ public final class NativeAudioRenderer extends Thread
      */
     public void setPlaying( boolean value )
     {
-        _api.setPlaying( value );
+        _sequencerController.setPlaying( value );
     }
 
     public void rewind()
     {
-        _api.rewind();
+        _sequencerController.rewind();
     }
 
     public void setBouncing( boolean value, String outputDirectory )
     {
-        _api.setBounceState(value, calculateMaxBuffers(), outputDirectory);
+        _sequencerController.setBounceState( value, calculateMaxBuffers(), outputDirectory );
     }
 
     public float getTempo()
@@ -158,14 +160,14 @@ public final class NativeAudioRenderer extends Thread
         return _tempo;
     }
 
-    public SequencerAPI getAPI()
+    public SequencerController getSequencerController()
     {
-        return _api;
+        return _sequencerController;
     }
 
     public ProcessingChain getMasterBusProcessors()
     {
-        return NativeAudioEngine.getMasterBusProcessors();
+        return MWEngineCore.getMasterBusProcessors();
     }
 
     /**
@@ -178,7 +180,7 @@ public final class NativeAudioRenderer extends Thread
      */
     public void setTempo( float aValue, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
     {
-        _api.setTempo(aValue, aTimeSigBeatAmount, aTimeSigBeatUnit);
+        _sequencerController.setTempo(aValue, aTimeSigBeatAmount, aTimeSigBeatUnit);
     }
 
     /**
@@ -203,7 +205,7 @@ public final class NativeAudioRenderer extends Thread
      */
     public void setTempoNow( float aValue, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
     {
-        _api.setTempoNow( aValue, aTimeSigBeatAmount, aTimeSigBeatUnit );
+        _sequencerController.setTempoNow(aValue, aTimeSigBeatAmount, aTimeSigBeatUnit);
     }
 
     public float getVolume()
@@ -214,7 +216,7 @@ public final class NativeAudioRenderer extends Thread
     public void setVolume( float aValue )
     {
         _volume = aValue * VOLUME_MULTIPLIER;
-        _api.setVolume(_volume);
+        _sequencerController.setVolume(_volume);
     }
 
     /**
@@ -224,7 +226,7 @@ public final class NativeAudioRenderer extends Thread
      */
     public void updateMeasures( int aValue )
     {
-        _api.updateMeasures( aValue, BAR_SUBDIVISIONS );
+        _sequencerController.updateMeasures(aValue, BAR_SUBDIVISIONS);
     }
 
     /**
@@ -244,7 +246,7 @@ public final class NativeAudioRenderer extends Thread
             maxRecordBuffers = calculateMaxBuffers();
 
         _recordOutput = value;
-        _api.setRecordingState( _recordOutput, maxRecordBuffers, outputDirectory );
+        _sequencerController.setRecordingState(_recordOutput, maxRecordBuffers, outputDirectory);
     }
 
     /**
@@ -265,7 +267,7 @@ public final class NativeAudioRenderer extends Thread
             maxRecordBuffers = BufferUtility.millisecondsToBuffer( maxDurationInMilliSeconds, SAMPLE_RATE );
 
         _recordOutput = value;
-        _api.setRecordingFromDeviceState( _recordOutput, maxRecordBuffers, outputDirectory );
+        _sequencerController.setRecordingFromDeviceState(_recordOutput, maxRecordBuffers, outputDirectory);
     }
 
     public boolean getRecordingState()
@@ -281,7 +283,7 @@ public final class NativeAudioRenderer extends Thread
      */
     public void setLoopPoint( int aStartPosition, int aEndPosition )
     {
-        _api.setLoopPoint( aStartPosition, aEndPosition, BAR_SUBDIVISIONS );
+        _sequencerController.setLoopPoint(aStartPosition, aEndPosition, BAR_SUBDIVISIONS);
     }
 
     @Override
@@ -330,7 +332,7 @@ public final class NativeAudioRenderer extends Thread
 
     public void reset()
     {
-        NativeAudioEngine.reset();
+        MWEngineCore.reset();
         _openSLRetry = 0;
     }
 
@@ -354,14 +356,14 @@ public final class NativeAudioRenderer extends Thread
 
         _openSLrunning = false;
 
-        NativeAudioEngine.stop();   // halt the Native audio thread
+        MWEngineCore.stop();   // halt the Native audio thread
 
         //_isRunning = false;       // nope, as that will actually halt THIS thread
     }
 
     public void run()
     {
-        Logger.log( "NativeAudioRenderer::STARTING NATIVE AUDIO RENDER LOOP" );
+        Log.d( "MWENGINE", "MWEngine::STARTING NATIVE AUDIO RENDER LOOP" );
 
         while ( _isRunning )
         {
@@ -369,10 +371,11 @@ public final class NativeAudioRenderer extends Thread
             if ( !_openSLrunning )
             {
                 // starting native thread
-                Logger.log( "NativeAudioRenderer::starting engine render thread with " + BUFFER_SIZE + " sample buffer at " + SAMPLE_RATE + " Hz samplerate" );
+                Log.d( "MWENGINE", "MWEngine::starting engine render thread with " + BUFFER_SIZE +
+                                   " sample buffer at " + SAMPLE_RATE + " Hz samplerate" );
 
                 _openSLrunning = true;
-                NativeAudioEngine.start();
+                MWEngineCore.start();
             }
 
             // the remainder of this function body is actually blocked
@@ -415,14 +418,14 @@ public final class NativeAudioRenderer extends Thread
      * can discover the IDs by building the Java project and running the following
      * command in the output /bin folder:
      *
-     * javap -s -private -classpath classes nl.igorski.lib.audio.renderer.NativeAudioRenderer
+     * javap -s -private -classpath classes nl.igorski.lib.audio.MWEngine
      */
 
     public static void handleBridgeConnected( int aSomething )
     {
         // JNI bridge from native layer connected to this static Java class
 
-        Logger.log( "NativeAudioRenderer::connected to JNI bridge" );
+        Log.d( "MWENGINE", "MWEngine::connected to JNI bridge" );
     }
 
     public static void handleNotification( int aNotificationId )
@@ -455,6 +458,7 @@ public final class NativeAudioRenderer extends Thread
             INSTANCE._initialCreation = false;
             INSTANCE.setLoopPoint( 0, BYTES_PER_BAR );
         }
-        Logger.log( "NativeAudioRenderer::handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
+        Log.d( "MWENGINE", "MWEngine::handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" +
+                aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
     }
 }

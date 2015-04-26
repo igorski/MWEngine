@@ -36,7 +36,7 @@
 
 /* this is the classpath to the Java class the MWEngine communicates with */
 
-#define JAVA_CLASS "nl/igorski/lib/audio/renderer/NativeAudioRenderer"
+#define JAVA_CLASS "nl/igorski/lib/audio/MWEngine"
 
 /* method signatures of aforementioned mediator JAVA_CLASS */
 

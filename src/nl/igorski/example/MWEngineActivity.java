@@ -2,20 +2,20 @@ package nl.igorski.example;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import nl.igorski.lib.audio.definitions.Pitch;
 import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
 import nl.igorski.lib.audio.nativeaudio.*;
-import nl.igorski.lib.audio.renderer.NativeAudioRenderer;
-import nl.igorski.lib.debug.Logger;
+import nl.igorski.lib.audio.MWEngine;
 
 import java.util.Vector;
 
 public class MWEngineActivity extends Activity
 {
-    public final String LOG_ID  = "MWENGINE";
+    public final String LOG_ID = "MWENGINE";
 
     /**
      * IMPORTANT : when creating native layer objects through JNI it
@@ -31,7 +31,7 @@ public class MWEngineActivity extends Activity
     private Filter                 _filter;
     private Phaser                 _phaser;
     private Delay                  _delay;
-    private NativeAudioRenderer    _audioRenderer;
+    private MWEngine _audioRenderer;
     private Vector<SynthEvent>     _synth1Events;
     private Vector<SynthEvent>     _synth2Events;
 
@@ -44,6 +44,8 @@ public class MWEngineActivity extends Activity
     private int SAMPLE_RATE;
     private int BUFFER_SIZE;
 
+    private static String LOG_TAG = "MWENGINE"; // logcat identifier
+
     /* public methods */
 
     /**
@@ -55,8 +57,6 @@ public class MWEngineActivity extends Activity
         super.onCreate( savedInstanceState );
         setContentView( R.layout.main );
 
-        Logger.setLogTag( "MWENGINE" ); // set the log tag for easy identification in logcat
-
         init();
     }
 
@@ -65,11 +65,11 @@ public class MWEngineActivity extends Activity
         if ( _inited )
             return;
 
-        Logger.log( "initing MWEngineActivity" );
+        Log.d( LOG_TAG, "initing MWEngineActivity" );
 
         // STEP 1 : preparing the native audio engine
 
-        _audioRenderer = new NativeAudioRenderer( getApplicationContext(), new StateObserver() );
+        _audioRenderer = new MWEngine( getApplicationContext(), new StateObserver() );
 
         // get the recommended buffer size for this device (NOTE : lower buffer sizes may
         // provide lower latency, but make sure all buffer sizes are powers of two of
@@ -87,8 +87,8 @@ public class MWEngineActivity extends Activity
         final int outputChannels = 1;   // see global.h
 
         // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
-        _lpfhpf    = new LPFHPFilter(( float )  NativeAudioRenderer.SAMPLE_RATE, 55, outputChannels );
-        _finalizer = new Finalizer  ( 2f, 500f, NativeAudioRenderer.SAMPLE_RATE,     outputChannels );
+        _lpfhpf    = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, outputChannels );
+        _finalizer = new Finalizer  ( 2f, 500f, MWEngine.SAMPLE_RATE,     outputChannels );
 
         final ProcessingChain masterBus = _audioRenderer.getMasterBusProcessors();
         masterBus.addProcessor( _finalizer );
@@ -184,7 +184,7 @@ public class MWEngineActivity extends Activity
     @Override
     public void onWindowFocusChanged( boolean hasFocus )
     {
-        Logger.log( "window focus changed for MWEngineActivity, has focus > " + hasFocus );
+        Log.d( LOG_TAG, "window focus changed for MWEngineActivity, has focus > " + hasFocus );
 
         if ( !hasFocus )
         {
@@ -283,7 +283,7 @@ public class MWEngineActivity extends Activity
 
     /* state change message listener */
 
-    private class StateObserver implements NativeAudioRenderer.IObserver
+    private class StateObserver implements MWEngine.IObserver
     {
         // cache the enumerations (from native layer) as integer Array
 
@@ -295,7 +295,7 @@ public class MWEngineActivity extends Activity
             {
                 case ERROR_HARDWARE_UNAVAILABLE:
 
-                    Logger.log( "NativeAudioRenderer::ERROR > received Open SL error callback from native layer" );
+                    Log.d( LOG_TAG, "MWEngine::ERROR > received Open SL error callback from native layer" );
 
                     // re-initialize thread
                     if ( _audioRenderer.canRestartEngine() )
@@ -305,7 +305,7 @@ public class MWEngineActivity extends Activity
                         _audioRenderer.start();
                     }
                     else {
-                        Logger.log( "exceeded maximum amount of retries. Cannot continue using audio engine" );
+                        Log.d( LOG_TAG, "exceeded maximum amount of retries. Cannot continue using audio engine" );
                     }
                     break;
             }
@@ -316,7 +316,7 @@ public class MWEngineActivity extends Activity
             switch ( _notificationEnums[ aNotificationId ])
             {
                 case SEQUENCER_POSITION_UPDATED:
-                    Logger.log( "sequencer position : " + aNotificationValue );
+                    Log.d( LOG_TAG, "sequencer position : " + aNotificationValue );
                     break;
             }
         }
@@ -334,7 +334,7 @@ public class MWEngineActivity extends Activity
      */
     private void createSynthEvent( SynthInstrument synth, double frequency, int position )
     {
-        final int duration     = 1; // 16th note at a BAR_SUBDIVISION of 16 (see NativeAudioRenderer)
+        final int duration     = 1; // 16th note at a BAR_SUBDIVISION of 16 (see MWEngine)
         final SynthEvent event = new SynthEvent(( float ) frequency, position, duration, synth );
 
         event.calculateBuffers();
