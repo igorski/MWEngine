@@ -20,31 +20,36 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SEQUENCERAPI_H_INCLUDED__
-#define __SEQUENCERAPI_H_INCLUDED__
+#ifndef __SEQUENCERCONTROLLER_H_INCLUDED__
+#define __SEQUENCERCONTROLLER_H_INCLUDED__
 
 #include "sequencer.h"
 #include <utilities/bulkcacher.h>
 
 /**
- * SequencerAPI is to be used as a bridge to
- * combine AudioEngine and Sequencer methods
- * into a single musical context
+ * SequencerAPI acts as the interface to control the Sequencers
+ * speed, position, range, etc. it is basically the mediator between
+ * the user interface and the Sequencer
  */
-class SequencerAPI
+class SequencerController
 {
     public:
-        SequencerAPI();
-        ~SequencerAPI();
+        SequencerController();
+        ~SequencerController();
         
-        void prepare             ( int aBufferSize, int aSampleRate, float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
-        void setLoopPoint        ( int aStartPosition, int aEndPosition, int aStepsPerBar );
-        void updateMeasures      ( int aAmount, int aStepsPerBar );
-        void setTempo            ( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
-        void setTempoNow         ( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
-        void setVolume           ( float aVolume );
-        void setPlaying          ( bool aPlaying );
-        void rewind              ();
+        void prepare       ( int aBufferSize, int aSampleRate, float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
+        void setTempo      ( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
+        void setTempoNow   ( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
+        void setVolume     ( float aVolume );
+        void setPlaying    ( bool aPlaying );
+
+        void setLoopRange  ( int aStartPosition, int aEndPosition );
+        void setLoopRange  ( int aStartPosition, int aEndPosition, int aStepsPerBar );
+        void updateMeasures( int aAmount, int aStepsPerBar );
+        void setNotificationMarker( int aPosition );
+        int  getPosition   ();
+        void setPosition   ( int aPosition );
+        void rewind        ();
 
         BulkCacher* getBulkCacher();
         void cacheAudioEventsForMeasure( int aMeasure );
@@ -52,6 +57,9 @@ class SequencerAPI
         void setBounceState             ( bool aIsBouncing, int aMaxBuffers, char* aOutputDirectory );
         void setRecordingState          ( bool aRecording,  int aMaxBuffers, char* aOutputDirectory );
         void setRecordingFromDeviceState( bool aRecording,  int aMaxBuffers, char* aOutputDirectory );
+
+    protected:
+        int stepsPerBar;
 };
 
 #endif

@@ -2,20 +2,20 @@ package nl.igorski.example;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import nl.igorski.lib.audio.definitions.Pitch;
 import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
 import nl.igorski.lib.audio.nativeaudio.*;
-import nl.igorski.lib.audio.renderer.NativeAudioRenderer;
-import nl.igorski.lib.debug.Logger;
+import nl.igorski.lib.audio.MWEngine;
 
 import java.util.Vector;
 
 public class MWEngineActivity extends Activity
 {
-    public final String LOG_ID  = "MWENGINE";
+    public final String LOG_ID = "MWENGINE";
 
     /**
      * IMPORTANT : when creating native layer objects through JNI it
@@ -24,16 +24,16 @@ public class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer              _finalizer;
-    private LPFHPFilter            _lpfhpf;
-    private SynthInstrument        _synth1;
-    private SynthInstrument        _synth2;
-    private Filter                 _filter;
-    private Phaser                 _phaser;
-    private Delay                  _delay;
-    private NativeAudioRenderer    _audioRenderer;
-    private Vector<SynthEvent>     _synth1Events;
-    private Vector<SynthEvent>     _synth2Events;
+    private Finalizer          _finalizer;
+    private LPFHPFilter        _lpfhpf;
+    private SynthInstrument    _synth1;
+    private SynthInstrument    _synth2;
+    private Filter             _filter;
+    private Phaser             _phaser;
+    private Delay              _delay;
+    private MWEngine           _engine;
+    private Vector<SynthEvent> _synth1Events;
+    private Vector<SynthEvent> _synth2Events;
 
     private boolean _sequencerPlaying = false;
     private boolean _inited           = false;
@@ -43,6 +43,8 @@ public class MWEngineActivity extends Activity
 
     private int SAMPLE_RATE;
     private int BUFFER_SIZE;
+
+    private static String LOG_TAG = "MWENGINE"; // logcat identifier
 
     /* public methods */
 
@@ -55,8 +57,6 @@ public class MWEngineActivity extends Activity
         super.onCreate( savedInstanceState );
         setContentView( R.layout.main );
 
-        Logger.setLogTag( "MWENGINE" ); // set the log tag for easy identification in logcat
-
         init();
     }
 
@@ -65,11 +65,11 @@ public class MWEngineActivity extends Activity
         if ( _inited )
             return;
 
-        Logger.log( "initing MWEngineActivity" );
+        Log.d( LOG_TAG, "initing MWEngineActivity" );
 
         // STEP 1 : preparing the native audio engine
 
-        _audioRenderer = new NativeAudioRenderer( getApplicationContext(), new StateObserver() );
+        _engine = new MWEngine( getApplicationContext(), new StateObserver() );
 
         // get the recommended buffer size for this device (NOTE : lower buffer sizes may
         // provide lower latency, but make sure all buffer sizes are powers of two of
@@ -80,17 +80,22 @@ public class MWEngineActivity extends Activity
         BUFFER_SIZE = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
         SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
-        _audioRenderer.createOutput( SAMPLE_RATE, BUFFER_SIZE );
-        _audioRenderer.updateMeasures( 1 ); // we'll loop just a single measure
-        _audioRenderer.start(); // start render thread (NOTE : sequencer is still paused!)
+        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+
+        // cache some of the engines properties
+
+        final ProcessingChain masterBus     = _engine.getMasterBusProcessors();
+        final SequencerController sequencer = _engine.getSequencerController();
+
+        sequencer.updateMeasures( 1, 16 ); // we'll loop just a single measure with 16th note subdivisions
+        _engine.start();                   // starts engines render thread (NOTE : sequencer is still paused!)
 
         final int outputChannels = 1;   // see global.h
 
         // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
-        _lpfhpf    = new LPFHPFilter(( float )  NativeAudioRenderer.SAMPLE_RATE, 55, outputChannels );
-        _finalizer = new Finalizer  ( 2f, 500f, NativeAudioRenderer.SAMPLE_RATE,     outputChannels );
+        _lpfhpf    = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, outputChannels );
+        _finalizer = new Finalizer  ( 2f, 500f, MWEngine.SAMPLE_RATE,     outputChannels );
 
-        final ProcessingChain masterBus = _audioRenderer.getMasterBusProcessors();
         masterBus.addProcessor( _finalizer );
         masterBus.addProcessor( _lpfhpf );
 
@@ -117,7 +122,7 @@ public class MWEngineActivity extends Activity
 
         // add some funky delay to synth 2
         _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
-        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
+        _synth2.getAudioChannel().getProcessingChain().addProcessor(_delay);
 
         // prepare synthesizer volumes
         _synth2.setVolume( .7f );
@@ -126,7 +131,7 @@ public class MWEngineActivity extends Activity
 
         _synth1Events = new Vector<SynthEvent>();   // remember : strong references!
         _synth2Events = new Vector<SynthEvent>();   // remember : strong references!
-        _audioRenderer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM at 4/4 time
+        sequencer.setTempoNow(130.0f, 4, 4);      // 130 BPM at 4/4 time
 
         // bubbly sixteenth note bass line for synth 1
 
@@ -184,16 +189,16 @@ public class MWEngineActivity extends Activity
     @Override
     public void onWindowFocusChanged( boolean hasFocus )
     {
-        Logger.log( "window focus changed for MWEngineActivity, has focus > " + hasFocus );
+        Log.d( LOG_TAG, "window focus changed for MWEngineActivity, has focus > " + hasFocus );
 
         if ( !hasFocus )
         {
             // suspending the app - stop threads to save CPU cycles
 
-            if ( _audioRenderer != null )
+            if ( _engine != null )
             {
-                _audioRenderer.pause();
-                _audioRenderer.dispose();
+                _engine.pause();
+                _engine.dispose();
             }
         }
         else
@@ -202,7 +207,7 @@ public class MWEngineActivity extends Activity
             if ( !_inited )
                 init();
             else
-                _audioRenderer.start(); // resumes audio render thread
+                _engine.start(); // resumes audio render thread
         }
     }
 
@@ -218,7 +223,7 @@ public class MWEngineActivity extends Activity
             // start/stop the sequencer so we can toggle hearing actual output! ;)
 
             _sequencerPlaying = !_sequencerPlaying;
-            _audioRenderer.setPlaying( _sequencerPlaying );
+            _engine.getSequencerController().setPlaying(_sequencerPlaying);
         }
     }
 
@@ -274,7 +279,7 @@ public class MWEngineActivity extends Activity
 
             final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
 
-            _audioRenderer.setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
+            _engine.getSequencerController().setTempo(newTempo, 4, 4); // update to match new tempo in 4/4 time
         }
 
         public void onStartTrackingTouch( SeekBar seekBar ) {}
@@ -283,7 +288,7 @@ public class MWEngineActivity extends Activity
 
     /* state change message listener */
 
-    private class StateObserver implements NativeAudioRenderer.IObserver
+    private class StateObserver implements MWEngine.IObserver
     {
         // cache the enumerations (from native layer) as integer Array
 
@@ -295,18 +300,23 @@ public class MWEngineActivity extends Activity
             {
                 case ERROR_HARDWARE_UNAVAILABLE:
 
-                    Logger.log( "NativeAudioRenderer::ERROR > received Open SL error callback from native layer" );
+                    Log.d( LOG_TAG, "ERROR : received Open SL error callback from native layer" );
 
                     // re-initialize thread
-                    if ( _audioRenderer.canRestartEngine() )
+                    if ( _engine.canRestartEngine() )
                     {
-                        _audioRenderer.dispose();
-                        _audioRenderer.createOutput( SAMPLE_RATE, BUFFER_SIZE );
-                        _audioRenderer.start();
+                        _engine.dispose();
+                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+                        _engine.start();
                     }
                     else {
-                        Logger.log( "exceeded maximum amount of retries. Cannot continue using audio engine" );
+                        Log.d( LOG_TAG, "exceeded maximum amount of retries. Cannot continue using audio engine" );
                     }
+                    break;
+
+                case MARKER_POSITION_REACHED:
+
+                    Log.d( LOG_TAG, "Marker position has been reached" );
                     break;
             }
         }
@@ -316,7 +326,7 @@ public class MWEngineActivity extends Activity
             switch ( _notificationEnums[ aNotificationId ])
             {
                 case SEQUENCER_POSITION_UPDATED:
-                    Logger.log( "sequencer position : " + aNotificationValue );
+                    Log.d( LOG_TAG, "sequencer position : " + aNotificationValue );
                     break;
             }
         }
@@ -334,7 +344,7 @@ public class MWEngineActivity extends Activity
      */
     private void createSynthEvent( SynthInstrument synth, double frequency, int position )
     {
-        final int duration     = 1; // 16th note at a BAR_SUBDIVISION of 16 (see NativeAudioRenderer)
+        final int duration     = 1; // 16th note at a BAR_SUBDIVISION of 16 (see MWEngine)
         final SynthEvent event = new SynthEvent(( float ) frequency, position, duration, synth );
 
         event.calculateBuffers();

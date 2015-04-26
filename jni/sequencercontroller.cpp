@@ -20,7 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "sequencer_api.h"
+#include "sequencercontroller.h"
 #include "sequencer.h"
 #include "audioengine.h"
 #include <definitions/notifications.h>
@@ -30,19 +30,19 @@
 
 /* constructor / destructor */
 
-SequencerAPI::SequencerAPI()
+SequencerController::SequencerController()
 {
-
+    stepsPerBar = 16; // by default, function as a sixteen step sequencer
 };
 
-SequencerAPI::~SequencerAPI()
+SequencerController::~SequencerController()
 {
-    // should never be removed and maintained throughout due to Object pooling...
+
 };
 
 /* public methods */
 
-void SequencerAPI::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo,
+void SequencerController::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo,
                             int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
     // set renderer output variables
@@ -54,9 +54,38 @@ void SequencerAPI::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo
     {
         AudioEngine::queuedTempo = aQueuedTempo;
         AudioEngine::handleTempoUpdate( aQueuedTempo, false );   // just to initialize all buffer sizes
-        setLoopPoint( 0, AudioEngine::bytes_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
+        setLoopRange( 0, AudioEngine::bytes_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
     }
 };
+
+void SequencerController::setTempo( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+{
+    AudioEngine::queuedTempo = aTempo;
+
+    AudioEngine::queuedTime_sig_beat_amount = aTimeSigBeatAmount;
+    AudioEngine::queuedTime_sig_beat_unit   = aTimeSigBeatUnit;
+}
+
+void SequencerController::setTempoNow( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+{
+    setTempo( aTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
+    AudioEngine::handleTempoUpdate( AudioEngine::queuedTempo, true );
+}
+
+void SequencerController::setVolume( float aVolume )
+{
+    AudioEngine::volume = aVolume;
+}
+
+void SequencerController::setPlaying( bool aIsPlaying )
+{
+    AudioEngine::playing = aIsPlaying;
+}
+
+void SequencerController::setLoopRange( int aStartPosition, int aEndPosition )
+{
+    setLoopRange( aStartPosition, aEndPosition, stepsPerBar );
+}
 
 /**
  * make the sequencer loop between two given points
@@ -66,7 +95,7 @@ void SequencerAPI::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo
  * @param aStepsPerBar   {int} the amount of individual segments the sequencer subdivides a single bar into
  *                             this is used for periodic notifications when the sequencer switches step
  */
-void SequencerAPI::setLoopPoint( int aStartPosition, int aEndPosition, int aStepsPerBar )
+void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, int aStepsPerBar )
 {
     AudioEngine::min_buffer_position = aStartPosition;
     AudioEngine::max_buffer_position = aEndPosition;
@@ -86,43 +115,43 @@ void SequencerAPI::setLoopPoint( int aStartPosition, int aEndPosition, int aStep
     {
         AudioEngine::stepPosition = AudioEngine::min_step_position;
     }
+    stepsPerBar = aStepsPerBar;
 }
 
-void SequencerAPI::updateMeasures( int aValue, int aStepsPerBar )
+void SequencerController::updateMeasures( int aValue, int aStepsPerBar )
 {
     AudioEngine::amount_of_bars      = aValue;
     AudioEngine::max_step_position   = aStepsPerBar * AudioEngine::amount_of_bars;
     AudioEngine::max_buffer_position = AudioEngine::bytes_per_bar * AudioEngine::amount_of_bars;
 }
 
-void SequencerAPI::setTempo( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+void SequencerController::rewind()
 {
-    AudioEngine::queuedTempo = aTempo;
-
-    AudioEngine::queuedTime_sig_beat_amount = aTimeSigBeatAmount;
-    AudioEngine::queuedTime_sig_beat_unit   = aTimeSigBeatUnit;
+    setPosition( AudioEngine::min_buffer_position );
 }
 
-void SequencerAPI::setTempoNow( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+void SequencerController::setNotificationMarker( int aPosition )
 {
-    setTempo( aTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
-    AudioEngine::handleTempoUpdate( AudioEngine::queuedTempo, true );
+    AudioEngine::marked_buffer_position = aPosition;
 }
 
-void SequencerAPI::setVolume( float aVolume )
+int SequencerController::getPosition()
 {
-    AudioEngine::volume = aVolume;
+    return AudioEngine::bufferPosition;
 }
 
-void SequencerAPI::setPlaying( bool aIsPlaying )
+void SequencerController::setPosition( int aPosition )
 {
-    AudioEngine::playing = aIsPlaying;
-}
+    // keep position within the sequences range (see "setLoopRange")
 
-void SequencerAPI::rewind()
-{
-    AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
-    AudioEngine::stepPosition   = AudioEngine::min_step_position;
+    if ( aPosition < AudioEngine::min_buffer_position )
+        aPosition = AudioEngine::min_buffer_position;
+
+    else if ( aPosition > AudioEngine::max_buffer_position )
+        aPosition = AudioEngine::max_buffer_position;
+
+    AudioEngine::bufferPosition = aPosition;
+    AudioEngine::stepPosition   = ( aPosition / AudioEngine::bytes_per_bar ) * stepsPerBar;
 
     Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED );
 }
@@ -133,7 +162,7 @@ void SequencerAPI::rewind()
  *
  * @param aMeasure {int} the measure containing the events we'd like to precache
  */
-void SequencerAPI::cacheAudioEventsForMeasure( int aMeasure )
+void SequencerController::cacheAudioEventsForMeasure( int aMeasure )
 {
     int startBufferPos = AudioEngine::bytes_per_bar * aMeasure;
     int endBufferPos   = startBufferPos + AudioEngine::bytes_per_bar;
@@ -147,7 +176,7 @@ void SequencerAPI::cacheAudioEventsForMeasure( int aMeasure )
         getBulkCacher()->cacheQueue();
 }
 
-BulkCacher* SequencerAPI::getBulkCacher()
+BulkCacher* SequencerController::getBulkCacher()
 {
     return sequencer::bulkCacher;
 }
@@ -156,7 +185,7 @@ BulkCacher* SequencerAPI::getBulkCacher()
  * when bouncing, the writing of buffers into the hardware is omitted
  * for an increase in bouncing speed (otherwise its real time)
  */
-void SequencerAPI::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputDirectory )
+void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputDirectory )
 {
     AudioEngine::bouncing = aIsBouncing;
 
@@ -177,7 +206,7 @@ void SequencerAPI::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOut
  *                          the given output directory.
  * aOutputDirectory {char*} name of the folder to write each snippet into
  */
-void SequencerAPI::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
+void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
     bool wasRecording         = AudioEngine::recordOutput;
     AudioEngine::recordOutput = aRecording;
@@ -214,7 +243,7 @@ void SequencerAPI::setRecordingState( bool aRecording, int aMaxBuffers, char* aO
  *                          the given output directory.
  * aOutputDirectory {char*} name of the folder to write each snippet into
  */
-void SequencerAPI::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
+void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
     bool wasRecording              = AudioEngine::recordFromDevice;
     AudioEngine::recordFromDevice  = aRecording;

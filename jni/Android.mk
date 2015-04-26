@@ -52,7 +52,7 @@ utilities/samplemanager.cpp \
 utilities/bufferpool.cpp \
 utilities/tablepool.cpp \
 sequencer.cpp \
-sequencer_api.cpp \
+sequencercontroller.cpp \
 wavetable.cpp \
 utilities/wavereader.cpp \
 utilities/wavewriter.cpp \

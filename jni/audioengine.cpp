@@ -46,12 +46,13 @@ namespace AudioEngine
     int bytes_per_bar;
     int bytes_per_tick;
 
-    int amount_of_bars      = 1;
-    int beat_subdivision    = 4;
-    int min_buffer_position = 0; // initially 0, but can differ when looping specific measures
-    int max_buffer_position = 0; // calculated when sequencer API creates output
-    int min_step_position   = 0;
-    int max_step_position   = 16;
+    int amount_of_bars         = 1;
+    int beat_subdivision       = 4;
+    int min_buffer_position    = 0;  // initially 0, but can differ when looping specific measures
+    int max_buffer_position    = 0;  // calculated when sequencer API creates output
+    int marked_buffer_position = -1; // -1 means no marker has been set, no notifications will go out
+    int min_step_position      = 0;
+    int max_step_position      = 16;
 
     bool playing          = false;
     bool recordOutput     = false;
@@ -320,6 +321,10 @@ namespace AudioEngine
 
                     if ( bufferPosition >= max_buffer_position )
                         bufferPosition = min_buffer_position;
+
+                    if ( marked_buffer_position != 1 &&
+                         bufferPosition == marked_buffer_position )
+                         Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
                }
             }
             // render the buffer in the audio hardware (unless we're bouncing as writing the output

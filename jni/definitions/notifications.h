@@ -35,6 +35,7 @@ class Notifications
          */
         enum ids {
             SEQUENCER_POSITION_UPDATED,
+            MARKER_POSITION_REACHED,
             SEQUENCER_TEMPO_UPDATED,
             RECORDING_STATE_UPDATED,
             BOUNCE_COMPLETE,
