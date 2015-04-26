@@ -6953,7 +6953,22 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Se
 }
 
 
-SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_SequencerController_1setLoopPoint(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3, jint jarg4) {
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_SequencerController_1setLoopRange_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3) {
+  SequencerController *arg1 = (SequencerController *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SequencerController **)&jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setLoopRange(arg2,arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_SequencerController_1setLoopRange_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3, jint jarg4) {
   SequencerController *arg1 = (SequencerController *) 0 ;
   int arg2 ;
   int arg3 ;
@@ -6966,7 +6981,7 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Se
   arg2 = (int)jarg2; 
   arg3 = (int)jarg3; 
   arg4 = (int)jarg4; 
-  (arg1)->setLoopPoint(arg2,arg3,arg4);
+  (arg1)->setLoopRange(arg2,arg3,arg4);
 }
 
 
@@ -6982,6 +6997,19 @@ SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Se
   arg2 = (int)jarg2; 
   arg3 = (int)jarg3; 
   (arg1)->updateMeasures(arg2,arg3);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_SequencerController_1setNotificationMarker(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  SequencerController *arg1 = (SequencerController *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(SequencerController **)&jarg1; 
+  arg2 = (int)jarg2; 
+  (arg1)->setNotificationMarker(arg2);
 }
 
 

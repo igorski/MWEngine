@@ -54,7 +54,7 @@ void SequencerController::prepare( int aBufferSize, int aSampleRate, float aQueu
     {
         AudioEngine::queuedTempo = aQueuedTempo;
         AudioEngine::handleTempoUpdate( aQueuedTempo, false );   // just to initialize all buffer sizes
-        setLoopPoint( 0, AudioEngine::bytes_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
+        setLoopRange( 0, AudioEngine::bytes_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
     }
 };
 
@@ -82,6 +82,11 @@ void SequencerController::setPlaying( bool aIsPlaying )
     AudioEngine::playing = aIsPlaying;
 }
 
+void SequencerController::setLoopRange( int aStartPosition, int aEndPosition )
+{
+    setLoopRange( aStartPosition, aEndPosition, stepsPerBar );
+}
+
 /**
  * make the sequencer loop between two given points
  *
@@ -90,7 +95,7 @@ void SequencerController::setPlaying( bool aIsPlaying )
  * @param aStepsPerBar   {int} the amount of individual segments the sequencer subdivides a single bar into
  *                             this is used for periodic notifications when the sequencer switches step
  */
-void SequencerController::setLoopPoint( int aStartPosition, int aEndPosition, int aStepsPerBar )
+void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, int aStepsPerBar )
 {
     AudioEngine::min_buffer_position = aStartPosition;
     AudioEngine::max_buffer_position = aEndPosition;
@@ -125,6 +130,11 @@ void SequencerController::rewind()
     setPosition( AudioEngine::min_buffer_position );
 }
 
+void SequencerController::setNotificationMarker( int aPosition )
+{
+    AudioEngine::marked_buffer_position = aPosition;
+}
+
 int SequencerController::getPosition()
 {
     return AudioEngine::bufferPosition;
@@ -132,7 +142,7 @@ int SequencerController::getPosition()
 
 void SequencerController::setPosition( int aPosition )
 {
-    // keep position within the sequences range (see "setLoopPoint")
+    // keep position within the sequences range (see "setLoopRange")
 
     if ( aPosition < AudioEngine::min_buffer_position )
         aPosition = AudioEngine::min_buffer_position;

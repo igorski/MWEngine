@@ -48,7 +48,7 @@ public final class MWEngine extends Thread
     }
 
     private static MWEngine INSTANCE;
-    private IObserver                  _observer;
+    private IObserver       _observer;
 
     private SequencerController _sequencerController;       // hold reference (prevents garbage collection) to native sequencer providing audio
 
@@ -69,11 +69,9 @@ public final class MWEngine extends Thread
 
     // we make these available across classes
 
-    public static int BYTES_PER_SAMPLE = 8;
     public static int BYTES_PER_BEAT;
     public static int BYTES_PER_BAR;
     public static int BYTES_PER_TICK;
-    public static int BAR_SUBDIVISIONS = 16;   // amount of steps per bar (defaults to sixteen step sequencing)
 
     /* recording buffer specific */
 
@@ -132,80 +130,7 @@ public final class MWEngine extends Thread
         BYTES_PER_BAR = ( int )(( SAMPLE_RATE * 60 ) / tempo * 4 );
 
         _sequencerController = new SequencerController();
-        _sequencerController.prepare(BUFFER_SIZE, SAMPLE_RATE, tempo, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT); // start w/ default of 120 BPM in 4/4 time
-    }
-
-    /**
-     * set play / pause state
-     * @param value {boolean} whether sequencer is playing (true)
-     *                        or paused (false)
-     */
-    public void setPlaying( boolean value )
-    {
-        _sequencerController.setPlaying( value );
-    }
-
-    public void rewind()
-    {
-        _sequencerController.rewind();
-    }
-
-    public void setBouncing( boolean value, String outputDirectory )
-    {
-        _sequencerController.setBounceState( value, calculateMaxBuffers(), outputDirectory );
-    }
-
-    public float getTempo()
-    {
-        return _tempo;
-    }
-
-    public SequencerController getSequencerController()
-    {
-        return _sequencerController;
-    }
-
-    public ProcessingChain getMasterBusProcessors()
-    {
-        return MWEngineCore.getMasterBusProcessors();
-    }
-
-    /**
-     * tempo changes are executed outside of the
-     * render and thus are queued
-     *
-     * @param aValue {float} new tempo
-     * @param aTimeSigBeatAmount {int} time signature beat amount
-     * @param aTimeSigBeatUnit   {int} time signature beat unit
-     */
-    public void setTempo( float aValue, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
-    {
-        _sequencerController.setTempo(aValue, aTimeSigBeatAmount, aTimeSigBeatUnit);
-    }
-
-    /**
-     * set the amount of subdivisions we use in a bar (in a musical
-     * context this can be used to lock time, i.e. 16 allows for
-     * fixed sixteen-step sequencing)
-     *
-     * @param value {int}
-     */
-    public void setBarSubdivisions( int value )
-    {
-        BAR_SUBDIVISIONS = value;
-    }
-
-    /**
-     * unless the sequencer isn't running, when
-     * this method can be used to set the tempo directly
-     *
-     * @param aValue {float} new tempo
-     * @param aTimeSigBeatAmount {int} time signature beat amount
-     * @param aTimeSigBeatUnit   {int} time signature beat amount
-     */
-    public void setTempoNow( float aValue, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
-    {
-        _sequencerController.setTempoNow(aValue, aTimeSigBeatAmount, aTimeSigBeatUnit);
+        _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, tempo, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT ); // start w/ default of 120 BPM in 4/4 time
     }
 
     public float getVolume()
@@ -219,14 +144,19 @@ public final class MWEngine extends Thread
         _sequencerController.setVolume(_volume);
     }
 
-    /**
-     * set the around of measures (bars) the current sequence/song holds
-     *
-     * @param aValue          {int} amount of measures
-     */
-    public void updateMeasures( int aValue )
+    public SequencerController getSequencerController()
     {
-        _sequencerController.updateMeasures(aValue, BAR_SUBDIVISIONS);
+        return _sequencerController;
+    }
+
+    public ProcessingChain getMasterBusProcessors()
+    {
+        return MWEngineCore.getMasterBusProcessors();
+    }
+
+    public void setBouncing( boolean value, String outputDirectory )
+    {
+        _sequencerController.setBounceState( value, calculateMaxBuffers(), outputDirectory );
     }
 
     /**
@@ -273,17 +203,6 @@ public final class MWEngine extends Thread
     public boolean getRecordingState()
     {
         return _recordOutput;
-    }
-
-    /**
-     * define a range for the sequencer to loop
-     *
-     * @param aStartPosition  {int} buffer position of the start point
-     * @param aEndPosition    {int} buffer position of the end point
-     */
-    public void setLoopPoint( int aStartPosition, int aEndPosition )
-    {
-        _sequencerController.setLoopPoint(aStartPosition, aEndPosition, BAR_SUBDIVISIONS);
     }
 
     @Override
@@ -456,7 +375,7 @@ public final class MWEngine extends Thread
         if ( INSTANCE._initialCreation )
         {
             INSTANCE._initialCreation = false;
-            INSTANCE.setLoopPoint( 0, BYTES_PER_BAR );
+            INSTANCE.getSequencerController().setLoopRange(0, BYTES_PER_BAR);
         }
         Log.d( "MWENGINE", "MWEngine::handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" +
                 aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
