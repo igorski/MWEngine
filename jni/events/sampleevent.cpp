@@ -89,7 +89,7 @@ int SampleEvent::getReadPointer()
 
 void SampleEvent::play()
 {
-    _lastLiveBufferPosition = _bufferRangeStart;
+    _lastPlaybackPosition = _bufferRangeStart;
     _instrument->getLiveEvents()->push_back( this );
     setEnabled( true );
 }
@@ -101,7 +101,17 @@ void SampleEvent::stop()
 }
 
 /**
+ * return the current playback position for a live event
+ * e.g. a SampleEvent triggered by play()
+ */
+int SampleEvent::getPlaybackPosition()
+{
+    return _lastPlaybackPosition;
+}
+
+/**
  * only invoked for a live event (see sequencer.cpp and audioengine.cpp)
+ * or a SampleEvent triggered by play()
  */
 AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 {
@@ -110,9 +120,16 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
     else
         _liveBuffer->silenceBuffers();  // clear previous contents
 
-    _liveBuffer->mergeBuffers( _buffer, _lastLiveBufferPosition, 0, 1 );
+    int mergeLength = _liveBuffer->mergeBuffers( _buffer, _lastPlaybackPosition, 0, 1 );
 
-    if (( _lastLiveBufferPosition += aBufferLength ) > _bufferRangeEnd )
+    // if the SampleEvent is loopeable and the merge is smaller than given aBufferLength
+    // (in other words: the full sample has been renderered, append from the beginning)
+
+    if ( _loopeable && mergeLength < aBufferLength ) {
+        _liveBuffer->mergeBuffers( _buffer, 0, mergeLength, 1 );
+    }
+
+    if (( _lastPlaybackPosition += aBufferLength ) > _bufferRangeEnd )
     {
         // if this is a one-shot SampleEvent, remove it from the sequencer when we have exceeded
         // the sample length (e.g. played it in its entirety)
@@ -120,7 +137,7 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
         if ( !_loopeable )
             removeLiveEvent();
         else
-            _lastLiveBufferPosition = _bufferRangeStart;
+            _lastPlaybackPosition -= ( _bufferRangeEnd - _bufferRangeStart );
     }
     return _liveBuffer;
 }
@@ -287,7 +304,7 @@ void SampleEvent::init( BaseInstrument* instrument )
     _addedToSequencer       = false;
     _readPointer            = 0;
     _rangePointer           = 0;
-    _lastLiveBufferPosition = 0;
+    _lastPlaybackPosition   = 0;
     _loopeable              = false;
     _destroyableBuffer      = false; // is referenced via SampleManager !
     _instrument             = instrument;

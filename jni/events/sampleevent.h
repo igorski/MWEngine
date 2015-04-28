@@ -48,7 +48,9 @@ class SampleEvent : public BaseAudioEvent
 
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
+
         bool getBufferForRange( AudioBuffer* buffer, int readPos );
+        int getPlaybackPosition();
 
         void play(); // enable the event and play it back immediately (for auditioning purposes)
         void stop(); // immediately stops playing the live-auditioned event
@@ -67,7 +69,7 @@ class SampleEvent : public BaseAudioEvent
 
         BaseInstrument* _instrument;    // the BaseInstrument this event belongs to
         AudioBuffer*    _liveBuffer;
-        int _lastLiveBufferPosition;
+        int _lastPlaybackPosition;
 
         // removal of AudioEvents must occur outside of the
         // cache loop, by activating this boolean we're queuing
