@@ -31,7 +31,7 @@ class BitCrusher : public BaseProcessor
         BitCrusher( float amount, float inputMix, float outputMix );
 
         float getAmount();
-        void setAmount( float value );
+        void setAmount( float value ); // range between -1 to +1
         float getInputMix();
         void setInputMix( float value );
         float getOutputMix();

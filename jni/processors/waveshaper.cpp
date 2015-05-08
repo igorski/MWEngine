@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,8 +27,8 @@
 
 WaveShaper::WaveShaper( float amount, float level )
 {
-    _amount = amount;
-    _level  = level;
+    setAmount( amount );
+    setLevel ( level );
 }
 
 /* public methods */
@@ -43,10 +43,10 @@ void WaveShaper::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
         for ( int j = 0; j < bufferSize; ++j )
         {
-            float input = channelBuffer[ j ];
-            input = ( input * ( std::abs( input ) + _amount ) / (( int ) input ^ 2 ) + ( _amount - 1 ) * std::abs( input ) + 1 );
-            channelBuffer[ j ] = input * _level;
+            SAMPLE_TYPE x = channelBuffer[ j ];
+            channelBuffer[ j ] = (( 1.0 + _multiplier ) * x / ( 1.0 + _multiplier * std::abs( x ))) * _level;
         }
+
         // omit unnecessary cycles by copying the mono content
         if ( isMonoSource )
         {
@@ -65,7 +65,17 @@ float WaveShaper::getAmount()
 
 void WaveShaper::setAmount( float value )
 {
+    // keep within range
+
+    if ( value <= -MAX_PHASE )
+        value = -.99f;
+
+    else if ( value >= MAX_PHASE )
+        value = .99f;
+
     _amount = value;
+
+    _multiplier = 2.0 * _amount / ( 1.0 - _amount );
 }
 
 float WaveShaper::getLevel()
