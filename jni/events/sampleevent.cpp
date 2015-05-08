@@ -137,7 +137,7 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
         if ( !_loopeable )
             removeLiveEvent();
         else
-            _lastPlaybackPosition -= ( _bufferRangeEnd - _bufferRangeStart );
+            _lastPlaybackPosition -= _bufferRangeLength;
     }
     return _liveBuffer;
 }
