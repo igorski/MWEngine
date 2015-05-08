@@ -37,6 +37,7 @@ processors/filter.cpp \
 processors/finalizer.cpp \
 processors/fm.cpp \
 processors/formantfilter.cpp \
+processors/glitcher.cpp \
 processors/limiter.cpp \
 processors/lpfhpfilter.cpp \
 processors/phaser.cpp \

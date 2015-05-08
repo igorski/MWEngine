@@ -226,6 +226,7 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #include "processors/finalizer.h"
 #include "processors/fm.h"
 #include "processors/formantfilter.h"
+#include "processors/glitcher.h"
 #include "processors/lpfhpfilter.h"
 #include "processors/phaser.h"
 #include "processors/waveshaper.h"
@@ -2872,6 +2873,103 @@ SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Fo
   result = (int)FormantFilter::VOWEL_U;
   jresult = (jint)result; 
   return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_new_1Glitcher(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2) {
+  jlong jresult = 0 ;
+  int arg1 ;
+  int arg2 ;
+  Glitcher *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (int)jarg1; 
+  arg2 = (int)jarg2; 
+  result = (Glitcher *)new Glitcher(arg1,arg2);
+  *(Glitcher **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_delete_1Glitcher(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  Glitcher *arg1 = (Glitcher *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(Glitcher **)&jarg1; 
+  delete arg1;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Glitcher_1setRecording(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  Glitcher *arg1 = (Glitcher *) 0 ;
+  bool arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Glitcher **)&jarg1; 
+  arg2 = jarg2 ? true : false; 
+  (arg1)->setRecording(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Glitcher_1setPlayback(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  Glitcher *arg1 = (Glitcher *) 0 ;
+  bool arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Glitcher **)&jarg1; 
+  arg2 = jarg2 ? true : false; 
+  (arg1)->setPlayback(arg2);
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Glitcher_1setPlaybackRange(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jint jarg3) {
+  Glitcher *arg1 = (Glitcher *) 0 ;
+  int arg2 ;
+  int arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Glitcher **)&jarg1; 
+  arg2 = (int)jarg2; 
+  arg3 = (int)jarg3; 
+  (arg1)->setPlaybackRange(arg2,arg3);
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Glitcher_1getSampleLength(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  Glitcher *arg1 = (Glitcher *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Glitcher **)&jarg1; 
+  result = (int)(arg1)->getSampleLength();
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Glitcher_1process(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jboolean jarg3) {
+  Glitcher *arg1 = (Glitcher *) 0 ;
+  AudioBuffer *arg2 = (AudioBuffer *) 0 ;
+  bool arg3 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(Glitcher **)&jarg1; 
+  arg2 = *(AudioBuffer **)&jarg2; 
+  arg3 = jarg3 ? true : false; 
+  (arg1)->process(arg2,arg3);
 }
 
 
@@ -7230,6 +7328,14 @@ SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_F
     (void)jenv;
     (void)jcls;
     *(BaseProcessor **)&baseptr = *(FormantFilter **)&jarg1;
+    return baseptr;
+}
+
+SWIGEXPORT jlong JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_Glitcher_1SWIGUpcast(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+    jlong baseptr = 0;
+    (void)jenv;
+    (void)jcls;
+    *(BaseProcessor **)&baseptr = *(Glitcher **)&jarg1;
     return baseptr;
 }
 
