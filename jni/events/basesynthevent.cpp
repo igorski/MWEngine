@@ -95,7 +95,7 @@ void BaseSynthEvent::setFrequency( float aFrequency, bool storeAsBaseFrequency )
     if ( storeAsBaseFrequency )
         _baseFrequency = aFrequency;
 
-    _instrument->synthesizer->initializeEventProperties( this );
+    _instrument->synthesizer->initializeEventProperties( this, false );
 }
 
 float BaseSynthEvent::getVolume()
@@ -182,7 +182,7 @@ void BaseSynthEvent::calculateBuffers()
         _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 
     if ( isSequenced )
-         _instrument->synthesizer->initializeEventProperties( this );
+         _instrument->synthesizer->initializeEventProperties( this, true );
 }
 
 /**
@@ -217,7 +217,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
         outputBuffer->mergeBuffers( _buffer, 0, writeOffset, MAX_PHASE );
 
-        // reset of properties at end of write
+        // reset of event properties at end of write
         if ( lastWriteIndex >= _sampleLength )
             calculateBuffers();
     }
@@ -236,7 +236,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
             outputBuffer->mergeBuffers( _buffer, 0, loopOffset, MAX_PHASE );
 
-            // reset of properties at end of write
+            // reset of event properties at end of write
             if ( lastWriteIndex >= _sampleLength )
                 calculateBuffers();
         }

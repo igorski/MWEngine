@@ -22,7 +22,6 @@
  */
 #include "ringbuffer.h"
 #include <utilities/bufferutility.h>
-#include <utilities/utils.h>
 
 /* constructor / destructor */
 
@@ -37,11 +36,7 @@ RingBuffer::RingBuffer( int capacity )
 
 RingBuffer::~RingBuffer()
 {
-    if ( _buffer != 0 )
-    {
-        delete _buffer;
-        _buffer = 0;
-    }
+    delete _buffer;
 }
 
 /* public methods */
@@ -53,17 +48,17 @@ int RingBuffer::getBufferLength()
 
 int RingBuffer::getSize()
 {
-    return ( _last - _first );
+    return _last - _first;
 }
 
 bool RingBuffer::isEmpty()
 {
-    return ( getSize() == 0 );
+    return getSize() == 0;
 }
 
 bool RingBuffer::isFull()
 {
-    return ( getSize() == _bufferLength );
+    return getSize() == _bufferLength;
 }
 
 void RingBuffer::flush()
@@ -80,9 +75,6 @@ void RingBuffer::flush()
 
 void RingBuffer::enqueue( SAMPLE_TYPE aSample )
 {
-    if ( _buffer == 0 )
-        return;
-
     _buffer[ _last ] = aSample;
 
     if ( ++_last >= _bufferLength )
@@ -93,10 +85,7 @@ SAMPLE_TYPE RingBuffer::dequeue()
 {
     SAMPLE_TYPE item;
 
-    if ( _buffer == 0 )
-        return ( SAMPLE_TYPE ) randomFloat();
-    else
-        item = _buffer[ _first ];
+    item = _buffer[ _first ];
 
     if ( ++_first >= _bufferLength )
         _first = 0;
@@ -106,8 +95,5 @@ SAMPLE_TYPE RingBuffer::dequeue()
 
 SAMPLE_TYPE RingBuffer::peek()
 {
-    if ( _buffer == 0 )
-        return ( SAMPLE_TYPE ) randomFloat();
-
     return _buffer[ _first ];
 }

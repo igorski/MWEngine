@@ -79,11 +79,11 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 
     // cache event properties for this render cycle
 
-    SAMPLE_TYPE phase           = aEvent->getPhaseForOscillator( _oscillatorNum );
-    SAMPLE_TYPE frequency       = aEvent->getFrequency();
-    SAMPLE_TYPE baseFrequency   = aEvent->getBaseFrequency();
-    bool isSequenced            = aEvent->isSequenced;
-    int bufferWriteIndex        = aEvent->lastWriteIndex;
+    SAMPLE_TYPE phase         = aEvent->getPhaseForOscillator( _oscillatorNum );
+    SAMPLE_TYPE frequency     = aEvent->getFrequency();
+    SAMPLE_TYPE baseFrequency = aEvent->getBaseFrequency();
+    bool isSequenced          = aEvent->isSequenced;
+    int bufferWriteIndex      = aEvent->lastWriteIndex;
 
     // modules
 
@@ -221,7 +221,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
             case WaveForms::KARPLUS_STRONG:
 
                 // --- Karplus-Strong algorithm for plucked string-sound (0.990f being energy decay factor)
-                ringBuffer->enqueue(( 0.990f * (( ringBuffer->dequeue() + ringBuffer->peek()) / 2 )));
+                ringBuffer->enqueue(( 0.990f * (( ringBuffer->dequeue() + ringBuffer->peek() ) / 2 ) ));
                 amp = ringBuffer->peek();
 
                 break;
@@ -232,7 +232,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         {
             phase += aEvent->cachedProps.phaseIncr;
 
-            // restore phase, max range is 0f-1f
+            // keep phase within range (-MAX_PHASE to +MAX_PHASE)
             if ( phase > MAX_PHASE )
                 phase -= MAX_PHASE;
         }
@@ -241,10 +241,11 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         if ( doArpeggiator )
         {
             // step the arpeggiator to the next position
-            if ( arpeggiator->peek())
+            if ( arpeggiator->peek() )
             {
                 frequency = arpeggiator->getPitchForStep( arpeggiator->getStep(), baseFrequency );
                 aEvent->setFrequency( frequency, false );
+                initializeEventProperties( aEvent, true ); // force update of ring buffers where applicable
                 if ( type == WaveForms::KARPLUS_STRONG ) ringBuffer = getRingBuffer( aEvent, frequency );
             }
         }
@@ -307,9 +308,12 @@ void Synthesizer::updateProperties()
     }
 }
 
-void Synthesizer::initializeEventProperties( BaseSynthEvent* aEvent )
+void Synthesizer::initializeEventProperties( BaseSynthEvent* aEvent, bool initializeBuffers )
 {
-    for ( int i = 0; i < _instrument->getOscillatorAmount(); ++i )
+    if ( !initializeBuffers )
+        return;
+
+    for ( int i = 0, l = _instrument->getOscillatorAmount(); i < l; ++i )
     {
         // in case of Karplus Strong synthesis ensure the ring buffers
         // are filled with noise (this method should indicate a new "pluck")
@@ -318,6 +322,7 @@ void Synthesizer::initializeEventProperties( BaseSynthEvent* aEvent )
         {
             SAMPLE_TYPE frequency  = tuneOscillator( i, aEvent->getFrequency() );
             RingBuffer* ringBuffer = getRingBuffer( aEvent, frequency );
+
             initKarplusStrong( ringBuffer );
         }
     }
@@ -389,6 +394,7 @@ void Synthesizer::initKarplusStrong( RingBuffer* ringBuffer )
 {
     ringBuffer->flush();
 
+    // fill the ring buffer with noise (the initial "pluck" of the string)
     for ( int i = 0, l = ringBuffer->getBufferLength(); i < l; ++i )
-        ringBuffer->enqueue( randomFloat());
+        ringBuffer->enqueue( randomFloat() );
 }

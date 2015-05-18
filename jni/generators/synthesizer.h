@@ -49,7 +49,7 @@ class Synthesizer
 
         void render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent );
         void updateProperties();
-        void initializeEventProperties( BaseSynthEvent* aEvent );
+        void initializeEventProperties( BaseSynthEvent* aEvent, bool initializeBuffers );
 
     protected:
 

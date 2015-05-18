@@ -79,8 +79,7 @@ namespace BufferPool
         if ( mapIt != eventMap.end() )
             return mapIt->second;
 
-        // new ringBuffer, create on the fly (note use of float value for precision ;)
-        // additionally, flush all previous ring buffers (their buffer
+        // new ringBuffer, create on the fly
 
         int ringBufferSize     = ( int ) (( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE / aFrequency );
         RingBuffer* ringBuffer = new RingBuffer( ringBufferSize );
@@ -100,12 +99,13 @@ namespace BufferPool
 
             // destroy ring buffers
 
-            for ( innerRingMap::iterator in_it = eventMap.begin(); in_it != eventMap.end(); ++in_it )
+            for ( innerRingMap::iterator in_it = eventMap.begin(); in_it != eventMap.end(); )
             {
                 RingBuffer* ringBuffer = in_it->second;
+
                 delete ringBuffer;
 
-                eventMap.erase( in_it );
+                eventMap.erase( in_it++ );
             }
             _eventBufferMap.erase( it );    // erase contents for events instanceId
             return true;
