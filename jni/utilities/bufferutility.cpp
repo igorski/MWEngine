@@ -161,9 +161,7 @@ int BufferUtility::calculateBufferLength( int milliSeconds )
 SAMPLE_TYPE* BufferUtility::generateSilentBuffer( int aBufferSize )
 {
     SAMPLE_TYPE* out = new SAMPLE_TYPE[ aBufferSize ];
-
-    for ( int i = 0; i < aBufferSize; ++i )
-        out[ i ] = 0.0;
+    memset( out, 0, aBufferSize * sizeof( SAMPLE_TYPE )); // zero bits should equal 0.0f
 
     return out;
 }
