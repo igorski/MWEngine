@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,8 @@
 
 #include <utilities/utils.h>
 
+unsigned int AudioChannel::INSTANCE_COUNT = 0;
+
 /* constructor / destructor */
 
 AudioChannel::AudioChannel( float aMixVolume )
@@ -45,6 +47,7 @@ AudioChannel::AudioChannel( float aMixVolume, int aMaxBufferPosition )
 AudioChannel::~AudioChannel()
 {
     reset();
+    --INSTANCE_COUNT;
 
     delete processingChain;
 }
@@ -158,6 +161,7 @@ void AudioChannel::init()
     isMono             = false;
     hasCache           = false;
     isCaching          = false;
+    instanceId         = ++INSTANCE_COUNT;
     _canCache          = false;
     _cachedBuffer      = 0;
     _cacheReadPointer  = 0;

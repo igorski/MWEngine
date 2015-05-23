@@ -1587,6 +1587,34 @@ SWIGEXPORT jfloat JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_
 }
 
 
+SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_AudioChannel_1instanceId_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2) {
+  AudioChannel *arg1 = (AudioChannel *) 0 ;
+  int arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(AudioChannel **)&jarg1; 
+  arg2 = (int)jarg2; 
+  if (arg1) (arg1)->instanceId = arg2;
+}
+
+
+SWIGEXPORT jint JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_AudioChannel_1instanceId_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jint jresult = 0 ;
+  AudioChannel *arg1 = (AudioChannel *) 0 ;
+  int result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(AudioChannel **)&jarg1; 
+  result = (int) ((arg1)->instanceId);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
 SWIGEXPORT void JNICALL Java_nl_igorski_lib_audio_nativeaudio_MWEngineCoreJNI_AudioChannel_1addEvent(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_) {
   AudioChannel *arg1 = (AudioChannel *) 0 ;
   BaseAudioEvent *arg2 = (BaseAudioEvent *) 0 ;
