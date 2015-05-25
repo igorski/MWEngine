@@ -262,7 +262,8 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
             aOutputBuffer->getBufferForChannel( c )[ i ] += ( amp * volume );
     }
 
-    // secondary oscillator ? render its contents into this (parent) buffer
+    // additional oscillators ? render their contents into the output buffer
+
     if ( doAddOSCs )
     {
         float eventFreq = aEvent->getFrequency(); // store current freq
@@ -270,7 +271,9 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         for ( int o = 0, oa = _oscillators.size(); o < oa; ++o )
         {
             // temporarily tune event to oscillator tuning (use base frequency)
-            aEvent->setFrequency( tuneOscillator( o, baseFrequency ), false );
+            // note we add 1 to the oscillator number (parent oscillator == 0)
+
+            aEvent->setFrequency( tuneOscillator( o + 1, baseFrequency ), false );
             _oscillators.at( o )->render( aOutputBuffer, aEvent );
         }
         aEvent->setFrequency( eventFreq, false ); // restore freq for original oscillator
@@ -316,13 +319,12 @@ void Synthesizer::initializeEventProperties( BaseSynthEvent* aEvent, bool initia
     for ( int i = 0, l = _instrument->getOscillatorAmount(); i < l; ++i )
     {
         // in case of Karplus Strong synthesis ensure the ring buffers
-        // are filled with noise (this method should indicate a new "pluck")
+        // are filled with noise (this caters for the "pluck" of the sound)
 
         if ( _instrument->getTuningForOscillator( i )->waveform == WaveForms::KARPLUS_STRONG )
         {
             SAMPLE_TYPE frequency  = tuneOscillator( i, aEvent->getFrequency() );
             RingBuffer* ringBuffer = getRingBuffer( aEvent, frequency );
-
             initKarplusStrong( ringBuffer );
         }
     }
@@ -359,8 +361,7 @@ void Synthesizer::destroyOscillator( int aOscillatorNum )
 
 float Synthesizer::tuneOscillator( int aOscillatorNum, float aFrequency )
 {
-    // additional oscs are at higher index in the SynthInstrument (num/index 0 == osc 1)!
-    OscillatorTuning* tuning = _instrument->getTuningForOscillator( aOscillatorNum + 1 );
+    OscillatorTuning* tuning = _instrument->getTuningForOscillator( aOscillatorNum );
 
     float lfo2Tmpfreq = aFrequency + ( aFrequency / 1200 * tuning->detune ); // 1200 cents == octave
     float lfo2freq    = lfo2Tmpfreq;
