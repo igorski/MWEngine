@@ -53,9 +53,10 @@ jint JNI_OnLoad( JavaVM* vm, void* reserved )
 void JavaBridge::registerInterface( JNIEnv* env, jobject jobj )
 {
     jclass localRefCls = env->FindClass( JAVA_CLASS );
-    if (localRefCls == NULL) {
+
+    if ( localRefCls == NULL )
         return; /* exception thrown */
-    }
+
     /* Create a global reference */
     _class = ( jclass ) env->NewGlobalRef( localRefCls );
 
@@ -99,9 +100,10 @@ jmethodID JavaBridge::getJavaMethod( javaAPI aAPImethod )
 {
     jmethodID native_method_id = 0;
     jclass    javaClass        = getJavaInterface();
+    JNIEnv*   environment      = getEnvironment();
 
-    if ( javaClass != 0 )
-        native_method_id = getEnvironment()->GetStaticMethodID( javaClass, aAPImethod.method, aAPImethod.signature );
+    if ( javaClass != 0 && environment != 0 )
+        native_method_id = environment->GetStaticMethodID( javaClass, aAPImethod.method, aAPImethod.signature );
 
     return native_method_id;
 }
