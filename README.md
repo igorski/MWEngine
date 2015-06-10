@@ -57,6 +57,6 @@ x86- or MIPS-architecture and running Android 2.3 or higher. The example will de
 sequence going using the library.
 
 To install the demo : first build the library as described above, and then run the Ant build script to deploy the .APK unto an
-attached device/emulator.. This requires both the Android NDK and the Android SDK.
+attached device/emulator (note that emulated devices can only operate at a sample rate of 8 kHz!). This requires both the Android NDK and the Android SDK.
 
 Be sure to point towards the installation locations of these in both the _build.sh_-file and the _local.properties_-file.
