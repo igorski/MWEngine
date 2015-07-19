@@ -61,9 +61,9 @@ namespace JavaBridge
     // these methods are used to retrieve references to :
 
     jclass getJavaInterface();                      // the Java class acting as the JNI message mediator
-    JNIEnv* getEnvironment();                       // the Java environment
+    JNIEnv* getEnvironment();                       // get a pointer to the Java environment (for C to Java communication)
     JavaVM* getVM();                                // the Java VM
-    jmethodID getJavaMethod( javaAPI aAPImethod );  // a method of the Java interface
+    jmethodID getJavaMethod( javaAPI aAPImethod );  // retrieve the identifier of a Java method
 }
 
 #endif

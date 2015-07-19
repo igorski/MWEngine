@@ -38,9 +38,9 @@ strong references during their lifecycle.
 The makefile (_/jni/Android.mk_) will by default compile the library with all available modules. The SWIG interface file
 (_/jni/mwengine.i_) includes all the engine's actors that will be exposed to Java.
 
-Those of a Unix-bent can run the _build.sh_-file in the _/src_-folder whereas Windows users can run the _build.bat_-file
-that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available through the PATH
-settings of your system (or adjust the shell scripts accordingly).
+Those of a Unix-bent can run the _build.sh_-file in the root folder of the repository whereas Windows users can run the
+_build.bat_-file that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available
+through the PATH settings of your system (or adjust the shell scripts accordingly).
 
 ### Documentation
 
