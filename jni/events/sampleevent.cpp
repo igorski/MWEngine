@@ -142,6 +142,11 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
     return _liveBuffer;
 }
 
+BaseInstrument* SampleEvent::getInstrument()
+{
+    return _instrument;
+}
+
 void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 {
     // make sure we lock read/write operations as setting a large sample

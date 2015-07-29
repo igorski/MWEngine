@@ -40,6 +40,7 @@ class SampleEvent : public BaseAudioEvent
         virtual int getReadPointer();
 
         virtual AudioBuffer* synthesize( int aBufferLength );
+        virtual BaseInstrument* getInstrument(); // retrieve reference to the instrument this event belongs to
 
         void setSample( AudioBuffer* sampleBuffer );
         virtual void addToSequencer();

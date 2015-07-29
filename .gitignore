@@ -3,6 +3,7 @@
 *.idea
 intelliJ project
 src/nl/igorski/lib/audio/nativeaudio/*
+jni/jni/java_interface_wrap.cpp
 obj
 bin/*
 gen/*
