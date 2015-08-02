@@ -144,7 +144,7 @@ namespace AudioEngine
                 // were we bouncing the audio ? save file and stop rendering
                 if ( bouncing )
                 {
-                    DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, false );
+                    DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, outputChannels, false );
 
                     // broadcast update via JNI, pass buffer identifier name to identify last recording
                     Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
@@ -201,8 +201,8 @@ namespace AudioEngine
                 // clear previous channel buffer content
                 channelBuffer->silenceBuffers();
 
-                bool useChannelRange    = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
-                int maxBufferPosition   = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
+                bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
+                int maxBufferPosition = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
 
                 // we make a copy of the current buffer position indicator
                 int bufferPos = bufferPosition;
@@ -330,7 +330,7 @@ namespace AudioEngine
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
             // makes it both unnecessarily audible and stalls this thread's execution
             if ( !bouncing )
-                android_AudioOut( p, outbuffer, bufferSize * AudioEngineProps::OUTPUT_CHANNELS );
+                android_AudioOut( p, outbuffer, bufferSize * outputChannels );
 
             // record the output if recording state is active
             if ( playing && ( recordOutput || recordFromDevice ))
@@ -338,7 +338,7 @@ namespace AudioEngine
                 if ( recordFromDevice ) // recording from device input ? > write the record buffer
                     DiskWriter::appendBuffer( recbuffer );
                 else                    // recording global output ? > write the combined buffer
-                    DiskWriter::appendBuffer( outbuffer, bufferSize, AudioEngineProps::OUTPUT_CHANNELS );
+                    DiskWriter::appendBuffer( outbuffer, bufferSize, outputChannels );
 
                 // exceeded maximum recording buffer amount ? > write current recording
                 if ( DiskWriter::bufferFull() || haltRecording )
@@ -348,7 +348,7 @@ namespace AudioEngine
 
                     if ( !haltRecording )
                     {
-                        DiskWriter::generateOutputBuffer( outputChannels ); // allocate new buffer for next iteration
+                        DiskWriter::generateOutputBuffer( amountOfChannels ); // allocate new buffer for next iteration
                         ++recordingFileId;
                     }
                     else {

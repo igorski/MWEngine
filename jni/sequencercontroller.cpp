@@ -208,6 +208,10 @@ void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, cha
  */
 void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
+    // in case Sequencer was recording input from the Android device, halt recording of input
+    if ( AudioEngine::recordFromDevice )
+        setRecordingFromDeviceState( false, 0, '\0' );
+
     bool wasRecording         = AudioEngine::recordOutput;
     AudioEngine::recordOutput = aRecording;
 
@@ -215,19 +219,16 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
     {
         DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::OUTPUT_CHANNELS );
     }
-    else
+    else if ( wasRecording )
     {
-        if ( wasRecording )
+        if ( !AudioEngine::playing )
         {
-            if ( !AudioEngine::playing )
-            {
-                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
-            }
-            else {
-                // apparently renderer is stopped before cycle completes next Disk Writing query... =/
-                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
-                AudioEngine::haltRecording = true;
-            }
+            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
+        }
+        else {
+            // apparently renderer is stopped before cycle completes next Disk Writing query... =/
+            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
+            AudioEngine::haltRecording = true;
         }
     }
     AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!
@@ -245,32 +246,27 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
  */
 void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
-    bool wasRecording              = AudioEngine::recordFromDevice;
-    AudioEngine::recordFromDevice  = aRecording;
+    // in case Sequencer was recording its output, halt recording of output
+    if ( AudioEngine::recordOutput )
+        setRecordingState( false, 0, '\0' );
+
+    bool wasRecording             = AudioEngine::recordFromDevice;
+    AudioEngine::recordFromDevice = aRecording;
 
     if ( AudioEngine::recordFromDevice )
     {
-        // diskwriter is a static instance currently (see Java CacheWriter/Readers), so we
-        // must halt recording of live output when recording from the Android device
-        if ( AudioEngine::recordOutput )
-        {
-            setRecordingState( false, 0, "" );
-        }
         DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::INPUT_CHANNELS );
     }
-    else
+    else if ( wasRecording )
     {
-        if ( wasRecording )
+        if ( !AudioEngine::playing )
         {
-            if ( !AudioEngine::playing )
-            {
-                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
-            }
-            else {
-                // apparently renderer is stopped before cycle completes next Disk Writing query... =/
-                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
-                AudioEngine::haltRecording = true;
-            }
+            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
+        }
+        else {
+            // apparently renderer is stopped before cycle completes next Disk Writing query... =/
+            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
+            AudioEngine::haltRecording = true;
         }
     }
     AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!

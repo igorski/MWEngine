@@ -140,7 +140,6 @@ namespace DiskWriter
                 for ( int c = 0; c < aNumChannels; ++c )
                     tempBuffer->getBufferForChannel( c )[ i ] = cachedBuffer->getBufferForChannel( c )[ i ];
             }
-
             WaveWriter::bufferToFile( outputFile.append( SSTR( AudioEngine::recordingFileId )),
                                       tempBuffer, aSampleRate );
 
