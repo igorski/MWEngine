@@ -27,7 +27,7 @@
 #include <utilities/bulkcacher.h>
 
 /**
- * SequencerAPI acts as the interface to control the Sequencers
+ * SequencerController acts as the interface to control the Sequencers
  * speed, position, range, etc. it is basically the mediator between
  * the user interface and the Sequencer
  */
