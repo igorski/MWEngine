@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,11 +24,9 @@ package nl.igorski.lib.audio;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
-import nl.igorski.lib.audio.nativeaudio.BufferUtility;
-import nl.igorski.lib.audio.nativeaudio.MWEngineCore;
-import nl.igorski.lib.audio.nativeaudio.ProcessingChain;
-import nl.igorski.lib.audio.nativeaudio.SequencerController;
+import nl.igorski.lib.audio.nativeaudio.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -39,7 +37,7 @@ import nl.igorski.lib.audio.nativeaudio.SequencerController;
  */
 public final class MWEngine extends Thread
 {
-    // interface to receive state change messages from the engine
+    /* interface to receive state change messages from the engine */
 
     public interface IObserver
     {
@@ -49,59 +47,59 @@ public final class MWEngine extends Thread
 
     private static MWEngine INSTANCE;
     private IObserver       _observer;
+    private Context         _context;
 
-    private SequencerController _sequencerController;       // hold reference (prevents garbage collection) to native sequencer providing audio
+    private SequencerController _sequencerController;
 
-    /* audio generation related, calculated on platform-specific basis in constructor */
+    /* audio generation related, should be overridden to match device-specific values */
 
     public static int SAMPLE_RATE = 44100;
     public static int BUFFER_SIZE = 2048;
 
-    /* time related */
+    /* time signature related */
 
     public static int TIME_SIG_BEAT_AMOUNT  = 4; // upper numeral in time signature (i.e. the "3" in 3/4)
     public static int TIME_SIG_BEAT_UNIT    = 4; // lower numeral in time signature (i.e. the "4" in 3/4)
-    private float     _tempo;
 
     // we CAN multiply the output the volume to decrease it, preventing rapidly distorting audio ( especially on filters )
-    private static final float VOLUME_MULTIPLIER = 1;
-    private static float      _volume            = .85f /* assumed default level */ * VOLUME_MULTIPLIER;
+    private static final float VOLUME_MULTIPLIER = .85f;
+    private static float       _volume           = .85f /* assumed default level */ * VOLUME_MULTIPLIER;
 
-    // we make these available across classes
+    /* we make these statically available to outside classes, these changes according to time signature and tempo */
 
-    public static int BYTES_PER_BEAT;
-    public static int BYTES_PER_BAR;
-    public static int BYTES_PER_TICK;
+    public static int BYTES_PER_SAMPLE = 8;
+    public static int BYTES_PER_BEAT   = 22050;
+    public static int BYTES_PER_BAR    = 88200;
+    public static int BYTES_PER_TICK   = 5512;
 
     /* recording buffer specific */
 
     private boolean _recordOutput = false;
 
-    /* native layer connection related */
+    /* engine / thread states */
 
-    private boolean _openSLrunning   = false;
-    private boolean _initialCreation = true;
-    private int     _openSLRetry     = 0;
-
-    /* threading related */
-
-    protected boolean _isRunning = false;
-    protected Object  _pauseLock;
-    protected boolean _paused;
+    private boolean _openSLrunning     = false;
+    private int     _openSLRetry       = 0;
+    private boolean _initialCreation   = true;
+    private boolean _disposed          = false;
+    private boolean _threadStarted     = false;
+    private boolean _isRunning         = false;
+    private boolean _paused            = false;
+    private final Object _pauseLock;
 
     /**
      * The Java-side bridge to manage all native layer components
      * of the MWEngine audio engine
      *
-     * @param aContext   {Context} current application context
+     * @param aContext {Context} current application context
+     * @param aObserver {MWEngine.IObserver} observer that will monitor engine states
      */
     public MWEngine( Context aContext, IObserver aObserver )
     {
         INSTANCE   = this;
+        _context   = aContext;
         _observer  = aObserver;
-
         _pauseLock = new Object();
-        _paused    = false;
 
         initJNI();
 
@@ -125,18 +123,18 @@ public final class MWEngine extends Thread
         if ( Build.FINGERPRINT.startsWith( "generic" ))
             SAMPLE_RATE = 8000;
 
-        // defaults during initialization
-        final float tempo = 120.0f;
-        BYTES_PER_BAR = ( int )(( SAMPLE_RATE * 60 ) / tempo * 4 );
+        // start w/ default of 120 BPM in 4/4 time
 
         _sequencerController = new SequencerController();
-        _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, tempo, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT ); // start w/ default of 120 BPM in 4/4 time
+        _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, 120.0f, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT );
+
+        _disposed = false;
     }
 
     public float getVolume()
-    {
-        return _volume / VOLUME_MULTIPLIER;
-    }
+        {
+            return _volume / VOLUME_MULTIPLIER;
+        }
 
     public void setVolume( float aValue )
     {
@@ -156,7 +154,7 @@ public final class MWEngine extends Thread
 
     public void setBouncing( boolean value, String outputDirectory )
     {
-        _sequencerController.setBounceState( value, calculateMaxBuffers(), outputDirectory );
+        _sequencerController.setBounceState(value, calculateMaxBuffers(), outputDirectory);
     }
 
     /**
@@ -205,50 +203,6 @@ public final class MWEngine extends Thread
         return _recordOutput;
     }
 
-    @Override
-    public void start()
-    {
-        if ( !_isRunning )
-        {
-            super.start();
-        }
-        else
-        {
-            initJNI();  // update reference to this Java object in JNI
-            unpause();
-        }
-        _isRunning = true;
-    }
-
-    /**
-     * invoke when the application suspends, this should
-     * halt the execution of the run method and cause the
-     * thread to clean up to free CPU resources
-     */
-    public void pause()
-    {
-        synchronized ( _pauseLock )
-        {
-            _paused = true;
-        }
-    }
-
-    public boolean isPaused()
-    {
-        return _paused;
-    }
-
-    public void unpause()
-    {
-        initJNI();
-
-        synchronized ( _pauseLock )
-        {
-            _paused = false;
-            _pauseLock.notifyAll();
-        }
-    }
-
     public void reset()
     {
         MWEngineCore.reset();
@@ -269,29 +223,82 @@ public final class MWEngine extends Thread
 
     // due to Object pooling we keep the thread alive by just pausing its execution, NOT actual cleanup
     // exiting the application will kill the native library anyways
+
     public void dispose()
     {
         pause();
 
+        _disposed      = true;
         _openSLrunning = false;
 
-        MWEngineCore.stop();   // halt the Native audio thread
+        MWEngineCore.stop();       // halt the Native audio thread
+        //_isRunning     = false;  // nope, we won't halt this thread (pooled)
+   }
 
-        //_isRunning = false;       // nope, as that will actually halt THIS thread
+    /* threading */
+
+    @Override
+    public void start()
+    {
+        if ( !_isRunning )
+        {
+            if ( !_threadStarted )
+                super.start();
+
+            _threadStarted = true;
+            _isRunning     = true;
+        }
+        else
+        {
+            initJNI();  // update reference to this Java object in JNI
+            unpause();
+        }
+    }
+
+    /**
+     * invoke when the application suspends, this should
+     * halt the execution of the run method and cause the
+     * thread to clean up to free CPU resources
+     */
+    public void pause()
+    {
+        synchronized ( _pauseLock )
+        {
+            _paused = true;
+        }
+    }
+
+    /**
+     * invoke when the application regains focus
+     */
+    public void unpause()
+    {
+        initJNI();
+
+        synchronized ( _pauseLock )
+        {
+            _paused = false;
+            _pauseLock.notifyAll();
+        }
+    }
+
+    public boolean isPaused()
+    {
+        return _paused;
     }
 
     public void run()
     {
-        Log.d( "MWENGINE", "MWEngine::STARTING NATIVE AUDIO RENDER LOOP" );
+        //DebugTool.log( "MWEngine STARTING NATIVE AUDIO RENDER THREAD" );
+
+        handleThreadStartTimeout();
 
         while ( _isRunning )
         {
             // start the Native audio thread
             if ( !_openSLrunning )
             {
-                // starting native thread
-                Log.d( "MWENGINE", "MWEngine::starting engine render thread with " + BUFFER_SIZE +
-                                   " sample buffer at " + SAMPLE_RATE + " Hz samplerate" );
+                Log.d( "MWENGINE", "STARTING NATIVE THREAD @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
                 _openSLrunning = true;
                 MWEngineCore.start();
@@ -299,6 +306,8 @@ public final class MWEngine extends Thread
 
             // the remainder of this function body is actually blocked
             // as long as the native thread is running
+
+            Log.d( "MWENGINE", "MWEngine THREAD STOPPED");
 
             _openSLrunning = false;
 
@@ -316,6 +325,8 @@ public final class MWEngine extends Thread
         }
     }
 
+    /* helper functions */
+
     private int calculateMaxBuffers()
     {
         // we record a maximum of 30 seconds before invoking the "handleRecordingUpdate"-method on the sequencer
@@ -325,13 +336,36 @@ public final class MWEngine extends Thread
         return ( int ) (( amountOfMinutes * 60000 ) * ( SAMPLE_RATE / 1000 ));
     }
 
+    /**
+     * rare bug : occasionally the audio engine won't start, closing / reopening
+     * the application tends to work....
+     *
+     * this poor man's check checks whether the bridge has submitted its connection
+     * message from the native layer after a short timeout
+     */
+    private void handleThreadStartTimeout()
+    {
+        if ( !_openSLrunning )
+        {
+            final Handler handler = new Handler( _context.getMainLooper() );
+            handler.postDelayed( new Runnable()
+            {
+                public void run()
+                {
+                    if ( !_disposed && !_openSLrunning )
+                        _observer.handleNotification( Notifications.ids.ERROR_THREAD_START.ordinal() );
+                }
+
+            }, 2000 );
+        }
+    }
+
     /* native bridge methods */
 
     /**
      * all these methods are static and provide a bridge from C++ back into Java
      * these methods are used by the native audio engine for updating states and
-     * requesting data, as such they are invoked from the native layer code and
-     * not through any Java call !
+     * requesting data
      *
      * Java method IDs need to be supplied to C++ in order te make the callbacks, you
      * can discover the IDs by building the Java project and running the following
@@ -339,12 +373,10 @@ public final class MWEngine extends Thread
      *
      * javap -s -private -classpath classes nl.igorski.lib.audio.MWEngine
      */
-
     public static void handleBridgeConnected( int aSomething )
     {
-        // JNI bridge from native layer connected to this static Java class
-
-        Log.d( "MWENGINE", "MWEngine::connected to JNI bridge" );
+        if ( INSTANCE._observer != null )
+            INSTANCE._observer.handleNotification( Notifications.ids.STATUS_BRIDGE_CONNECTED.ordinal() );
     }
 
     public static void handleNotification( int aNotificationId )
@@ -362,22 +394,18 @@ public final class MWEngine extends Thread
     public static void handleTempoUpdated( float aNewTempo, int aBytesPerBeat, int aBytesPerTick,
                                            int aBytesPerBar, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
     {
-        INSTANCE._tempo = aNewTempo;
-
-        BYTES_PER_BEAT  = aBytesPerBeat;
-        BYTES_PER_TICK  = aBytesPerTick;
-        BYTES_PER_BAR   = aBytesPerBar;
-
+        BYTES_PER_BEAT       = aBytesPerBeat;
+        BYTES_PER_TICK       = aBytesPerTick;
+        BYTES_PER_BAR        = aBytesPerBar;
         TIME_SIG_BEAT_AMOUNT = aTimeSigBeatAmount;
         TIME_SIG_BEAT_UNIT   = aTimeSigBeatUnit;
 
-        // weird bug where on initial start sequencer would not know the step range...
+        // weird bug where on initial start the sequencer would not know the step range...
         if ( INSTANCE._initialCreation )
         {
             INSTANCE._initialCreation = false;
-            INSTANCE.getSequencerController().setLoopRange(0, BYTES_PER_BAR);
+            INSTANCE.getSequencerController().setLoopRange( 0, BYTES_PER_BAR );
         }
-        Log.d( "MWENGINE", "MWEngine::handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" +
-                aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
+        //Log.d( "MWENGINE", "handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
     }
 }
