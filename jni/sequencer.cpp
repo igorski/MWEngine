@@ -41,7 +41,7 @@ namespace sequencer
 
         int i, l;
 
-        // 1. the sequenced synthesizers, note we update their mix properties here as they might change during playback
+        // note we update the channels mix properties here as they might change during playback
 
         for ( i = 0, l = instruments.size(); i < l; ++i )
         {

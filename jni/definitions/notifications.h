@@ -39,7 +39,11 @@ class Notifications
             SEQUENCER_TEMPO_UPDATED,
             RECORDING_STATE_UPDATED,
             BOUNCE_COMPLETE,
-            ERROR_HARDWARE_UNAVAILABLE
+
+            STATUS_BRIDGE_CONNECTED,
+
+            ERROR_HARDWARE_UNAVAILABLE,
+            ERROR_THREAD_START
         };
 };
 

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -43,7 +43,7 @@ SequencerController::~SequencerController()
 /* public methods */
 
 void SequencerController::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo,
-                            int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+                                   int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
     // set renderer output variables
     AudioEngineProps::BUFFER_SIZE = aBufferSize;
@@ -57,6 +57,11 @@ void SequencerController::prepare( int aBufferSize, int aSampleRate, float aQueu
         setLoopRange( 0, AudioEngine::bytes_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
     }
 };
+
+float SequencerController::getTempo()
+{
+    return AudioEngine::tempo;
+}
 
 void SequencerController::setTempo( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
