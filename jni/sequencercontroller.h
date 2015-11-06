@@ -44,9 +44,10 @@ class SequencerController
         void setVolume     ( float aVolume );
         void setPlaying    ( bool aPlaying );
 
-        void setLoopRange  ( int aStartPosition, int aEndPosition );
-        void setLoopRange  ( int aStartPosition, int aEndPosition, int aStepsPerBar );
-        void updateMeasures( int aAmount, int aStepsPerBar );
+        void setLoopRange     ( int aStartPosition, int aEndPosition );
+        void setLoopRange     ( int aStartPosition, int aEndPosition, int aStepsPerBar );
+        void updateStepsPerBar( int aStepsPerBar );
+        void updateMeasures   ( int aAmount, int aStepsPerBar );
         void setNotificationMarker( int aPosition );
         int  getPosition   ();
         void setPosition   ( int aPosition );
