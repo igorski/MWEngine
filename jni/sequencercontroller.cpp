@@ -120,7 +120,16 @@ void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, in
     {
         AudioEngine::stepPosition = AudioEngine::min_step_position;
     }
-    stepsPerBar = aStepsPerBar;
+    updateStepsPerBar( aStepsPerBar );
+}
+
+void SequencerController::updateStepsPerBar( int aStepsPerBar )
+{
+    if ( stepsPerBar != aStepsPerBar )
+    {
+        stepsPerBar = aStepsPerBar;
+        AudioEngine::beat_subdivision = aStepsPerBar / AudioEngine::time_sig_beat_unit;
+    }
 }
 
 void SequencerController::updateMeasures( int aValue, int aStepsPerBar )
@@ -128,6 +137,8 @@ void SequencerController::updateMeasures( int aValue, int aStepsPerBar )
     AudioEngine::amount_of_bars      = aValue;
     AudioEngine::max_step_position   = aStepsPerBar * AudioEngine::amount_of_bars;
     AudioEngine::max_buffer_position = AudioEngine::bytes_per_bar * AudioEngine::amount_of_bars;
+
+    updateStepsPerBar( aStepsPerBar );
 }
 
 void SequencerController::rewind()
