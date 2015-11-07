@@ -41,6 +41,7 @@ processors/glitcher.cpp \
 processors/limiter.cpp \
 processors/lpfhpfilter.cpp \
 processors/phaser.cpp \
+processors/tremolo.cpp \
 processors/waveshaper.cpp \
 generators/wavegenerator.cpp \
 generators/synthesizer.cpp \

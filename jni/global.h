@@ -59,6 +59,7 @@ namespace AudioEngineProps
 // global constants used throughout the engine
 const SAMPLE_TYPE PI     = atan( 1 ) * 4;
 const SAMPLE_TYPE TWO_PI = PI * 2.0;
+const int WAVE_TABLE_PRECISION = 128; // the amount of samples in a wave table
 
 extern void *print_message( void* );
 

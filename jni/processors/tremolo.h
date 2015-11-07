@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,37 +20,33 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LFO_H_INCLUDED__
-#define __LFO_H_INCLUDED__
+#ifndef __TREMOLO_H_INCLUDED__
+#define __TREMOLO_H_INCLUDED__
 
-#include "global.h"
-#include "wavetable.h"
+#include "baseprocessor.h"
+#include "../audiobuffer.h"
+#include "../wavetable.h"
+#include <events/sampleevent.h>
 
-class LFO
+class Tremolo : public BaseProcessor
 {
     public:
-        LFO();
-        ~LFO();
+        Tremolo( int aWaveForm, float aFrequency, bool aStereo );
+        ~Tremolo();
 
-        static const double MAX_LFO_RATE      = 10;  // the maximum rate of oscillation in Hz
-        static const double MIN_LFO_RATE      = .1;  // the minimum rate of oscillation in Hz
+        int getWaveForm();
+        void setWaveForm( int aWaveForm );
+        float getFrequency();
+        void setFrequency( float aFrequency );
+        bool getStereo();
+        void setStereo( bool aStereo );
 
-        float getRate();
-        void setRate( float value );
-        int getWave();
-        void setWave( int value );
-
-        void generate();
-        WaveTable* getTable();
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     protected:
-
-        SAMPLE_TYPE _rate;
-
-        int _wave;
+        int        _waveform;
+        bool       _stereo;
         WaveTable* _table;
-
-        int calculateBufferLength( float aMinRate );
 };
 
 #endif
