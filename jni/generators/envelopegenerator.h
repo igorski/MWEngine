@@ -3,6 +3,8 @@
  *
  * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
+ * wave table generation adapted from sources by Matt @ hackmeopen.com
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -20,38 +22,22 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __TREMOLO_H_INCLUDED__
-#define __TREMOLO_H_INCLUDED__
+#ifndef __ENVELOPEGENERATOR_H_INCLUDED__
+#define __ENVELOPEGENERATOR_H_INCLUDED__
 
-#include "baseprocessor.h"
-#include "../audiobuffer.h"
+#include "../global.h"
 #include "../wavetable.h"
-#include <events/sampleevent.h>
 
-class Tremolo : public BaseProcessor
+namespace EnvelopeGenerator
 {
-    public:
+    // waveTable is the output WaveTable the envelope shape is generated into
+    // startAmplitude describes the amplitude level at the beginning of the envelope where
+    // endAmplitude describes the amplitude level at the end of the envelope, e.g.
+    // a startAmplitude of MAX_PHASE and an endAmplitude of 0.0 would create a fade out-envelope
+    // and a startAmplitude of 0.0 and an endAmplitude of MAX_PHASE would create a fade in-envelope
+    // releaseTime describes the release of the envelope in milliseconds
 
-        // Tremolo can work with two distinct channels, if the left or right channel
-        // have a different wave form or frequency, Tremolo functions as a stereo effect
-
-        Tremolo( int aLeftWaveForm, int aRightWaveForm, float aLeftFrequency, float aRightFrequency );
-        ~Tremolo();
-
-        // aChannelNum 0 = left channel table, aChannelNum 1 = right channel table
-
-        int  getWaveFormForChannel   ( int aChannelNum );
-        void setWaveFormForChannel   ( int aChannelNum, int aWaveForm );
-        float getFrequencyForChannel ( int aChannelNum );
-        void  setFrequencyForChannel ( int aChannelNum, float aFrequency );
-        WaveTable* getTableForChannel( int aChannelNum );
-
-        bool isStereo();
-        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
-
-    protected:
-        WaveTable* _tables[ 2 ];
-        int        _waveforms[ 2 ];
-};
+    extern void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude, float releaseTime );
+}
 
 #endif

@@ -25,83 +25,87 @@
 
 /* constructors / destructor */
 
-Tremolo::Tremolo( int aWaveForm, float aFrequency, bool aStereo )
+Tremolo::Tremolo( int aLeftWaveForm, int aRightWaveForm, float aLeftFrequency, float aRightFrequency )
 {
-    _table = new WaveTable( WAVE_TABLE_PRECISION, aFrequency );
+    // create stereo tables
+    for ( int i = 0; i < 2; ++i )
+        _tables[ i ] = new WaveTable( WAVE_TABLE_PRECISION, ( i == 0 ) ? aLeftFrequency : aRightFrequency );
 
-    setWaveForm ( aWaveForm );
-    setFrequency( aFrequency );
-    setStereo   ( aStereo );
+    setWaveFormForChannel ( 0, aLeftWaveForm );
+    setFrequencyForChannel( 0, aLeftFrequency );
+    setWaveFormForChannel ( 1, aRightWaveForm );
+    setFrequencyForChannel( 1, aRightFrequency );
 }
 
 Tremolo::~Tremolo()
 {
-    delete _table;
+    for ( int i = 0; i < 2; ++i )
+        delete _tables[ i ];
 }
 
 /* public methods */
 
-int Tremolo::getWaveForm()
+int Tremolo::getWaveFormForChannel( int aChannelNum )
 {
-    return _waveform;
+    return _waveforms[ aChannelNum ];
 }
 
-void Tremolo::setWaveForm( int aWaveForm )
+void Tremolo::setWaveFormForChannel( int aChannelNum, int aWaveForm )
 {
-    _waveform = aWaveForm;
-    TablePool::getTable( _table, _waveform );
+    _waveforms[ aChannelNum ] = aWaveForm;
+    TablePool::getTable( getTableForChannel( aChannelNum ), aWaveForm );
 }
 
-float Tremolo::getFrequency()
+float Tremolo::getFrequencyForChannel( int aChannelNum )
 {
-    return _table->getFrequency();
+    return getTableForChannel( aChannelNum )->getFrequency();
 }
 
-void Tremolo::setFrequency( float aFrequency )
+void Tremolo::setFrequencyForChannel( int aChannelNum, float aFrequency )
 {
-    _table->setFrequency( aFrequency );
+    getTableForChannel( aChannelNum )->setFrequency( aFrequency );
 }
 
-bool Tremolo::getStereo()
+WaveTable* Tremolo::getTableForChannel( int aChannelNum )
 {
-    return _stereo;
+    return _tables[ aChannelNum ];
 }
 
-void Tremolo::setStereo( bool aStereo )
+bool Tremolo::isStereo()
 {
-    _stereo = aStereo;
+    if ( _waveforms[ 0 ] != _waveforms[ 1 ])
+        return true;
+
+    return getFrequencyForChannel( 0 ) != getFrequencyForChannel( 1 );
 }
 
 void Tremolo::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int bufferSize = sampleBuffer->bufferSize;
-    bool doStereo  = getStereo() && sampleBuffer->amountOfChannels > 1;
+    int bufferSize        = sampleBuffer->bufferSize;
+    bool doStereo         = isStereo() && sampleBuffer->amountOfChannels > 1;
+    WaveTable* leftTable  = getTableForChannel( 0 );
+    WaveTable* rightTable = getTableForChannel( 1 );
+
+    // in case sampleBuffer has more than 2 output channels we most
+    // store and restore the accumulators for every additional channel
+
+    int orgLeftAccumulator  = leftTable->getAccumulator();
+    int orgRightAccumulator = rightTable->getAccumulator();
 
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* channelBuffer     = sampleBuffer->getBufferForChannel( c );
         SAMPLE_TYPE* nextChannelBuffer = ( doStereo && ( c + 1 ) < ca ) ? sampleBuffer->getBufferForChannel( c + 1 ) : 0;
-        SAMPLE_TYPE sample;
 
         for ( int i = 0; i < bufferSize; ++i )
         {
-            sample = channelBuffer[ i ] * _table->peek();
-
             if ( doStereo && nextChannelBuffer != 0 )
             {
-                if ( sample < 0 ) {
-                    // pan left
-                    channelBuffer[ i ]      = sample;
-                    nextChannelBuffer[ i ] = 0.0;
-                }
-                else {
-                    // pan right
-                    channelBuffer[ i ]      = 0.0;
-                    nextChannelBuffer[ i ] = sample;
-                }
+                channelBuffer[ i ]     *= leftTable->peek();
+                nextChannelBuffer[ i ] *= rightTable->peek();
             }
             else {
-                channelBuffer[ i ] = sample;
+                channelBuffer[ i ] *= leftTable->peek();
             }
         }
 
@@ -112,6 +116,22 @@ void Tremolo::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             break;
         }
         else if ( doStereo )
-            ++c;    // extra increment as next buffer has already been filled
+        {
+            // here we restore the accumulators for the additional channels, note the additional
+            // increment as the next buffer has already been filled
+
+            int nextChannelNum = ( ++c + 1 );
+
+            // if the amount of channels remaining for processing is an even
+            // number, also reset the right table
+
+            if ( nextChannelNum >= 2 && nextChannelNum < ca )
+            {
+                leftTable->setAccumulator( orgLeftAccumulator );
+
+                if (( ca - nextChannelNum ) % 2 == 0 )
+                    rightTable->setAccumulator( orgRightAccumulator );
+            }
+        }
     }
 }

@@ -43,6 +43,7 @@ processors/lpfhpfilter.cpp \
 processors/phaser.cpp \
 processors/tremolo.cpp \
 processors/waveshaper.cpp \
+generators/envelopegenerator.cpp \
 generators/wavegenerator.cpp \
 generators/synthesizer.cpp \
 utilities/bufferutility.cpp \
