@@ -24,6 +24,7 @@
 #include "global.h"
 #include <android/log.h>
 #include <time.h>
+#include <ctime>
 #include <string.h>
 #include <cstdlib>
 
@@ -55,11 +56,22 @@ float randomFloat()
     return rand() / float( RAND_MAX );
 }
 
-float now_ms()
+/**
+ * get the current time (since the epoch) in
+ * milliseconds, can be used for benchmarking purposes
+ */
+unsigned long long now_ms()
 {
-    struct timespec res;
-    clock_gettime( CLOCK_REALTIME, &res );
-    return 1000.0 * res.tv_sec + ( float ) res.tv_nsec / 1e6;
+    struct timeval tv;
+
+    gettimeofday( &tv, NULL );
+
+    unsigned long long ret = tv.tv_usec;
+
+    ret /= 1000;                 // micro seconds to milliseconds
+    ret += ( tv.tv_sec * 1000 ); // add the seconds after millisecond conversion
+
+    return ret;
 }
 
 /* volume util */
