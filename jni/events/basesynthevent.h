@@ -73,9 +73,6 @@ class BaseSynthEvent : public BaseAudioEvent
         void setFrequency( float aFrequency );
         void setFrequency( float aFrequency, bool storeAsBaseFrequency );
 
-        float getVolume();
-        void setVolume( float value );
-
         CachedProperties cachedProps;
 
         // reference to last phase for a given oscillator render (see synthesizer.h)
@@ -105,7 +102,6 @@ class BaseSynthEvent : public BaseAudioEvent
 
         // used for waveform generation
         SAMPLE_TYPE _frequency, _baseFrequency;
-        float _volume;
 
         // properties for non-sequenced synthesis
 

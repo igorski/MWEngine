@@ -73,6 +73,9 @@ class BaseAudioEvent
         virtual void unlock();      // unlock
         virtual bool isLocked();
 
+        virtual float getVolume();
+        virtual void  setVolume( float value );
+
         virtual void destroy();
 
     protected:
@@ -84,6 +87,8 @@ class BaseAudioEvent
 
         bool _enabled;
         bool _loopeable;
+
+        float _volume;
 
         // cached buffer
         AudioBuffer* _buffer;

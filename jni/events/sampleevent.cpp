@@ -273,7 +273,7 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
                     srcBuffer = _buffer->getBufferForChannel( 0 );
 
                 SAMPLE_TYPE* targetBuffer = buffer->getBufferForChannel( c );
-                targetBuffer[ i ]        += srcBuffer[ _rangePointer ];
+                targetBuffer[ i ]        += ( srcBuffer[ _rangePointer ] * _volume );
             }
 
             if ( ++_rangePointer > _bufferRangeEnd )
@@ -314,6 +314,7 @@ void SampleEvent::init( BaseInstrument* instrument )
     _destroyableBuffer      = false; // is referenced via SampleManager !
     _instrument             = instrument;
     _liveBuffer             = 0;
+    _volume                 = MAX_PHASE;
 }
 
 void SampleEvent::removeLiveEvent()
