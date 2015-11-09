@@ -47,7 +47,7 @@ class EventUtility
         // examples :
         // ( audioEvent, 0, 16, 4 ) positions audioEvent at 4 / 16 = start of the 2nd quaver in the first measure
         // ( audioEvent, 1, 32, 4 ) positions audioEvent at 4 / 32 = 1/8th note in the second measure
-        void positionEvent( BaseAudioEvent* audioEvent, int startMeasure, int subdivisions, int offset );
+        static void positionEvent( BaseAudioEvent* audioEvent, int startMeasure, int subdivisions, int offset );
 };
 
 #endif
