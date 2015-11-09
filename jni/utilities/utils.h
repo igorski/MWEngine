@@ -31,7 +31,7 @@
 
 float scale( float value, float maxValue, float maxCompareValue );
 float randomFloat();
-float now_ms();
+unsigned long long now_ms();
 
 /* volume util */
 

@@ -98,16 +98,6 @@ void BaseSynthEvent::setFrequency( float aFrequency, bool storeAsBaseFrequency )
     _instrument->synthesizer->initializeEventProperties( this, false );
 }
 
-float BaseSynthEvent::getVolume()
-{
-    return _volume;
-}
-
-void BaseSynthEvent::setVolume( float value )
-{
-    _volume = value;
-}
-
 SAMPLE_TYPE BaseSynthEvent::getPhaseForOscillator( int aOscillatorNum )
 {
     return cachedProps.oscillatorPhases.at( aOscillatorNum );
@@ -215,6 +205,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         // render the snippet
         _instrument->synthesizer->render( _buffer, this );
 
+        // note we merge using MAX_PHASE as mix volume (event volume was applied during synthesis)
         outputBuffer->mergeBuffers( _buffer, 0, writeOffset, MAX_PHASE );
 
         // reset of event properties at end of write
@@ -234,6 +225,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
             _instrument->synthesizer->render( _buffer, this );    // overwrites old buffer contents
 
+            // note we merge using MAX_PHASE as mix volume (event volume was applied during synthesis)
             outputBuffer->mergeBuffers( _buffer, 0, loopOffset, MAX_PHASE );
 
             // reset of event properties at end of write

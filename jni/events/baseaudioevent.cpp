@@ -33,6 +33,7 @@ BaseAudioEvent::BaseAudioEvent()
     _destroyableBuffer = true;
     _loopeable         = false;
     _locked            = false;
+    _volume            = MAX_PHASE;
 }
 
 BaseAudioEvent::~BaseAudioEvent()
@@ -127,6 +128,16 @@ bool BaseAudioEvent::isLocked()
     return _locked;
 }
 
+float BaseAudioEvent::getVolume()
+{
+    return _volume;
+}
+
+void BaseAudioEvent::setVolume( float value )
+{
+    _volume = value;
+}
+
 void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
                                 int minBufferPosition, int maxBufferPosition,
                                 bool loopStarted, int loopOffset, bool useChannelRange )
@@ -171,7 +182,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
                 SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
                 SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
 
-                tgtBuffer[ i ] += srcBuffer[ readPointer ];
+                tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
             }
         }
         else
@@ -189,7 +200,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
                         SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
                         SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
 
-                        tgtBuffer[ i ] += srcBuffer[ readPointer ];
+                        tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
                     }
                 }
             }
