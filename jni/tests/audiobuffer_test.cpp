@@ -11,6 +11,8 @@ TEST( AudioBuffer, Construction )
 
     EXPECT_EQ( audioBuffer->amountOfChannels, amountOfChannels )
         << "expected:" << amountOfChannels << ", got:" << audioBuffer->amountOfChannels << " channels";
+
+    delete audioBuffer;
 }
 
 TEST( AudioBuffer, Silence )
@@ -29,6 +31,7 @@ TEST( AudioBuffer, Silence )
         for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
             EXPECT_EQ( buffer[ i ], 0.0 ) << " epected: 0.0, got:" << buffer[ i ];
     }
+    delete audioBuffer;
 }
 
 TEST( AudioBuffer, AdjustVolumes )
@@ -41,6 +44,8 @@ TEST( AudioBuffer, AdjustVolumes )
 
     EXPECT_EQ( getMaxAmpForBuffer( audioBuffer ), maxValue * multiplier )
         << "expected:" << ( maxValue * multiplier ) << ", got:" << getMaxAmpForBuffer( audioBuffer ) << " for adjusted volume";
+
+    delete audioBuffer;
 }
 
 /* FIXME
@@ -80,6 +85,9 @@ TEST( AudioBuffer, MergeBuffers )
             }
         }
     }
+    delete audioBuffer1;
+    delete audioBuffer2;
+    delete buffer2clone;
 }
 */
 
@@ -118,6 +126,7 @@ TEST( AudioBuffer, ApplyMonoSource )
         for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
             EXPECT_EQ( buffer[ i ], monoBuffer[ i ]) << "expected:" << monoBuffer[ i ] << ", got:" << buffer[ i ];
     }
+    delete audioBuffer;
 }
 
 TEST( AudioBuffer, Clone )
@@ -135,4 +144,6 @@ TEST( AudioBuffer, Clone )
         for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
             EXPECT_EQ( buffer[ i ], srcBuffer[ i ]) << "expected:" << srcBuffer[ i ] << ", got:" << buffer[ i ] << " for clone";
     }
+    delete audioBuffer;
+    delete clone;
 }

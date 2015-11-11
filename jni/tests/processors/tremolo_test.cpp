@@ -13,6 +13,8 @@ TEST( Tremolo, Construction )
     ASSERT_EQ( tremolo->getWaveFormForChannel( 1 ),  rightWaveForm );
     ASSERT_EQ( tremolo->getFrequencyForChannel( 0 ), leftFrequency );
     ASSERT_EQ( tremolo->getFrequencyForChannel( 1 ), rightFrequency );
+
+    delete tremolo;
 }
 
 TEST( Tremolo, IsStereo )
@@ -29,16 +31,22 @@ TEST( Tremolo, IsStereo )
     ASSERT_FALSE( tremolo->isStereo() ) << "expected tremolo to be operating in mono";
 
     // test with equal frequencies
+    delete tremolo;
+
     rightWaveForm = 2;
     tremolo = new Tremolo( leftWaveForm, rightWaveForm, leftFrequency, rightFrequency );
 
     ASSERT_TRUE( tremolo->isStereo() ) << "expected tremolo to be operating in stereo";
 
     // test with equal waveforms
+    delete tremolo;
+
     rightWaveForm = 1;
     rightFrequency = 5000;
 
     tremolo = new Tremolo( leftWaveForm, rightWaveForm, leftFrequency, rightFrequency );
 
     ASSERT_TRUE( tremolo->isStereo() ) << "expected tremolo to be operating in stereo";
+
+    delete tremolo;
 }
