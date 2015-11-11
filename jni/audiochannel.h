@@ -82,6 +82,22 @@ class AudioChannel
          */
         void reset();
 
+        /**
+         * AudioChannel has its own output buffer which will contain
+         * the channels contents upon each iteration of the AudioEnginge's render cycle
+         * this method creates the buffer at the correct buffer size and channel amount
+         * to match the engines properties
+         */
+        void createOutputBuffer();
+        AudioBuffer* getOutputBuffer();
+
+        /**
+         * AudioChannel can also have a large cache buffer that holds pre-rendered
+         * contents. Use this sparingly (for instance on compositions that are only a few
+         * seconds in length, as memory consumption increases!!)
+         *
+         * caching is off by default, see the online Wiki on canCache() to activate this
+         */
         AudioBuffer* readCachedBuffer( AudioBuffer* aOutputBuffer, int aReadOffset );
         bool canCache();
         void canCache( bool value, int aBufferSize, int aCacheStartOffset, int aCacheEndOffset );
@@ -95,6 +111,8 @@ class AudioChannel
         static unsigned int INSTANCE_COUNT;
 
         void init();
+
+        AudioBuffer* _outputBuffer;
         AudioBuffer* _cachedBuffer;
         bool _canCache;
         int _cacheReadPointer;

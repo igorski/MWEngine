@@ -25,10 +25,11 @@
 
 /* public methods */
 
-SAMPLE_TYPE LevelUtility::RMS( AudioBuffer* audioBuffer, int channelNum )
+SAMPLE_TYPE LevelUtility::RMS( AudioChannel* audioChannel, int channelNum )
 {
-    SAMPLE_TYPE out     = 0.0;
-    SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( channelNum );
+    AudioBuffer* audioBuffer = audioChannel->getOutputBuffer();
+    SAMPLE_TYPE out          = 0.0;
+    SAMPLE_TYPE* buffer      = audioBuffer->getBufferForChannel( channelNum );
     SAMPLE_TYPE sample;
 
     for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
@@ -40,18 +41,19 @@ SAMPLE_TYPE LevelUtility::RMS( AudioBuffer* audioBuffer, int channelNum )
     return sqrt( out );
 }
 
-SAMPLE_TYPE LevelUtility::dBSPL( AudioBuffer* audioBuffer, int channelNum )
+SAMPLE_TYPE LevelUtility::dBSPL( AudioChannel* audioChannel, int channelNum )
 {
-    SAMPLE_TYPE value = pow( linear( audioBuffer, channelNum ), 0.5 );
-    value = value / audioBuffer->bufferSize;
+    SAMPLE_TYPE value = pow( linear( audioChannel, channelNum ), 0.5 );
+    value = value / audioChannel->getOutputBuffer()->bufferSize;
 
     return 20.0 * log10( value );
 }
 
-SAMPLE_TYPE LevelUtility::linear( AudioBuffer* audioBuffer, int channelNum )
+SAMPLE_TYPE LevelUtility::linear( AudioChannel* audioChannel, int channelNum )
 {
-    SAMPLE_TYPE out     = 0.0;
-    SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( channelNum );
+    AudioBuffer* audioBuffer = audioChannel->getOutputBuffer();
+    SAMPLE_TYPE out          = 0.0;
+    SAMPLE_TYPE* buffer      = audioBuffer->getBufferForChannel( channelNum );
     SAMPLE_TYPE sample;
 
     for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )

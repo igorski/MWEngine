@@ -24,7 +24,7 @@
 #define __LEVEL_UTILITY_H_INCLUDED__
 
 #include "global.h"
-#include "../audiobuffer.h"
+#include "../audiochannel.h"
 
 /**
  * LevelUtility provides methods to determine the mean level
@@ -34,15 +34,15 @@ class LevelUtility
 {
     public:
 
-        // root mean square of the given AudioBuffer signal
+        // root mean square of the given AudioChannels signal
         // channelNum describes which channel of the given buffer to evaluate
-        static SAMPLE_TYPE RMS( AudioBuffer* audioBuffer, int channelNum );
+        static SAMPLE_TYPE RMS( AudioChannel* audioChannel, int channelNum );
 
-        // dBSPL for the given AudioBuffer signal
-        static SAMPLE_TYPE dBSPL( AudioBuffer* audioBuffer, int channelNum );
+        // dBSPL for the given AudioChannels signal
+        static SAMPLE_TYPE dBSPL( AudioChannel* audioChannel, int channelNum );
 
-        // linear energy of the given AudioBuffer signal
-        static SAMPLE_TYPE linear( AudioBuffer* audioBuffer, int channelNum );
+        // linear energy of the given AudioChannels signal
+        static SAMPLE_TYPE linear( AudioChannel* audioChannel, int channelNum );
 };
 
 #endif
