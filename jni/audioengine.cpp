@@ -96,12 +96,14 @@ namespace AudioEngine
                                      AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 
         // hardware unavailable ? halt thread, trigger JNI callback for error handler
+
         if ( p == NULL )
         {
             Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
             return;
         }
-        // audio hardware available, start render thread
+
+        // audio hardware available, prepare environment
 
         int bufferSize, i, c, ci;
         bufferSize         = AudioEngineProps::BUFFER_SIZE;
@@ -114,13 +116,22 @@ namespace AudioEngine
         int loopOffset = 0;         // the offset within the current buffer where we start reading from the current loops start offset
         int loopAmount = 0;         // amount of samples we must read from the current loops start offset
 
-        float recbufferIn   [ bufferSize ];                  // used for recording from device input
-        float outbuffer     [ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
+        float recbufferIn[ bufferSize ];                  // used for recording from device input
+        float outbuffer  [ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
 
         // generate buffers for temporary channel buffer writes
-        AudioBuffer* channelBuffer = new AudioBuffer( outputChannels, bufferSize );
-        AudioBuffer* inbuffer      = new AudioBuffer( outputChannels, bufferSize ); // accumulates all channels ("master strip")
-        AudioBuffer* recbuffer     = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, bufferSize );
+        AudioBuffer* inbuffer  = new AudioBuffer( outputChannels, bufferSize ); // accumulates all channels ("master strip")
+        AudioBuffer* recbuffer = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, bufferSize );
+
+        // ensure all audiochannel buffers have the correct properties (in case engine is
+        // restarting after changing buffer size, for instance)
+
+        std::vector<BaseInstrument*> instruments = sequencer::instruments;
+
+        for ( i = 0; i < instruments.size(); ++i )
+            instruments.at( i )->audioChannel->createOutputBuffer();
+
+        // start thread
 
         thread = 1;
 
@@ -198,7 +209,8 @@ namespace AudioEngine
                 std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
                 int amount                               = audioEvents.size();
 
-                // clear previous channel buffer content
+                // get channel output buffer and clear previous contents
+                AudioBuffer* channelBuffer = channel->getOutputBuffer();
                 channelBuffer->silenceBuffers();
 
                 bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
@@ -365,7 +377,7 @@ namespace AudioEngine
 
         // clear heap memory allocated before thread loop
         delete inbuffer;
-        delete channelBuffer;
+        delete recbuffer;
     }
 
     void stop()

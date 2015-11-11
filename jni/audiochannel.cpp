@@ -49,6 +49,8 @@ AudioChannel::~AudioChannel()
     reset();
     --INSTANCE_COUNT;
 
+    delete _outputBuffer;
+    delete _cachedBuffer;
     delete processingChain;
 }
 
@@ -99,6 +101,28 @@ void AudioChannel::canCache( bool value, int aBufferSize, int aCacheStartOffset,
     else {
         isCaching = false;
     }
+}
+
+void AudioChannel::createOutputBuffer()
+{
+    int bufferSize     = AudioEngineProps::BUFFER_SIZE;
+    int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
+
+    if ( _outputBuffer != 0 )
+    {
+        if ( _outputBuffer->bufferSize       == bufferSize &&
+             _outputBuffer->amountOfChannels == outputChannels )
+        {
+            return; // don't create, existing one is satisfactory
+        }
+        delete _outputBuffer;
+    }
+    _outputBuffer = new AudioBuffer( outputChannels, bufferSize );
+}
+
+AudioBuffer* AudioChannel::getOutputBuffer()
+{
+    return _outputBuffer;
 }
 
 /**
@@ -163,11 +187,13 @@ void AudioChannel::init()
     isCaching          = false;
     instanceId         = ++INSTANCE_COUNT;
     _canCache          = false;
+    _outputBuffer      = 0;
     _cachedBuffer      = 0;
     _cacheReadPointer  = 0;
     _cacheWritePointer = 0;
     _cacheStartOffset  = 0;
     _cacheEndOffset    = 0;
+    processingChain    = new ProcessingChain();
 
-    processingChain   = new ProcessingChain();
+    createOutputBuffer();
 }

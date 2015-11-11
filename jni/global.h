@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -62,5 +62,6 @@ const SAMPLE_TYPE TWO_PI = PI * 2.0;
 const int WAVE_TABLE_PRECISION = 128; // the amount of samples in a wave table
 
 extern void *print_message( void* );
+#define LOGTAG "MWENGINE"             // the logtag used when logging messages to logcat
 
 #endif

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,46 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __UTILS_H_INCLUDED__
-#define __UTILS_H_INCLUDED__
+#ifndef __LEVEL_UTILITY_H_INCLUDED__
+#define __LEVEL_UTILITY_H_INCLUDED__
 
-#include <math.h>
-#include <sstream>
 #include "global.h"
+#include "../audiochannel.h"
 
-/* convenience methods */
-
-float scale( float value, float maxValue, float maxCompareValue );
-float randomFloat();
-unsigned long long now_ms();
-
-/* volume util */
-
-namespace VolumeUtil
+/**
+ * LevelUtility provides methods to determine the mean level
+ * of an AudioBuffer, which can be used for UI representations (e.g. level meters)
+ */
+class LevelUtility
 {
-    extern float FACTOR1;
-    extern float FACTOR2;
+    public:
 
-    extern float lin2log( float dLinear );
-    extern float log2lin( float dLogarithmic );
-}
+        // root mean square of the given AudioChannels signal
+        // channelNum describes which channel of the given buffer to evaluate
+        static SAMPLE_TYPE RMS( AudioChannel* audioChannel, int channelNum );
 
-/* convenience methods */
+        // dBSPL for the given AudioChannels signal
+        static SAMPLE_TYPE dBSPL( AudioChannel* audioChannel, int channelNum );
 
-// numbers to string
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
- ( std::ostringstream() << std::dec << x ) ).str()
-
-/* convenience log methods */
-
-namespace DebugTool
-{
-    extern void log( char const* aMessage );
-    extern void log( char const* aMessage, char const* aValue );
-    extern void log( char const* aMessage, int aValue );
-    extern void log( char const* aMessage, unsigned int aValue );
-    extern void log( char const* aMessage, float aValue );
-    extern void log( char const* aMessage, double aValue );
-}
+        // linear energy of the given AudioChannels signal
+        static SAMPLE_TYPE linear( AudioChannel* audioChannel, int channelNum );
+};
 
 #endif
