@@ -53,6 +53,7 @@ int Tremolo::getWaveFormForChannel( int aChannelNum )
 void Tremolo::setWaveFormForChannel( int aChannelNum, int aWaveForm )
 {
     _waveforms[ aChannelNum ] = aWaveForm;
+    // TODO : USE ENVELOPE GENERATOR!!!
     TablePool::getTable( getTableForChannel( aChannelNum ), aWaveForm );
 }
 

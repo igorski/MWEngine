@@ -1,4 +1,3 @@
-#include "helpers/helper.cpp"
 #include "../audiobuffer.h"
 
 TEST( AudioBuffer, Construction )
