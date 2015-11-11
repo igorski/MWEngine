@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * wave table generation adapted from sources by Matt @ hackmeopen.com
  *
