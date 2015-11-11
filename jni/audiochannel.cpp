@@ -49,6 +49,8 @@ AudioChannel::~AudioChannel()
     reset();
     --INSTANCE_COUNT;
 
+    delete _outputBuffer;
+    delete _cachedBuffer;
     delete processingChain;
 }
 

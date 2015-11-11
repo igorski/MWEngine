@@ -84,7 +84,7 @@ class AudioChannel
 
         /**
          * AudioChannel has its own output buffer which will contain
-         * the channels contents upon each iteration of the AudioEnginge's render cycle
+         * the channels contents upon each iteration of the AudioEngine's render cycle
          * this method creates the buffer at the correct buffer size and channel amount
          * to match the engines properties
          */
