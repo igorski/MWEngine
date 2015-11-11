@@ -47,6 +47,12 @@ After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.li
 You can then run the Ant build script to create the .APK package and deploy it into an attached device / emulator, e.g. :
 
     ant debug install
+    
+### Unit testing
+
+The library comes with unit tests, written using the Googletest framework. To run the tests, simply execute the _test.sh_
+shell script with a device attached. This script will build the library by calling the build script defined above. Note:
+_adb_ must be specified in your global path settings.
 
 ### Documentation
 

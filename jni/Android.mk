@@ -72,3 +72,12 @@ modules/routeableoscillator.cpp \
 LOCAL_LDLIBS := -llog -lOpenSLES
 
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := mwengine_unittest
+LOCAL_SRC_FILES := tests/main.cpp
+LOCAL_SHARED_LIBRARIES := mwengine
+LOCAL_STATIC_LIBRARIES := googletest_main
+include $(BUILD_EXECUTABLE)
+
+$(call import-module,third_party/googletest)
