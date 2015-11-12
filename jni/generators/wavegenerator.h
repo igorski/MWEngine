@@ -30,6 +30,12 @@
 
 namespace WaveGenerator
 {
+    // generate a WaveTable for given waveformType
+    // NOTE : wave table generation has high CPU demands
+    // instead of doing this during live audio synthesis, it is
+    // better to precache the WaveTables upon application start
+    // (also see TablePool for maintaining the cache)
+
     extern void generate( WaveTable* waveTable, int waveformType );
 }
 

@@ -175,6 +175,7 @@ void AudioChannel::reset()
     }
     */
     liveEvents.clear();
+    hasLiveEvents = false;
 }
 
 /* protected methods */

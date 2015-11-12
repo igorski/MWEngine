@@ -17,7 +17,7 @@ TEST( AudioBuffer, Construction )
 
 TEST( AudioBuffer, Silence )
 {
-    AudioBuffer* audioBuffer = randomFilledAudioBuffer();
+    AudioBuffer* audioBuffer = fillAudioBuffer( randomAudioBuffer() );
     SAMPLE_TYPE maxValue     = getMaxAmpForBuffer( audioBuffer );
 
     ASSERT_GT( maxValue, 0.0 ) << "expected max amp above 0.0, got:" << maxValue << " instead";
@@ -36,7 +36,7 @@ TEST( AudioBuffer, Silence )
 
 TEST( AudioBuffer, AdjustVolumes )
 {
-    AudioBuffer* audioBuffer = randomFilledAudioBuffer();
+    AudioBuffer* audioBuffer = fillAudioBuffer( randomAudioBuffer() );
     SAMPLE_TYPE multiplier   = randomSample( 0.0, MAX_PHASE );
     SAMPLE_TYPE maxValue     = getMaxAmpForBuffer( audioBuffer );
 
@@ -51,8 +51,8 @@ TEST( AudioBuffer, AdjustVolumes )
 /* FIXME
 TEST( AudioBuffer, MergeBuffers )
 {
-    AudioBuffer* audioBuffer1 = randomFilledAudioBuffer();
-    AudioBuffer* audioBuffer2 = randomFilledAudioBuffer();
+    AudioBuffer* audioBuffer1 = fillAudioBuffer( randomAudioBuffer() );
+    AudioBuffer* audioBuffer2 = fillAudioBuffer( randomAudioBuffer() );
 
     AudioBuffer* buffer2clone = audioBuffer2->clone();
 
@@ -131,8 +131,19 @@ TEST( AudioBuffer, ApplyMonoSource )
 
 TEST( AudioBuffer, Clone )
 {
-    AudioBuffer* audioBuffer = randomFilledAudioBuffer();
+    AudioBuffer* audioBuffer = fillAudioBuffer( randomAudioBuffer() );
     AudioBuffer* clone       = audioBuffer->clone();
+
+    // verify the properties are equal
+
+    EXPECT_EQ( clone->bufferSize, audioBuffer->bufferSize )
+        << "expected:" << audioBuffer->bufferSize << ",  got:" << clone->bufferSize << " for buffer size";
+
+    EXPECT_EQ( clone->amountOfChannels, audioBuffer->amountOfChannels )
+        << "expected:" << audioBuffer->amountOfChannels << ",  got:" << clone->amountOfChannels << " for amount of channels";
+
+    EXPECT_EQ( clone->loopeable, audioBuffer->loopeable )
+        << "expected:" << audioBuffer->loopeable << ",  got:" << clone->loopeable << " for loopeable";
 
     // verify all cloned channels have the same values as the source
 
@@ -144,6 +155,7 @@ TEST( AudioBuffer, Clone )
         for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
             EXPECT_EQ( buffer[ i ], srcBuffer[ i ]) << "expected:" << srcBuffer[ i ] << ", got:" << buffer[ i ] << " for clone";
     }
+
     delete audioBuffer;
     delete clone;
 }
