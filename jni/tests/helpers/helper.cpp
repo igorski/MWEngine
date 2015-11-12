@@ -19,6 +19,13 @@ int randomInt( int min, int max )
     return min + ( rand() % ( int )( max - min + 1 ));
 }
 
+// random true - false
+
+bool randomBool()
+{
+    return 0 == ( rand() % 2 );
+}
+
 // return a random floating point value
 
 float randomFloat()
