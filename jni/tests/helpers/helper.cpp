@@ -69,7 +69,7 @@ AudioBuffer* randomMultiChannelBuffer()
 
 AudioBuffer* fillAudioBuffer( AudioBuffer* audioBuffer )
 {
-    for ( int c = 0, ca = audioBuffer->amountOfChannels; c < ca; ++ c )
+    for ( int c = 0, ca = audioBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
 
@@ -85,7 +85,7 @@ SAMPLE_TYPE getMaxAmpForBuffer( AudioBuffer* audioBuffer )
 {
     SAMPLE_TYPE max = -MAX_PHASE;
 
-    for ( int c = 0, ca = audioBuffer->amountOfChannels; c < ca; ++ c )
+    for ( int c = 0, ca = audioBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
 
@@ -96,6 +96,23 @@ SAMPLE_TYPE getMaxAmpForBuffer( AudioBuffer* audioBuffer )
         }
     }
     return max;
+}
+
+// check whether a given AudioBuffer has sample content (e.g. isn't only silent)
+
+bool bufferHasContent( AudioBuffer* audioBuffer )
+{
+    for ( int c = 0, ca = audioBuffer->amountOfChannels; c < ca; ++c )
+    {
+        SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
+
+        for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
+        {
+            if ( buffer[ i ] != 0.0 )
+                return true;
+        }
+    }
+    return false;
 }
 
 // ----------------------------

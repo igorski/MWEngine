@@ -74,7 +74,7 @@ void BaseAudioEvent::setSampleEnd( int value )
     _sampleEnd = value;
 }
 
-bool BaseAudioEvent::getLoopeable()
+bool BaseAudioEvent::isLoopeable()
 {
     return _loopeable;
 }
@@ -87,7 +87,7 @@ void BaseAudioEvent::setLoopeable( bool value )
         _buffer->loopeable = _loopeable;
 }
 
-bool BaseAudioEvent::deletable()
+bool BaseAudioEvent::isDeletable()
 {
     return _deleteMe;
 }
@@ -138,7 +138,7 @@ void BaseAudioEvent::setVolume( float value )
     _volume = value;
 }
 
-void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
+void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                                 int minBufferPosition, int maxBufferPosition,
                                 bool loopStarted, int loopOffset, bool useChannelRange )
 {
@@ -159,7 +159,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
     for ( int i = 0; i < bufferSize; ++i )
     {
-        int readPointer = i + bufferPos;
+        int readPointer = i + bufferPosition;
 
         // over the max position ? read from the start ( implies that sequence has started loop )
         if ( readPointer >= maxBufferPosition )
@@ -212,6 +212,14 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 AudioBuffer* BaseAudioEvent::getBuffer()
 {
     return _buffer;
+}
+
+void BaseAudioEvent::setBuffer( AudioBuffer* buffer, bool destroyable )
+{
+    _destroyableBuffer = destroyable;
+    destroyBuffer(); // clear existing buffer
+
+    _buffer = buffer;
 }
 
 AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )

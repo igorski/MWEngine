@@ -50,15 +50,22 @@ class AudioChannel
         float mixVolume;
         int instanceId;
 
+        /**
+         * invoked by the sequencer when collecting all the events the instrument
+         * referencing this AudioChannel should render for the current sequencer offset
+         *
+         * don't invoke this manually, you'll likely want to use "addToSequencer",
+         * "removeFromSequencer" directly from an AudioEvent
+         */
         void addEvent( BaseAudioEvent* aEvent );
 
         /**
-         * a channel can both contain buffered output as well
-         * as live events ( for instance a keyboard plays the
-         * same synthesizer as the sequenced patterns ). We need to
-         * add them here so they can benefit from the same processing chain
+         * a channel can both contain sequenced output aligned to a grid as well
+         * as instantaneously playing live events ( for instance: a keyboard plays the
+         * same synthesizer as the sequenced patterns do ).
          *
-         * @param aLiveEvent {BaseAudioEvent} the live event
+         * don't invoke this manually, you'll likely want to use "addToSequencer",
+         * "removeFromSequencer" directly from a live AudioEvent
          */
         void addLiveEvent( BaseAudioEvent* aLiveEvent );
 

@@ -119,11 +119,11 @@ namespace sequencer
                 int sampleStart = audioEvent->getSampleStart();
                 int sampleEnd   = audioEvent->getSampleEnd();
 
-                if ( audioEvent->getLoopeable() ||
+                if ( audioEvent->isLoopeable() ||
                    ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
                    ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
                 {
-                    if ( !audioEvent->deletable())
+                    if ( !audioEvent->isDeletable())
                         channel->addEvent( audioEvent );
                     else
                         removes.push_back( audioEvent );
@@ -162,7 +162,7 @@ namespace sequencer
         {
             BaseAudioEvent* audioEvent = liveEvents->at( i );
 
-            if ( !audioEvent->deletable())
+            if ( !audioEvent->isDeletable())
                 channel->addLiveEvent( audioEvent );
             else
                 removes.push_back( audioEvent );
@@ -217,7 +217,7 @@ namespace sequencer
                     if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
                         ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
                     {
-                        if ( !audioEvent->deletable())
+                        if ( !audioEvent->isDeletable())
                             events->push_back(( BaseCacheableAudioEvent* ) audioEvent );
                     }
                 }

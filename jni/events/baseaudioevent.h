@@ -34,14 +34,30 @@ class BaseAudioEvent
         /**
          * used by the AudioEngine to mix in parts of this
          * event buffer at a specific range
+         *
+         * outputBuffer describes the AudioBuffer this event will mix its contents into
+         * bufferPosition is the current position (playback head) of the sequencer
+         * minBufferPosition describes the minimum buffer position of the sequencers current loop range
+         * maxBufferPosition describes the maximum buffer position of the sequencers current loop range
+         * loopStarted describes whether the sequencer is about to loop (e.g. the current bufferPos + the
+         *     bufferSize of given outputBuffer will be greater or equal to the maxBufferPosition, meaning the
+         *     sequencer will also require a render for the first samples at minBufferPosition (the amount of
+         *     bufferSize samples left after having rendered the last samples up until maxBufferPosition)
+         * loopOffset describes at which sample position the loop should read from (e.g. the amout of samples
+         *     to render at the minBufferPosition)
+         * useChannelRange whether the channel we're mixing into has its own range
          */
-        virtual void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
-                                bool loopStarted, int loopOffset, bool useChannelRange );
+        virtual void mixBuffer( AudioBuffer* outputBuffer, int bufferPosition, int minBufferPosition,
+                                int maxBufferPosition, bool loopStarted, int loopOffset, bool useChannelRange );
 
         /**
-         * get the complete AudioBuffer for this event
+         * get / set the AudioBuffer for this event
+         *
+         * depending on the inheriting class type buffers can be
+         * set / maintained internally (e.g. via a referenced Synthesizer, SampleManager, etc.)
          */
         virtual AudioBuffer* getBuffer();
+        virtual void setBuffer( AudioBuffer* buffer, bool destroyable );
 
         /**
          * an AudioEvent can also synthesize audio live, this
@@ -60,10 +76,10 @@ class BaseAudioEvent
         virtual void setSampleStart( int value );
         virtual void setSampleEnd( int value );
 
-        virtual bool getLoopeable();
+        virtual bool isLoopeable();
         virtual void setLoopeable( bool value );
 
-        virtual bool deletable();   // query whether this event is queued for deletion
+        virtual bool isDeletable();   // query whether this event is queued for deletion
         virtual void setDeletable( bool value );
 
         virtual bool isEnabled();   // whether this audio event is elligible for playback
