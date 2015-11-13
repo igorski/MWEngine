@@ -30,17 +30,18 @@
 
 SampleEvent::SampleEvent()
 {
+    construct();
     init( 0 );
 }
 
 SampleEvent::SampleEvent( BaseInstrument* aInstrument )
 {
+    construct();
     init( aInstrument );
 }
 
 SampleEvent::~SampleEvent()
 {
-    removeFromSequencer();
     delete _liveBuffer;
 }
 
@@ -90,12 +91,19 @@ int SampleEvent::getReadPointer()
 void SampleEvent::play()
 {
     _lastPlaybackPosition = _bufferRangeStart;
+
+    // remove this event to the live events list of the instrument (keep
+    // the current sequenced event - if it was added - as is
+
     _instrument->getLiveEvents()->push_back( this );
     setEnabled( true );
 }
 
 void SampleEvent::stop()
 {
+    // remove this event from the live events list of the instrument (keep
+    // the current sequenced event - if it was added - as is
+
     removeLiveEvent();
     setEnabled( false );
 }
@@ -142,11 +150,6 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
     return _liveBuffer;
 }
 
-BaseInstrument* SampleEvent::getInstrument()
-{
-    return _instrument;
-}
-
 void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 {
     // make sure we lock read/write operations as setting a large sample
@@ -183,52 +186,6 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 
     if ( !wasLocked )
         _locked = false;
-}
-
-void SampleEvent::addToSequencer()
-{
-    if ( !_addedToSequencer )
-    {
-        _instrument->getEvents()->push_back( this );
-    }
-    _addedToSequencer = true;
-}
-
-void SampleEvent::removeFromSequencer()
-{
-    if ( _addedToSequencer )
-    {
-        std::vector<BaseAudioEvent*>* audioEvents = _instrument->getEvents();
-
-        for ( int i; i < audioEvents->size(); i++ )
-        {
-            if ( audioEvents->at( i ) == this )
-            {
-                audioEvents->erase( audioEvents->begin() + i );
-                break;
-            }
-        }
-        removeLiveEvent();
-    }
-    _addedToSequencer = false;
-}
-
-void SampleEvent::swapInstrument( BaseInstrument* aInstrument )
-{
-    // swap instrument if new one is different to existing reference
-    if ( _instrument != aInstrument )
-    {
-        bool readdToSequencer = _addedToSequencer;
-        removeFromSequencer();
-
-        _instrument = aInstrument;
-
-        // if event was added to the Sequencer, re-add it so
-        // it can now playback over the new instrument
-
-        if ( readdToSequencer )
-            addToSequencer();
-    }
 }
 
 void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
@@ -299,22 +256,15 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 
 void SampleEvent::init( BaseInstrument* instrument )
 {
-    _deleteMe               = false;
-    _buffer                 = 0;
-    _sampleStart            = 0;
-    _sampleEnd              = 0;
-    _sampleLength           = 0;
-    _bufferRangeLength      = 0;
-    _locked                 = false;
-    _addedToSequencer       = false;
-    _readPointer            = 0;
-    _rangePointer           = 0;
-    _lastPlaybackPosition   = 0;
-    _loopeable              = false;
-    _destroyableBuffer      = false; // is referenced via SampleManager !
-    _instrument             = instrument;
-    _liveBuffer             = 0;
-    _volume                 = MAX_PHASE;
+    _deleteMe              = false;
+    _bufferRangeLength     = 0;
+    _addedToSequencer      = false;
+    _readPointer           = 0;
+    _rangePointer          = 0;
+    _lastPlaybackPosition  = 0;
+    _destroyableBuffer     = false; // is referenced via SampleManager !
+    _instrument            = instrument;
+    _liveBuffer            = 0;
 }
 
 void SampleEvent::removeLiveEvent()

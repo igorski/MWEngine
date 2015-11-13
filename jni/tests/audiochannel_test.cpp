@@ -45,7 +45,7 @@ TEST( AudioChannel, Events )
         << "expected AudioChannel events vector to be empty after reset";
 
     delete audioChannel;
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( AudioChannel, LiveEvents )
@@ -76,7 +76,7 @@ TEST( AudioChannel, LiveEvents )
         << "expected AudioChannel liveEvents vector to be empty after reset";
 
     delete audioChannel;
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( AudioChannel, OutputBuffer )

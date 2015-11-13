@@ -6,6 +6,7 @@
 #include "../../global.h"
 #include "../../audiobuffer.h"
 #include "../../events/baseaudioevent.h"
+#include "../../instruments/baseinstrument.h"
 #include "../../utilities/bufferutility.h"
 
 // ---------------------
@@ -119,8 +120,18 @@ bool bufferHasContent( AudioBuffer* audioBuffer )
 // HELPER AUDIO EVENT FUNCTIONS
 // ----------------------------
 
+// create a BaseAudioEvent (NOTE: delete using "deleteAudioEvent")
+
 BaseAudioEvent* randomAudioEvent()
 {
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+    BaseAudioEvent* audioEvent = new BaseAudioEvent( new BaseInstrument() );
     return audioEvent;
+}
+
+void deleteAudioEvent( BaseAudioEvent* audioEvent )
+{
+    // instrument was created by helper, BaseAudioEvent destructors don't
+    // dispose Instruments (as they shouldn't!), do it here
+    delete audioEvent->getInstrument();
+    delete audioEvent;
 }

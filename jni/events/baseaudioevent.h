@@ -25,9 +25,12 @@
 
 #include "../audiobuffer.h"
 
+class BaseInstrument;  // forward declaration, see <instruments/baseinstrument.h>
+
 class BaseAudioEvent
 {
     public:
+        BaseAudioEvent( BaseInstrument* instrument );
         BaseAudioEvent();
         ~BaseAudioEvent();
 
@@ -68,6 +71,15 @@ class BaseAudioEvent
          */
         virtual AudioBuffer* synthesize( int aBufferLength );
 
+        virtual BaseInstrument* getInstrument(); // retrieve reference to the instrument this event belongs to
+        virtual void setInstrument( BaseInstrument* aInstrument ); // set / swap instrument this event belongs to
+
+        virtual void addToSequencer();      // add / remove event from Instruments events list
+        virtual void removeFromSequencer(); // adding it makes event eligible for playback via the sequencer
+        bool isSequenced;                   // when true, this event plays back at a strict time within the sequencer
+                                            // when false, this is a live event playing immediately (this has nothing
+                                            // to do with this Event actually being added/removed from the sequencer!!)
+
         virtual int getSampleLength();
         virtual int getSampleStart();
         virtual int getSampleEnd();
@@ -96,15 +108,20 @@ class BaseAudioEvent
 
     protected:
 
+        void construct();   // basic initialization which can be shared across overloaded constructors
+
         // buffer regions
         int _sampleStart;
         int _sampleEnd;
         int _sampleLength;
 
+        // properties
         bool _enabled;
         bool _loopeable;
-
         float _volume;
+
+        bool _addedToSequencer;      // whether this event exists in the instruments event list (and is eligible for playback)
+        BaseInstrument* _instrument; // the BaseInstrument this event belongs to
 
         // cached buffer
         AudioBuffer* _buffer;
@@ -112,7 +129,7 @@ class BaseAudioEvent
 
         bool _deleteMe;
         bool _locked;
-        bool _updateAfterUnlock;    // use in update-methods when checking for lock
+        bool _updateAfterUnlock; // use in update-methods when checking for lock
 
         // _destroyableBuffer indicates we can delete the buffer on destruction (true by default and
         // implies that this AudioEvent holds the only reference to its buffers

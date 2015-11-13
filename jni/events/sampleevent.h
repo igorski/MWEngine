@@ -40,12 +40,8 @@ class SampleEvent : public BaseAudioEvent
         virtual int getReadPointer();
 
         virtual AudioBuffer* synthesize( int aBufferLength );
-        virtual BaseInstrument* getInstrument(); // retrieve reference to the instrument this event belongs to
 
         void setSample( AudioBuffer* sampleBuffer );
-        virtual void addToSequencer();
-        virtual void removeFromSequencer();
-        virtual void swapInstrument( BaseInstrument* aInstrument );
 
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
@@ -68,15 +64,8 @@ class SampleEvent : public BaseAudioEvent
         int _bufferRangeEnd;
         int _bufferRangeLength;
 
-        BaseInstrument* _instrument;    // the BaseInstrument this event belongs to
         AudioBuffer*    _liveBuffer;
         int _lastPlaybackPosition;
-
-        // removal of AudioEvents must occur outside of the
-        // cache loop, by activating this boolean we're queuing
-        // the AudioEvent for removal
-
-        bool _addedToSequencer;  // whether this event is part of a sequence
 
         void init( BaseInstrument* aInstrument );
         void removeLiveEvent();

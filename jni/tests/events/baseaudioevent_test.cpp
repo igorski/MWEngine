@@ -1,4 +1,5 @@
 #include "../../events/baseaudioevent.h"
+#include "../../instruments/baseinstrument.h"
 
 TEST( BaseAudioEvent, GettersSettersVolume )
 {
@@ -14,7 +15,7 @@ TEST( BaseAudioEvent, GettersSettersVolume )
     EXPECT_EQ( audioEvent->getVolume(), volume )
         << "expected volume to be equal to the set value";
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( BaseAudioEvent, EnabledState )
@@ -34,7 +35,7 @@ TEST( BaseAudioEvent, EnabledState )
     ASSERT_TRUE( audioEvent->isEnabled() )
         << "expected audio event to be enabled after enabling";
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( BaseAudioEvent, LoopeableState )
@@ -54,7 +55,7 @@ TEST( BaseAudioEvent, LoopeableState )
     ASSERT_FALSE( audioEvent->isLoopeable() )
         << "expected audio event not to be loopeable after disabling loop";
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( BaseAudioEvent, LockedState )
@@ -74,7 +75,7 @@ TEST( BaseAudioEvent, LockedState )
     ASSERT_FALSE( audioEvent->isLocked() )
         << "expected audio event to be unlocked after unlocking";
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( BaseAudioEvent, DeletableState )
@@ -89,7 +90,7 @@ TEST( BaseAudioEvent, DeletableState )
     ASSERT_TRUE( audioEvent->isDeletable() )
         << "expected audio event to be deletable after flagging it as such";
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( BaseAudioEvent, SampleProperties )
@@ -108,7 +109,7 @@ TEST( BaseAudioEvent, SampleProperties )
     EXPECT_EQ( sampleEnd,    audioEvent->getSampleEnd() );
     EXPECT_EQ( sampleLength, audioEvent->getSampleLength() );
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( BaseAudioEvent, Buffers )
@@ -126,7 +127,7 @@ TEST( BaseAudioEvent, Buffers )
     ASSERT_FALSE( buffer == audioEvent->getBuffer() )
         << "expected buffer to be destroyed after invoking destroy in the AudioEvent";
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
 }
 
 TEST( BaseAudioEvent, MixBuffer )
@@ -203,6 +204,22 @@ TEST( BaseAudioEvent, MixBuffer )
             << "expected temporary buffer to contain no content after mixing for an out-of-range buffer position";
     }
 
-    delete audioEvent;
+    deleteAudioEvent( audioEvent );
     delete tempBuffer;
+}
+
+TEST( BaseAudioEvent, Instrument )
+{
+    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+
+    ASSERT_TRUE( 0 == audioEvent->getInstrument() )
+        << "expected BaseAudioEvent not to have an Instrument during construction";
+
+    BaseInstrument* instrument = new BaseInstrument();
+    audioEvent->setInstrument( instrument );
+
+    ASSERT_TRUE( instrument == audioEvent->getInstrument() )
+        << "expected AudioEvent to return the set Instrument";
+
+    deleteAudioEvent( audioEvent );
 }
