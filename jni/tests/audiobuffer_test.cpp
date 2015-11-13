@@ -29,7 +29,7 @@ TEST( AudioBuffer, Silence )
         SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
 
         for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
-            EXPECT_EQ( buffer[ i ], 0.0 ) << " epected: 0.0, got:" << buffer[ i ];
+            EXPECT_EQ( buffer[ i ], 0.0 ) << "expected silent sample";
     }
     delete audioBuffer;
 }
@@ -58,7 +58,7 @@ TEST( AudioBuffer, MergeBuffers )
     int read       = randomInt( 0, audioBuffer1->bufferSize - 1 );
     int write      = randomInt( 0, audioBuffer2->bufferSize - 1 );
     float volume   = randomFloat();
-    bool loopeable = false; // TODO: failures!! randomBool(); // use random loopeable setting
+    bool loopeable = false;//TODO : ACTIVATE randomBool(); // use random loopeable setting
 
     int writtenSamples = buffer2clone->mergeBuffers( audioBuffer1, read, write, volume );
     buffer2clone->loopeable = loopeable;
@@ -89,7 +89,7 @@ TEST( AudioBuffer, MergeBuffers )
                         break;
                 }
                 SAMPLE_TYPE compareSample = sourceBuffer2[ i ] + ( sourceBuffer1[ r ] * volume );
-                EXPECT_EQ( buffer[ i ], compareSample )
+                EXPECT_EQ( compareSample, buffer[ i ] )
                     << "expected:" << compareSample << ", got:" << buffer[ i ] << " for merged buffer range at write pos " << i;
 
                 ++r;
@@ -97,7 +97,7 @@ TEST( AudioBuffer, MergeBuffers )
             else {
                 // outside of the merge range, we expect the buffer values to
                 // equal that of the source of the clone buffer
-                EXPECT_EQ( buffer[ i ], sourceBuffer2[ i ])
+                EXPECT_EQ( sourceBuffer2[ i ], buffer[ i ] )
                     << "expected:" << sourceBuffer2[ i ] << " for non merged buffer range at write pos " << i;
             }
         }

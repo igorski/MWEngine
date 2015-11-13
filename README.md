@@ -48,11 +48,12 @@ You can then run the Ant build script to create the .APK package and deploy it i
 
     ant debug install
     
-### Unit testing
+### Unit tests
 
-The library comes with unit tests, written using the Googletest C++ testing framework (distributed with NDK 10). To run the tests, simply
-execute the _test.sh_ shell script with a device attached (sorry Unix-only shell at the moment). This script will also build the library
-prior to running the tests by calling the build script described above. Note: _adb_ must be specified in your global path settings.
+The library comes with unit tests (_/jni/tests/_), written using the Googletest C++ testing framework (distributed with NDK 10).
+To run the tests, simply execute the _test.sh_ (sorry Unix-only shell at the moment)-script with a device attached.
+This will also build the library prior to running the tests by calling the build script described above.
+Note: _adb_ must be specified in your global path settings.
 
 ### Documentation
 

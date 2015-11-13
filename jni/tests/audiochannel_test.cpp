@@ -21,6 +21,8 @@ TEST( AudioChannel, Construction )
     EXPECT_EQ( audioChannel->maxBufferPosition, maxBufferPosition )
             << "expected:" << maxBufferPosition << ", got:" << audioChannel->maxBufferPosition << " for max buffer position";
 
+    ProcessingChain* processingChain = audioChannel->processingChain;
+
     delete audioChannel;
 }
 
@@ -114,4 +116,87 @@ TEST( AudioChannel, OutputBuffer )
         << "expected:" << AudioEngineProps::OUTPUT_CHANNELS << ", got:" << outputBuffer->amountOfChannels << " for output channel amount";
 
     delete audioChannel;
+}
+
+TEST( AudioChannel, Caching )
+{
+    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, MAX_PHASE ));
+
+    ASSERT_FALSE( audioChannel->canCache() )
+        << "expected caching to be disabled by default on construction";
+
+    int cacheBufferSize  = randomInt( 512, 8192 );
+    int cacheStartOffset = randomInt( 0, cacheBufferSize / 2 );
+    int cacheEndOffset   = randomInt( cacheStartOffset + 1, cacheBufferSize - 1 );
+
+    audioChannel->canCache( true, cacheBufferSize, cacheStartOffset, cacheEndOffset );
+
+    ASSERT_TRUE( audioChannel->canCache() )
+        << "expected caching to be enabled after cache invocation";
+
+    ASSERT_TRUE( audioChannel->isCaching )
+        << "expected caching state to be true after cache invocation";
+
+    ASSERT_FALSE( audioChannel->hasCache )
+        << "expected caching complete state to be false after cache invocation";
+
+    // create a randomly filled AudioBuffer to write into the cache
+
+    AudioBuffer* audioBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, randomInt( 0, 512 ));
+    fillAudioBuffer( audioBuffer );
+
+    // write something into the cache until it is completely filled
+    int writeIterations = 0;
+    while ( !audioChannel->hasCache ) {
+        audioChannel->writeCache( audioBuffer, 0 );
+        ++writeIterations;
+    }
+
+    ASSERT_TRUE( audioChannel->hasCache )
+        << "expected caching complete state to be true after filling of the entire cache buffer";
+
+    ASSERT_FALSE( audioChannel->isCaching )
+        << "expected caching state to be false after filling of the entire cache buffer";
+
+    // ensure all has been written
+    int readOffset = cacheStartOffset;
+
+    for ( int i = 0; i < writeIterations; ++i )
+    {
+        // create temporary buffer to receive cache contents
+        AudioBuffer* tempBuffer = new AudioBuffer( audioBuffer->amountOfChannels, audioBuffer->bufferSize );
+        audioChannel->readCachedBuffer( tempBuffer, readOffset );
+
+        // read one buffer size at a time as it has been written one buffer size at a time
+        readOffset += audioBuffer->bufferSize;
+
+        if ( readOffset < cacheEndOffset )
+        {
+            for ( int c = 0, ca = audioBuffer->amountOfChannels; c < ca; ++c )
+            {
+                SAMPLE_TYPE* srcBuffer   = tempBuffer->getBufferForChannel( c );
+                SAMPLE_TYPE* cacheBuffer = tempBuffer->getBufferForChannel( c );
+
+                for ( int j = 0, l = audioBuffer->bufferSize; j < l; ++j )
+                    EXPECT_EQ( srcBuffer[ j ], cacheBuffer[ j ] ) << " expected cached contents to equal source contents";
+            }
+        }
+        delete tempBuffer;
+    }
+
+    // check flushing of the cached buffer
+
+    audioChannel->clearCachedBuffer();
+
+    ASSERT_TRUE( audioChannel->canCache() )
+        << "expected caching to be enabled after clearing of the cached buffer";
+
+    ASSERT_TRUE( audioChannel->isCaching )
+        << "expected caching state to be true after clearing of the cached buffer";
+
+    ASSERT_FALSE( audioChannel->hasCache )
+        << "expected caching complete state to be false after clearing of the cached buffer";
+
+    delete audioChannel;
+    delete audioBuffer;
 }

@@ -90,6 +90,7 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
     if (( aWriteOffset + writeLength ) > bufferSize )
         writeLength = bufferSize - aWriteOffset;
 
+    int maxWriteOffset = aWriteOffset + writeLength;
     int c;
 
     for ( c = 0; c < amountOfChannels; ++c )
@@ -100,7 +101,7 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
         SAMPLE_TYPE* srcBuffer    = aBuffer->getBufferForChannel( c );
         SAMPLE_TYPE* targetBuffer = getBufferForChannel( c );
 
-        for ( int i = aWriteOffset, l = aWriteOffset + writeLength, r = aReadOffset; i < l; ++i, ++r )
+        for ( int i = aWriteOffset, r = aReadOffset; i < maxWriteOffset; ++i, ++r )
         {
             if ( r >= sourceLength )
             {

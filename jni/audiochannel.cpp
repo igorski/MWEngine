@@ -71,7 +71,7 @@ AudioBuffer* AudioChannel::readCachedBuffer( AudioBuffer* aOutputBuffer, int aRe
 {
     if ( aReadOffset >= _cacheStartOffset && aReadOffset <= _cacheEndOffset )
     {
-        aOutputBuffer->mergeBuffers( _cachedBuffer, _cacheReadPointer, 0, 1.0f );
+        aOutputBuffer->mergeBuffers( _cachedBuffer, _cacheReadPointer, 0, MAX_PHASE );
         _cacheReadPointer += aOutputBuffer->bufferSize;
     }
 }
@@ -98,9 +98,7 @@ void AudioChannel::canCache( bool value, int aBufferSize, int aCacheStartOffset,
         if ( _cachedBuffer == 0 )
             _cachedBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferSize );
     }
-    else {
-        isCaching = false;
-    }
+    isCaching = value;
 }
 
 void AudioChannel::createOutputBuffer()
@@ -131,7 +129,7 @@ AudioBuffer* AudioChannel::getOutputBuffer()
  */
 void AudioChannel::writeCache( AudioBuffer* aBuffer, int aReadOffset )
 {
-    int mergedSamples   = _cachedBuffer->mergeBuffers( aBuffer, aReadOffset, _cacheWritePointer, 1.0f );
+    int mergedSamples   = _cachedBuffer->mergeBuffers( aBuffer, aReadOffset, _cacheWritePointer, MAX_PHASE );
     _cacheWritePointer += mergedSamples;
 
     // caching completed ?
@@ -154,7 +152,8 @@ void AudioChannel::clearCachedBuffer()
         delete _cachedBuffer;
         _cachedBuffer = 0;
     }
-    hasCache = false;
+    hasCache  = false;
+    isCaching = _canCache;
 }
 
 void AudioChannel::reset()

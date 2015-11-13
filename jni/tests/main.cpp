@@ -9,7 +9,7 @@
 
 int main( int argc, char *argv[] )
 {
-    srand( time( 0 ));
+    srand( time( 0 )); // setup for all randomized generators
 
     ::testing::InitGoogleTest( &argc, argv );
     return RUN_ALL_TESTS();
