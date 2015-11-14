@@ -104,8 +104,6 @@ class BaseAudioEvent
         virtual float getVolume();
         virtual void  setVolume( float value );
 
-        virtual void destroy();
-
     protected:
 
         void construct();   // basic initialization which can be shared across overloaded constructors

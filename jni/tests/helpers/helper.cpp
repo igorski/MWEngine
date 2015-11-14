@@ -132,6 +132,7 @@ void deleteAudioEvent( BaseAudioEvent* audioEvent )
 {
     // instrument was created by helper, BaseAudioEvent destructors don't
     // dispose Instruments (as they shouldn't!), do it here
-    delete audioEvent->getInstrument();
+    BaseInstrument* instrument = audioEvent->getInstrument();
     delete audioEvent;
+   // delete instrument;
 }

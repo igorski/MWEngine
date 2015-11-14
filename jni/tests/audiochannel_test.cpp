@@ -21,8 +21,6 @@ TEST( AudioChannel, Construction )
     EXPECT_EQ( audioChannel->maxBufferPosition, maxBufferPosition )
             << "expected:" << maxBufferPosition << ", got:" << audioChannel->maxBufferPosition << " for max buffer position";
 
-    ProcessingChain* processingChain = audioChannel->processingChain;
-
     delete audioChannel;
 }
 

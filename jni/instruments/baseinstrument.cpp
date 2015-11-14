@@ -92,6 +92,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
         if ( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ) != _audioEvents->end())
         {
             _audioEvents->erase( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ));
+            audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
             return true;
         }
     }
@@ -100,6 +101,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
         if ( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ) != _liveAudioEvents->end())
         {
             _liveAudioEvents->erase( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ));
+            audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
             return true;
         }
     }

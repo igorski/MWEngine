@@ -34,14 +34,14 @@ BaseAudioEvent::BaseAudioEvent()
 
 BaseAudioEvent::BaseAudioEvent( BaseInstrument* instrument )
 {
-    setInstrument( instrument );
     construct();
+    _instrument = instrument;
 }
 
 BaseAudioEvent::~BaseAudioEvent()
 {
     removeFromSequencer();
-    destroy();
+    destroyBuffer();
 }
 
 /* public methods */
@@ -61,7 +61,9 @@ void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
         _instrument  != aInstrument )
     {
         bool wasAddedToSequencer = _addedToSequencer;
-        removeFromSequencer();
+
+        if ( wasAddedToSequencer )
+            removeFromSequencer();
 
         _instrument = aInstrument;
 
@@ -87,6 +89,9 @@ void BaseAudioEvent::addToSequencer()
 
 void BaseAudioEvent::removeFromSequencer()
 {
+    if ( !_addedToSequencer )
+        return;
+
     if ( !isSequenced )
     {
         std::vector<BaseAudioEvent*>* liveEvents = _instrument->getLiveEvents();
@@ -292,11 +297,6 @@ AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
     return new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
 }
 
-void BaseAudioEvent::destroy()
-{
-    destroyBuffer();
-}
-
 /* protected methods */
 
 void BaseAudioEvent::construct()
@@ -311,6 +311,7 @@ void BaseAudioEvent::construct()
     _sampleStart       = 0;
     _sampleEnd         = 0;
     _sampleLength      = 0;
+    _instrument        = 0;
     isSequenced        = true;
 }
 

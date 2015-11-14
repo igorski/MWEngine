@@ -122,11 +122,6 @@ TEST( BaseAudioEvent, Buffers )
     ASSERT_TRUE( buffer == audioEvent->getBuffer() )
         << "expected AudioEvent to return set buffer";
 
-    audioEvent->destroy();
-
-    ASSERT_FALSE( buffer == audioEvent->getBuffer() )
-        << "expected buffer to be destroyed after invoking destroy in the AudioEvent";
-
     deleteAudioEvent( audioEvent );
 }
 
