@@ -37,29 +37,27 @@ class DrumInstrument : public BaseInstrument
         ~DrumInstrument();
 
         std::vector<BaseAudioEvent*>* getEvents();
-        std::vector<BaseAudioEvent*>* getLiveEvents();
         std::vector<BaseAudioEvent*>* getEventsForPattern( int patternNum );
         std::vector<BaseAudioEvent*>* getEventsForActivePattern();
 
         int drumTimbre;
 
         std::vector<DrumPattern*>*    drumPatterns;
-        std::vector<BaseAudioEvent*>* liveAudioEvents;
         int activeDrumPattern;
 
         RouteableOscillator *rOsc;
 
         // base class overrides
-        // note we don't override 'removeEvents' as DrumPatterns manage the events
 
         bool hasEvents();
-        bool hasLiveEvents();
         void updateEvents();
         void clearEvents();
-        bool removeEvent( BaseAudioEvent* aEvent );
+        bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
         DrumPattern* getDrumPattern( int patternNum );
         int setDrumPattern( DrumPattern* pattern );
 
+    protected:
+        void construct();
 };
 
 #endif

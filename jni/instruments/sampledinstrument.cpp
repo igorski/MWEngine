@@ -32,47 +32,34 @@
 
 SampledInstrument::SampledInstrument()
 {
-    volume          = 1;
-    audioChannel    = new AudioChannel( volume );
-    audioEvents     = new std::vector<BaseAudioEvent*>();
-    liveAudioEvents = new std::vector<BaseAudioEvent*>();
-
-    registerInSequencer();                     // register instrument inside the sequencer
-    index = sequencer::instruments.size() - 1; // the index this instrument is registered at in the sequencer
+    construct();
 }
 
 SampledInstrument::~SampledInstrument()
 {
-    DebugTool::log( "SampledInstrument::DESTRUCT" );
+    // when using JNI, we let SWIG invoke destructors when Java references are finalized
+    // otherwise we delete and dispose the events directly from this instrument
+#ifndef USE_JNI
+    while ( _audioEvents->size() > 0 )
+        delete _audioEvents->back();
 
-    while ( audioEvents->size() > 0 )
-        delete audioEvents->back();
-
-    while ( liveAudioEvents->size() > 0 )
-        delete liveAudioEvents->back();
-
-    delete audioEvents;
-    delete liveAudioEvents;
+    while ( _liveAudioEvents->size() > 0 )
+        delete _liveAudioEvents->back();
+#endif
 }
 
 /* public methods */
 
-bool SampledInstrument::hasEvents()
+bool SampledInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
-    return audioEvents->size() > 0;
-}
+    bool removed = false;
 
-std::vector<BaseAudioEvent*>* SampledInstrument::getEvents()
-{
-    return audioEvents;
-}
+    if ( audioEvent != 0 )
+    {
+        removed = BaseInstrument::removeEvent( audioEvent, isLiveEvent );
 
-bool SampledInstrument::hasLiveEvents()
-{
-    return liveAudioEvents->size() > 0;
-}
-
-std::vector<BaseAudioEvent*>* SampledInstrument::getLiveEvents()
-{
-    return liveAudioEvents;
+        delete audioEvent;
+        audioEvent = 0;
+    }
+    return removed;
 }

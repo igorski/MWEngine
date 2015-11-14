@@ -32,14 +32,7 @@ class SampledInstrument : public BaseInstrument
         SampledInstrument();
         ~SampledInstrument();
 
-        bool hasEvents();
-        bool hasLiveEvents();
-        std::vector<BaseAudioEvent*>* getEvents();
-        std::vector<BaseAudioEvent*>* getLiveEvents();
-
-        int index;  // index in the Sequencers sampler Vector
-        std::vector<BaseAudioEvent*>* audioEvents;
-        std::vector<BaseAudioEvent*>* liveAudioEvents;
+        bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
 };
 
 #endif

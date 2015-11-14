@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -34,19 +34,26 @@ class BaseInstrument
 
         virtual bool hasEvents();     // whether the instrument has events to sequence
         virtual bool hasLiveEvents(); // whether the instruments has events to synthesize on the fly
-        virtual void updateEvents();  // updates all associated events after changing instrument properties
+        virtual void updateEvents();  // updates all associated events after changing instrument properties / tempo change
 
         virtual std::vector<BaseAudioEvent*>* getEvents();
         virtual std::vector<BaseAudioEvent*>* getLiveEvents();
 
-        virtual void clearEvents();   // clears all events
-        virtual bool removeEvent( BaseAudioEvent* aEvent ); // invoked by Sequencer when event can safely be removed
+        virtual void clearEvents();
+        virtual bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
 
         void registerInSequencer();
         void unregisterFromSequencer();
 
         float volume;
         AudioChannel *audioChannel;
+        int index;  // index in the Sequencers instrument Vector
+
+    protected:
+        virtual void construct();
+
+        std::vector<BaseAudioEvent*>* _audioEvents;
+        std::vector<BaseAudioEvent*>* _liveAudioEvents;
 };
 
 #endif
