@@ -472,7 +472,7 @@ namespace AudioEngine
 
     bool writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )
     {
-        // must cache isn't the same as IS caching (likely sequencer is waiting for start offset ;))
+        // mustCache isn't the same as isCaching (likely sequencer is waiting for start offset ;))
         if ( channel->isCaching )
             channel->writeCache( channelBuffer, cacheReadPos );
         else

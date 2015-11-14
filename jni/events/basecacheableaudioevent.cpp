@@ -25,9 +25,10 @@
 
 /* constructor / destructor */
 
-BaseCacheableAudioEvent::BaseCacheableAudioEvent()
+BaseCacheableAudioEvent::BaseCacheableAudioEvent( BaseInstrument* instrument )
 {
-
+    setInstrument( instrument );
+    construct();
 }
 
 BaseCacheableAudioEvent::~BaseCacheableAudioEvent()

@@ -23,7 +23,6 @@
 #include "sequencer.h"
 #include "audioengine.h"
 #include <utilities/utils.h>
-#include <algorithm>
 #include <vector>
 
 namespace sequencer
@@ -119,11 +118,11 @@ namespace sequencer
                 int sampleStart = audioEvent->getSampleStart();
                 int sampleEnd   = audioEvent->getSampleEnd();
 
-                if ( audioEvent->getLoopeable() ||
+                if ( audioEvent->isLoopeable() ||
                    ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
                    ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
                 {
-                    if ( !audioEvent->deletable())
+                    if ( !audioEvent->isDeletable())
                         channel->addEvent( audioEvent );
                     else
                         removes.push_back( audioEvent );
@@ -138,13 +137,7 @@ namespace sequencer
             for ( i; i < removes.size(); i++ )
             {
                 BaseAudioEvent* audioEvent = removes[ i ];
-
-                // remove audio event from the instruments event list
-                if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
-                {
-                    audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
-                }
-                instrument->removeEvent( audioEvent );
+                instrument->removeEvent( audioEvent, false );
             }
         }
     }
@@ -162,7 +155,7 @@ namespace sequencer
         {
             BaseAudioEvent* audioEvent = liveEvents->at( i );
 
-            if ( !audioEvent->deletable())
+            if ( !audioEvent->isDeletable())
                 channel->addLiveEvent( audioEvent );
             else
                 removes.push_back( audioEvent );
@@ -175,13 +168,7 @@ namespace sequencer
             for ( i; i < removes.size(); i++ )
             {
                 BaseAudioEvent* audioEvent = removes[ i ];
-
-                // remove audio event from the list
-                if ( std::find( liveEvents->begin(), liveEvents->end(), audioEvent ) != liveEvents->end())
-                {
-                    liveEvents->erase( std::find( liveEvents->begin(), liveEvents->end(), audioEvent ));
-                }
-                instrument->removeEvent( audioEvent );
+                instrument->removeEvent( audioEvent, true );
             }
         }
     }
@@ -217,7 +204,7 @@ namespace sequencer
                     if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
                         ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
                     {
-                        if ( !audioEvent->deletable())
+                        if ( !audioEvent->isDeletable())
                             events->push_back(( BaseCacheableAudioEvent* ) audioEvent );
                     }
                 }

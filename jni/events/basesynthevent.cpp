@@ -26,7 +26,6 @@
 #include "../global.h"
 #include <instruments/synthinstrument.h>
 #include <utilities/utils.h>
-#include <algorithm>
 #include <cmath>
 
 unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
@@ -35,7 +34,7 @@ unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
 
 BaseSynthEvent::BaseSynthEvent()
 {
-
+    construct();
 }
 
 /**
@@ -49,6 +48,7 @@ BaseSynthEvent::BaseSynthEvent()
 BaseSynthEvent::BaseSynthEvent( float aFrequency, int aPosition, float aLength,
                                 SynthInstrument* aInstrument )
 {
+    construct();
     init( aInstrument, aFrequency, aPosition, aLength, true );
 }
 
@@ -60,12 +60,12 @@ BaseSynthEvent::BaseSynthEvent( float aFrequency, int aPosition, float aLength,
  */
 BaseSynthEvent::BaseSynthEvent( float aFrequency, SynthInstrument* aInstrument )
 {
+    construct();
     init( aInstrument, aFrequency, 0, 1, false );
 }
 
 BaseSynthEvent::~BaseSynthEvent()
 {
-    removeFromSequencer();
     --INSTANCE_COUNT;
 }
 
@@ -95,7 +95,7 @@ void BaseSynthEvent::setFrequency( float aFrequency, bool storeAsBaseFrequency )
     if ( storeAsBaseFrequency )
         _baseFrequency = aFrequency;
 
-    _instrument->synthesizer->initializeEventProperties( this, false );
+    _synthInstrument->synthesizer->initializeEventProperties( this, false );
 }
 
 SAMPLE_TYPE BaseSynthEvent::getPhaseForOscillator( int aOscillatorNum )
@@ -117,14 +117,7 @@ void BaseSynthEvent::setPhaseForOscillator( int aOscillatorNum, SAMPLE_TYPE aPha
  */
 void BaseSynthEvent::invalidateProperties( int aPosition, float aLength, SynthInstrument* aInstrument )
 {
-    // swap instrument if new one is different to existing reference
-    if ( aInstrument != 0 &&
-        _instrument  != aInstrument )
-    {
-        removeFromSequencer();
-        _instrument = aInstrument;
-        addToSequencer();
-    }
+    setInstrument( aInstrument );
     position = aPosition;
     length   = aLength;
 
@@ -172,7 +165,7 @@ void BaseSynthEvent::calculateBuffers()
         _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 
     if ( isSequenced )
-         _instrument->synthesizer->initializeEventProperties( this, true );
+         _synthInstrument->synthesizer->initializeEventProperties( this, true );
 }
 
 /**
@@ -203,7 +196,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         int writeOffset = _sampleStart > bufferPos ? _sampleStart - bufferPos : 0;
 
         // render the snippet
-        _instrument->synthesizer->render( _buffer, this );
+        _synthInstrument->synthesizer->render( _buffer, this );
 
         // note we merge using MAX_PHASE as mix volume (event volume was applied during synthesis)
         outputBuffer->mergeBuffers( _buffer, 0, writeOffset, MAX_PHASE );
@@ -223,7 +216,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
             // TODO: specify range in ::render method ? this would avoid unnecessary buffer merging ;)
 
-            _instrument->synthesizer->render( _buffer, this );    // overwrites old buffer contents
+            _synthInstrument->synthesizer->render( _buffer, this );    // overwrites old buffer contents
 
             // note we merge using MAX_PHASE as mix volume (event volume was applied during synthesis)
             outputBuffer->mergeBuffers( _buffer, 0, loopOffset, MAX_PHASE );
@@ -254,16 +247,16 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
 
     // when an event has no fixed length and the decay is short
     // we deactivate the decay envelope completely (for now)
-    float decay    = _instrument->adsr->getDecay();
+    float decay    = _synthInstrument->adsr->getDecay();
     bool undoDecay = decay < .75;
 
     if ( undoDecay )
-        _instrument->adsr->setDecay( 0 );
+        _synthInstrument->adsr->setDecay( 0 );
 
-    _instrument->synthesizer->render( _buffer, this );
+    _synthInstrument->synthesizer->render( _buffer, this );
 
     if ( undoDecay )
-        _instrument->adsr->setDecay( decay );
+        _synthInstrument->adsr->setDecay( decay );
 
     // keep track of the rendered bytes, in case of a key up event
     // we still want to have the sound ring for the minimum period
@@ -326,21 +319,18 @@ void BaseSynthEvent::setDeletable( bool value )
  * @param aFrequency  frequency in Hz for the note to be rendered
  * @param aPosition   offset in the sequencer where this event starts playing / becomes audible
  * @param aLength     length of the event (in sequencer steps)
- * @param aIsSequenced whether this event is sequenced and only audible in a specific sequence range
+ * @param isSequenced whether this event is sequenced and only audible in a specific sequence range
  */
 void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
-                           int aPosition, int aLength, bool aIsSequenced )
+                           int aPosition, int aLength, bool isSequenced )
 {
     instanceId         = ++INSTANCE_COUNT;
     _destroyableBuffer = true;  // synth event buffer is always unique and managed by this instance !
     _instrument        = aInstrument;
+    _synthInstrument   = aInstrument; // convenience reference (typecast to SynthInstrument)
 
-    _buffer            = 0;
-    _locked            = false;
     position           = aPosition;
     length             = aLength;
-
-    _volume            = MAX_PHASE;
 
     cachedProps.ADSRenvelope     = 0.0;
     cachedProps.arpeggioPosition = 0;
@@ -352,7 +342,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     for ( int i = 0; i < maxOscillatorAmount; ++i )
         cachedProps.oscillatorPhases.push_back( 0.0 );
 
-    isSequenced        = aIsSequenced;
+    this->isSequenced  = isSequenced;
     _queuedForDeletion = false;
     _deleteMe          = false;
     _hasMinLength      = isSequenced; // a sequenced event has no early cancel
@@ -363,32 +353,4 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
 
     calculateBuffers();
     addToSequencer();
-}
-
-void BaseSynthEvent::addToSequencer()
-{
-    // adds the event to the sequencer so it can be heard
-
-    if ( isSequenced )
-        _instrument->audioEvents->push_back( this );
-    else
-        _instrument->liveAudioEvents->push_back( this );
-}
-
-void BaseSynthEvent::removeFromSequencer()
-{
-    if ( !isSequenced )
-    {
-        std::vector<BaseAudioEvent*>::iterator position = std::find( _instrument->liveAudioEvents->begin(),
-                                                                     _instrument->liveAudioEvents->end(), this );
-        if ( position != _instrument->liveAudioEvents->end() )
-            _instrument->liveAudioEvents->erase( position );
-    }
-    else
-    {
-        std::vector<BaseAudioEvent*>::iterator position = std::find( _instrument->audioEvents->begin(),
-                                                                     _instrument->audioEvents->end(), this );
-        if ( position != _instrument->audioEvents->end() )
-            _instrument->audioEvents->erase( position );
-    }
 }

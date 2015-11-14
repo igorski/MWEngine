@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,45 +22,90 @@
  */
 #include "baseinstrument.h"
 #include "../sequencer.h"
+#include <algorithm>
 
 /* constructor / destructor */
 
 BaseInstrument::BaseInstrument()
 {
-
+    construct();
 }
 
 BaseInstrument::~BaseInstrument()
 {
     unregisterFromSequencer();
+    clearEvents();
+
     delete audioChannel;
+    delete _audioEvents;
+    delete _liveAudioEvents;
 }
 
 /* public methods */
 
 bool BaseInstrument::hasEvents()
 {
-    return false;   // override in derived class
+    return _audioEvents->size() > 0;
 }
 
 bool BaseInstrument::hasLiveEvents()
 {
-    return false;   // override in derived class
+    return _liveAudioEvents->size() > 0;
+}
+
+std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
+{
+    return _audioEvents;
+}
+
+std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
+{
+    return _liveAudioEvents;
 }
 
 void BaseInstrument::updateEvents()
 {
-    // override in derived class
+    // when updating to reflect changes in the instruments changes
+    // or to update event properties responding to tempo changes
+    // override this function in your derived class for custom implementations
 }
 
 void BaseInstrument::clearEvents()
 {
-    // override in derived class
+    if ( _audioEvents != 0 )
+    {
+        while ( _audioEvents->size() > 0 )
+            removeEvent( _audioEvents->at( 0 ), false );
+    }
+
+    if ( _liveAudioEvents != 0 )
+    {
+        while ( _liveAudioEvents->size() > 0 )
+            removeEvent( _liveAudioEvents->at( 0 ), true );
+    }
 }
 
-bool BaseInstrument::removeEvent( BaseAudioEvent* aEvent )
+bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
-    return false;   // override in derived class
+    if ( !isLiveEvent )
+    {
+        if ( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ) != _audioEvents->end())
+        {
+            _audioEvents->erase( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ));
+            audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
+            return true;
+        }
+    }
+    else
+    {
+        if ( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ) != _liveAudioEvents->end())
+        {
+            _liveAudioEvents->erase( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ));
+            audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
+            return true;
+        }
+    }
+    return false;
 }
 
 void BaseInstrument::registerInSequencer()
@@ -73,8 +118,10 @@ void BaseInstrument::registerInSequencer()
             wasPresent = true;
     }
 
-    if ( !wasPresent )
+    if ( !wasPresent ) {
         sequencer::instruments.push_back( this );
+        index = sequencer::instruments.size() - 1; // the index this instrument is registered at in the sequencer
+    }
 }
 
 void BaseInstrument::unregisterFromSequencer()
@@ -87,14 +134,22 @@ void BaseInstrument::unregisterFromSequencer()
             break;
         }
     }
+    index = -1;
 }
 
-std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
-{
-    return 0; // override in derived class
-}
+/* protected methods */
 
-std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
+void BaseInstrument::construct()
 {
-    return 0; // override in derived class
+    volume          = MAX_PHASE;
+    audioChannel    = new AudioChannel( volume );
+
+    // events
+
+    _audioEvents     = new std::vector<BaseAudioEvent*>();
+    _liveAudioEvents = new std::vector<BaseAudioEvent*>();
+
+    // register instrument inside the sequencer
+
+    registerInSequencer();
 }

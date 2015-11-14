@@ -59,8 +59,7 @@ class BaseSynthEvent : public BaseAudioEvent
 
         unsigned int instanceId;
 
-        // sequenced related properties
-        bool isSequenced;
+        // sequencer related properties
         int position;
         float length;
 
@@ -97,9 +96,6 @@ class BaseSynthEvent : public BaseAudioEvent
 
         static unsigned int INSTANCE_COUNT;
 
-        // synthesis properties
-        SynthInstrument* _instrument;
-
         // used for waveform generation
         SAMPLE_TYPE _frequency, _baseFrequency;
 
@@ -108,12 +104,12 @@ class BaseSynthEvent : public BaseAudioEvent
         int _minLength;
         bool _hasMinLength, _queuedForDeletion;
 
+        SynthInstrument* _synthInstrument;
+
         // setup related
 
         void init( SynthInstrument* aInstrument, float aFrequency, int aPosition, int aLength, bool aIsSequenced );
 
-        virtual void addToSequencer();
-        virtual void removeFromSequencer();
         virtual void setDeletable( bool value );
 
         // render related

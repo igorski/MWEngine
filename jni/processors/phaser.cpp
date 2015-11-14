@@ -52,7 +52,12 @@ Phaser::Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, floa
 
 Phaser::~Phaser()
 {
-    delete[] _alps;
+    int stages = 6;
+
+    for ( int i = 0; i < stages; ++i )
+        delete _alps[ i ];
+
+    // _alps wasn't allocated with new[], nothing to delete[] ;)
 }
 
 /* public methods */

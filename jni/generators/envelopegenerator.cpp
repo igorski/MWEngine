@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * wave table generation adapted from sources by Matt @ hackmeopen.com
  *
@@ -22,21 +22,34 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __WAVEGENERATOR_H_INCLUDED__
-#define __WAVEGENERATOR_H_INCLUDED__
-
+#include "envelopegenerator.h"
 #include "../global.h"
-#include "../wavetable.h"
+#include <definitions/waveforms.h>
+#include <algorithm>
+#include <math.h>
 
-namespace WaveGenerator
+namespace EnvelopeGenerator
 {
-    // generate a WaveTable for given waveformType
-    // NOTE : wave table generation has high CPU demands
-    // instead of doing this during live audio synthesis, it is
-    // better to precache the WaveTables upon application start
-    // (also see TablePool for maintaining the cache)
+    void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude, float releaseTime )
+    {
+        SAMPLE_TYPE* outputBuffer = waveTable->getBuffer();
+        int numberOfSamples       = waveTable->tableLength;
 
-    extern void generate( WaveTable* waveTable, int waveformType );
+        // we can't use a 0.0 value as we would get Infinity values, sanitize to a small, positive number instead
+
+        startAmplitude = std::max( 0.001, startAmplitude );
+        endAmplitude   = std::max( 0.001, endAmplitude );
+
+        SAMPLE_TYPE releaseTimeInSeconds = ( SAMPLE_TYPE )( releaseTime * 1000.0 );
+
+        SAMPLE_TYPE sampleRate = ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE;
+        SAMPLE_TYPE coeff      = ( log( endAmplitude ) - log( startAmplitude )) / ( releaseTimeInSeconds * sampleRate );
+        SAMPLE_TYPE sample     = startAmplitude;
+
+        for ( int i = 0; i < numberOfSamples; ++i )
+        {
+            sample += coeff * sample;
+            outputBuffer[ i ] = sample;
+        }
+    }
 }
-
-#endif

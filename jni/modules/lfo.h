@@ -34,7 +34,6 @@ class LFO
 
         static const double MAX_LFO_RATE      = 10;  // the maximum rate of oscillation in Hz
         static const double MIN_LFO_RATE      = .1;  // the minimum rate of oscillation in Hz
-        static const int WAVE_TABLE_PRECISION = 128; // the amount of samples in the wave table
 
         float getRate();
         void setRate( float value );

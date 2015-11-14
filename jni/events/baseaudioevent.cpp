@@ -22,27 +22,94 @@
  */
 #include "baseaudioevent.h"
 #include "../global.h"
-#include "../utilities/utils.h"
+#include <instruments/baseinstrument.h>
+#include <algorithm>
 
-// constructor / destructor
+// constructors / destructor
 
 BaseAudioEvent::BaseAudioEvent()
 {
-    _buffer            = 0;
-    _enabled           = true;
-    _destroyableBuffer = true;
-    _loopeable         = false;
-    _locked            = false;
-    _volume            = MAX_PHASE;
+    construct();
+}
+
+BaseAudioEvent::BaseAudioEvent( BaseInstrument* instrument )
+{
+    construct();
+    _instrument = instrument;
 }
 
 BaseAudioEvent::~BaseAudioEvent()
 {
-    // DebugTool::log( "BaseAudioEvent::destructor" );
-    destroy();
+    removeFromSequencer();
+    destroyBuffer();
 }
 
 /* public methods */
+
+BaseInstrument* BaseAudioEvent::getInstrument()
+{
+    return _instrument;
+}
+
+void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
+{
+    // swap instrument if new one is different to existing reference
+    // additionally, if event was added to the sequencer, add it to the new
+    // instruments sequenced events list
+
+    if ( aInstrument != 0 &&
+        _instrument  != aInstrument )
+    {
+        bool wasAddedToSequencer = _addedToSequencer;
+
+        if ( wasAddedToSequencer )
+            removeFromSequencer();
+
+        _instrument = aInstrument;
+
+        if ( wasAddedToSequencer )
+            addToSequencer();
+    }
+}
+
+void BaseAudioEvent::addToSequencer()
+{
+    if ( _addedToSequencer )
+        return;
+
+    // adds the event to the sequencer so it can be heard
+
+    if ( isSequenced )
+        _instrument->getEvents()->push_back( this );
+    else
+        _instrument->getLiveEvents()->push_back( this );
+
+    _addedToSequencer = true;
+}
+
+void BaseAudioEvent::removeFromSequencer()
+{
+    if ( !_addedToSequencer )
+        return;
+
+    if ( !isSequenced )
+    {
+        std::vector<BaseAudioEvent*>* liveEvents = _instrument->getLiveEvents();
+        std::vector<BaseAudioEvent*>::iterator position = std::find( liveEvents->begin(),
+                                                                     liveEvents->end(), this );
+        if ( position != liveEvents->end() )
+            liveEvents->erase( position );
+    }
+    else
+    {
+        std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
+        std::vector<BaseAudioEvent*>::iterator position = std::find( events->begin(),
+                                                                     events->end(), this );
+        if ( position != events->end() )
+            events->erase( position );
+    }
+    _addedToSequencer = false;
+}
 
 int BaseAudioEvent::getSampleLength()
 {
@@ -74,7 +141,7 @@ void BaseAudioEvent::setSampleEnd( int value )
     _sampleEnd = value;
 }
 
-bool BaseAudioEvent::getLoopeable()
+bool BaseAudioEvent::isLoopeable()
 {
     return _loopeable;
 }
@@ -87,7 +154,7 @@ void BaseAudioEvent::setLoopeable( bool value )
         _buffer->loopeable = _loopeable;
 }
 
-bool BaseAudioEvent::deletable()
+bool BaseAudioEvent::isDeletable()
 {
     return _deleteMe;
 }
@@ -138,7 +205,7 @@ void BaseAudioEvent::setVolume( float value )
     _volume = value;
 }
 
-void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
+void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                                 int minBufferPosition, int maxBufferPosition,
                                 bool loopStarted, int loopOffset, bool useChannelRange )
 {
@@ -159,7 +226,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
     for ( int i = 0; i < bufferSize; ++i )
     {
-        int readPointer = i + bufferPos;
+        int readPointer = i + bufferPosition;
 
         // over the max position ? read from the start ( implies that sequence has started loop )
         if ( readPointer >= maxBufferPosition )
@@ -214,6 +281,14 @@ AudioBuffer* BaseAudioEvent::getBuffer()
     return _buffer;
 }
 
+void BaseAudioEvent::setBuffer( AudioBuffer* buffer, bool destroyable )
+{
+    _destroyableBuffer = destroyable;
+    destroyBuffer(); // clear existing buffer
+
+    _buffer = buffer;
+}
+
 AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
 {
     // override in subclass as this memory allocation requires cleanup
@@ -224,9 +299,20 @@ AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
 
 /* protected methods */
 
-void BaseAudioEvent::destroy()
+void BaseAudioEvent::construct()
 {
-    destroyBuffer();
+    _buffer            = 0;
+    _enabled           = true;
+    _destroyableBuffer = true;
+    _loopeable         = false;
+    _locked            = false;
+    _addedToSequencer  = false;
+    _volume            = MAX_PHASE;
+    _sampleStart       = 0;
+    _sampleEnd         = 0;
+    _sampleLength      = 0;
+    _instrument        = 0;
+    isSequenced        = true;
 }
 
 void BaseAudioEvent::destroyBuffer()

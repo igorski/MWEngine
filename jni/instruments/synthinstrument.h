@@ -59,19 +59,10 @@ class SynthInstrument : public BaseInstrument
         RouteableOscillator *rOsc;
         ADSR* adsr;
 
-        std::vector<BaseAudioEvent*>* audioEvents;
-        std::vector<BaseAudioEvent*>* liveAudioEvents;
-
         // overrides
 
-        bool hasEvents();
-        bool hasLiveEvents();
         void updateEvents();  // updates all events after changing synth properties
-        void clearEvents();
-        bool removeEvent( BaseAudioEvent* aEvent );
-
-        std::vector<BaseAudioEvent*>* getEvents();
-        std::vector<BaseAudioEvent*>* getLiveEvents();
+        bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
 
     protected:
 

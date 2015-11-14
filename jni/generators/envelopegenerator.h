@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * wave table generation adapted from sources by Matt @ hackmeopen.com
  *
@@ -22,21 +22,22 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __WAVEGENERATOR_H_INCLUDED__
-#define __WAVEGENERATOR_H_INCLUDED__
+#ifndef __ENVELOPEGENERATOR_H_INCLUDED__
+#define __ENVELOPEGENERATOR_H_INCLUDED__
 
 #include "../global.h"
 #include "../wavetable.h"
 
-namespace WaveGenerator
+namespace EnvelopeGenerator
 {
-    // generate a WaveTable for given waveformType
-    // NOTE : wave table generation has high CPU demands
-    // instead of doing this during live audio synthesis, it is
-    // better to precache the WaveTables upon application start
-    // (also see TablePool for maintaining the cache)
+    // waveTable is the output WaveTable the envelope shape is generated into
+    // startAmplitude describes the amplitude level at the beginning of the envelope where
+    // endAmplitude describes the amplitude level at the end of the envelope, e.g.
+    // a startAmplitude of MAX_PHASE and an endAmplitude of 0.0 would create a fade out-envelope
+    // and a startAmplitude of 0.0 and an endAmplitude of MAX_PHASE would create a fade in-envelope
+    // releaseTime describes the release of the envelope in milliseconds
 
-    extern void generate( WaveTable* waveTable, int waveformType );
+    extern void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude, float releaseTime );
 }
 
 #endif

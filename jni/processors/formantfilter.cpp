@@ -46,8 +46,7 @@ FormantFilter::FormantFilter( double aVowel )
 
 FormantFilter::~FormantFilter()
 {
-    delete _memory;
-    delete _currentCoeffs;
+    // _currentCoeffs and _memory weren't allocated with new[], nothing to delete[] ;)
 }
 
 /* public methods */

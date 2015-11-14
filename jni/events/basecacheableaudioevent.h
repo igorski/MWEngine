@@ -25,10 +25,20 @@
 
 #include "baseaudioevent.h"
 
+/**
+ * BaseCacheableAudioEvent provides an interface for
+ * AudioEvents that synthesize their content on-the-fly
+ * but have immutable content (e.g. buffer contents don't change
+ * each time the Event plays back). To spare CPU resources, this
+ * event can cache its contents once they have fully rendered and
+ * read from cache whenever the buffer is requested.
+ *
+ * NOTE : this consumes more memory though.
+ */
 class BaseCacheableAudioEvent : public BaseAudioEvent
 {
     public:
-        BaseCacheableAudioEvent();
+        BaseCacheableAudioEvent( BaseInstrument* instrument );
         virtual ~BaseCacheableAudioEvent();
 
         virtual void setAutoCache( bool value );

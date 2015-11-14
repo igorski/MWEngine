@@ -39,6 +39,7 @@
  */
 DrumEvent::DrumEvent( int aPosition, int aDrumType, int aDrumTimbre, BaseInstrument* aInstrument )
 {
+    construct();
     init( aInstrument );
 
     position     = aPosition;

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,44 +20,38 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMINSTRUMENT_H_INCLUDED__
-#define __DRUMINSTRUMENT_H_INCLUDED__
+#ifndef __TREMOLO_H_INCLUDED__
+#define __TREMOLO_H_INCLUDED__
 
-#include "baseinstrument.h"
-#include "../audiochannel.h"
-#include "../drumpattern.h"
-#include <events/baseaudioevent.h>
-#include <modules/routeableoscillator.h>
-#include <vector>
+#include "baseprocessor.h"
+#include "../audiobuffer.h"
+#include "../wavetable.h"
+#include <events/sampleevent.h>
 
-class DrumInstrument : public BaseInstrument
+class Tremolo : public BaseProcessor
 {
     public:
-        DrumInstrument();
-        ~DrumInstrument();
 
-        std::vector<BaseAudioEvent*>* getEvents();
-        std::vector<BaseAudioEvent*>* getEventsForPattern( int patternNum );
-        std::vector<BaseAudioEvent*>* getEventsForActivePattern();
+        // Tremolo can work with two distinct channels, if the left or right channel
+        // have a different wave form or frequency, Tremolo functions as a stereo effect
 
-        int drumTimbre;
+        Tremolo( int aLeftWaveForm, int aRightWaveForm, float aLeftFrequency, float aRightFrequency );
+        ~Tremolo();
 
-        std::vector<DrumPattern*>*    drumPatterns;
-        int activeDrumPattern;
+        // aChannelNum 0 = left channel table, aChannelNum 1 = right channel table
 
-        RouteableOscillator *rOsc;
+        int  getWaveFormForChannel   ( int aChannelNum );
+        void setWaveFormForChannel   ( int aChannelNum, int aWaveForm );
+        float getFrequencyForChannel ( int aChannelNum );
+        void  setFrequencyForChannel ( int aChannelNum, float aFrequency );
+        WaveTable* getTableForChannel( int aChannelNum );
 
-        // base class overrides
-
-        bool hasEvents();
-        void updateEvents();
-        void clearEvents();
-        bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
-        DrumPattern* getDrumPattern( int patternNum );
-        int setDrumPattern( DrumPattern* pattern );
+        bool isStereo();
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     protected:
-        void construct();
+        WaveTable* _tables[ 2 ];
+        int        _waveforms[ 2 ];
 };
 
 #endif

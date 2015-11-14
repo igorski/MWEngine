@@ -78,23 +78,30 @@ SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
 
 int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume )
 {
-    if ( aBuffer == 0 ) return 0;
+    if ( aBuffer == 0 || aWriteOffset >= bufferSize ) return 0;
 
-    int sourceLength   = aBuffer->bufferSize;
-    int writeLength    = sourceLength;
-    int writtenSamples = 0;
+    int sourceLength     = aBuffer->bufferSize;
+    int maxSourceChannel = aBuffer->amountOfChannels - 1;
+    int writeLength      = sourceLength;
+    int writtenSamples   = 0;
 
     // keep writes within the bounds of this buffer
 
     if (( aWriteOffset + writeLength ) > bufferSize )
         writeLength = bufferSize - aWriteOffset;
 
-    for ( int i = 0; i < amountOfChannels; ++i )
-    {
-        SAMPLE_TYPE* srcBuffer    = aBuffer->getBufferForChannel( i );
-        SAMPLE_TYPE* targetBuffer = getBufferForChannel( i );
+    int maxWriteOffset = aWriteOffset + writeLength;
+    int c;
 
-        for ( int j = aWriteOffset, l = aWriteOffset + writeLength, r = aReadOffset; j < l; ++j, ++r )
+    for ( c = 0; c < amountOfChannels; ++c )
+    {
+        if ( c > maxSourceChannel )
+            break;
+
+        SAMPLE_TYPE* srcBuffer    = aBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE* targetBuffer = getBufferForChannel( c );
+
+        for ( int i = aWriteOffset, r = aReadOffset; i < maxWriteOffset; ++i, ++r )
         {
             if ( r >= sourceLength )
             {
@@ -103,12 +110,12 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
                 else
                     break;
             }
-            targetBuffer[ j ] += ( srcBuffer[ r ] * aMixVolume );
+            targetBuffer[ i ] += ( srcBuffer[ r ] * aMixVolume );
             ++writtenSamples;
         }
     }
     // return the amount of samples written (per buffer)
-    return writtenSamples;
+    return writtenSamples / c;
 }
 
 /**
