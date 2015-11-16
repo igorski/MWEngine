@@ -48,43 +48,49 @@ TEST( AudioBuffer, AdjustVolumes )
     delete audioBuffer;
 }
 
-TEST( AudioBuffer, MergeBuffersEqualLength )
+TEST( AudioBuffer, MergeEqualLengthBuffers )
 {
-    AudioBuffer* audioBuffer1 = fillAudioBuffer( randomAudioBuffer() );
-    AudioBuffer* audioBuffer2 = fillAudioBuffer( new AudioBuffer( audioBuffer1->amountOfChannels, audioBuffer1->bufferSize ));
-    AudioBuffer* buffer2clone = audioBuffer2->clone();
+    AudioBuffer* bufferToMergeWidth = fillAudioBuffer( randomAudioBuffer() );
+    AudioBuffer* bufferSource = fillAudioBuffer( new AudioBuffer( bufferToMergeWidth->amountOfChannels,
+                                                 bufferToMergeWidth->bufferSize ));
+    AudioBuffer* mergedBuffer = bufferSource->clone(); // a clone from the buffer source
 
-    // randomize read / write offsets
-    // TODO: create test specifically testing at end of range reads
-    int read       = randomInt( 0, audioBuffer1->bufferSize - 1 );
-    int write      = randomInt( 0, audioBuffer2->bufferSize - 1 );
-    float volume   = randomFloat();
-    bool loopeable = randomBool(); // use random loopeable setting
+    // randomize read / write offsets so this test can cover a range of scenarios
 
-    int writtenSamples = buffer2clone->mergeBuffers( audioBuffer1, read, write, volume );
-    buffer2clone->loopeable = loopeable;
+    int read                = randomInt( 0, bufferToMergeWidth->bufferSize - 2 );
+    int write               = randomInt( 0, bufferSource->bufferSize - 1 );
+    float volume            = randomFloat();
+    bufferToMergeWidth->loopeable = randomBool(); // use random loopeable setting;
 
-    int expectedWriteAmount = std::min( buffer2clone->bufferSize - write, audioBuffer1->bufferSize - read );
+    int writtenSamples = mergedBuffer->mergeBuffers( bufferToMergeWidth, read, write, volume );
+
+    int expectedWriteAmount = mergedBuffer->bufferSize - read;
+
+    // if the input buffer is loopeable, we expect to write as many samples are in the output buffer
+    if ( bufferToMergeWidth->loopeable )
+        expectedWriteAmount = mergedBuffer->bufferSize - write;
+
+        std::cout << "read " << read << " write " << write << " for length " << bufferToMergeWidth->bufferSize << " loopeable " << bufferToMergeWidth->loopeable;
 
     EXPECT_EQ( writtenSamples, expectedWriteAmount )
         << "expected:" << expectedWriteAmount << " written buffers, got " << writtenSamples << " instead.";
 
-    for ( int c = 0, ca = buffer2clone->amountOfChannels; c < ca ; ++c )
+    for ( int c = 0, ca = mergedBuffer->amountOfChannels; c < ca ; ++c )
     {
         // it is possible the AudioBuffer has been merged with a buffer that had less channels
-        bool mergedChannel = c < audioBuffer1->amountOfChannels;
+        bool mergedChannel = c < bufferToMergeWidth->amountOfChannels;
 
-        SAMPLE_TYPE* buffer        = buffer2clone->getBufferForChannel( c );
-        SAMPLE_TYPE* sourceBuffer1 = mergedChannel ? audioBuffer1->getBufferForChannel( c ) : 0;
-        SAMPLE_TYPE* sourceBuffer2 = audioBuffer2->getBufferForChannel( c );
+        SAMPLE_TYPE* buffer        = mergedBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE* sourceBuffer1 = mergedChannel ? bufferToMergeWidth->getBufferForChannel( c ) : 0;
+        SAMPLE_TYPE* sourceBuffer2 = bufferSource->getBufferForChannel( c );
 
-        for ( int i = 0, l = audioBuffer1->bufferSize, r = read; i < l; ++i )
+        for ( int i = 0, l = bufferToMergeWidth->bufferSize, r = read; i < l; ++i )
         {
             if ( mergedChannel && i >= write )
             {
                 if ( r >= l )
                 {
-                    if ( loopeable )
+                    if ( bufferToMergeWidth->loopeable  )
                         r = 0;
                     else
                         break;
@@ -104,12 +110,12 @@ TEST( AudioBuffer, MergeBuffersEqualLength )
         }
     }
 
-    delete audioBuffer1;
-    delete audioBuffer2;
-    delete buffer2clone;
+    delete bufferToMergeWidth;
+    delete bufferSource;
+    delete mergedBuffer;
 }
 
-TEST( AudioBuffer, MergeBuffersInequalLength )
+TEST( AudioBuffer, MergeInequalLengthBuffers )
 {
     // create two buffers
 
@@ -129,7 +135,7 @@ TEST( AudioBuffer, MergeBuffersInequalLength )
 
     // TEST 1 : merging of a smaller buffer into a large buffer, no looping
 
-    int writtenSamples = audioBuffer1->mergeBuffers( audioBuffer2, 0, 0, volume );
+    int writtenSamples = audioBuffer1->mergeBuffers( audioBuffer2, read, write, volume );
 
     EXPECT_EQ( writtenSamples, expectedWriteAmount )
         << "expected:" << expectedWriteAmount << " written buffers, got " << writtenSamples << " instead.";
@@ -159,7 +165,8 @@ TEST( AudioBuffer, MergeBuffersInequalLength )
 
     audioBuffer1->silenceBuffers();
     audioBuffer2->loopeable = true;
-    writtenSamples = audioBuffer1->mergeBuffers( audioBuffer2, 0, 0, volume );
+    expectedWriteAmount     = buffer1size;
+    writtenSamples = audioBuffer1->mergeBuffers( audioBuffer2, read, write, volume );
 
     EXPECT_EQ( writtenSamples, expectedWriteAmount )
         << "expected:" << expectedWriteAmount << " written buffers, got " << writtenSamples << " instead.";
