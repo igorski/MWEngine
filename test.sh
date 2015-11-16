@@ -1,8 +1,8 @@
 #!/bin/sh
 
-echo -----------------
-echo Building MWEngine
-echo -----------------
+echo ---------------------------------------
+echo Building MWEngine \(might take a moment\)
+echo ---------------------------------------
 
 ( exec "./build.sh" ) > /dev/null
 BUILD_SUCCESS=$?

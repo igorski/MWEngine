@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -82,12 +82,12 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
 
     int sourceLength     = aBuffer->bufferSize;
     int maxSourceChannel = aBuffer->amountOfChannels - 1;
-    int writeLength      = sourceLength;
+    int writeLength      = bufferSize;
     int writtenSamples   = 0;
 
     // keep writes within the bounds of this buffer
 
-    if (( aWriteOffset + writeLength ) > bufferSize )
+    if (( aWriteOffset + writeLength ) >= bufferSize )
         writeLength = bufferSize - aWriteOffset;
 
     int maxWriteOffset = aWriteOffset + writeLength;
@@ -105,7 +105,7 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
         {
             if ( r >= sourceLength )
             {
-                if ( loopeable )
+                if ( aBuffer->loopeable )
                     r = 0;
                 else
                     break;
@@ -115,7 +115,7 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
         }
     }
     // return the amount of samples written (per buffer)
-    return writtenSamples / c;
+    return ( c == 0 ) ? writtenSamples : writtenSamples / c;
 }
 
 /**
