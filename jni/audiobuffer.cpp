@@ -105,7 +105,7 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
         {
             if ( r >= sourceLength )
             {
-                if ( loopeable )
+                if ( aBuffer->loopeable )
                     r = 0;
                 else
                     break;

@@ -48,17 +48,18 @@ TEST( AudioBuffer, AdjustVolumes )
     delete audioBuffer;
 }
 
-TEST( AudioBuffer, MergeBuffers )
+TEST( AudioBuffer, MergeBuffersEqualLength )
 {
     AudioBuffer* audioBuffer1 = fillAudioBuffer( randomAudioBuffer() );
-    AudioBuffer* audioBuffer2 = fillAudioBuffer( randomAudioBuffer() );
+    AudioBuffer* audioBuffer2 = fillAudioBuffer( new AudioBuffer( audioBuffer1->amountOfChannels, audioBuffer1->bufferSize ));
     AudioBuffer* buffer2clone = audioBuffer2->clone();
 
     // randomize read / write offsets
+    // TODO: create test specifically testing at end of range reads
     int read       = randomInt( 0, audioBuffer1->bufferSize - 1 );
     int write      = randomInt( 0, audioBuffer2->bufferSize - 1 );
     float volume   = randomFloat();
-    bool loopeable = false;//TODO : ACTIVATE randomBool(); // use random loopeable setting
+    bool loopeable = randomBool(); // use random loopeable setting
 
     int writtenSamples = buffer2clone->mergeBuffers( audioBuffer1, read, write, volume );
     buffer2clone->loopeable = loopeable;
@@ -71,15 +72,15 @@ TEST( AudioBuffer, MergeBuffers )
     for ( int c = 0, ca = buffer2clone->amountOfChannels; c < ca ; ++c )
     {
         // it is possible the AudioBuffer has been merged with a buffer that had less channels
-        bool channelMerged = c < audioBuffer1->amountOfChannels;
+        bool mergedChannel = c < audioBuffer1->amountOfChannels;
 
         SAMPLE_TYPE* buffer        = buffer2clone->getBufferForChannel( c );
-        SAMPLE_TYPE* sourceBuffer1 = channelMerged ? audioBuffer1->getBufferForChannel( c ) : 0;
+        SAMPLE_TYPE* sourceBuffer1 = mergedChannel ? audioBuffer1->getBufferForChannel( c ) : 0;
         SAMPLE_TYPE* sourceBuffer2 = audioBuffer2->getBufferForChannel( c );
 
         for ( int i = 0, l = audioBuffer1->bufferSize, r = read; i < l; ++i )
         {
-            if ( channelMerged && i >= write )
+            if ( mergedChannel && i >= write )
             {
                 if ( r >= l )
                 {
@@ -106,6 +107,90 @@ TEST( AudioBuffer, MergeBuffers )
     delete audioBuffer1;
     delete audioBuffer2;
     delete buffer2clone;
+}
+
+TEST( AudioBuffer, MergeBuffersInequalLength )
+{
+    // create two buffers
+
+    int channelAmount = randomInt( 1, 5 );
+    int buffer1size   = 128;
+    int buffer2size   = buffer1size / 2;
+
+    AudioBuffer* audioBuffer1 = new AudioBuffer( channelAmount, buffer1size );
+    AudioBuffer* audioBuffer2 = fillAudioBuffer( new AudioBuffer( channelAmount, buffer2size ));
+
+    // merge properties
+
+    int   read              = 0;
+    int   write             = 0;
+    float volume            = randomFloat();
+    int expectedWriteAmount = buffer2size;
+
+    // TEST 1 : merging of a smaller buffer into a large buffer, no looping
+
+    int writtenSamples = audioBuffer1->mergeBuffers( audioBuffer2, 0, 0, volume );
+
+    EXPECT_EQ( writtenSamples, expectedWriteAmount )
+        << "expected:" << expectedWriteAmount << " written buffers, got " << writtenSamples << " instead.";
+
+    for ( int c = 0, ca = audioBuffer1->amountOfChannels; c < ca ; ++c )
+    {
+        SAMPLE_TYPE* buffer       = audioBuffer1->getBufferForChannel( c );
+        SAMPLE_TYPE* sourceBuffer = audioBuffer2->getBufferForChannel( c );
+
+        for ( int i = 0, l = buffer1size; i < l; ++i )
+        {
+            if ( i >= buffer2size )
+            {
+                // expect no samples as the iterator has extended the merge range
+                EXPECT_EQ( 0.0, buffer[ i ] )
+                    << "expected no sample, got:" << buffer[ i ] << " for merged buffer range at write pos " << i;
+            }
+            else {
+                SAMPLE_TYPE compareSample = sourceBuffer[ i ] * volume;
+                EXPECT_EQ( compareSample, buffer[ i ] )
+                    << "expected " << compareSample << ", got:" << buffer[ i ] << " for merged buffer range at write pos " << i;
+            }
+        }
+    }
+
+    // TEST 2 : merging of a smaller buffer into a large buffer but with looping
+
+    audioBuffer1->silenceBuffers();
+    audioBuffer2->loopeable = true;
+    writtenSamples = audioBuffer1->mergeBuffers( audioBuffer2, 0, 0, volume );
+
+    EXPECT_EQ( writtenSamples, expectedWriteAmount )
+        << "expected:" << expectedWriteAmount << " written buffers, got " << writtenSamples << " instead.";
+
+    for ( int c = 0, ca = audioBuffer1->amountOfChannels; c < ca ; ++c )
+    {
+        SAMPLE_TYPE* buffer       = audioBuffer1->getBufferForChannel( c );
+        SAMPLE_TYPE* sourceBuffer = audioBuffer2->getBufferForChannel( c );
+
+        for ( int i = 0, loopOffset = 0, l = buffer1size; i < l; ++i )
+        {
+            if ( i >= buffer2size )
+            {
+                // when reading beyond the size of the source buffer, we expect
+                // the next sample to be read from the beginning of the source buffer
+                SAMPLE_TYPE compareSample = sourceBuffer[ loopOffset ] * volume;
+                EXPECT_EQ( compareSample, buffer[ i ] )
+                    << "expected " << compareSample << ", got:" << buffer[ i ] << " for merged buffer range "
+                    << "at write pos " << i << " and read pos " << loopOffset << " after expecting looped writing";
+
+                ++loopOffset;
+            }
+            else {
+                SAMPLE_TYPE compareSample = sourceBuffer[ i ] * volume;
+                EXPECT_EQ( compareSample, buffer[ i ] )
+                    << "expected " << compareSample << ", got:" << buffer[ i ] << " for merged buffer range at write pos " << i;
+            }
+        }
+    }
+    delete audioBuffer1;
+    delete audioBuffer2;
 }
 
 TEST( AudioBuffer, ApplyMonoSource )
