@@ -87,7 +87,7 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
 
     // keep writes within the bounds of this buffer
 
-    if (( aWriteOffset + writeLength ) > bufferSize )
+    if (( aWriteOffset + writeLength ) >= bufferSize )
         writeLength = bufferSize - aWriteOffset;
 
     int maxWriteOffset = aWriteOffset + writeLength;

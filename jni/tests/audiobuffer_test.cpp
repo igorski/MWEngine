@@ -51,8 +51,8 @@ TEST( AudioBuffer, AdjustVolumes )
 TEST( AudioBuffer, MergeEqualLengthBuffers )
 {
     AudioBuffer* bufferToMergeWidth = fillAudioBuffer( randomAudioBuffer() );
-    AudioBuffer* bufferSource = fillAudioBuffer( new AudioBuffer( bufferToMergeWidth->amountOfChannels,
-                                                 bufferToMergeWidth->bufferSize ));
+    int bufferSize            = bufferToMergeWidth->bufferSize;
+    AudioBuffer* bufferSource = fillAudioBuffer( new AudioBuffer( bufferToMergeWidth->amountOfChannels, bufferSize ));
     AudioBuffer* mergedBuffer = bufferSource->clone(); // a clone from the buffer source
 
     // randomize read / write offsets so this test can cover a range of scenarios
@@ -70,7 +70,8 @@ TEST( AudioBuffer, MergeEqualLengthBuffers )
     if ( bufferToMergeWidth->loopeable )
         expectedWriteAmount = mergedBuffer->bufferSize - write;
 
-        std::cout << "read " << read << " write " << write << " for length " << bufferToMergeWidth->bufferSize << " loopeable " << bufferToMergeWidth->loopeable;
+    if (( expectedWriteAmount + write ) >= bufferSize )
+        expectedWriteAmount = bufferSize - write;
 
     EXPECT_EQ( writtenSamples, expectedWriteAmount )
         << "expected:" << expectedWriteAmount << " written buffers, got " << writtenSamples << " instead.";

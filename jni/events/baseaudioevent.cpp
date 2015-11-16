@@ -312,6 +312,7 @@ void BaseAudioEvent::construct()
     _sampleEnd         = 0;
     _sampleLength      = 0;
     _instrument        = 0;
+    _deleteMe          = false;
     isSequenced        = true;
 }
 
