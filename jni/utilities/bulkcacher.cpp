@@ -96,7 +96,7 @@ void BulkCacher::cacheQueue()
     int i = 0;
     int amount = _queue->size();
 
-    //DebugTool::log( "BulkCacher::caching %d events", amount );
+    //Debug::log( "BulkCacher::caching %d events", amount );
 
     for ( i; i < amount; i++ )
     {

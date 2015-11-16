@@ -22,7 +22,7 @@
  */
 #include "audiochannel.h"
 
-#include <utilities/utils.h>
+#include <utilities/debug.h>
 
 unsigned int AudioChannel::INSTANCE_COUNT = 0;
 
@@ -136,7 +136,7 @@ void AudioChannel::writeCache( AudioBuffer* aBuffer, int aReadOffset )
 
     if ( _cacheWritePointer >= _cachedBuffer->bufferSize )
     {
-        DebugTool::log( "caching completed for channel" );
+        Debug::log( "caching completed for channel" );
 
         hasCache           = true;
         isCaching          = false;

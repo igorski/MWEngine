@@ -32,7 +32,6 @@
 #define JAVA_BRIDGE_H
 
 #include <jni.h>
-#include <utilities/utils.h>
 
 /* this is the classpath to the Java class the MWEngine communicates with */
 

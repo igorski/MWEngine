@@ -47,12 +47,12 @@ generators/envelopegenerator.cpp \
 generators/wavegenerator.cpp \
 generators/synthesizer.cpp \
 utilities/bufferutility.cpp \
-utilities/eventutility.cpp \
 utilities/levelutility.cpp \
 utilities/bulkcacher.cpp \
 utilities/diskwriter.cpp \
 processingchain.cpp \
 ringbuffer.cpp \
+utilities/debug.cpp \
 utilities/samplemanager.cpp \
 utilities/bufferpool.cpp \
 utilities/tablepool.cpp \

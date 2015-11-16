@@ -22,7 +22,6 @@
  */
 #include "utils.h"
 #include "global.h"
-#include <android/log.h>
 #include <time.h>
 #include <ctime>
 #include <string.h>
@@ -88,74 +87,5 @@ namespace VolumeUtil
     float log2lin( float dLogarithmic )
     {
         return pow( 10.0, dLogarithmic * VolumeUtil::FACTOR2 );
-    }
-}
-
-/* logging */
-
-namespace DebugTool
-{
-    /**
-     * send a debug message to the Android logcat
-     * @param aMessage {char} message string
-     */
-    void log( char const* aMessage )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, "%s", aMessage );
-    }
-
-    /**
-     * same as above, but traces contents of an char const*
-     * @param aValue {char const*} optional numerical value
-     *
-     * to trace char values pass "%s" in aMessage to show aValue
-     */
-    void log( char const* aMessage, char const* aValue )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
-    }
-
-    /**
-     * same as above, but traces contents of an int
-     * @param aValue {int} optional numerical value
-     *
-     * to trace numerical values pass "%d" in aMessage to show aValue
-     */
-    void log( char const* aMessage, int aValue )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
-    }
-
-    /**
-     * same as above, but traces contents of an int
-     * @param aValue {int} optional numerical value
-     *
-     * to trace numerical values pass "%d" in aMessage to show aValue
-     */
-    void log( char const* aMessage, unsigned int aValue )
-    {
-        DebugTool::log( aMessage, ( int ) aValue );
-    }
-
-    /**
-     * same as above, but traces contents of a float value
-     * @param aValue {float} optional numerical value
-     *
-     * to trace float values pass "%f" in aMessage to show aValue
-     */
-    void log( char const* aMessage, float aValue )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
-    }
-
-    /**
-     * same as above, but traces contents of a double value
-     * @param aValue {double} optional numerical value
-     *
-     * to trace float values pass "%f" in aMessage to show aValue
-     */
-    void log( char const* aMessage, double aValue )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
     }
 }
