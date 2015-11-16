@@ -22,6 +22,7 @@
  */
 #include "baseaudioevent.h"
 #include "../global.h"
+#include "../audioengine.h"
 #include <instruments/baseinstrument.h>
 #include <algorithm>
 
