@@ -129,7 +129,7 @@ TEST( BaseAudioEvent, MixBuffer )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
 
-    int sampleLength = randomInt( 1024, 88200 );
+    int sampleLength = randomInt( 64, 256 );
     int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
     int sampleEnd    = sampleStart + sampleLength;
 
@@ -140,10 +140,10 @@ TEST( BaseAudioEvent, MixBuffer )
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
     audioEvent->setBuffer( buffer, true );
 
-    //std::cout << " ss:" << sampleStart << " se:" << sampleEnd << " sl:" << sampleLength << "ch:" << buffer->amountOfChannels;
+    std::cout << " ss:" << sampleStart << " se:" << sampleEnd << " sl:" << sampleLength << "ch:" << buffer->amountOfChannels;
 
     // create a temporary buffer to write output in, ensure it is smaller than the event buffer
-    AudioBuffer* tempBuffer = new AudioBuffer( buffer->amountOfChannels, randomInt( 24, 512 ));
+    AudioBuffer* tempBuffer = new AudioBuffer( buffer->amountOfChannels, randomInt( 24, 128 ));
 
     ASSERT_FALSE( bufferHasContent( tempBuffer ))
         << "expected temporary buffer to be silent after creation, but it has content";
@@ -155,20 +155,37 @@ TEST( BaseAudioEvent, MixBuffer )
     int bufferPos    = randomInt( minBufferPos, maxBufferPos - 1 );
     bool loopStarted = false;
     int loopOffset   = 0;
+    float volume     = audioEvent->getVolume();
 
     // if the random bufferPosition wasn't within the events sampleStart and sampleEnd range, we expect no content
 
     bool expectContent = ( bufferPos >= sampleStart && bufferPos < sampleEnd );
 
-    //std::cout << "expected content:" << expectContent;
-    //std::cout << "min: " << minBufferPos << "max: " << maxBufferPos << " cur:" << bufferPos;
+    std::cout << "expected content:" << expectContent;
+    std::cout << "min: " << minBufferPos << "max: " << maxBufferPos << " cur:" << bufferPos;
 
     audioEvent->mixBuffer( tempBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
 
     if ( expectContent )
     {
-        ASSERT_TRUE( bufferHasContent( tempBuffer ))
-            << "expected temporary buffer to contain content after mixing, but it didn't";
+        for ( int c = 0, ca = tempBuffer->amountOfChannels; c < ca; ++c )
+        {
+            SAMPLE_TYPE* buffer       = tempBuffer->getBufferForChannel( c );
+            SAMPLE_TYPE* sourceBuffer = audioEvent->getBuffer()->getBufferForChannel( c );
+
+            for ( int i = 0, r = bufferPos; i < tempBuffer->bufferSize; ++i, ++r )
+            {
+                if ( r >= maxBufferPos && !loopStarted )
+                    r -= ( maxBufferPos - minBufferPos );
+
+                SAMPLE_TYPE sample         = buffer[ i ];
+                SAMPLE_TYPE expectedSample = sourceBuffer[ r ] * volume;
+
+                EXPECT_EQ( expectedSample, sample )
+                    << "expected mixed sample to be equal to the source sample multiplied by the event volume";
+            }
+        }
+
     }
     else {
         ASSERT_FALSE( bufferHasContent( tempBuffer ))
