@@ -21,7 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "wavereader.h"
-#include "utils.h"
+#include "debug.h"
 #include <stdio.h>
 
 AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
@@ -85,15 +85,15 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
                 free( sound_buffer );
             }
             else
-                DebugTool::log( "WaveReader::Error not a valid WAVE file" );
+                Debug::log( "WaveReader::Error not a valid WAVE file" );
         }
         else
-            DebugTool::log( "WaveReader::Error not a valid WAVE file (no RIFF header)" );
+            Debug::log( "WaveReader::Error not a valid WAVE file (no RIFF header)" );
 
         fclose( fp );
     }
     else {
-        DebugTool::log( "WaveReader::Error could not open file '%s'", inputFile.c_str() );
+        Debug::log( "WaveReader::Error could not open file '%s'", inputFile.c_str() );
     }
     return out;
  }

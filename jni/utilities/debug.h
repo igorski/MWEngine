@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,34 +20,19 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __UTILS_H_INCLUDED__
-#define __UTILS_H_INCLUDED__
+#ifndef __DEBUG_H_INCLUDED__
+#define __DEBUG_H_INCLUDED__
 
-#include <math.h>
-#include <sstream>
-#include "global.h"
+/* convenience log methods that hook into the Android logcat */
 
-/* convenience methods */
-
-float scale( float value, float maxValue, float maxCompareValue );
-float randomFloat();
-unsigned long long now_ms();
-
-/* volume util */
-
-namespace VolumeUtil
+namespace Debug
 {
-    extern float FACTOR1;
-    extern float FACTOR2;
-
-    extern float lin2log( float dLinear );
-    extern float log2lin( float dLogarithmic );
+    extern void log( char const* aMessage );
+    extern void log( char const* aMessage, char const* aValue );
+    extern void log( char const* aMessage, int aValue );
+    extern void log( char const* aMessage, unsigned int aValue );
+    extern void log( char const* aMessage, float aValue );
+    extern void log( char const* aMessage, double aValue );
 }
-
-/* convenience methods */
-
-// numbers to string
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
- ( std::ostringstream() << std::dec << x ) ).str()
 
 #endif

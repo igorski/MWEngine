@@ -22,6 +22,7 @@
  */
 #include "baseaudioevent.h"
 #include "../global.h"
+#include "../audioengine.h"
 #include <instruments/baseinstrument.h>
 #include <algorithm>
 
@@ -139,6 +140,17 @@ int BaseAudioEvent::getSampleEnd()
 void BaseAudioEvent::setSampleEnd( int value )
 {
     _sampleEnd = value;
+}
+
+void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offset )
+{
+    int bytesPerBar = AudioEngine::bytes_per_bar; // will always match current tempo, time sig at right sample rate
+
+    int startOffset = bytesPerBar * startMeasure;
+    startOffset    += offset * bytesPerBar / subdivisions;
+
+    setSampleStart( startOffset );
+    setSampleEnd  ( startOffset + getSampleLength() );
 }
 
 bool BaseAudioEvent::isLoopeable()
