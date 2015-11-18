@@ -25,6 +25,8 @@
 #include <instruments/baseinstrument.h>
 #include <algorithm>
 
+#include <utilities/utils.h> // QQQ
+
 // constructors / destructor
 
 BaseAudioEvent::BaseAudioEvent()
@@ -119,6 +121,18 @@ int BaseAudioEvent::getSampleLength()
 void BaseAudioEvent::setSampleLength( int value )
 {
     _sampleLength = value;
+
+    // for non loopeable-events the existing sample end must not
+    // be smaller than or equal to the sample start nor
+    // exceed the range set by the sample start and sample length
+
+    if ( !_loopeable )
+    {
+        if ( _sampleEnd <= _sampleStart ||
+             _sampleEnd >= ( _sampleStart + _sampleLength )) {
+            _sampleEnd = _sampleStart + ( _sampleLength - 1 );
+        }
+    }
 }
 
 int BaseAudioEvent::getSampleStart()
@@ -138,7 +152,14 @@ int BaseAudioEvent::getSampleEnd()
 
 void BaseAudioEvent::setSampleEnd( int value )
 {
-    _sampleEnd = value;
+    // for non loopeable-events the sample end cannot exceed
+    // beyond the start and the total sample length (it can
+    // be smaller though for a cut-off playback)
+
+    if ( !_loopeable && value >= ( _sampleStart + _sampleLength ))
+        _sampleEnd = _sampleStart + ( _sampleLength - 1 );
+    else
+        _sampleEnd = value;
 }
 
 bool BaseAudioEvent::isLoopeable()
@@ -213,9 +234,6 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     // read from the pre-cached buffer for sequenced notes
 
-    int startOffset  = getSampleStart();
-    int endOffset    = getSampleEnd();
-    int sampleLength = getSampleLength();
     int bufferSize   = outputBuffer->bufferSize;
 
     // if the output channel amount differs from this events channel amount, we might
@@ -223,28 +241,32 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     // ideally events should never hold more channels than AudioEngineProps::OUTPUT_CHANNELS
 
     int outputChannels = std::min( _buffer->amountOfChannels, outputBuffer->amountOfChannels );
+    int readPointer, c, ca;
 
+     DebugTool::log("here we go for %d", bufferPosition);
     for ( int i = 0; i < bufferSize; ++i )
     {
-        int readPointer = i + bufferPosition;
-
+        readPointer = i + bufferPosition;
+        DebugTool::log("at iteration %d", i );
         // over the max position ? read from the start ( implies that sequence has started loop )
-        if ( readPointer >= maxBufferPosition )
+        if ( readPointer > maxBufferPosition )
         {
+        DebugTool::log("read %d above max", readPointer);
             if ( useChannelRange )  // TODO: channels use a min buffer position too ? (currently drummachine only)
                 readPointer -= maxBufferPosition;
 
             else if ( !loopStarted )
-                readPointer -= ( maxBufferPosition - minBufferPosition );
+                break;
         }
 
-        if ( readPointer >= startOffset && readPointer <= endOffset )
+        if ( readPointer >= _sampleStart && readPointer <= _sampleEnd )
         {
             // mind the offset ! ( cached buffer starts at 0 while
-            // the startOffset defines where the event is positioned in the sequencer )
-            readPointer -= startOffset;
+            // the _sampleStart defines where the event is positioned in the sequencer )
+            readPointer -= _sampleStart;
+            DebugTool::log("yarrr for read %d", readPointer );
 
-            for ( int c = 0; c < outputChannels; ++c )
+            for ( c = 0; c < outputChannels; ++c )
             {
                 SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
                 SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
@@ -252,25 +274,26 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
             }
         }
-        else
+        else if ( loopStarted && i >= loopOffset )
         {
-            if ( loopStarted && i >= loopOffset )
+        DebugTool::log("here we go loopin for iterator %d",i);
+            readPointer = minBufferPosition + ( i - loopOffset );
+DebugTool::log("at read pointer %d",readPointer);
+            if ( readPointer >= _sampleStart && readPointer <= _sampleEnd )
             {
-                readPointer = minBufferPosition + ( i - loopOffset );
+                readPointer -= _sampleStart;
 
-                if ( readPointer >= startOffset && readPointer <= endOffset )
+                for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
                 {
-                    readPointer -= startOffset;
+                    SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
+                    SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
 
-                    for ( int c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
-                    {
-                        SAMPLE_TYPE* srcBuffer = _buffer->getBufferForChannel( c );
-                        SAMPLE_TYPE* tgtBuffer = outputBuffer->getBufferForChannel( c );
-
-                        tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
-                    }
+                    tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
                 }
             }
+        }
+        else {
+        DebugTool::log("nope for %d", readPointer );
         }
     }
     unlock();   // release lock
@@ -284,8 +307,7 @@ AudioBuffer* BaseAudioEvent::getBuffer()
 void BaseAudioEvent::setBuffer( AudioBuffer* buffer, bool destroyable )
 {
     _destroyableBuffer = destroyable;
-    destroyBuffer(); // clear existing buffer
-
+    destroyBuffer(); // clear existing buffer (if destroyable)
     _buffer = buffer;
 }
 
