@@ -24,6 +24,6 @@ if [ $BUILD_SUCCESS -eq 0 ]; then
     # ALTERNATIVE: run all the unit tests with a defined amount of repeats, breaking one the
     # first failure (useful for debugging seemingly random failures)
 
-    adb shell "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/mwengine_unittest --gtest_repeat=100 --gtest_break_on_failure"
+    adb shell "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/mwengine_unittest --gtest_repeat=500 --gtest_break_on_failure"
 
 fi

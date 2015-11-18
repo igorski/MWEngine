@@ -248,6 +248,8 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     {
         readPointer = i + bufferPosition;
         DebugTool::log("at iteration %d", i );
+        DebugTool::log("the pointer is %d", readPointer );
+
         // over the max position ? read from the start ( implies that sequence has started loop )
         if ( readPointer > maxBufferPosition )
         {
