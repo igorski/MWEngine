@@ -17,13 +17,16 @@ if [ $BUILD_SUCCESS -eq 0 ]; then
     adb push libs/armeabi/mwengine_unittest /data/local/tmp/
     adb shell chmod 775 /data/local/tmp/mwengine_unittest
 
+    # if a numerical argument was provided treat is as an amount of test repeats
+    # breaking on the first failure (useful for debugging seemingly random failures)
+
+    if echo $1 | egrep -q '^\-?[0-9]+$'; then
+        adb shell "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/mwengine_unittest --gtest_repeat=$1 --gtest_break_on_failure"
+
     # run all the unit tests once
 
-#    adb shell "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/mwengine_unittest"
-
-    # ALTERNATIVE: run all the unit tests with a defined amount of repeats, breaking one the
-    # first failure (useful for debugging seemingly random failures)
-
-    adb shell "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/mwengine_unittest --gtest_repeat=500 --gtest_break_on_failure"
+    else
+        adb shell "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/mwengine_unittest"
+    fi
 
 fi

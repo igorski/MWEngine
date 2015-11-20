@@ -6,6 +6,9 @@
 #include "audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
 #include "events/baseaudioevent_test.cpp"
+#include "events/basesynthevent_test.cpp"
+//#include "events/drumevent_test.cpp"
+//#include "events/sampleevent_test.cpp"
 #include "instruments/baseinstrument_test.cpp"
 //#include "processors/tremolo_test.cpp"
 

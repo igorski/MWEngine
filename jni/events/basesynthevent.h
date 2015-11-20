@@ -108,7 +108,7 @@ class BaseSynthEvent : public BaseAudioEvent
 
         // setup related
 
-        void init( SynthInstrument* aInstrument, float aFrequency, int aPosition, int aLength, bool aIsSequenced );
+        void init( SynthInstrument* aInstrument, float aFrequency, int aPosition, float aLength, bool aIsSequenced );
 
         virtual void setDeletable( bool value );
 

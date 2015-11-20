@@ -26,8 +26,6 @@
 #include <instruments/baseinstrument.h>
 #include <algorithm>
 
-#include <utilities/utils.h> // QQQ
-
 // constructors / destructor
 
 BaseAudioEvent::BaseAudioEvent()
@@ -255,17 +253,13 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     int outputChannels = std::min( _buffer->amountOfChannels, outputBuffer->amountOfChannels );
     int readPointer, c, ca;
 
-     DebugTool::log("here we go for %d", bufferPosition);
     for ( int i = 0; i < bufferSize; ++i )
     {
         readPointer = i + bufferPosition;
-        DebugTool::log("at iteration %d", i );
-        DebugTool::log("the pointer is %d", readPointer );
 
         // over the max position ? read from the start ( implies that sequence has started loop )
         if ( readPointer > maxBufferPosition )
         {
-        DebugTool::log("read %d above max", readPointer);
             if ( useChannelRange )  // TODO: channels use a min buffer position too ? (currently drummachine only)
                 readPointer -= maxBufferPosition;
 
@@ -278,7 +272,6 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
             // mind the offset ! ( cached buffer starts at 0 while
             // the _sampleStart defines where the event is positioned in the sequencer )
             readPointer -= _sampleStart;
-            DebugTool::log("yarrr for read %d", readPointer );
 
             for ( c = 0; c < outputChannels; ++c )
             {
@@ -290,9 +283,8 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
         }
         else if ( loopStarted && i >= loopOffset )
         {
-        DebugTool::log("here we go loopin for iterator %d",i);
             readPointer = minBufferPosition + ( i - loopOffset );
-DebugTool::log("at read pointer %d",readPointer);
+
             if ( readPointer >= _sampleStart && readPointer <= _sampleEnd )
             {
                 readPointer -= _sampleStart;
@@ -305,9 +297,6 @@ DebugTool::log("at read pointer %d",readPointer);
                     tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
                 }
             }
-        }
-        else {
-        DebugTool::log("nope for %d", readPointer );
         }
     }
     unlock();   // release lock
