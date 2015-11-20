@@ -84,9 +84,26 @@ class BaseAudioEvent
         virtual int getSampleStart();
         virtual int getSampleEnd();
 
+        // position the AudioEvent within the Sequencer using buffer samples as unit
+        // this allows for high precision positioning, see positionEvent() for a
+        // positioning example using musical concepts
+
         virtual void setSampleLength( int value );
         virtual void setSampleStart( int value );
         virtual void setSampleEnd( int value );
+
+        // position the AudioEvent within the Sequencer using musical timing concepts
+        // NOTE : this results in strict "on the grid" timing, using buffer samples instead (see setSampleStart() and
+        // setSampleEnd() ) allows for more accurate positioning for drifting / swing / early / late events
+        //
+        // startMeasure describes which measure the event belongs to (NOTE : first measure starts at 0)
+        // subdivisions describes the amount of "steps" in each measure (e.g. 16 for 16 steps within a single measure)
+        // offset describes the offset at which to position the event, this is a subset of the amount of subdivisons
+        //
+        // examples :
+        // ( 0, 16, 4 ) positions audioEvent at 4 / 16 = start of the 2nd quaver in the first measure
+        // ( 1, 32, 4 ) positions audioEvent at 4 / 32 = 1/8th note in the second measure
+        virtual void positionEvent( int startMeasure, int subdivisions, int offset );
 
         virtual bool isLoopeable();
         virtual void setLoopeable( bool value );

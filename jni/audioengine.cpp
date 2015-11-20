@@ -30,7 +30,7 @@
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
 #include <utilities/diskwriter.h>
-#include <utilities/utils.h>
+#include <utilities/debug.h>
 #include <vector>
 
 #ifdef USE_JNI
@@ -383,12 +383,12 @@ namespace AudioEngine
     void stop()
     {
         thread = 0;
-        DebugTool::log( "MWENGINE :: STOPPED OpenSL engine" );
+        Debug::log( "MWENGINE :: STOPPED OpenSL engine" );
     }
 
     void reset()
     {
-        DebugTool::log( "MWENGINE :: RESET" );
+        Debug::log( "MWENGINE :: RESET" );
 
         // nothing much... references are currently maintained by Java, causing SWIG to destruct referenced Objects
 

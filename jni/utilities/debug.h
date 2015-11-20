@@ -20,47 +20,19 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "sampledinstrument.h"
-#include "../audioengine.h"
-#include "../global.h"
-#include "../sequencer.h"
-#include "../utilities/utils.h"
-#include <cstddef>
-#include <events/sampleevent.h>
+#ifndef __DEBUG_H_INCLUDED__
+#define __DEBUG_H_INCLUDED__
 
-/* constructor / destructor */
+/* convenience log methods that hook into the Android logcat */
 
-SampledInstrument::SampledInstrument()
+namespace Debug
 {
-    construct();
+    extern void log( char const* aMessage );
+    extern void log( char const* aMessage, char const* aValue );
+    extern void log( char const* aMessage, int aValue );
+    extern void log( char const* aMessage, unsigned int aValue );
+    extern void log( char const* aMessage, float aValue );
+    extern void log( char const* aMessage, double aValue );
 }
 
-SampledInstrument::~SampledInstrument()
-{
-    // when using JNI, we let SWIG invoke destructors when Java references are finalized
-    // otherwise we delete and dispose the events directly from this instrument
-#ifndef USE_JNI
-    while ( _audioEvents->size() > 0 )
-        delete _audioEvents->back();
-
-    while ( _liveAudioEvents->size() > 0 )
-        delete _liveAudioEvents->back();
 #endif
-}
-
-/* public methods */
-
-bool SampledInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
-{
-    bool removed = false;
-
-    if ( audioEvent != 0 )
-    {
-        removed = BaseInstrument::removeEvent( audioEvent, isLiveEvent );
-#ifndef USE_JNI
-        delete audioEvent;
-        audioEvent = 0;
-#endif
-    }
-    return removed;
-}

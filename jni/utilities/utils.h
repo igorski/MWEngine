@@ -50,16 +50,4 @@ namespace VolumeUtil
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
  ( std::ostringstream() << std::dec << x ) ).str()
 
-/* convenience log methods */
-
-namespace DebugTool
-{
-    extern void log( char const* aMessage );
-    extern void log( char const* aMessage, char const* aValue );
-    extern void log( char const* aMessage, int aValue );
-    extern void log( char const* aMessage, unsigned int aValue );
-    extern void log( char const* aMessage, float aValue );
-    extern void log( char const* aMessage, double aValue );
-}
-
 #endif

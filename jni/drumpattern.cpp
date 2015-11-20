@@ -23,7 +23,7 @@
 #include "drumpattern.h"
 
 #include "global.h"
-#include <utilities/utils.h>
+#include <utilities/debug.h>
 #include <instruments/druminstrument.h>
 
 /* constructor / destructor */
@@ -47,7 +47,7 @@ DrumPattern::DrumPattern( int aNum, BaseInstrument* aInstrument )
 
 DrumPattern::~DrumPattern()
 {
-    DebugTool::log( "DrumPattern::destroy num %d", num );
+    Debug::log( "DrumPattern::destroy num %d", num );
 
     destroyAudioEvents();
     delete audioEvents;

@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <jni/javabridge.h>
+#include <utilities/debug.h>
 #include <string.h>
 
 static JavaVM*  _vm    = 0;
@@ -39,7 +40,7 @@ jint JNI_OnLoad( JavaVM* vm, void* reserved )
 
     JavaBridge::registerVM( vm );
 
-    DebugTool::log( "JNI INITED OK" );
+    Debug::log( "JNI INITED OK" );
     return JNI_VERSION_1_6;
 }
 
