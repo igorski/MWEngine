@@ -234,7 +234,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     // read from the pre-cached buffer for sequenced notes
 
-    int bufferSize   = outputBuffer->bufferSize;
+    int bufferSize = outputBuffer->bufferSize;
 
     // if the output channel amount differs from this events channel amount, we might
     // potentially have a bad time (e.g. engine has mono output while this event is stereo)
