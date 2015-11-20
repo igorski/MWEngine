@@ -57,9 +57,10 @@ bool SampledInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEven
     if ( audioEvent != 0 )
     {
         removed = BaseInstrument::removeEvent( audioEvent, isLiveEvent );
-
+#ifndef USE_JNI
         delete audioEvent;
         audioEvent = 0;
+#endif
     }
     return removed;
 }
