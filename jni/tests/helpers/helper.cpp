@@ -116,6 +116,27 @@ bool bufferHasContent( AudioBuffer* audioBuffer )
     return false;
 }
 
+// dump the sample contents of the buffer into the console (NOTE : this will easily
+// flood the console with messages for large buffers!!
+
+void dumpBufferContents( AudioBuffer* audioBuffer )
+{
+    std::cout << "\ndumping AudioBuffer with " << audioBuffer->amountOfChannels << " channels of "
+        << audioBuffer->bufferSize << " samples in size\n";
+
+    for ( int c = 0; c < audioBuffer->amountOfChannels; ++c )
+    {
+        std::cout << "---------\n";
+        std::cout << "CHANNEL " << c << ":\n";
+        std::cout << "---------\n";
+
+        SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
+
+        for ( int i = 0; i < audioBuffer->bufferSize; ++i )
+            std::cout << i << ":" << buffer[ i ] << "\n";
+    }
+}
+
 // ----------------------------
 // HELPER AUDIO EVENT FUNCTIONS
 // ----------------------------

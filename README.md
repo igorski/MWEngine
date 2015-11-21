@@ -55,6 +55,14 @@ To run the tests, simply execute the _test.sh_ (sorry Unix-only shell at the mom
 This will also build the library prior to running the tests by calling the build script described above.
 Note: _adb_ must be specified in your global path settings.
 
+To repeat the tests you can provide an optional numerical argument to the shell script, for instance :
+
+    ./sh test.sh 1000
+
+will repeat all tests 1,000 times or break on the first failed test. This can be a convenient method to hunt down a
+unit test that fails at random.
+
+
 ### Documentation
 
 This repository is constantly being updated and as such so is the documentation. You can view the Wiki (which will document the basic

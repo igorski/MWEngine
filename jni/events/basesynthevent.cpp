@@ -25,7 +25,6 @@
 #include "../sequencer.h"
 #include "../global.h"
 #include <instruments/synthinstrument.h>
-#include <utilities/utils.h>
 #include <cmath>
 
 unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
@@ -178,13 +177,13 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
     lock();
 
     // over the max position ? read from the start ( implies that sequence has started loop )
-    if ( bufferPos >= maxBufferPosition )
+    if ( bufferPos > maxBufferPosition )
     {
         if ( useChannelRange )
             bufferPos -= maxBufferPosition;
 
         else if ( !loopStarted )
-            bufferPos -= ( maxBufferPosition - minBufferPosition );
+            return;
     }
 
     int bufferEndPos = bufferPos + AudioEngineProps::BUFFER_SIZE;
@@ -322,7 +321,7 @@ void BaseSynthEvent::setDeletable( bool value )
  * @param isSequenced whether this event is sequenced and only audible in a specific sequence range
  */
 void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
-                           int aPosition, int aLength, bool isSequenced )
+                           int aPosition, float aLength, bool isSequenced )
 {
     instanceId         = ++INSTANCE_COUNT;
     _destroyableBuffer = true;  // synth event buffer is always unique and managed by this instance !

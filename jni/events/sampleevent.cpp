@@ -256,9 +256,7 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 
 void SampleEvent::init( BaseInstrument* instrument )
 {
-    _deleteMe              = false;
     _bufferRangeLength     = 0;
-    _addedToSequencer      = false;
     _readPointer           = 0;
     _rangePointer          = 0;
     _lastPlaybackPosition  = 0;

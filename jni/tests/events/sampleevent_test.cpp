@@ -1,102 +1,41 @@
-#include "../../events/baseaudioevent.h"
-#include "../../instruments/baseinstrument.h"
+#include "../../events/sampleevent.h"
+#include "../../instruments/sampledinstrument.h"
 
-TEST( BaseAudioEvent, GettersSettersVolume )
+TEST( SampleEvent, Constructor )
 {
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+    SampledInstrument* instrument = new SampledInstrument();
+    SampleEvent* audioEvent = new SampleEvent( instrument );
 
-    EXPECT_EQ( audioEvent->getVolume(), MAX_PHASE )
-        << "expected default volume to be equal to the maximum phase value";
-
-    float volume = randomFloat();
-
-    audioEvent->setVolume( volume );
-
-    EXPECT_EQ( audioEvent->getVolume(), volume )
-        << "expected volume to be equal to the set value";
+    ASSERT_TRUE( instrument == audioEvent->getInstrument() )
+        << "expected instrument to equal the value given in constructor";
 
     deleteAudioEvent( audioEvent );
 }
 
-TEST( BaseAudioEvent, EnabledState )
+TEST( SampleEvent, GettersSetters )
 {
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+    SampledInstrument* instrument = new SampledInstrument();
+    SampleEvent* audioEvent = new SampleEvent( instrument );
 
-    ASSERT_TRUE( audioEvent->isEnabled() )
-        << "expected audio event to be enabled after construction";
+    int rangeStart = randomInt( 0, 512 );
+    int rangeEnd   = randomInt( 512, 2014 );
 
-    audioEvent->setEnabled( false );
+    audioEvent->setBufferRangeStart( rangeStart );
+    audioEvent->setBufferRangeEnd  ( rangeEnd );
 
-    ASSERT_FALSE( audioEvent->isEnabled() )
-        << "expected audio event to be disabled after disabling";
+    EXPECT_EQ( rangeStart, audioEvent->getBufferRangeStart() )
+        << "expected range start to equal the value given in the setter method";
 
-    audioEvent->setEnabled( true );
-
-    ASSERT_TRUE( audioEvent->isEnabled() )
-        << "expected audio event to be enabled after enabling";
+    EXPECT_EQ( rangeEnd, audioEvent->getBufferRangeEnd() )
+        << "expected range end to equal the value given in the setter method";
 
     deleteAudioEvent( audioEvent );
 }
 
-TEST( BaseAudioEvent, LoopeableState )
+TEST( SampleEvent, PlayStop )
 {
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-
-    ASSERT_FALSE( audioEvent->isLoopeable() )
-        << "expected audio event not to be loopeable after construction";
-
-    audioEvent->setLoopeable( true );
-
-    ASSERT_TRUE( audioEvent->isLoopeable() )
-        << "expected audio event to be loopeable after enabling loop";
-
-    audioEvent->setLoopeable( false );
-
-    ASSERT_FALSE( audioEvent->isLoopeable() )
-        << "expected audio event not to be loopeable after disabling loop";
-
-    deleteAudioEvent( audioEvent );
-}
-
-TEST( BaseAudioEvent, LockedState )
-{
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-
-    ASSERT_FALSE( audioEvent->isLocked() )
-        << "expected audio event to be unlocked after construction";
-
-    audioEvent->lock();
-
-    ASSERT_TRUE( audioEvent->isLocked() )
-        << "expected audio event to be locked after locking";
-
-    audioEvent->unlock();
-
-    ASSERT_FALSE( audioEvent->isLocked() )
-        << "expected audio event to be unlocked after unlocking";
-
-    deleteAudioEvent( audioEvent );
-}
-
-TEST( BaseAudioEvent, DeletableState )
-{
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-
-    ASSERT_FALSE( audioEvent->isDeletable() )
-        << "expected audio event not to be deletable after construction";
-
-    audioEvent->setDeletable( true );
-
-    ASSERT_TRUE( audioEvent->isDeletable() )
-        << "expected audio event to be deletable after flagging it as such";
-
-    deleteAudioEvent( audioEvent );
-}
-
-TEST( BaseAudioEvent, AddRemoveSequencer )
-{
-    BaseInstrument* instrument = new BaseInstrument();
-    BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
+    SampledInstrument* instrument = new SampledInstrument();
+    SampleEvent* audioEvent = new SampleEvent( instrument );
 
     // expect AudioEvent not be in any of the event queues of the instrument after construction
 
@@ -120,37 +59,11 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     ASSERT_FALSE( found )
         << "expected event not to be present in the live event list after construction";
 
-    // 1. add the event to the sequencer
+    // 1. activate play-state
 
-    audioEvent->addToSequencer();
+    audioEvent->play();
 
-    // expect AudioEvent to be in the sequenced event list, not the live list
-
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_TRUE( found )
-        << "expected event to be present in the event list after addition";
-
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
-        << "expected event not to be present in the live event list after addition";
-
-    // 2. remove the event from the sequencer
-
-    audioEvent->removeFromSequencer();
-
-    // expect AudioEvent not to be in the sequenced event list anymore
+    // expect event to be present in live events list
 
     found = false;
     for ( int i = 0; i < instrument->getEvents()->size(); ++i )
@@ -160,24 +73,7 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     }
 
     ASSERT_FALSE( found )
-        << "expected event not to be present in the event list after removal";
-
-    // 3. add live event to the sequencer
-
-    audioEvent->isSequenced = false;
-    audioEvent->addToSequencer();
-
-    // expect AudioEvent to be in the live event list, not the sequenced list
-
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
-        << "expected live event not to be present in the sequenced event list after addition";
+        << "expected event not to be present in the sequenced event list after invocation of play()";
 
     found = false;
     for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
@@ -187,13 +83,16 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     }
 
     ASSERT_TRUE( found )
-        << "expected live event to be present in the live event list after addition";
+        << "expected event to be present in the live event list after invocation of play()";
 
-    // 4. remove live event from sequencer
+    ASSERT_TRUE( audioEvent->isEnabled() )
+        << "expected SampleEvent to be enabled after invocation of play()";
 
-    audioEvent->removeFromSequencer();
+    // 2. deactive play-state
 
-    // expect AudioEvent not be in any of the event queues of the instrument after removal
+    audioEvent->stop();
+
+    // expect event not be in the event lists anymore
 
     found = false;
     for ( int i = 0; i < instrument->getEvents()->size(); ++i )
@@ -203,7 +102,7 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     }
 
     ASSERT_FALSE( found )
-        << "expected event not to be present in the event list after removal";
+        << "expected event not to be present in the event list after invocation of stop()";
 
     found = false;
     for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
@@ -213,74 +112,19 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     }
 
     ASSERT_FALSE( found )
-        << "expected event not to be present in the live event list after removal";
+        << "expected event not to be present in the live event list after invocation of stop()";
+
+    ASSERT_FALSE( audioEvent->isEnabled() )
+        << "expected SampleEvent not to be enabled after invocation of stop()";
 
     deleteAudioEvent( audioEvent );
 }
 
-TEST( BaseAudioEvent, SampleProperties )
+// test overridden mix buffer method
+/* TODO : issue when using getRangeForBuffer method
+TEST( SampleEvent, MixBuffer )
 {
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-
-    int sampleLength = randomInt( 512, 8192 );
-    int sampleStart  = randomInt( 0, sampleLength / 2 );
-    int expectedEnd  = sampleStart + ( sampleLength - 1 );
-
-    audioEvent->setSampleStart ( sampleStart );
-    audioEvent->setSampleLength( sampleLength );
-
-    EXPECT_EQ( sampleStart,  audioEvent->getSampleStart() );
-    EXPECT_EQ( expectedEnd,  audioEvent->getSampleEnd() );
-    EXPECT_EQ( sampleLength, audioEvent->getSampleLength() );
-
-    // test auto sanitation of properties
-
-    audioEvent->setSampleEnd( expectedEnd * 2 );
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end not to exceed the range set by the sample start and length properties";
-
-    sampleLength /= 2;
-    audioEvent->setSampleLength( sampleLength );
-    expectedEnd = sampleStart + ( sampleLength - 1 );
-
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end not to exceed the range set by the sample start and updated length properties";
-
-    // test non sanitation of properties for loopeable events
-
-    audioEvent->setLoopeable( true );
-
-    expectedEnd *= 2;
-    audioEvent->setSampleEnd( expectedEnd );
-
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end to exceed the range set by the sample start and length properties for loopeable event";
-
-    sampleLength /= 2;
-    audioEvent->setSampleLength( sampleLength );
-
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end to exceed the range set by the sample start and updated length properties for loopeable event";
-
-    deleteAudioEvent( audioEvent );
-}
-
-TEST( BaseAudioEvent, Buffers )
-{
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-    AudioBuffer* buffer        = fillAudioBuffer( randomAudioBuffer() );
-
-    audioEvent->setBuffer( buffer, true );
-
-    ASSERT_TRUE( buffer == audioEvent->getBuffer() )
-        << "expected AudioEvent to return set buffer";
-
-    deleteAudioEvent( audioEvent );
-}
-
-TEST( BaseAudioEvent, MixBuffer )
-{
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+    SampleEvent* audioEvent = new SampleEvent( new SampledInstrument() );
 
     int sampleLength = randomInt( 8, 24 );
     int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
@@ -291,7 +135,7 @@ TEST( BaseAudioEvent, MixBuffer )
     int sampleEnd = audioEvent->getSampleEnd();
 
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
-    audioEvent->setBuffer( buffer, true );
+    audioEvent->setSample( buffer );
 
     float volume = randomFloat();
     audioEvent->setVolume( volume );
@@ -433,19 +277,4 @@ TEST( BaseAudioEvent, MixBuffer )
     delete targetBuffer;
     delete buffer;
 }
-
-TEST( BaseAudioEvent, Instrument )
-{
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-
-    ASSERT_TRUE( 0 == audioEvent->getInstrument() )
-        << "expected BaseAudioEvent not to have an Instrument during construction";
-
-    BaseInstrument* instrument = new BaseInstrument();
-    audioEvent->setInstrument( instrument );
-
-    ASSERT_TRUE( instrument == audioEvent->getInstrument() )
-        << "expected AudioEvent to return the set Instrument";
-
-    deleteAudioEvent( audioEvent );
-}
+*/
