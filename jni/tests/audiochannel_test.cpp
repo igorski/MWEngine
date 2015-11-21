@@ -183,6 +183,8 @@ TEST( AudioChannel, Caching )
 
         if ( writeIterations == 8192 ) {
             std::cout << " TODO: cache test never finished, is there a bug here ??? (fails on occasion)";
+            delete audioChannel;
+            delete audioBuffer;
             return;
         }
     }
