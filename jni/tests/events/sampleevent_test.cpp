@@ -201,7 +201,6 @@ TEST( SampleEvent, GetBufferForRange )
 }
 
 // test overridden mix buffer method
-/* TODO : issue when using getRangeForBuffer method
 TEST( SampleEvent, MixBuffer )
 {
     SampleEvent* audioEvent = new SampleEvent( new SampledInstrument() );
@@ -357,4 +356,3 @@ TEST( SampleEvent, MixBuffer )
     delete targetBuffer;
     delete buffer;
 }
-*/
