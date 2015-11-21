@@ -17,7 +17,7 @@ if [ $BUILD_SUCCESS -eq 0 ]; then
     adb push libs/armeabi/mwengine_unittest /data/local/tmp/
     adb shell chmod 775 /data/local/tmp/mwengine_unittest
 
-    # if a numerical argument was provided treat is as an amount of test repeats
+    # if a numerical argument was provided treat it as the amount of test repeats
     # breaking on the first failure (useful for debugging seemingly random failures)
 
     if echo $1 | egrep -q '^\-?[0-9]+$'; then
