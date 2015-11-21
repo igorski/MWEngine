@@ -57,9 +57,9 @@ Note: _adb_ must be specified in your global path settings.
 
 To repeat the tests you can provide an optional numerical argument to the shell script, for instance :
 
-    ./sh test.sh 10000
+    ./sh test.sh 1000
 
-will repeat all tests 10,000 times or break on the first failed test. This can be a convenient method to hunt down a
+will repeat all tests 1,000 times or break on the first failed test. This can be a convenient method to hunt down a
 unit test that fails at random.
 
 
