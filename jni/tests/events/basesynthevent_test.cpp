@@ -261,7 +261,7 @@ TEST( BaseSynthEvent, MixBuffer )
     expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
                     (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd ) ||
                     ( loopStartIteratorPosition > maxBufferPos && (
-                        ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) |
+                        ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
                         ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
 
     audioEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );

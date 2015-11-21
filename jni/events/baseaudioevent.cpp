@@ -142,6 +142,14 @@ int BaseAudioEvent::getSampleStart()
 void BaseAudioEvent::setSampleStart( int value )
 {
     _sampleStart = value;
+
+    if ( _sampleEnd <= _sampleStart )
+    {
+        if ( !_loopeable && _sampleLength > 0 )
+            _sampleEnd = _sampleStart + ( _sampleLength - 1 );
+        else
+            _sampleEnd = _sampleStart;
+    }
 }
 
 int BaseAudioEvent::getSampleEnd()
@@ -169,7 +177,7 @@ void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offs
     startOffset    += offset * bytesPerBar / subdivisions;
 
     setSampleStart( startOffset );
-    setSampleEnd  ( startOffset + getSampleLength() );
+    setSampleEnd  (( startOffset + _sampleLength ) - 1 );
 }
 
 bool BaseAudioEvent::isLoopeable()

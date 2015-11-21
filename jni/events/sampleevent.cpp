@@ -24,7 +24,6 @@
 #include "../audioengine.h"
 #include "../global.h"
 #include "../sequencer.h"
-#include "../utilities/utils.h"
 
 /* constructor / destructor */
 
@@ -62,7 +61,7 @@ void SampleEvent::setBufferRangeStart( int value )
     if ( _bufferRangeEnd <= _bufferRangeStart )
         _bufferRangeEnd = std::min( _bufferRangeStart + 1, _sampleLength );
 
-    _bufferRangeLength = _bufferRangeEnd - _bufferRangeStart;
+    _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
 }
 
 int SampleEvent::getBufferRangeEnd()
@@ -80,7 +79,7 @@ void SampleEvent::setBufferRangeEnd( int value )
     if ( _bufferRangeStart >= _bufferRangeEnd )
         _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
-    _bufferRangeLength = _bufferRangeEnd - _bufferRangeStart;
+    _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
 }
 
 int SampleEvent::getReadPointer()
@@ -174,13 +173,10 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
         _buffer = sampleBuffer;
 
     _buffer->loopeable = _loopeable;
-    _sampleLength      = sampleLength;
+    setSampleLength( sampleLength );
 
-    _sampleEnd         = _sampleStart + _sampleLength;
-    _bufferRangeStart  = _sampleStart;
-    _bufferRangeEnd    = _sampleEnd;
-    _bufferRangeLength = _sampleLength;
-    _rangePointer      = _bufferRangeStart;
+    // ensures existing range remains within bounds
+    setBufferRangeStart( _bufferRangeStart );
 
     _updateAfterUnlock = false; // unnecessary
 

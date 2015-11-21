@@ -1,5 +1,6 @@
 #include "../../events/baseaudioevent.h"
 #include "../../instruments/baseinstrument.h"
+#include "../../audioengine.h"
 
 TEST( BaseAudioEvent, GettersSettersVolume )
 {
@@ -265,6 +266,28 @@ TEST( BaseAudioEvent, SampleProperties )
     deleteAudioEvent( audioEvent );
 }
 
+TEST( BaseAudioEvent, PositionEvent )
+{
+    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+
+    int sampleLength = randomInt( 24, 8192 );
+    audioEvent->setSampleLength( sampleLength );
+
+    int startMeasure = randomInt( 0, 15 );
+    int subdivisions = randomInt( 4, 128 );
+    int offset       = randomInt( 0, 64 );
+
+    audioEvent->positionEvent( startMeasure, subdivisions, offset );
+
+    int expectedSampleStart = startMeasure * AudioEngine::bytes_per_bar;
+    int expectedSampleEnd   = expectedSampleStart + sampleLength - 1;
+
+    EXPECT_EQ( expectedSampleStart, audioEvent->getSampleStart() );
+    EXPECT_EQ( expectedSampleEnd,   audioEvent->getSampleEnd() );
+
+    deleteAudioEvent( audioEvent );
+}
+
 TEST( BaseAudioEvent, Buffers )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
@@ -388,7 +411,7 @@ TEST( BaseAudioEvent, MixBuffer )
     expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
                     (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd ) ||
                     ( loopStartIteratorPosition > maxBufferPos && (
-                        ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) |
+                        ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
                         ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
 
     audioEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
