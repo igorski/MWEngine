@@ -59,7 +59,7 @@ void SampleEvent::setBufferRangeStart( int value )
         _rangePointer = _bufferRangeStart;
 
     if ( _bufferRangeEnd <= _bufferRangeStart )
-        _bufferRangeEnd = std::min( _bufferRangeStart + 1, _sampleLength );
+        _bufferRangeEnd = std::max( _bufferRangeStart + ( _bufferRangeLength - 1 ), _bufferRangeStart );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
 }
@@ -175,9 +175,16 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
     _buffer->loopeable = _loopeable;
     setSampleLength( sampleLength );
 
-    // ensures existing range remains within bounds
-    setBufferRangeStart( _bufferRangeStart );
-
+    if ( _bufferRangeLength == 0 )
+    {
+        _bufferRangeStart  = _sampleStart;
+        _bufferRangeEnd    = _sampleEnd;
+        _bufferRangeLength = _sampleLength;
+    }
+    else {
+        // ensures existing ranges remain within bounds
+        setBufferRangeStart( _bufferRangeStart );
+    }
     _updateAfterUnlock = false; // unnecessary
 
     if ( !wasLocked )
