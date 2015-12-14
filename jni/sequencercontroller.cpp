@@ -74,6 +74,7 @@ void SequencerController::setTempo( float aTempo, int aTimeSigBeatAmount, int aT
 void SequencerController::setTempoNow( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
     setTempo( aTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
+    updateStepsPerBar( stepsPerBar );
     AudioEngine::handleTempoUpdate( AudioEngine::queuedTempo, true );
 }
 
@@ -84,14 +85,6 @@ void SequencerController::setVolume( float aVolume )
 
 void SequencerController::setPlaying( bool aIsPlaying )
 {
-    // if engine wasn't playing also broadcast the current
-    // sequencer position before starting the sequencer
-
-    if ( aIsPlaying && !AudioEngine::playing )
-    {
-        --AudioEngine::stepPosition; // incremented by "handleSequencerPositionUpdate"
-        AudioEngine::handleSequencerPositionUpdate( 0 );
-    }
     AudioEngine::playing = aIsPlaying;
 }
 
@@ -133,11 +126,8 @@ void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, in
 
 void SequencerController::updateStepsPerBar( int aStepsPerBar )
 {
-    if ( stepsPerBar != aStepsPerBar )
-    {
-        stepsPerBar = aStepsPerBar;
-        AudioEngine::beat_subdivision = aStepsPerBar / AudioEngine::time_sig_beat_unit;
-    }
+    stepsPerBar = aStepsPerBar;
+    AudioEngine::beat_subdivision = aStepsPerBar / AudioEngine::time_sig_beat_amount;
 }
 
 void SequencerController::updateMeasures( int aValue, int aStepsPerBar )

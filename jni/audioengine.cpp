@@ -116,12 +116,15 @@ namespace AudioEngine
         int loopOffset = 0;         // the offset within the current buffer where we start reading from the current loops start offset
         int loopAmount = 0;         // amount of samples we must read from the current loops start offset
 
-        float recbufferIn[ bufferSize ];                  // used for recording from device input
-        float outbuffer  [ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
+        float outbuffer[ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
 
-        // generate buffers for temporary channel buffer writes
-        AudioBuffer* inbuffer  = new AudioBuffer( outputChannels, bufferSize ); // accumulates all channels ("master strip")
+#ifdef ALLOW_RECORDING
+        // generate the input buffer used for recording from device input
+        // as well as the remporary buffer used to merge the input into
+        float recbufferIn[ bufferSize ];
         AudioBuffer* recbuffer = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, bufferSize );
+#endif
+        AudioBuffer* inbuffer  = new AudioBuffer( outputChannels, bufferSize ); // accumulates all channels ("master strip")
 
         // ensure all audiochannel buffers have the correct properties (in case engine is
         // restarting after changing buffer size, for instance)
@@ -174,6 +177,7 @@ namespace AudioEngine
                 }
             }
 
+#ifdef ALLOW_RECORDING
             // record audio from Android device ?
             if ( recordFromDevice && AudioEngineProps::INPUT_CHANNELS > 0 )
             {
@@ -192,7 +196,7 @@ namespace AudioEngine
                     }
                 }
             }
-
+#endif
             // channel loop
             int j = 0;
             int channelAmount = channels.size();
@@ -328,23 +332,25 @@ namespace AudioEngine
                 // update the buffer pointers and sequencer position
                 if ( playing )
                 {
-                    if ( ++bufferPosition % bytes_per_tick == 0 )
+                    if ( bufferPosition % bytes_per_tick == 0 )
                        handleSequencerPositionUpdate( i );
+
+                    if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position )
+                         Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
+
+                    ++bufferPosition;
 
                     if ( bufferPosition >= max_buffer_position )
                         bufferPosition = min_buffer_position;
-
-                    if ( marked_buffer_position != 1 &&
-                         bufferPosition == marked_buffer_position )
-                         Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
-               }
+                }
             }
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
             // makes it both unnecessarily audible and stalls this thread's execution
             if ( !bouncing )
                 android_AudioOut( p, outbuffer, bufferSize * outputChannels );
 
-            // record the output if recording state is active
+#ifdef ALLOW_RECORDING
+            // record the output if the recording state is active
             if ( playing && ( recordOutput || recordFromDevice ))
             {
                 if ( recordFromDevice ) // recording from device input ? > write the record buffer
@@ -368,7 +374,7 @@ namespace AudioEngine
                     }
                 }
             }
-
+#endif
             // tempo update queued ?
             if ( queuedTempo != tempo )
                 handleTempoUpdate( queuedTempo, true );
@@ -377,7 +383,9 @@ namespace AudioEngine
 
         // clear heap memory allocated before thread loop
         delete inbuffer;
+#ifdef ALLOW_RECORDING
         delete recbuffer;
+#endif
     }
 
     void stop()
@@ -412,13 +420,12 @@ namespace AudioEngine
         time_sig_beat_unit   = queuedTime_sig_beat_unit;
 
         float oldPosition     = ( float ) bufferPosition / ( float ) max_buffer_position;  // pct of loop offset
-        float tempBytesPerBar = ((( float ) AudioEngineProps::SAMPLE_RATE * 60 ) / tempo ) * 4; // a full bar at 4 beats per measure
-
-        bytes_per_beat        = ( int ) ( tempBytesPerBar / ( float ) time_sig_beat_unit );
+        float tempBytesPerBar = ((( float ) AudioEngineProps::SAMPLE_RATE * 60 ) / tempo ) * time_sig_beat_amount;
+        bytes_per_beat        = ( int ) ( tempBytesPerBar / ( float ) time_sig_beat_amount );
 
         // bytes per tick equals the smallest note size the sequencer acknowledges (i.e. 8ths, 16ths, 32nds, 64ths, etc.)
-        bytes_per_tick        = bytes_per_beat / beat_subdivision;
-        bytes_per_bar         = ( int ) ( tempBytesPerBar / ( float ) time_sig_beat_unit * ( float ) time_sig_beat_amount ); // in case of non-equals amount vs. unit
+        bytes_per_tick = bytes_per_beat / beat_subdivision;
+        bytes_per_bar  = bytes_per_tick * beat_subdivision * time_sig_beat_amount; // in case of non-equals amount vs. unit
 
         max_buffer_position = ( bytes_per_bar * amount_of_bars ); // TODO: this implies single time sig for all bars!!
 
@@ -434,7 +441,6 @@ namespace AudioEngine
         if ( broadcastUpdate )
         {
 #ifdef USE_JNI
-
             // when using the engine through JNI with Java, we don't broadcast using
             // the Notifier, but instantly invoke a callback directly on the bridge
             // as it allows us to update multiple parameters at once
