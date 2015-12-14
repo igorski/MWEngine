@@ -41,8 +41,7 @@ namespace AudioEngineProps
 {
 #ifdef ALLOW_RECORDING
      const int INPUT_CHANNELS  = 1;
-#endif
-#ifndef ALLOW_RECORDING
+#else
     const int INPUT_CHANNELS   = 0;
 #endif
     const int OUTPUT_CHANNELS  = 1;      // min 1 (mono)

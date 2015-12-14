@@ -406,6 +406,6 @@ public final class MWEngine extends Thread
             INSTANCE._initialCreation = false;
             INSTANCE.getSequencerController().setLoopRange( 0, BYTES_PER_BAR );
         }
-        //Log.d( "MWENGINE", "handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
+        //Log.d( "MWENGINE", "handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar, " + aBytesPerTick + " bytes per tick )" );
     }
 }

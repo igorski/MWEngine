@@ -122,7 +122,7 @@ public class MWEngineActivity extends Activity
 
         // add some funky delay to synth 2
         _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
-        _synth2.getAudioChannel().getProcessingChain().addProcessor(_delay);
+        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // prepare synthesizer volumes
         _synth2.setVolume( .7f );
@@ -131,7 +131,7 @@ public class MWEngineActivity extends Activity
 
         _synth1Events = new Vector<SynthEvent>();   // remember : strong references!
         _synth2Events = new Vector<SynthEvent>();   // remember : strong references!
-        sequencer.setTempoNow(130.0f, 4, 4);      // 130 BPM at 4/4 time
+        sequencer.setTempoNow( 130.0f, 4, 4 );      // 130 BPM at 4/4 time
 
         // bubbly sixteenth note bass line for synth 1
 
@@ -279,7 +279,7 @@ public class MWEngineActivity extends Activity
 
             final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
 
-            _engine.getSequencerController().setTempo(newTempo, 4, 4); // update to match new tempo in 4/4 time
+            _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
         }
 
         public void onStartTrackingTouch( SeekBar seekBar ) {}
@@ -326,7 +326,11 @@ public class MWEngineActivity extends Activity
             switch ( _notificationEnums[ aNotificationId ])
             {
                 case SEQUENCER_POSITION_UPDATED:
-                    Log.d( LOG_TAG, "sequencer position : " + aNotificationValue );
+
+                    // notification value describes the amount of elapsed samples
+                    int sequencerPosition = ( int ) Math.floor( aNotificationValue / MWEngine.BYTES_PER_TICK );
+                    int pendingSamples    = ( MWEngine.BYTES_PER_TICK * ( sequencerPosition + 1 )) - aNotificationValue;
+                    Log.d( LOG_TAG, "sequencer position:" + sequencerPosition + " samples elapsed:" + aNotificationValue + ", pending:" + pendingSamples );
                     break;
             }
         }
