@@ -329,7 +329,7 @@ namespace AudioEngine
                 if ( playing )
                 {
                     if ( ++bufferPosition % bytes_per_tick == 0 )
-                       handleSequencerPositionUpdate( android_GetTimestamp( p ));
+                       handleSequencerPositionUpdate( i );
 
                     if ( bufferPosition >= max_buffer_position )
                         bufferPosition = min_buffer_position;
@@ -459,7 +459,7 @@ namespace AudioEngine
         }
     }
 
-    void handleSequencerPositionUpdate( float streamTimeStamp )
+    void handleSequencerPositionUpdate( int elapsedSamples )
     {
         ++stepPosition;
 
@@ -467,7 +467,7 @@ namespace AudioEngine
         if ( stepPosition >= max_step_position )
             stepPosition = min_step_position;
 
-        Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, stepPosition );
+        Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, ( stepPosition << 16 ) | elapsedSamples );
     }
 
     bool writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )

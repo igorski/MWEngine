@@ -84,6 +84,14 @@ void SequencerController::setVolume( float aVolume )
 
 void SequencerController::setPlaying( bool aIsPlaying )
 {
+    // if engine wasn't playing also broadcast the current
+    // sequencer position before starting the sequencer
+
+    if ( aIsPlaying && !AudioEngine::playing )
+    {
+        --AudioEngine::stepPosition; // incremented by "handleSequencerPositionUpdate"
+        AudioEngine::handleSequencerPositionUpdate( 0 );
+    }
     AudioEngine::playing = aIsPlaying;
 }
 

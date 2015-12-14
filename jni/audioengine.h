@@ -90,7 +90,7 @@ namespace AudioEngine
     /* internal methods */
 
     void handleTempoUpdate            ( float aQueuedTempo, bool broadcastUpdate );
-    void handleSequencerPositionUpdate( float streamTimeStamp );
+    void handleSequencerPositionUpdate( int elapsedSamples );
     bool writeChannelCache            ( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos );
 }
 #endif

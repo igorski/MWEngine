@@ -82,3 +82,9 @@ To install the demo : first build the library as described above, and then run t
 attached device/emulator (note that emulated devices can only operate at a sample rate of 8 kHz!). This requires both the Android NDK and the Android SDK.
 
 Be sure to point towards the installation locations of these in both the _build.sh_-file and the _local.properties_-file.
+
+### Contributors
+
+MWEngine has received welcome contributions from the following developers:
+
+Andrey Stavrinov (@hypeastrum)
