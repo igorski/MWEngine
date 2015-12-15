@@ -13,7 +13,7 @@
 // HELPER MATH FUNCTIONS
 // ---------------------
 
-// random integer value between min - max range
+// random integer value between given min - max range
 
 int randomInt( int min, int max )
 {
@@ -34,7 +34,15 @@ float randomFloat()
     return rand() / float( RAND_MAX );
 }
 
-// return a random sample value
+// return a random floating point value between given min - max range
+
+float randomFloat( float min, float max )
+{
+    float f = rand() / float( RAND_MAX );
+    return ( min + f * ( max - min ));
+}
+
+// return a random sample value between given min - max range
 
 SAMPLE_TYPE randomSample( double min, double max )
 {
