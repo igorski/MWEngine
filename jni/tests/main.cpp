@@ -5,6 +5,7 @@
 
 #include "audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
+#include "processingchain_test.cpp"
 #include "events/baseaudioevent_test.cpp"
 #include "events/basesynthevent_test.cpp"
 //#include "events/drumevent_test.cpp"
