@@ -110,8 +110,8 @@ void WaveTable::cloneTable( WaveTable* waveTable )
     if ( tableLength != waveTable->tableLength )
     {
         delete _buffer;
-        _buffer = BufferUtility::generateSilentBuffer( tableLength );
         tableLength = waveTable->tableLength;
+        _buffer = BufferUtility::generateSilentBuffer( tableLength );
     }
     for ( int i = 0; i < tableLength; ++i )
         _buffer[ i ] = waveTable->_buffer[ i ];

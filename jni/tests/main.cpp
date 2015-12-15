@@ -6,6 +6,7 @@
 #include "audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
 #include "processingchain_test.cpp"
+#include "ringbuffer_test.cpp"
 #include "wavetable_test.cpp"
 #include "events/baseaudioevent_test.cpp"
 #include "events/basesynthevent_test.cpp"
