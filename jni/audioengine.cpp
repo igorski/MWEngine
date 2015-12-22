@@ -42,33 +42,26 @@
 
 namespace AudioEngine
 {
-    int bytes_per_beat;
-    int bytes_per_bar;
-    int bytes_per_tick;
-
-    int amount_of_bars         = 1;
-    int beat_subdivision       = 4;
-    int min_buffer_position    = 0;  // initially 0, but can differ when looping specific measures
-    int max_buffer_position    = 0;  // calculated when sequencer API creates output
-    int marked_buffer_position = -1; // -1 means no marker has been set, no notifications will go out
-    int min_step_position      = 0;
-    int max_step_position      = 16;
-
     bool playing          = false;
     bool recordOutput     = false;
     bool haltRecording    = false;
     bool bouncing         = false;
     bool recordFromDevice = false;
-    bool monitorRecording = false; // might introduce feedback on microphone ;)
+    bool monitorRecording = false; // might introduce feedback when using internal microphone ;)
     int recordingFileId = 0;
 
-    /* buffer read/write pointers */
+    /* tempo / sequencer position related */
 
-    int bufferPosition = 0;
-    int stepPosition   = 0;
-
-    /* tempo related */
-
+    int samples_per_beat;                // strictly speaking sequencer specific, but scoped onto the AudioEngine
+    int samples_per_bar;                 // for rendering purposes, see SequencerController on how to read and
+    int samples_per_step;                // adjust these values
+    int amount_of_bars             = 1;
+    int beat_subdivision           = 4;
+    int min_buffer_position        = 0;  // initially 0, but can differ when looping specific measures
+    int max_buffer_position        = 0;  // calculated when SequencerController is created
+    int marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
+    int min_step_position          = 0;
+    int max_step_position          = 16;
     float tempo                    = 90.0;
     float queuedTempo              = 120.0;
     int time_sig_beat_amount       = 4;
@@ -76,9 +69,14 @@ namespace AudioEngine
     int queuedTime_sig_beat_amount = time_sig_beat_amount;
     int queuedTime_sig_beat_unit   = time_sig_beat_unit;
 
+    /* buffer read/write pointers */
+
+    int bufferPosition = 0;
+    int stepPosition   = 0;
+
     /* output related */
 
-    float volume = .85;
+    float volume = .85f;
     ProcessingChain* masterBus = new ProcessingChain();
 
     static int thread;
@@ -226,7 +224,7 @@ namespace AudioEngine
                 // ...in case the AudioChannels maxBufferPosition differs from the sequencer loop range
                 // note that these buffer positions are always a full measure in length (as we loop by measures)
                 while ( bufferPos > maxBufferPosition )
-                    bufferPos -= bytes_per_bar;
+                    bufferPos -= samples_per_bar;
 
                 // only render sequenced events when the sequencer isn't in the paused state
                 // and the channel volume is actually at an audible level! ( > 0 )
@@ -332,8 +330,8 @@ namespace AudioEngine
                 // update the buffer pointers and sequencer position
                 if ( playing )
                 {
-                    if ( bufferPosition % bytes_per_tick == 0 )
-                       handleSequencerPositionUpdate( i );
+                    if ( bufferPosition % samples_per_step == 0 )
+                       handleSequencerPositionUpdate( bufferPosition );
 
                     if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position )
                          Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
@@ -419,15 +417,15 @@ namespace AudioEngine
         time_sig_beat_amount = queuedTime_sig_beat_amount;
         time_sig_beat_unit   = queuedTime_sig_beat_unit;
 
-        float oldPosition     = ( float ) bufferPosition / ( float ) max_buffer_position;  // pct of loop offset
-        float tempBytesPerBar = ((( float ) AudioEngineProps::SAMPLE_RATE * 60 ) / tempo ) * time_sig_beat_amount;
-        bytes_per_beat        = ( int ) ( tempBytesPerBar / ( float ) time_sig_beat_amount );
+        float oldPosition       = ( float ) bufferPosition / ( float ) max_buffer_position;  // pct of loop offset
+        float tempSamplesPerBar = ((( float ) AudioEngineProps::SAMPLE_RATE * 60 ) / tempo ) * time_sig_beat_amount;
+        samples_per_beat        = ( int ) ( tempSamplesPerBar / ( float ) time_sig_beat_amount );
 
-        // bytes per tick equals the smallest note size the sequencer acknowledges (i.e. 8ths, 16ths, 32nds, 64ths, etc.)
-        bytes_per_tick = bytes_per_beat / beat_subdivision;
-        bytes_per_bar  = bytes_per_tick * beat_subdivision * time_sig_beat_amount; // in case of non-equals amount vs. unit
+        // samples per step describes the smallest note size the sequencer acknowledges (i.e. 8ths, 16ths, 32nds, 64ths, etc.)
+        samples_per_step = samples_per_beat / beat_subdivision;
+        samples_per_bar  = samples_per_step * beat_subdivision * time_sig_beat_amount; // in case of non-equals amount vs. unit
 
-        max_buffer_position = ( bytes_per_bar * amount_of_bars ); // TODO: this implies single time sig for all bars!!
+        max_buffer_position = ( samples_per_bar * amount_of_bars ); // TODO: this implies single time sig for all bars!!
 
         // make sure relative positions remain in sync
         bufferPosition = ( int ) llround( max_buffer_position * oldPosition );
@@ -454,8 +452,8 @@ namespace AudioEngine
                 if ( env != 0 )
                 {
                     env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id,
-                                               AudioEngine::tempo, AudioEngine::bytes_per_beat,
-                                               AudioEngine::bytes_per_tick, AudioEngine::bytes_per_bar,
+                                               AudioEngine::tempo, AudioEngine::samples_per_beat,
+                                               AudioEngine::samples_per_step, AudioEngine::samples_per_bar,
                                                AudioEngine::time_sig_beat_amount, AudioEngine::time_sig_beat_unit );
                 }
             }
@@ -465,7 +463,7 @@ namespace AudioEngine
         }
     }
 
-    void handleSequencerPositionUpdate( int elapsedSamples )
+    void handleSequencerPositionUpdate( int currentBufferPosition )
     {
         ++stepPosition;
 
@@ -473,7 +471,7 @@ namespace AudioEngine
         if ( stepPosition >= max_step_position )
             stepPosition = min_step_position;
 
-        Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, ( stepPosition << 16 ) | elapsedSamples );
+        Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, currentBufferPosition );
     }
 
     bool writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )

@@ -46,9 +46,9 @@ namespace AudioEngine
 
     /* engine properties */
 
-    extern int bytes_per_beat;      // the amount of samples necessary for a single beat at the current tempo and sample rate
-    extern int bytes_per_bar;       // the amount of samples for a full bar at the current tempo and sample rate
-    extern int bytes_per_tick;      // the amount of samples per sub division (e.g. 16th note)
+    extern int samples_per_beat;      // the amount of samples necessary for a single beat at the current tempo and sample rate
+    extern int samples_per_bar;       // the amount of samples for a full bar at the current tempo and sample rate
+    extern int samples_per_step;      // the amount of samples per sub division (e.g. 16th note)
 
     extern int amount_of_bars;         // the amount of measures in the current sequencer
     extern int beat_subdivision;       // the amount of sub divisions the engine recognises for a beat (for instance a value of 4 equals sixteenth notes in 4/4 time)
@@ -90,7 +90,7 @@ namespace AudioEngine
     /* internal methods */
 
     void handleTempoUpdate            ( float aQueuedTempo, bool broadcastUpdate );
-    void handleSequencerPositionUpdate( int elapsedSamples );
+    void handleSequencerPositionUpdate( int currentBufferPosition );
     bool writeChannelCache            ( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos );
 }
 #endif

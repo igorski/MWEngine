@@ -171,10 +171,10 @@ void BaseAudioEvent::setSampleEnd( int value )
 
 void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offset )
 {
-    int bytesPerBar = AudioEngine::bytes_per_bar; // will always match current tempo, time sig at right sample rate
+    int samplesPerBar = AudioEngine::samples_per_bar; // will always match current tempo, time sig at right sample rate
 
-    int startOffset = bytesPerBar * startMeasure;
-    startOffset    += offset * bytesPerBar / subdivisions;
+    int startOffset = samplesPerBar * startMeasure;
+    startOffset    += offset * samplesPerBar / subdivisions;
 
     setSampleStart( startOffset );
     setSampleEnd  (( startOffset + _sampleLength ) - 1 );

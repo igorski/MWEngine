@@ -24,16 +24,17 @@ public class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer          _finalizer;
-    private LPFHPFilter        _lpfhpf;
-    private SynthInstrument    _synth1;
-    private SynthInstrument    _synth2;
-    private Filter             _filter;
-    private Phaser             _phaser;
-    private Delay              _delay;
-    private MWEngine           _engine;
-    private Vector<SynthEvent> _synth1Events;
-    private Vector<SynthEvent> _synth2Events;
+    private Finalizer           _finalizer;
+    private LPFHPFilter         _lpfhpf;
+    private SynthInstrument     _synth1;
+    private SynthInstrument     _synth2;
+    private Filter              _filter;
+    private Phaser              _phaser;
+    private Delay               _delay;
+    private MWEngine            _engine;
+    private SequencerController _sequencerController;
+    private Vector<SynthEvent>  _synth1Events;
+    private Vector<SynthEvent>  _synth2Events;
 
     private boolean _sequencerPlaying = false;
     private boolean _inited           = false;
@@ -81,6 +82,7 @@ public class MWEngineActivity extends Activity
         SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
         _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+        _sequencerController = _engine.getSequencerController();
 
         // cache some of the engines properties
 
@@ -223,7 +225,7 @@ public class MWEngineActivity extends Activity
             // start/stop the sequencer so we can toggle hearing actual output! ;)
 
             _sequencerPlaying = !_sequencerPlaying;
-            _engine.getSequencerController().setPlaying(_sequencerPlaying);
+            _engine.getSequencerController().setPlaying( _sequencerPlaying );
         }
     }
 
@@ -327,9 +329,14 @@ public class MWEngineActivity extends Activity
             {
                 case SEQUENCER_POSITION_UPDATED:
 
-                    // notification value describes the amount of elapsed samples
-                    int sequencerPosition = ( int ) Math.floor( aNotificationValue / MWEngine.BYTES_PER_TICK );
-                    int pendingSamples    = ( MWEngine.BYTES_PER_TICK * ( sequencerPosition + 1 )) - aNotificationValue;
+                    // for this notification id, the notification value describes the current buffer position of the
+                    // engine, we can now calculate the current sequencer position (in steps) and the amount of
+                    // samples pending until the next step position is reached
+
+                    int sequencerPosition = ( int ) Math.floor( aNotificationValue / _sequencerController.getSamplesPerStep() );
+                    int nextPosition      = sequencerPosition + 1;
+                    int pendingSamples    = ( _sequencerController.getSamplesPerStep() * nextPosition ) - aNotificationValue;
+
                     Log.d( LOG_TAG, "sequencer position:" + sequencerPosition + " samples elapsed:" + aNotificationValue + ", pending:" + pendingSamples );
                     break;
             }

@@ -128,7 +128,7 @@ void DrumInstrument::construct()
     volume            = MAX_PHASE / 2;
     drumTimbre        = DrumTimbres::LIGHT;
     rOsc              = 0;// new RouteableOscillator();  // currently unused...
-    audioChannel      = new AudioChannel( volume, AudioEngine::bytes_per_bar );
+    audioChannel      = new AudioChannel( volume, AudioEngine::samples_per_bar );
 
     activeDrumPattern = 0;
     drumPatterns      = new std::vector<DrumPattern*>();

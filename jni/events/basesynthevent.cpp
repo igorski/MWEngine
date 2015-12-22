@@ -145,14 +145,14 @@ void BaseSynthEvent::calculateBuffers()
     if ( isSequenced )
     {
         oldLength     = _sampleLength;
-        _sampleLength = ( int )( length * ( float ) AudioEngine::bytes_per_tick );
-        _sampleStart  = position * AudioEngine::bytes_per_tick;
+        _sampleLength = ( int )( length * ( float ) AudioEngine::samples_per_step );
+        _sampleStart  = position * AudioEngine::samples_per_step;
         _sampleEnd    = _sampleStart + _sampleLength;
     }
     else {
         // quick releases of a noteOn-instruction should ring for at least a 64th note
-        _minLength    = AudioEngine::bytes_per_bar / 64;
-        _sampleLength = AudioEngine::bytes_per_bar;     // important for amplitude swell in
+        _minLength    = AudioEngine::samples_per_bar / 64;
+        _sampleLength = AudioEngine::samples_per_bar;     // important for amplitude swell in
         oldLength     = AudioEngineProps::BUFFER_SIZE;  // buffer is as long as the engine's buffer size
         _hasMinLength = false;                          // keeping track if the min length has been rendered
     }
@@ -257,7 +257,7 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
     if ( undoDecay )
         _synthInstrument->adsr->setDecay( decay );
 
-    // keep track of the rendered bytes, in case of a key up event
+    // keep track of the rendered samples, in case of a key up event
     // we still want to have the sound ring for the minimum period
     // defined in the constructor instead of cut off immediately
 
