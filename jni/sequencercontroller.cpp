@@ -124,6 +124,11 @@ void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, in
     updateStepsPerBar( aStepsPerBar );
 }
 
+int SequencerController::getStepPosition()
+{
+    return AudioEngine::stepPosition;
+}
+
 int SequencerController::getBufferPosition()
 {
     return AudioEngine::bufferPosition;

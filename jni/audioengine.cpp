@@ -331,7 +331,7 @@ namespace AudioEngine
                 if ( playing )
                 {
                     if ( bufferPosition % samples_per_step == 0 )
-                       handleSequencerPositionUpdate( bufferPosition );
+                       handleSequencerPositionUpdate( i );
 
                     if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position )
                          Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
@@ -463,15 +463,15 @@ namespace AudioEngine
         }
     }
 
-    void handleSequencerPositionUpdate( int currentBufferPosition )
+    void handleSequencerPositionUpdate( int bufferOffset )
     {
-        ++stepPosition;
+        stepPosition = floor( bufferPosition / samples_per_step );
 
         // larger-equal check as we can remove measures from the sequencer while running
         if ( stepPosition >= max_step_position )
             stepPosition = min_step_position;
 
-        Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, currentBufferPosition );
+        Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, bufferOffset );
     }
 
     bool writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )

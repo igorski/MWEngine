@@ -329,15 +329,17 @@ public class MWEngineActivity extends Activity
             {
                 case SEQUENCER_POSITION_UPDATED:
 
-                    // for this notification id, the notification value describes the current buffer position of the
-                    // engine, we can now calculate the current sequencer position (in steps) and the amount of
-                    // samples pending until the next step position is reached
+                    // for this notification id, the notification value describes the precise buffer offset of the
+                    // engine when the notification fired (as a value in the range of 0 - BUFFER_SIZE). using this value
+                    // we can calculate the amount of samples pending until the next step position is reached
+                    // which in turn allows us to calculate the engine latency
 
-                    int sequencerPosition = ( int ) Math.floor( aNotificationValue / _sequencerController.getSamplesPerStep() );
-                    int nextPosition      = sequencerPosition + 1;
-                    int pendingSamples    = ( _sequencerController.getSamplesPerStep() * nextPosition ) - aNotificationValue;
+                    int sequencerPosition = _sequencerController.getStepPosition();
+                    int elapsedSamples    = _sequencerController.getBufferPosition() + aNotificationValue;
+                    int pendingSamples    = _sequencerController.getSamplesPerStep() * ( sequencerPosition + 1 ) - elapsedSamples; // until next position
 
-                    Log.d( LOG_TAG, "sequencer position:" + sequencerPosition + " samples elapsed:" + aNotificationValue + ", pending:" + pendingSamples );
+                    Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
+                            ", elapsed samples: " + elapsedSamples + ", pending samples until next position: " + pendingSamples );
                     break;
             }
         }

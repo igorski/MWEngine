@@ -46,6 +46,7 @@ class SequencerController
 
         void setLoopRange         ( int aStartPosition, int aEndPosition );
         void setLoopRange         ( int aStartPosition, int aEndPosition, int aStepsPerBar );
+        int getStepPosition       ();
         int  getBufferPosition    ();
         void setBufferPosition    ( int aPosition );
         void updateStepsPerBar    ( int aStepsPerBar );
