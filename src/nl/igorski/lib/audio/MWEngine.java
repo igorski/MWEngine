@@ -64,12 +64,12 @@ public final class MWEngine extends Thread
          *
          * supported notiifcations identifiers :
          *
-         * SEQUENCER_POSITION_UPDATED fired when sequencer has advanced a step, payload describes
-         *                            the precise buffer offset of the sequencer when the notification fired
+         * SEQUENCER_POSITION_UPDATED fired when Sequencer has advanced a step, payload describes
+         *                            the precise buffer offset of the Sequencer when the notification fired
          *                            (as a value in the range of 0 - BUFFER_SIZE)
          * RECORDING_STATE_UPDATED    fired when a recording snippet of request size has been written
          *                            to the output folder, payload contains snippet number
-         * BOUNCE_COMPLETE
+         * BOUNCE_COMPLETE            fired when the offline bouncing of the Sequencer range has completed
          */
         void handleNotification( int aNotificationId, int aNotificationValue );
     }
