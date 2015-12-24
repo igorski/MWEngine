@@ -100,12 +100,12 @@ namespace sequencer
         // buffer position by subtracting all measures above the first
         if ( channel->maxBufferPosition > 0 )
         {
-            int bytesPerBar = AudioEngine::bytes_per_bar;
+            int samplesPerBar = AudioEngine::samples_per_bar;
 
             while ( bufferPosition >= channel->maxBufferPosition )
             {
-                bufferPosition -= bytesPerBar;
-                bufferEnd      -= bytesPerBar;
+                bufferPosition -= samplesPerBar;
+                bufferEnd      -= samplesPerBar;
             }
         }
         int i = 0, amount = audioEvents->size();

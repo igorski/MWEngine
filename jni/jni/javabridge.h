@@ -49,7 +49,7 @@ namespace JavaAPIs
     const javaAPI REGISTRATION_SUCCESS     = { "handleBridgeConnected",         "(I)V"  };
     const javaAPI HANDLE_NOTIFICATION      = { "handleNotification",            "(I)V"  };
     const javaAPI HANDLE_NOTIFICATION_DATA = { "handleNotificationWithData",    "(II)V" };
-    const javaAPI TEMPO_UPDATED            = { "handleTempoUpdated",            "(FIIIII)V" };
+    const javaAPI TEMPO_UPDATED            = { "handleTempoUpdated",            "(F)V"  };
 }
 
 namespace JavaBridge

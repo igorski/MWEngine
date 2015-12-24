@@ -24,16 +24,17 @@ public class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer          _finalizer;
-    private LPFHPFilter        _lpfhpf;
-    private SynthInstrument    _synth1;
-    private SynthInstrument    _synth2;
-    private Filter             _filter;
-    private Phaser             _phaser;
-    private Delay              _delay;
-    private MWEngine           _engine;
-    private Vector<SynthEvent> _synth1Events;
-    private Vector<SynthEvent> _synth2Events;
+    private Finalizer           _finalizer;
+    private LPFHPFilter         _lpfhpf;
+    private SynthInstrument     _synth1;
+    private SynthInstrument     _synth2;
+    private Filter              _filter;
+    private Phaser              _phaser;
+    private Delay               _delay;
+    private MWEngine            _engine;
+    private SequencerController _sequencerController;
+    private Vector<SynthEvent>  _synth1Events;
+    private Vector<SynthEvent>  _synth2Events;
 
     private boolean _sequencerPlaying = false;
     private boolean _inited           = false;
@@ -81,6 +82,7 @@ public class MWEngineActivity extends Activity
         SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
         _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+        _sequencerController = _engine.getSequencerController();
 
         // cache some of the engines properties
 
@@ -122,7 +124,7 @@ public class MWEngineActivity extends Activity
 
         // add some funky delay to synth 2
         _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
-        _synth2.getAudioChannel().getProcessingChain().addProcessor(_delay);
+        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // prepare synthesizer volumes
         _synth2.setVolume( .7f );
@@ -131,7 +133,7 @@ public class MWEngineActivity extends Activity
 
         _synth1Events = new Vector<SynthEvent>();   // remember : strong references!
         _synth2Events = new Vector<SynthEvent>();   // remember : strong references!
-        sequencer.setTempoNow(130.0f, 4, 4);      // 130 BPM at 4/4 time
+        sequencer.setTempoNow( 130.0f, 4, 4 );      // 130 BPM at 4/4 time
 
         // bubbly sixteenth note bass line for synth 1
 
@@ -223,7 +225,7 @@ public class MWEngineActivity extends Activity
             // start/stop the sequencer so we can toggle hearing actual output! ;)
 
             _sequencerPlaying = !_sequencerPlaying;
-            _engine.getSequencerController().setPlaying(_sequencerPlaying);
+            _engine.getSequencerController().setPlaying( _sequencerPlaying );
         }
     }
 
@@ -279,7 +281,7 @@ public class MWEngineActivity extends Activity
 
             final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
 
-            _engine.getSequencerController().setTempo(newTempo, 4, 4); // update to match new tempo in 4/4 time
+            _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
         }
 
         public void onStartTrackingTouch( SeekBar seekBar ) {}
@@ -326,7 +328,18 @@ public class MWEngineActivity extends Activity
             switch ( _notificationEnums[ aNotificationId ])
             {
                 case SEQUENCER_POSITION_UPDATED:
-                    Log.d( LOG_TAG, "sequencer position : " + aNotificationValue );
+
+                    // for this notification id, the notification value describes the precise buffer offset of the
+                    // engine when the notification fired (as a value in the range of 0 - BUFFER_SIZE). using this value
+                    // we can calculate the amount of samples pending until the next step position is reached
+                    // which in turn allows us to calculate the engine latency
+
+                    int sequencerPosition = _sequencerController.getStepPosition();
+                    int elapsedSamples    = _sequencerController.getBufferPosition() + aNotificationValue;
+                    int pendingSamples    = _sequencerController.getSamplesPerStep() * ( sequencerPosition + 1 ) - elapsedSamples; // until next position
+
+                    Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
+                            ", elapsed samples: " + elapsedSamples + ", pending samples until next position: " + pendingSamples );
                     break;
             }
         }

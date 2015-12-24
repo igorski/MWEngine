@@ -37,11 +37,40 @@ import nl.igorski.lib.audio.nativeaudio.*;
  */
 public final class MWEngine extends Thread
 {
-    /* interface to receive state change messages from the engine */
-
+    /**
+     * interface to receive state change messages from the engine
+     * these messages are constants defined inside Notifications.ids.values()
+     */
     public interface IObserver
     {
+        /**
+         * invoked whenever the engine broadcasts a notification
+         * @param aNotificationId {int} unique identifier for the notification
+         *
+         * supported notification identifiers :
+         *
+         * ERROR_HARDWARE_UNAVAILABLE fired when MWEngine cannot connect to audio hardware (fatal)
+         * ERROR_THREAD_START         fired when MWEngine cannot start the rendering thread (fatal)
+         * STATUS_BRIDGE_CONNECTED    fired when MWEngine connects to the native layer code through JNI
+         * MARKER_POSITION_REACHED    fired when request Sequencer marker position has been reached
+         */
         void handleNotification( int aNotificationId );
+
+        /**
+         * invoked whenever the engine broadcasts a notification
+         *
+         * @param aNotificationId {int} unique identifier for the notification
+         * @param aNotificationValue {int} payload for the notification
+         *
+         * supported notiifcations identifiers :
+         *
+         * SEQUENCER_POSITION_UPDATED fired when Sequencer has advanced a step, payload describes
+         *                            the precise buffer offset of the Sequencer when the notification fired
+         *                            (as a value in the range of 0 - BUFFER_SIZE)
+         * RECORDING_STATE_UPDATED    fired when a recording snippet of request size has been written
+         *                            to the output folder, payload contains snippet number
+         * BOUNCE_COMPLETE            fired when the offline bouncing of the Sequencer range has completed
+         */
         void handleNotification( int aNotificationId, int aNotificationValue );
     }
 
@@ -56,21 +85,9 @@ public final class MWEngine extends Thread
     public static int SAMPLE_RATE = 44100;
     public static int BUFFER_SIZE = 2048;
 
-    /* time signature related */
-
-    public static int TIME_SIG_BEAT_AMOUNT  = 4; // upper numeral in time signature (i.e. the "3" in 3/4)
-    public static int TIME_SIG_BEAT_UNIT    = 4; // lower numeral in time signature (i.e. the "4" in 3/4)
-
     // we CAN multiply the output the volume to decrease it, preventing rapidly distorting audio ( especially on filters )
     private static final float VOLUME_MULTIPLIER = .85f;
     private static float       _volume           = .85f /* assumed default level */ * VOLUME_MULTIPLIER;
-
-    /* we make these statically available to outside classes, these changes according to time signature and tempo */
-
-    public static int BYTES_PER_SAMPLE = 8;
-    public static int BYTES_PER_BEAT   = 22050;
-    public static int BYTES_PER_BAR    = 88200;
-    public static int BYTES_PER_TICK   = 5512;
 
     /* recording buffer specific */
 
@@ -126,7 +143,7 @@ public final class MWEngine extends Thread
         // start w/ default of 120 BPM in 4/4 time
 
         _sequencerController = new SequencerController();
-        _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, 120.0f, TIME_SIG_BEAT_AMOUNT, TIME_SIG_BEAT_UNIT );
+        _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, 120.0f, 4, 4 );
 
         _disposed = false;
     }
@@ -391,21 +408,16 @@ public final class MWEngine extends Thread
             INSTANCE._observer.handleNotification( aNotificationId, aNotificationData );
     }
 
-    public static void handleTempoUpdated( float aNewTempo, int aBytesPerBeat, int aBytesPerTick,
-                                           int aBytesPerBar, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+    public static void handleTempoUpdated( float aNewTempo )
     {
-        BYTES_PER_BEAT       = aBytesPerBeat;
-        BYTES_PER_TICK       = aBytesPerTick;
-        BYTES_PER_BAR        = aBytesPerBar;
-        TIME_SIG_BEAT_AMOUNT = aTimeSigBeatAmount;
-        TIME_SIG_BEAT_UNIT   = aTimeSigBeatUnit;
-
         // weird bug where on initial start the sequencer would not know the step range...
+
         if ( INSTANCE._initialCreation )
         {
             INSTANCE._initialCreation = false;
-            INSTANCE.getSequencerController().setLoopRange( 0, BYTES_PER_BAR );
+            INSTANCE.getSequencerController().setLoopRange(
+                    0, INSTANCE.getSequencerController().getSamplesPerBar()
+            );
         }
-        //Log.d( "MWENGINE", "handleTempoUpdated new tempo > " + aNewTempo + " @ " + aTimeSigBeatAmount + "/" + aTimeSigBeatUnit + " time signature ( " + aBytesPerBar + " bytes per bar )" );
     }
 }

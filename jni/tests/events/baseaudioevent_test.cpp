@@ -279,7 +279,7 @@ TEST( BaseAudioEvent, PositionEvent )
 
     audioEvent->positionEvent( startMeasure, subdivisions, offset );
 
-    int expectedSampleStart = startMeasure * AudioEngine::bytes_per_bar;
+    int expectedSampleStart = startMeasure * AudioEngine::samples_per_bar;
     int expectedSampleEnd   = expectedSampleStart + sampleLength - 1;
 
     EXPECT_EQ( expectedSampleStart, audioEvent->getSampleStart() );

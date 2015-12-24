@@ -102,8 +102,8 @@ int BufferUtility::getBitRate( int sampleRate, int bitDepth, int channels )
  */
 int BufferUtility::calculateSamplesPerBeatDivision( int sampleRate, double tempo, int subdivision )
 {
-    int bytesPerBar = getSamplesPerBar( sampleRate, tempo, 4, 4 );
-    return ( int ) ( bytesPerBar / subdivision );
+    int samplesPerBar = getSamplesPerBar( sampleRate, tempo, 4, 4 );
+    return ( int ) ( samplesPerBar / subdivision );
 }
 
 /**

@@ -29,14 +29,21 @@
 
 // PRECISION defines the floating-point precision used to synthesize the audio samples
 // valid values are 1 (32-bit float) and 2 (64-bit double)
+// if you wish to record audio from the Android device input, uncomment the ALLOW_RECORDING definition
+// note this requires android.permission.MODIFY_AUDIO_SETTINGS and a positive value for AudioEngineProps::INPUT_CHANNELS
 // if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
 
 #define PRECISION 2
+//#define ALLOW_RECORDING
 #define USE_JNI
 
 namespace AudioEngineProps
 {
-    const int INPUT_CHANNELS   = 1;      // requires android.permission.MODIFY_AUDIO_SETTINGS
+#ifdef ALLOW_RECORDING
+     const int INPUT_CHANNELS  = 1;
+#else
+    const int INPUT_CHANNELS   = 0;
+#endif
     const int OUTPUT_CHANNELS  = 1;      // min 1 (mono)
     const bool CHANNEL_CACHING = false;  // whether to cache AudioChannels and their compatible modules in their ProcessingChain
 
