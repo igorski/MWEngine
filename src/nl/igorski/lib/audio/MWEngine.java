@@ -37,11 +37,40 @@ import nl.igorski.lib.audio.nativeaudio.*;
  */
 public final class MWEngine extends Thread
 {
-    /* interface to receive state change messages from the engine */
-
+    /**
+     * interface to receive state change messages from the engine
+     * these messages are constants defined inside Notifications.ids.values()
+     */
     public interface IObserver
     {
+        /**
+         * invoked whenever the engine broadcasts a notification
+         * @param aNotificationId {int} unique identifier for the notification
+         *
+         * supported notification identifiers :
+         *
+         * ERROR_HARDWARE_UNAVAILABLE fired when MWEngine cannot connect to audio hardware (fatal)
+         * ERROR_THREAD_START         fired when MWEngine cannot start the rendering thread (fatal)
+         * STATUS_BRIDGE_CONNECTED    fired when MWEngine connects to the native layer code through JNI
+         * MARKER_POSITION_REACHED    fired when request Sequencer marker position has been reached
+         */
         void handleNotification( int aNotificationId );
+
+        /**
+         * invoked whenever the engine broadcasts a notification
+         *
+         * @param aNotificationId {int} unique identifier for the notification
+         * @param aNotificationValue {int} payload for the notification
+         *
+         * supported notiifcations identifiers :
+         *
+         * SEQUENCER_POSITION_UPDATED fired when sequencer has advanced a step, payload describes
+         *                            the precise buffer offset of the sequencer when the notification fired
+         *                            (as a value in the range of 0 - BUFFER_SIZE)
+         * RECORDING_STATE_UPDATED    fired when a recording snippet of request size has been written
+         *                            to the output folder, payload contains snippet number
+         * BOUNCE_COMPLETE
+         */
         void handleNotification( int aNotificationId, int aNotificationValue );
     }
 
