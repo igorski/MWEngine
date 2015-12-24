@@ -451,10 +451,7 @@ namespace AudioEngine
 
                 if ( env != 0 )
                 {
-                    env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id,
-                                               AudioEngine::tempo, AudioEngine::samples_per_beat,
-                                               AudioEngine::samples_per_step, AudioEngine::samples_per_bar,
-                                               AudioEngine::time_sig_beat_amount, AudioEngine::time_sig_beat_unit );
+                    env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id, AudioEngine::tempo );
                 }
             }
 #else
