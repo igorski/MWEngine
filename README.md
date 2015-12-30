@@ -88,5 +88,5 @@ Be sure to point towards the installation locations of these in both the _build.
 MWEngine has received welcome contributions (either suggestions on improving the API or proposal of new features,
 solving of bugs, etc.) from the following developers :
 
-Andrey Stavrinov (@hypeastrum)
-Aran Arunakiri
+ * Andrey Stavrinov (@hypeastrum)
+ * Aran Arunakiri
