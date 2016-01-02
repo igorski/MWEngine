@@ -162,6 +162,10 @@ TEST( Sequencer, GetAudioEvents )
     delete instrument1;
     delete instrument2;
     delete instrument3;
+
+    // reset Sequencer
+
+    Sequencer::playing = false;
 }
 
 TEST( Sequencer, GetAudioEventsAtBoundaries )
@@ -222,6 +226,9 @@ TEST( Sequencer, GetAudioEventsAtBoundaries )
     delete channels;
     delete audioEvent;
     delete instrument;
+
+    // reset Sequencer
+    Sequencer::playing = false;
 }
 
 TEST( Sequencer, GetLiveEvents )
@@ -312,6 +319,9 @@ TEST( Sequencer, GetLiveEvents )
     delete audioEvent2;
     delete instrument1;
     delete instrument2;
+
+    // reset Sequencer
+    Sequencer::playing = false;
 }
 
 TEST( Sequencer, GetEventsFlushChannel )
@@ -395,6 +405,9 @@ TEST( Sequencer, GetEventsFlushChannel )
     delete audioEvent1;
     delete audioEvent2;
     delete instrument;
+
+    // reset Sequencer
+    Sequencer::playing = false;
 }
 
 TEST( Sequencer, RemoveDeletableEvents )
@@ -468,6 +481,9 @@ TEST( Sequencer, RemoveDeletableEvents )
     delete audioEvent2;
     delete instrument1;
     delete instrument2;
+
+    // reset Sequencer
+    Sequencer::playing = false;
 }
 
 /*
@@ -515,11 +531,17 @@ TEST( Sequencer, GetCacheableEvents )
     delete audioEvent2;
     delete instrument1;
     delete instrument2;
+
+    // reset Sequencer
+    Sequencer::playing = false;
 }
 */
 
 TEST( Sequencer, IgnoreEventsForMutedChannels )
 {
+    // setup sequencer
+    Sequencer::playing = true;
+
     std::vector<AudioChannel*>* channels = new std::vector<AudioChannel*>();
     BaseInstrument* instrument1 = new BaseInstrument();
     BaseInstrument* instrument2 = new BaseInstrument();
@@ -568,6 +590,9 @@ TEST( Sequencer, IgnoreEventsForMutedChannels )
     delete audioEvent2;
     delete instrument1;
     delete instrument2;
+
+    // reset Sequencer
+    Sequencer::playing = false;
 }
 
 TEST( Sequencer, EventClearing )

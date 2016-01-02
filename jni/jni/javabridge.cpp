@@ -122,6 +122,9 @@ jclass JavaBridge::getJavaInterface()
 
 JNIEnv* JavaBridge::getEnvironment()
 {
+    if ( _vm == 0 )
+        return 0;
+
     JNIEnv *env;
     jint rs = _vm->AttachCurrentThread( &env, NULL );
 

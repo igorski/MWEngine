@@ -335,11 +335,10 @@ public class MWEngineActivity extends Activity
                     // which in turn allows us to calculate the engine latency
 
                     int sequencerPosition = _sequencerController.getStepPosition();
-                    int elapsedSamples    = _sequencerController.getBufferPosition() + aNotificationValue;
-                    int pendingSamples    = _sequencerController.getSamplesPerStep() * ( sequencerPosition + 1 ) - elapsedSamples; // until next position
+                    int elapsedSamples    = _sequencerController.getBufferPosition();
 
                     Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
-                            ", elapsed samples: " + elapsedSamples + ", pending samples until next position: " + pendingSamples );
+                            ", elapsed samples: " + elapsedSamples );
                     break;
             }
         }

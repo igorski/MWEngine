@@ -56,4 +56,6 @@ TEST( AudioEngine, GetAudioEventsAtLoopStart )
     delete audioEvent2;
     delete instrument1;
     delete instrument2;
+
+    Sequencer::playing = false;
 }

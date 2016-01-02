@@ -55,9 +55,9 @@ void SequencerController::prepare( int aBufferSize, int aSampleRate, float aQueu
     // calculate buffers and ranges
     if ( aQueuedTempo > 0 )
     {
-        AudioEngine::queuedTempo = aQueuedTempo;
+        setTempo( aQueuedTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
         AudioEngine::handleTempoUpdate( aQueuedTempo, false );   // just to initialize all buffer sizes
-        setLoopRange( 0, AudioEngine::samples_per_bar, aTimeSigBeatAmount * aTimeSigBeatUnit );
+        setLoopRange( 0, AudioEngine::samples_per_bar - 1, stepsPerBar );
     }
 };
 
@@ -116,7 +116,7 @@ void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, in
         AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
     }
     AudioEngine::min_step_position = round(( aStartPosition / AudioEngine::samples_per_bar ) * aStepsPerBar );
-    AudioEngine::max_step_position = round(((( float ) aEndPosition / ( float )AudioEngine::samples_per_bar ) * aStepsPerBar ) - 1 );
+    AudioEngine::max_step_position = round(((( float ) aEndPosition / ( float ) AudioEngine::samples_per_bar ) * aStepsPerBar ) - 1 );
 
     // keep current sequencer step within the new loop range
     if ( AudioEngine::stepPosition < AudioEngine::min_step_position ||
@@ -141,11 +141,11 @@ void SequencerController::setBufferPosition( int aPosition )
 {
     // keep position within the sequences range (see "setLoopRange")
 
-    if ( aPosition < AudioEngine::min_buffer_position )
+    if ( aPosition < AudioEngine::min_buffer_position ||
+         aPosition > AudioEngine::max_buffer_position )
+    {
         aPosition = AudioEngine::min_buffer_position;
-
-    else if ( aPosition > AudioEngine::max_buffer_position )
-        aPosition = AudioEngine::max_buffer_position;
+    }
 
     AudioEngine::bufferPosition = aPosition;
     AudioEngine::stepPosition   = ( aPosition / AudioEngine::samples_per_bar ) * stepsPerBar;
@@ -181,13 +181,18 @@ int SequencerController::getTimeSigBeatUnit()
 void SequencerController::updateStepsPerBar( int aStepsPerBar )
 {
     stepsPerBar = aStepsPerBar;
-    AudioEngine::beat_subdivision = aStepsPerBar / AudioEngine::time_sig_beat_amount;
+    AudioEngine::max_step_position = ( stepsPerBar * AudioEngine::amount_of_bars ) - 1;
+    AudioEngine::beat_subdivision  = stepsPerBar / AudioEngine::time_sig_beat_amount;
+
+    // keep current sequencer step within the new loop range
+
+    if ( AudioEngine::stepPosition > AudioEngine::max_step_position )
+        AudioEngine::stepPosition = AudioEngine::min_step_position;
 }
 
 void SequencerController::updateMeasures( int aValue, int aStepsPerBar )
 {
     AudioEngine::amount_of_bars      = aValue;
-    AudioEngine::max_step_position   = ( aStepsPerBar * AudioEngine::amount_of_bars ) - 1;
     AudioEngine::max_buffer_position = ( AudioEngine::samples_per_bar * AudioEngine::amount_of_bars ) - 1;
 
     updateStepsPerBar( aStepsPerBar );
@@ -212,7 +217,7 @@ void SequencerController::setNotificationMarker( int aPosition )
 void SequencerController::cacheAudioEventsForMeasure( int aMeasure )
 {
     int startBufferPos = AudioEngine::samples_per_bar * aMeasure;
-    int endBufferPos   = startBufferPos + AudioEngine::samples_per_bar;
+    int endBufferPos   = ( startBufferPos + AudioEngine::samples_per_bar ) - 1;
 
     std::vector<BaseCacheableAudioEvent*>* list = Sequencer::collectCacheableSequencerEvents( startBufferPos, endBufferPos );
     getBulkCacher()->addToQueue( list );
