@@ -109,8 +109,8 @@ namespace AudioEngine
         std::vector<AudioChannel*>* channels = new std::vector<AudioChannel*>();
 
         bool loopStarted = false; // whether the current buffer will exceed the end offset of the loop (read remaining samples from the start)
-        int loopOffset   = 0;     // the offset within the current buffer where we start reading from the current loops start offset
-        int loopAmount   = 0;     // amount of samples we must read from the current loop ranges start offset
+        int loopOffset   = 0;     // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
+        int loopAmount   = 0;     // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
 
         float outbuffer[ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
 
