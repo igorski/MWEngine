@@ -17,7 +17,7 @@ TEST( BaseInstrument, Constructor )
     ASSERT_FALSE( 0 == instrument->getLiveEvents() )
         << "expected instrument to have created an live events vector during construction";
 
-    EXPECT_EQ( sequencer::instruments.size() - 1, instrument->index )
+    EXPECT_EQ( Sequencer::instruments.size() - 1, instrument->index )
         << "expected instrument to have the highest index after addition to the sequencer";
 
     delete instrument;
@@ -27,13 +27,13 @@ TEST( BaseInstrument, SequencerRegistration )
 {
     BaseInstrument* instrument = new BaseInstrument();
 
-    EXPECT_EQ( sequencer::instruments.size() - 1, instrument->index )
+    EXPECT_EQ( Sequencer::instruments.size() - 1, instrument->index )
         << "expected instrument to have the highest index after addition to the sequencer after construction";
 
     bool wasPresent = false;
-    for ( int i = 0; i < sequencer::instruments.size(); i++ )
+    for ( int i = 0; i < Sequencer::instruments.size(); i++ )
     {
-        if ( sequencer::instruments.at( i ) == instrument )
+        if ( Sequencer::instruments.at( i ) == instrument )
             wasPresent = true;
     }
 
@@ -43,12 +43,12 @@ TEST( BaseInstrument, SequencerRegistration )
     instrument->unregisterFromSequencer();
 
     EXPECT_EQ( -1, instrument->index )
-        << "expected instrument to have a negative index indiciating its not added to the sequencer";
+        << "expected instrument to have a negative index indicating its not added to the sequencer";
 
     wasPresent = false;
-    for ( int i = 0; i < sequencer::instruments.size(); i++ )
+    for ( int i = 0; i < Sequencer::instruments.size(); i++ )
     {
-        if ( sequencer::instruments.at( i ) == instrument )
+        if ( Sequencer::instruments.at( i ) == instrument )
             wasPresent = true;
     }
 
@@ -57,13 +57,13 @@ TEST( BaseInstrument, SequencerRegistration )
 
     instrument->registerInSequencer();
 
-    EXPECT_EQ( sequencer::instruments.size() - 1, instrument->index )
+    EXPECT_EQ( Sequencer::instruments.size() - 1, instrument->index )
         << "expected instrument to have the highest index after addition to the sequencer";
 
     wasPresent = false;
-    for ( int i = 0; i < sequencer::instruments.size(); i++ )
+    for ( int i = 0; i < Sequencer::instruments.size(); i++ )
     {
-        if ( sequencer::instruments.at( i ) == instrument )
+        if ( Sequencer::instruments.at( i ) == instrument )
             wasPresent = true;
     }
 

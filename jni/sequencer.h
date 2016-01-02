@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -38,12 +38,18 @@
  * song position / length / tempo manipulations, for these purposes
  * you should be using the methods exposed by the SequencerController instead
  */
-namespace sequencer
+namespace Sequencer
 {
     extern std::vector<BaseInstrument*> instruments;
+    extern bool playing; // whether the sequencer is running or paused
+
+    extern int registerInstrument   ( BaseInstrument* instrument );
+    extern bool unregisterInstrument( BaseInstrument* instrument );
+
 
     // collect all audio events which should be rendered at the given buffer range
-    extern std::vector<AudioChannel*> getAudioEvents( std::vector<AudioChannel*> channels, int bufferPosition, int bufferEnd, bool addLiveInstruments );
+    extern bool getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
+                                int bufferSize, bool addLiveInstruments, bool flushChannels );
 
     extern void updateEvents();
     extern void clearEvents();

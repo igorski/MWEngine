@@ -59,6 +59,7 @@ utilities/tablepool.cpp \
 sequencer.cpp \
 sequencercontroller.cpp \
 wavetable.cpp \
+utilities/fastmath.cpp \
 utilities/wavereader.cpp \
 utilities/wavewriter.cpp \
 messaging/notifier.cpp \

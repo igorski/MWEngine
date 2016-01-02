@@ -36,7 +36,10 @@ class AudioChannel
         AudioChannel( float aMixVolume, int aMaxBufferPosition );
         ~AudioChannel();
 
-        // queried and modified by sequencer
+        // queried and modified by Sequencer (these are temporary
+        // vectors used during rendering, the actual events belong
+        // to the events BaseInstrument)
+
         std::vector<BaseAudioEvent*> audioEvents;
         std::vector<BaseAudioEvent*> liveEvents;
 

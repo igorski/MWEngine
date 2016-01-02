@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -48,7 +48,7 @@ namespace AudioEngine
 
     extern int samples_per_beat;      // the amount of samples necessary for a single beat at the current tempo and sample rate
     extern int samples_per_bar;       // the amount of samples for a full bar at the current tempo and sample rate
-    extern int samples_per_step;      // the amount of samples per sub division (e.g. 16th note)
+    extern float samples_per_step;    // the amount of samples per sub division (e.g. 16th note)
 
     extern int amount_of_bars;         // the amount of measures in the current sequencer
     extern int beat_subdivision;       // the amount of sub divisions the engine recognises for a beat (for instance a value of 4 equals sixteenth notes in 4/4 time)
@@ -56,8 +56,7 @@ namespace AudioEngine
     extern int max_buffer_position;    // the maximum sample offset in the current loop range
     extern int marked_buffer_position; // the buffer position that should launch a notification when playback exceeds this position
     extern int min_step_position;      // the lowest step in the current sequence
-    extern int max_step_position;      // the maximum step in the current sequence (e.g. 16)
-    extern bool playing;               // whether the engine is playing or paused
+    extern int max_step_position;      // the maximum step in the current sequence (e.g. 15 for 16 step sequencer - step starts at 0.)
     extern bool recordOutput;          // whether to record rendered output
     extern bool haltRecording;         // whether to stop the recording upon next iteration
     extern bool bouncing;              // whether bouncing audio (i.e. rendering in inaudible offline mode without thread lock)

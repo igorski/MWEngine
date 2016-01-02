@@ -145,8 +145,8 @@ void BaseSynthEvent::calculateBuffers()
     if ( isSequenced )
     {
         oldLength     = _sampleLength;
-        _sampleLength = ( int )( length * ( float ) AudioEngine::samples_per_step );
-        _sampleStart  = position * AudioEngine::samples_per_step;
+        _sampleLength = ( int )( length * AudioEngine::samples_per_step );
+        _sampleStart  = position * ( int ) AudioEngine::samples_per_step;
         _sampleEnd    = _sampleStart + _sampleLength;
     }
     else {

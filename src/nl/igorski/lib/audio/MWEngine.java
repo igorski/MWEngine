@@ -416,7 +416,7 @@ public final class MWEngine extends Thread
         {
             INSTANCE._initialCreation = false;
             INSTANCE.getSequencerController().setLoopRange(
-                    0, INSTANCE.getSequencerController().getSamplesPerBar()
+                    0, INSTANCE.getSequencerController().getSamplesPerBar() - 1
             );
         }
     }

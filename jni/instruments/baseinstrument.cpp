@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -110,30 +110,12 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
 void BaseInstrument::registerInSequencer()
 {
-    bool wasPresent = false; // prevent double addition
-
-    for ( int i = 0; i < sequencer::instruments.size(); i++ )
-    {
-        if ( sequencer::instruments.at( i ) == this )
-            wasPresent = true;
-    }
-
-    if ( !wasPresent ) {
-        sequencer::instruments.push_back( this );
-        index = sequencer::instruments.size() - 1; // the index this instrument is registered at in the sequencer
-    }
+    index = Sequencer::registerInstrument( this );
 }
 
 void BaseInstrument::unregisterFromSequencer()
 {
-    for ( int i = 0; i < sequencer::instruments.size(); i++ )
-    {
-        if ( sequencer::instruments.at( i ) == this )
-        {
-            sequencer::instruments.erase( sequencer::instruments.begin() + i );
-            break;
-        }
-    }
+    Sequencer::unregisterInstrument( this );
     index = -1;
 }
 

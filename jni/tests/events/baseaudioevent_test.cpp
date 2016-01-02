@@ -268,7 +268,8 @@ TEST( BaseAudioEvent, SampleProperties )
 
 TEST( BaseAudioEvent, PositionEvent )
 {
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+    BaseAudioEvent* audioEvent   = new BaseAudioEvent();
+    AudioEngine::samples_per_bar = randomInt( 11025, 88200 );
 
     int sampleLength = randomInt( 24, 8192 );
     audioEvent->setSampleLength( sampleLength );
@@ -279,7 +280,8 @@ TEST( BaseAudioEvent, PositionEvent )
 
     audioEvent->positionEvent( startMeasure, subdivisions, offset );
 
-    int expectedSampleStart = startMeasure * AudioEngine::samples_per_bar;
+    int expectedSampleStart = ( startMeasure * AudioEngine::samples_per_bar ) +
+                              ( offset * AudioEngine::samples_per_bar / subdivisions );
     int expectedSampleEnd   = expectedSampleStart + sampleLength - 1;
 
     EXPECT_EQ( expectedSampleStart, audioEvent->getSampleStart() );

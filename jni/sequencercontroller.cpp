@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,7 +32,10 @@
 
 SequencerController::SequencerController()
 {
-    stepsPerBar = 16; // by default, function as a sixteen step sequencer
+    // by default, function as a sixteen step sequencer
+
+    stepsPerBar = 16;
+    AudioEngine::max_step_position = stepsPerBar - 1;
 };
 
 SequencerController::~SequencerController()
@@ -85,7 +88,7 @@ void SequencerController::setVolume( float aVolume )
 
 void SequencerController::setPlaying( bool aIsPlaying )
 {
-    AudioEngine::playing = aIsPlaying;
+    Sequencer::playing = aIsPlaying;
 }
 
 void SequencerController::setLoopRange( int aStartPosition, int aEndPosition )
@@ -107,17 +110,17 @@ void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, in
     AudioEngine::max_buffer_position = aEndPosition;
 
     // keep current buffer read pointer within the new loop range
-    if ( AudioEngine::bufferPosition <  AudioEngine::min_buffer_position ||
-         AudioEngine::bufferPosition >= AudioEngine::max_buffer_position )
+    if ( AudioEngine::bufferPosition < AudioEngine::min_buffer_position ||
+         AudioEngine::bufferPosition > AudioEngine::max_buffer_position )
     {
         AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
     }
-    AudioEngine::min_step_position = ( aStartPosition / AudioEngine::samples_per_bar ) * aStepsPerBar;
-    AudioEngine::max_step_position = ( aEndPosition   / AudioEngine::samples_per_bar ) * aStepsPerBar;
+    AudioEngine::min_step_position = round(( aStartPosition / AudioEngine::samples_per_bar ) * aStepsPerBar );
+    AudioEngine::max_step_position = round(((( float ) aEndPosition / ( float )AudioEngine::samples_per_bar ) * aStepsPerBar ) - 1 );
 
     // keep current sequencer step within the new loop range
-    if ( AudioEngine::stepPosition <  AudioEngine::min_step_position ||
-         AudioEngine::stepPosition >= AudioEngine::max_step_position )
+    if ( AudioEngine::stepPosition < AudioEngine::min_step_position ||
+         AudioEngine::stepPosition > AudioEngine::max_step_position )
     {
         AudioEngine::stepPosition = AudioEngine::min_step_position;
     }
@@ -157,7 +160,7 @@ int SequencerController::getSamplesPerBeat()
 
 int SequencerController::getSamplesPerStep()
 {
-    return AudioEngine::samples_per_step;
+    return ( int ) AudioEngine::samples_per_step;
 }
 
 int SequencerController::getSamplesPerBar()
@@ -184,8 +187,8 @@ void SequencerController::updateStepsPerBar( int aStepsPerBar )
 void SequencerController::updateMeasures( int aValue, int aStepsPerBar )
 {
     AudioEngine::amount_of_bars      = aValue;
-    AudioEngine::max_step_position   = aStepsPerBar * AudioEngine::amount_of_bars;
-    AudioEngine::max_buffer_position = AudioEngine::samples_per_bar * AudioEngine::amount_of_bars;
+    AudioEngine::max_step_position   = ( aStepsPerBar * AudioEngine::amount_of_bars ) - 1;
+    AudioEngine::max_buffer_position = ( AudioEngine::samples_per_bar * AudioEngine::amount_of_bars ) - 1;
 
     updateStepsPerBar( aStepsPerBar );
 }
@@ -211,7 +214,7 @@ void SequencerController::cacheAudioEventsForMeasure( int aMeasure )
     int startBufferPos = AudioEngine::samples_per_bar * aMeasure;
     int endBufferPos   = startBufferPos + AudioEngine::samples_per_bar;
 
-    std::vector<BaseCacheableAudioEvent*>* list = sequencer::collectCacheableSequencerEvents( startBufferPos, endBufferPos );
+    std::vector<BaseCacheableAudioEvent*>* list = Sequencer::collectCacheableSequencerEvents( startBufferPos, endBufferPos );
     getBulkCacher()->addToQueue( list );
 
     delete list; // free memory
@@ -222,7 +225,7 @@ void SequencerController::cacheAudioEventsForMeasure( int aMeasure )
 
 BulkCacher* SequencerController::getBulkCacher()
 {
-    return sequencer::bulkCacher;
+    return Sequencer::bulkCacher;
 }
 
 /**
@@ -265,7 +268,7 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
     }
     else if ( wasRecording )
     {
-        if ( !AudioEngine::playing )
+        if ( !Sequencer::playing )
         {
             DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
         }
@@ -303,7 +306,7 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
     }
     else if ( wasRecording )
     {
-        if ( !AudioEngine::playing )
+        if ( !Sequencer::playing )
         {
             DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
         }

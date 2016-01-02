@@ -46,7 +46,7 @@ class BaseAudioEvent
          *     bufferSize of given outputBuffer will be greater or equal to the maxBufferPosition, meaning the
          *     sequencer will also require a render for the first samples at minBufferPosition (the amount of
          *     bufferSize samples left after having rendered the last samples up until maxBufferPosition)
-         * loopOffset describes at which sample position the loop should read from (e.g. the amout of samples
+         * loopOffset describes at which sample position the loop should read from (e.g. the amount of samples
          *     to render at the minBufferPosition)
          * useChannelRange whether the channel we're mixing into has its own range
          */
