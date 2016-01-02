@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,18 +25,52 @@
 #include <utilities/utils.h>
 #include <vector>
 
-namespace sequencer
+namespace Sequencer
 {
+    bool playing = false;
     std::vector<BaseInstrument*> instruments;
     BulkCacher* bulkCacher = new BulkCacher( true );
 
     /* public methods */
 
-    std::vector<AudioChannel*> getAudioEvents( std::vector<AudioChannel*> channels, int bufferPosition,
-                                               int bufferEnd, bool addLiveInstruments )
+    int registerInstrument( BaseInstrument* instrument )
     {
-        // clear previous channel contents (note we don't delete the channels anywhere as we re-use them)
-        channels.clear();
+        int index       = -1;
+        bool wasPresent = false; // prevent double addition
+
+        for ( int i = 0; i < instruments.size(); i++ )
+        {
+            if ( instruments.at( i ) == instrument )
+                wasPresent = true;
+        }
+
+        if ( !wasPresent ) {
+            instruments.push_back( instrument );
+            index = instruments.size() - 1;
+        }
+        return index; // the index this instrument is registered at
+    }
+
+    bool unregisterInstrument( BaseInstrument* instrument )
+    {
+        for ( int i = 0; i < instruments.size(); i++ )
+        {
+            if ( instruments.at( i ) == instrument )
+            {
+                instruments.erase( instruments.begin() + i );
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
+                         int bufferSize, bool addLiveInstruments, bool flushChannels )
+    {
+        channels->clear();
+
+        int bufferEnd    = bufferPosition + ( bufferSize - 1 );          // the highest SampleEnd value we'll query
+        bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
 
         int i, l;
 
@@ -47,21 +81,24 @@ namespace sequencer
             BaseInstrument* instrument      = instruments.at( i );
             AudioChannel* instrumentChannel = instrument->audioChannel;
 
-            instrumentChannel->reset();
+            // clear previous channel contents when requested
+            if ( flushChannels )
+                instrumentChannel->reset();
+
             instrumentChannel->mixVolume = instrument->volume;
 
             if ( !instrumentChannel->muted )
             {
-                if ( AudioEngine::playing )
+                if ( playing )
                     collectSequencedEvents( instrument, bufferPosition, bufferEnd );
 
                 if ( addLiveInstruments && instrument->hasLiveEvents() )
                     collectLiveEvents( instrument );
 
-                channels.push_back( instrumentChannel );
+                channels->push_back( instrumentChannel );
             }
         }
-        return channels;
+        return loopStarted;
     }
 
     void updateEvents()

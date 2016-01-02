@@ -66,7 +66,7 @@ void BaseCacheableAudioEvent::cache( bool doCallback )
     // custom  derived class cache implementation here
 
     if ( doCallback )
-        sequencer::bulkCacher->cacheQueue();
+        Sequencer::bulkCacher->cacheQueue();
 
     _caching = false;
 }

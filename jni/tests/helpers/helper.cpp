@@ -163,5 +163,28 @@ void deleteAudioEvent( BaseAudioEvent* audioEvent )
     // dispose Instruments (as they shouldn't!), do it here
     BaseInstrument* instrument = audioEvent->getInstrument();
     delete audioEvent;
-   // delete instrument;
+
+    if ( instrument != 0 )
+        instrument->unregisterFromSequencer();
+//    delete instrument; // triggers segmentation fault??
+}
+
+// create a BaseAudioEvent that is enqueued into the sequencer, you'll
+// likely want to delete both this event and its instrument manually
+
+BaseAudioEvent* enqueuedAudioEvent( BaseInstrument* instrument, int sampleLength, int measureNum,
+                                    int subdivision, int offset )
+{
+    BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
+    audioEvent->setSampleLength( sampleLength );
+    audioEvent->positionEvent  ( measureNum, subdivision, offset );
+    audioEvent->addToSequencer();
+
+    return audioEvent;
+}
+
+void dumpEventProperties( BaseAudioEvent* audioEvent )
+{
+    std::cout << "\n AudioEvent start: " << audioEvent->getSampleStart() <<
+        " end: " << audioEvent->getSampleEnd() << " (length: " << audioEvent->getSampleLength() << ")";
 }
