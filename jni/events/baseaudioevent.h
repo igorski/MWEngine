@@ -43,11 +43,11 @@ class BaseAudioEvent
          * minBufferPosition describes the minimum buffer position of the sequencers current loop range
          * maxBufferPosition describes the maximum buffer position of the sequencers current loop range
          * loopStarted describes whether the sequencer is about to loop (e.g. the current bufferPos + the
-         *     bufferSize of given outputBuffer will be greater or equal to the maxBufferPosition, meaning the
-         *     sequencer will also require a render for the first samples at minBufferPosition (the amount of
-         *     bufferSize samples left after having rendered the last samples up until maxBufferPosition)
-         * loopOffset describes at which sample position the loop should read from (e.g. the amount of samples
-         *     to render at the minBufferPosition)
+         *     bufferSize of given outputBuffer will be greater than the max_buffer_position, meaning the
+         *     sequencer will also require a render for the first samples at min_buffer_position (the amount of
+         *     bufferSize samples left after having rendered the last samples up until max_buffer_position)
+         * loopOffset describes at which sample position the loop is started so we can calculate the amount of
+         *     samples to render from the min_buffer_position)
          * useChannelRange whether the channel we're mixing into has its own range
          */
         virtual void mixBuffer( AudioBuffer* outputBuffer, int bufferPosition, int minBufferPosition,
