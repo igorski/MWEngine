@@ -32,7 +32,6 @@
 #include <utilities/diskwriter.h>
 #include <utilities/debug.h>
 #include <vector>
-#include <events/synthevent.h> // QQQ TODO remove
 
 #ifdef USE_JNI
 
@@ -106,9 +105,8 @@ namespace AudioEngine
         int bufferSize, i, c, ci;
         bufferSize         = AudioEngineProps::BUFFER_SIZE;
         int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
-        bool isMono        = outputChannels == 1;
-        std::vector<AudioChannel*>* channels  = new std::vector<AudioChannel*>();
-        std::vector<AudioChannel*>* channels2 = new std::vector<AudioChannel*>(); // used when loop starts for gathering events at the start range
+        bool isMono        = ( outputChannels == 1 );
+        std::vector<AudioChannel*>* channels = new std::vector<AudioChannel*>();
 
         bool loopStarted = false; // whether the current buffer will exceed the end offset of the loop (read remaining samples from the start)
         int loopOffset   = 0;     // the offset within the current buffer where we start reading from the current loops start offset
@@ -163,39 +161,7 @@ namespace AudioEngine
                 }
                 else
                 {
-                                    for ( i = 0; i < channels->at(0)->audioEvents.size(); ++i ) {
-                                        BaseAudioEvent* event = channels->at(0)->audioEvents.at(i);
-                                        Debug::log("evt1 ss: %d", event->getSampleStart());
-                                        Debug::log("evt1 se: %d", event->getSampleEnd());
-                                        Debug::log("evt1 sl: %d", event->getSampleLength());
-                                    }
-
-                    Sequencer::getAudioEvents( channels2, min_buffer_position, loopAmount, false, false );
-
-                    Debug::log( "channel 1 instrument 1 events amount %d", channels->at(0)->audioEvents.size() );
-                    Debug::log( "channel 1 instrument 2 events amount %d", channels->at(1)->audioEvents.size() );
-                    Debug::log( "channel 2 instrument 1 events amount %d", channels2->at(0)->audioEvents.size());
-                    Debug::log( "channel 2 instrument 2 events amount %d", channels2->at(1)->audioEvents.size());
-                    Debug::log(" retrieved from %d",min_buffer_position);
-                    Debug::log(" retrieved for length %d",loopAmount);
-
-                    for ( i = 0; i < channels->at(0)->audioEvents.size(); ++i ) {
-                        BaseAudioEvent* event = channels->at(0)->audioEvents.at(i);
-                        Debug::log("evt1 ss: %d", event->getSampleStart());
-                        Debug::log("evt1 se: %d", event->getSampleEnd());
-                        Debug::log("evt1 sl: %d", event->getSampleLength());
-                    }
-                    for ( i = 0; i < channels2->at(0)->audioEvents.size(); ++i ) {
-                        BaseAudioEvent* event = channels2->at(0)->audioEvents.at(i);
-                        Debug::log("evt2 ss: %d", event->getSampleStart());
-                        Debug::log("evt2 se: %d", event->getSampleEnd());
-                        Debug::log("evt2 sl: %d", event->getSampleLength());
-                    }
-
-                    // er? the channels are magically merged by above invocation..., performing the insert below adds the same events TWICE*POP*!?!?
-                    //channels->insert( channels->end(), channels2->begin(), channels2->end() ); // merge the channels into one
-
-                    channels2->clear();  // would clear on next "getAudioEvents"-query... but why wait ?
+                    Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
                 }
             }
 
@@ -411,7 +377,6 @@ namespace AudioEngine
 
         // clear heap memory allocated before thread loop
         delete channels;
-        delete channels2;
         delete inbuffer;
 #ifdef ALLOW_RECORDING
         delete recbuffer;

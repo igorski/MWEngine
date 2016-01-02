@@ -216,7 +216,8 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     ASSERT_FALSE( found )
         << "expected event not to be present in the live event list after removal";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseAudioEvent, SampleProperties )
@@ -472,5 +473,6 @@ TEST( BaseAudioEvent, Instrument )
     ASSERT_TRUE( instrument == audioEvent->getInstrument() )
         << "expected AudioEvent to return the set Instrument";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }

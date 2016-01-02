@@ -362,7 +362,7 @@ TEST( Sequencer, GetEventsFlushChannel )
 
     ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 0 ) == audioEvent2 )
         << "expected to have retrieved the second AudioEvent";
-    /*
+
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, false );
 
     EXPECT_EQ( 2, channels->at( 0 )->audioEvents.size() )
@@ -371,9 +371,24 @@ TEST( Sequencer, GetEventsFlushChannel )
     ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 0 ) == audioEvent2 )
         << "expected to have retrieved the second AudioEvent";
 
-    ASSERT_TRUE( channels->at( 1 )->audioEvents.at( 0 ) == audioEvent2 )
-        << "expected to have retrieved the second AudioEvent by merging";
-    */
+    ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 1 ) == audioEvent1 )
+        << "expected to have retrieved the first AudioEvent by merging new request into non flushed channel";
+
+    // add audioEvent1 to the non flushed channel
+    Sequencer::getAudioEvents( channels, 0, bufferSize, true, false );
+
+    EXPECT_EQ( 3, channels->at( 0 )->audioEvents.size() )
+        << "expected to have collected 3 events for AudioChannel 1 (flushing was disabled)";
+
+    ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 0 ) == audioEvent2 )
+        << "expected to have retrieved the second AudioEvent in previous request";
+
+    ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 1 ) == audioEvent1 )
+        << "expected to have retrieved the first AudioEvent in previous request";
+
+    ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 2 ) == audioEvent1 )
+        << "expected to have retrieved the first AudioEvent by merging new request into non flushed channel";
+
     // free allocated memory
 
     delete channels;
