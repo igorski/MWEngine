@@ -1,15 +1,33 @@
 #include "../audioengine.h"
+#include "../sequencer.h"
+#include "../sequencercontroller.h"
 
 TEST( AudioEngine, Start )
 {
-    AudioEngineProps::SAMPLE_RATE = 44100;
-    AudioEngineProps::BUFFER_SIZE = 512;
+    AudioEngine::test_program = 0; // help mocked OpenSL IO identify which test is running
+
+    // prepare engine environment
+
+    SequencerController* controller = new SequencerController();
+    controller->prepare( 48000, 240, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
+
+    AudioEngine::engine_started = false;
+
+    ASSERT_FALSE( AudioEngine::engine_started )
+        << "expected engine not to have started yet";
 
     AudioEngine::start();
+
+    EXPECT_EQ( 1, AudioEngine::test_program )
+        << "expected program to have incremented";
+
+    ASSERT_TRUE( AudioEngine::engine_started )
+        << "expected engine to have started";
+
+    delete controller;
 }
 
-// TODO : write the thing
-
+/*
 TEST( AudioEngine, GetAudioEventsAtLoopStart )
 {
     // setup sequencer
@@ -42,7 +60,7 @@ TEST( AudioEngine, GetAudioEventsAtLoopStart )
     // ( 11025 - (( 88199 - 88100 ) + 1 )) == 10925 samples to read from start (which is min_buffer_position == 0 )
 
     int startOffset = 88100;
-    Sequencer::getAudioEvents( channels, startOffset, bufferSize, true );
+    Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
 
     EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
         << "expected to have collected 1 event for AudioChannel 1";
@@ -59,3 +77,4 @@ TEST( AudioEngine, GetAudioEventsAtLoopStart )
 
     Sequencer::playing = false;
 }
+*/

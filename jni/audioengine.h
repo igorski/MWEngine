@@ -91,5 +91,19 @@ namespace AudioEngine
     void handleTempoUpdate            ( float aQueuedTempo, bool broadcastUpdate );
     void handleSequencerPositionUpdate( int bufferOffset );
     bool writeChannelCache            ( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos );
+
+    /**
+     * unit test related
+
+     * these variables aren't declared by the .cpp unless MOCK_TESTING is defined
+
+     * as the unit tests use the MWEngine as a shared library we need to store
+     * engine status results inside the engine itself, as the mock_opensl_io.h
+     * driver (which hijacks the opensl_io.h methods) will be built by both libraries
+     * this would imply the mock_opensl_io would not share memory space
+     */
+    extern bool engine_started;
+    extern int test_program;
+    extern float mock_opensl_time;
 }
 #endif

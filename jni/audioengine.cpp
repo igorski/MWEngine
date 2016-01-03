@@ -25,13 +25,24 @@
 #include "audiochannel.h"
 #include "processingchain.h"
 #include "sequencer.h"
-#include "opensl_io.h"
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
 #include <utilities/diskwriter.h>
 #include <utilities/debug.h>
 #include <vector>
+
+// whether to include the OpenSL driver or the mocked driver (unit test mode)
+
+#ifdef MOCK_ENGINE
+
+#include "tests/helpers/mock_opensl_io.h"
+#else
+#include "opensl_io.h"
+
+#endif
+
+// whether to include JNI classes to add the Java bridge
 
 #ifdef USE_JNI
 
@@ -477,6 +488,17 @@ namespace AudioEngine
 
         return true; // indicates we have written the buffer to the cache
     }
+
+#ifdef MOCK_ENGINE
+
+    /* unit test related */
+
+    bool engine_started    = false;
+    int test_program       = 0;
+    float mock_opensl_time = 0.0f;
+
+#endif
+
 }
 
 /**
