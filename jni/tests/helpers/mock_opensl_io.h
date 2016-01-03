@@ -13,6 +13,5 @@
 #define android_AudioIn( a, b, c ) mock_android_AudioIn( a, b, c );
 #define android_AudioOut( a, b, c ) mock_android_AudioOut( a, b, c );
 #define android_GetTimestamp( a ) mock_android_GetTimestamp( a );
-extern float mockOpenSL_time;
 
 #endif

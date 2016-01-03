@@ -1,18 +1,17 @@
-#include "../../opensl_io.h"
+#include "mock_opensl_io.h"
 #include "../../utilities/debug.h"
-
-float mockOpenSL_time = 0.0f;
 
 OPENSL_STREAM* mock_android_OpenAudioDevice( int sr, int inchannels, int outchannels, int bufferframes )
 {
     Debug::log( "mocked device opening" );
 
-    OPENSL_STREAM *p;
-    p = (OPENSL_STREAM *) calloc(sizeof(OPENSL_STREAM),1);
+    OPENSL_STREAM *p = ( OPENSL_STREAM* ) calloc( sizeof( OPENSL_STREAM ), 1 );
 
-    p->inchannels = inchannels;
+    p->inchannels  = inchannels;
     p->outchannels = outchannels;
     p->sr = sr;
+
+    AudioEngine::engine_started = true;
 
     return p;
 }
@@ -20,24 +19,36 @@ OPENSL_STREAM* mock_android_OpenAudioDevice( int sr, int inchannels, int outchan
 void mock_android_CloseAudioDevice( OPENSL_STREAM *p )
 {
     Debug::log( "mocked device closing" );
+
+    if ( p != 0 )
+        free( p );
 }
 
 int mock_android_AudioIn( OPENSL_STREAM *p, float *buffer, int size )
 {
-    //mockOpenSL_time += (float) size/(p->sr*p->inchannels);
+    AudioEngine::mock_opensl_time += ( float ) size / ( p->sr * p->inchannels );
+
     return size;
 }
 
 int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 {
-    Debug::log( "audio out" );
+    // AudioEngine thread will halt all unit test execution
+    // android_AudioOut is called upon each iteration, here
+    // we can check whether we can halt the thread
 
-    AudioEngine::stop();
-
+    switch ( AudioEngine::test_program )
+    {
+        case 0:
+            Debug::log( "stopping mocked engine" );
+            ++AudioEngine::test_program;    // advance to next test
+            AudioEngine::stop();
+            break;
+    }
     return size;
 }
 
 float mock_android_GetTimestamp( OPENSL_STREAM *p )
 {
-    return mockOpenSL_time;
+    return AudioEngine::mock_opensl_time;
 }

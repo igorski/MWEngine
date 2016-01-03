@@ -1,17 +1,33 @@
 #include "../audioengine.h"
 #include "../sequencer.h"
+#include "../sequencercontroller.h"
 
 TEST( AudioEngine, Start )
 {
-    AudioEngineProps::SAMPLE_RATE = 48000;
-    AudioEngineProps::BUFFER_SIZE = 240;
+    AudioEngine::test_program = 0; // help mocked OpenSL IO identify which test is running
+
+    // prepare engine environment
+
+    SequencerController* controller = new SequencerController();
+    controller->prepare( 48000, 240, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
+
+    AudioEngine::engine_started = false;
+
+    ASSERT_FALSE( AudioEngine::engine_started )
+        << "expected engine not to have started yet";
 
     AudioEngine::start();
-    AudioEngine::stop();
+
+    EXPECT_EQ( 1, AudioEngine::test_program )
+        << "expected program to have incremented";
+
+    ASSERT_TRUE( AudioEngine::engine_started )
+        << "expected engine to have started";
+
+    delete controller;
 }
 
-// TODO : write the thing
-
+/*
 TEST( AudioEngine, GetAudioEventsAtLoopStart )
 {
     // setup sequencer
@@ -61,3 +77,4 @@ TEST( AudioEngine, GetAudioEventsAtLoopStart )
 
     Sequencer::playing = false;
 }
+*/

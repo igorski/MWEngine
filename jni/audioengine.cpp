@@ -488,6 +488,17 @@ namespace AudioEngine
 
         return true; // indicates we have written the buffer to the cache
     }
+
+#ifdef MOCK_ENGINE
+
+    /* unit test related */
+
+    bool engine_started    = false;
+    int test_program       = 0;
+    float mock_opensl_time = 0.0f;
+
+#endif
+
 }
 
 /**
