@@ -32,11 +32,17 @@
 #include <utilities/debug.h>
 #include <vector>
 
+// whether to include the OpenSL driver or the mocked driver (unit test mode)
+
 #ifdef MOCK_ENGINE
+
 #include "tests/helpers/mock_opensl_io.h"
 #else
 #include "opensl_io.h"
+
 #endif
+
+// whether to include JNI classes to add the Java bridge
 
 #ifdef USE_JNI
 
