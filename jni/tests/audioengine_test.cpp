@@ -1,11 +1,13 @@
 #include "../audioengine.h"
+#include "../sequencer.h"
 
 TEST( AudioEngine, Start )
 {
-    AudioEngineProps::SAMPLE_RATE = 44100;
-    AudioEngineProps::BUFFER_SIZE = 512;
+    AudioEngineProps::SAMPLE_RATE = 48000;
+    AudioEngineProps::BUFFER_SIZE = 240;
 
     AudioEngine::start();
+    AudioEngine::stop();
 }
 
 // TODO : write the thing
@@ -42,7 +44,7 @@ TEST( AudioEngine, GetAudioEventsAtLoopStart )
     // ( 11025 - (( 88199 - 88100 ) + 1 )) == 10925 samples to read from start (which is min_buffer_position == 0 )
 
     int startOffset = 88100;
-    Sequencer::getAudioEvents( channels, startOffset, bufferSize, true );
+    Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
 
     EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
         << "expected to have collected 1 event for AudioChannel 1";

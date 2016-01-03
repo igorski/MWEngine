@@ -1,14 +1,11 @@
-#define MOCK_ENGINE
-
 #include <gtest/gtest.h>
 #include <ctime>
 #include <cstdlib>
-#include "helpers/mock_opensl.cpp"
 #include "helpers/helper.cpp"
 
 #include "audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
-//#include "audioengine_test.cpp"
+#include "audioengine_test.cpp"
 #include "processingchain_test.cpp"
 #include "ringbuffer_test.cpp"
 #include "sequencer_test.cpp"

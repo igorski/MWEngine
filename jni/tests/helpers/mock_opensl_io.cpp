@@ -1,16 +1,25 @@
-#include "mock_opensl.h"
+#include "../../opensl_io.h"
+#include "../../utilities/debug.h"
 
 float mockOpenSL_time = 0.0f;
 
 OPENSL_STREAM* mock_android_OpenAudioDevice( int sr, int inchannels, int outchannels, int bufferframes )
 {
-    std::cout << "mocked device opening";
-    return 0;
+    Debug::log( "mocked device opening" );
+
+    OPENSL_STREAM *p;
+    p = (OPENSL_STREAM *) calloc(sizeof(OPENSL_STREAM),1);
+
+    p->inchannels = inchannels;
+    p->outchannels = outchannels;
+    p->sr = sr;
+
+    return p;
 }
 
 void mock_android_CloseAudioDevice( OPENSL_STREAM *p )
 {
-    std::cout << "mocked device closing";
+    Debug::log( "mocked device closing" );
 }
 
 int mock_android_AudioIn( OPENSL_STREAM *p, float *buffer, int size )
@@ -21,6 +30,10 @@ int mock_android_AudioIn( OPENSL_STREAM *p, float *buffer, int size )
 
 int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 {
+    Debug::log( "audio out" );
+
+    AudioEngine::stop();
+
     return size;
 }
 

@@ -25,13 +25,18 @@
 #include "audiochannel.h"
 #include "processingchain.h"
 #include "sequencer.h"
-#include "opensl_io.h"
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
 #include <utilities/diskwriter.h>
 #include <utilities/debug.h>
 #include <vector>
+
+#ifdef MOCK_ENGINE
+#include "tests/helpers/mock_opensl_io.h"
+#else
+#include "opensl_io.h"
+#endif
 
 #ifdef USE_JNI
 

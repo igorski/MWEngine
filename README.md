@@ -57,11 +57,14 @@ Note: _adb_ must be specified in your global path settings.
 
 To repeat the tests you can provide an optional numerical argument to the shell script, for instance :
 
-    ./sh test.sh 1000
+    ./sh test.sh 500
 
-will repeat all tests 1,000 times or break on the first failed test. This can be a convenient method to hunt down a
+will repeat all tests 500 times or break on the first failed test. This can be a convenient method to hunt down a
 unit test that fails at random.
 
+*Note on unit testing:* To build the application for unit testing observe that there are separate makefiles for the
+unit test mode (see suffix _test_ for the .mk files). In short these files set the compiler preprocesser MOCK_ENGINE which
+replaces the OpenSL driver with a mocked driver so the engine can be unit tested "offline".
 
 ### Documentation
 

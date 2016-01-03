@@ -4,7 +4,7 @@ echo ---------------------------------------
 echo Building MWEngine \(might take a moment\)
 echo ---------------------------------------
 
-( exec "./build.sh" ) > /dev/null
+( exec "./build.sh" "NDK_APPLICATION_MK=jni/Application_Test.mk" ) > /dev/null
 BUILD_SUCCESS=$?
 
 if [ $BUILD_SUCCESS -eq 0 ]; then
@@ -13,7 +13,7 @@ if [ $BUILD_SUCCESS -eq 0 ]; then
     echo Running MWEngine unit tests
     echo ---------------------------
 
-    adb push libs/armeabi/libmwengine.so /data/local/tmp/
+    adb push libs/armeabi/libmwengine_test.so /data/local/tmp/
     adb push libs/armeabi/mwengine_unittest /data/local/tmp/
     adb shell chmod 775 /data/local/tmp/mwengine_unittest
 
