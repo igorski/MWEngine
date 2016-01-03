@@ -1,6 +1,8 @@
 #include "mock_opensl_io.h"
 #include "../../utilities/debug.h"
 
+int lastIteration = -1;
+
 OPENSL_STREAM* mock_android_OpenAudioDevice( int sr, int inchannels, int outchannels, int bufferframes )
 {
     Debug::log( "mocked device opening" );
@@ -51,9 +53,20 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
             if ( Sequencer::playing )
             {
+                // test 1. ensure all buffer iterations are calculated accordingly
+
                 int currentIteration = AudioEngine::render_iterations;
 
+                if ( currentIteration != ( lastIteration + 1 )) {
+                    Debug::log("HOUSTON WE HAVE ISSUE %d vs. %d", currentIteration, ( lastIteration + 1 ));
+                }
+                if ( AudioEngine::bufferPosition != (( currentIteration + 1 ) * AudioEngineProps::BUFFER_SIZE )) {
+                    Debug::log("HOUSTON WE REALLY HAVE ISSUE %d %d", AudioEngine::bufferPosition,(( currentIteration + 1 ) * AudioEngineProps::BUFFER_SIZE ));
+                }
+
                 Debug::logToFile( "/sdcard/log.txt", "---- receival %d of max. %d", currentIteration, ( AudioEngine::samples_per_bar / AudioEngineProps::BUFFER_SIZE ) );
+
+                // test 2. evaluate buffer contents
 
                 for ( int i = 0; i < size; ++i ) {
                     // TODO : separate between mono/stereo buffer (see global.h) !!
@@ -73,6 +86,7 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                     Debug::logToFile( "/sdcard/log.txt", "---- stopping engine" );
                     AudioEngine::stop();
                 }
+                lastIteration = currentIteration;
                 Debug::logToFile( "/sdcard/log.txt", "--- end receival %d", currentIteration );
             }
             break;

@@ -136,7 +136,6 @@ TEST( AudioEngine, Output )
     // start the engine
 
     controller->setPlaying( true );
-
     AudioEngine::start();
 
     // evaluate results

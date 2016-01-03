@@ -123,11 +123,14 @@ namespace AudioEngine
         int loopOffset   = 0;     // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
         int loopAmount   = 0;     // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
 
-        float outbuffer[ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
+        int outSampleNum = bufferSize * outputChannels;
+        float outbuffer[ outSampleNum ]; // the output buffer rendered by the hardware
 
 #ifdef ALLOW_RECORDING
+
         // generate the input buffer used for recording from device input
-        // as well as the remporary buffer used to merge the input into
+        // as well as the temporary buffer used to merge the input into
+
         float recbufferIn[ bufferSize ];
         AudioBuffer* recbuffer = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, bufferSize );
 #endif
@@ -244,6 +247,14 @@ namespace AudioEngine
                                 audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
                                                        maxBufferPosition, loopStarted, loopOffset, useChannelRange );
                             }
+                            // QQQ
+                            SAMPLE_TYPE* buffer = channelBuffer->getBufferForChannel(0);
+                            for ( int z = 0; z < bufferSize; ++z ) {
+                                if ( isnan( buffer[ z ])) {
+                                    Debug::log( "NAN at index %d!!!! mixed at pos %d for mbp %d - mbp %d loopStarted %d offset %d", z, bufferPos, min_buffer_position, maxBufferPosition, loopStarted, loopOffset);
+                                }
+                            }
+                            // E.O. QQQ
                         }
                     }
                     else
@@ -336,7 +347,7 @@ namespace AudioEngine
                         // for higher accuracy we must calculate using floating point precision, it
                         // is a more expensive calculation than using integer modulo though, so we check
                         // only when the integer modulo operation check has passed
-                        // TODO : this is innaccurate.
+                        // TODO : this attempted fmod calculation is innaccurate.
                         //if ( std::fmod(( float ) bufferPosition, samples_per_step ) == 0 )
                             handleSequencerPositionUpdate( i );
                     }
@@ -351,9 +362,9 @@ namespace AudioEngine
             }
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
             // makes it both unnecessarily audible and stalls this thread's execution)
-
+            Debug::logToFile("/sdcard/foo.txt","here we go outputtin' at %d", bufferPosition );
             if ( !bouncing )
-                android_AudioOut( p, outbuffer, bufferSize * outputChannels );
+                android_AudioOut( p, outbuffer, outSampleNum );
 
 #ifdef ALLOW_RECORDING
             // record the output if the recording state is active
