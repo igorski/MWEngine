@@ -11,6 +11,9 @@ TEST( BaseInstrument, Constructor )
     ASSERT_FALSE( 0 == instrument->audioChannel )
         << "expected instrument to have created an AudioChannel during construction";
 
+    EXPECT_EQ( instrument->volume, instrument->audioChannel->mixVolume )
+        << "expected AudioChannel volume to be equal to istrument volume after construction";
+
     ASSERT_FALSE( 0 == instrument->getEvents() )
         << "expected instrument to have created an events vector during construction";
 

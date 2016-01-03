@@ -39,10 +39,16 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
     switch ( AudioEngine::test_program )
     {
-        case 0:
+        case 0: // engine start test
+        case 1: // engine tempo update test
+
             Debug::log( "stopping mocked engine" );
             ++AudioEngine::test_program;    // advance to next test
             AudioEngine::stop();
+            break;
+
+        case 2:
+
             break;
     }
     return size;

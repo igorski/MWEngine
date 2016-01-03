@@ -1,6 +1,9 @@
+#include "../audiobuffer.h"
 #include "../audioengine.h"
 #include "../sequencer.h"
 #include "../sequencercontroller.h"
+#include "../events/sampleevent.h"
+#include "../instruments/baseinstrument.h"
 
 TEST( AudioEngine, Start )
 {
@@ -13,9 +16,6 @@ TEST( AudioEngine, Start )
 
     AudioEngine::engine_started = false;
 
-    ASSERT_FALSE( AudioEngine::engine_started )
-        << "expected engine not to have started yet";
-
     AudioEngine::start();
 
     EXPECT_EQ( 1, AudioEngine::test_program )
@@ -25,6 +25,115 @@ TEST( AudioEngine, Start )
         << "expected engine to have started";
 
     delete controller;
+}
+
+TEST( AudioEngine, TempoUpdate )
+{
+    // prepare engine environment
+
+    float oldTempo = randomFloat( 40.0f,  199.0f );
+    float newTempo = randomFloat( 120.0f, 300.0f );
+
+    SequencerController* controller = new SequencerController();
+    controller->prepare( 48000, 240, oldTempo, 4, 4 );
+    controller->setTempoNow( oldTempo, 4, 4 ); // ensure tempo is applied immediately
+    controller->rewind();
+
+    int oldSPBar  = AudioEngine::samples_per_bar;
+    int oldSPBeat = AudioEngine::samples_per_beat;
+    int oldSPStep = AudioEngine::samples_per_step;
+    int oldMaxBP  = AudioEngine::max_buffer_position = randomInt( 11025, 8820  );
+
+    EXPECT_EQ( oldTempo, controller->getTempo() )
+        << "expected tempo to be set prior to engine start";
+
+    // request new tempo via controller
+
+    controller->setTempo( newTempo, 12, 8 );
+
+    EXPECT_EQ( oldTempo, controller->getTempo() )
+        << "expected tempo at the old value to be set prior to engine start";
+
+    EXPECT_EQ( 4, controller->getTimeSigBeatAmount() )
+        << "expected time signature to be at the old value prior to the engine start";
+
+    EXPECT_EQ( 4, controller->getTimeSigBeatUnit() )
+        << "expected time signature to be at the old value prior to the engine start";
+
+    AudioEngine::start();
+    //usleep( 50 ); // tempo update is executed after the engine is halted by the OpenSL mock
+
+    // assert results
+
+    EXPECT_EQ( newTempo, controller->getTempo() )
+        << "expected engine to have updated the tempo during a single iteration of its render cycle";
+
+    EXPECT_EQ( 12, controller->getTimeSigBeatAmount() )
+        << "expected engine to have updated the time signature during a single iteration of its render cycle";
+
+    EXPECT_EQ( 8, controller->getTimeSigBeatUnit() )
+        << "expected engine to have updated the time signature during a single iteration of its render cycle";
+
+    ASSERT_FALSE( AudioEngine::max_buffer_position == oldMaxBP )
+        << "expected engine to have updated its max buffer position after tempo change";
+
+    ASSERT_FALSE( AudioEngine::samples_per_bar == oldSPBar )
+        << "expected engine to have updated its samples per bar value after tempo change";
+
+    ASSERT_FALSE( AudioEngine::samples_per_beat == oldSPBeat )
+        << "expected engine to have updated its samples per beat value after tempo change";
+
+    ASSERT_FALSE( AudioEngine::samples_per_step == oldSPStep )
+        << "expected engine to have updated its samples per step value after tempo change";
+
+    delete controller;
+}
+
+TEST( AudioEngine, Output )
+{
+    // prepare engine environment
+
+    SequencerController* controller = new SequencerController();
+    controller->prepare( 48000, 240, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
+    controller->rewind();
+
+    // create a SampleEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
+    //
+    // the event will lost for an entire measure in duration
+
+    AudioBuffer* buffer    = new AudioBuffer( 1, 16 );
+    SAMPLE_TYPE* rawBuffer = buffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -MAX_PHASE;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    for ( int i = 8; i < 12; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) MAX_PHASE;
+
+    for ( int i = 12; i < 16; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    BaseInstrument* instrument = new BaseInstrument();
+    SampleEvent* event         = new SampleEvent( instrument );
+    event->setSample( buffer );
+    event->setSampleLength( AudioEngine::samples_per_bar );
+    event->positionEvent( 0, 16, 0 );
+    event->addToSequencer();
+
+    // start the engine
+
+   // AudioEngine::start();
+
+    delete controller;
+    delete instrument;
+    delete event;
+    delete buffer;
 }
 
 /*
