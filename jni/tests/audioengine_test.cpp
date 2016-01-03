@@ -2,7 +2,7 @@
 #include "../audioengine.h"
 #include "../sequencer.h"
 #include "../sequencercontroller.h"
-#include "../events/sampleevent.h"
+#include "../events/baseaudioevent.h"
 #include "../instruments/baseinstrument.h"
 
 TEST( AudioEngine, Start )
@@ -12,7 +12,7 @@ TEST( AudioEngine, Start )
     // prepare engine environment
 
     SequencerController* controller = new SequencerController();
-    controller->prepare( 48000, 240, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
+    controller->prepare( 240, 48000, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
 
     AudioEngine::engine_started = false;
 
@@ -29,13 +29,15 @@ TEST( AudioEngine, Start )
 
 TEST( AudioEngine, TempoUpdate )
 {
+    AudioEngine::test_program = 1; // help mocked OpenSL IO identify which test is running
+
     // prepare engine environment
 
     float oldTempo = randomFloat( 40.0f,  199.0f );
     float newTempo = randomFloat( 120.0f, 300.0f );
 
     SequencerController* controller = new SequencerController();
-    controller->prepare( 48000, 240, oldTempo, 4, 4 );
+    controller->prepare( 240, 48000, oldTempo, 4, 4 );
     controller->setTempoNow( oldTempo, 4, 4 ); // ensure tempo is applied immediately
     controller->rewind();
 
@@ -91,18 +93,22 @@ TEST( AudioEngine, TempoUpdate )
 
 TEST( AudioEngine, Output )
 {
+    AudioEngine::test_program = 2; // help mocked OpenSL IO identify which test is running
+
     // prepare engine environment
 
     SequencerController* controller = new SequencerController();
-    controller->prepare( 48000, 240, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
+    controller->prepare( 16, 48000, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
     controller->rewind();
+
+    AudioEngine::volume = 1;    // QQQ : later on we test mix volume ;)
 
     // create a SampleEvent that holds a simple waveform
     // the resulting 16 sample mono buffer contains the following samples:
     //
     // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
     //
-    // the event will lost for an entire measure in duration
+    // the event will last for an entire measure in duration
 
     AudioBuffer* buffer    = new AudioBuffer( 1, 16 );
     SAMPLE_TYPE* rawBuffer = buffer->getBufferForChannel( 0 );
@@ -120,15 +126,25 @@ TEST( AudioEngine, Output )
         rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
 
     BaseInstrument* instrument = new BaseInstrument();
-    SampleEvent* event         = new SampleEvent( instrument );
-    event->setSample( buffer );
+    BaseAudioEvent* event      = new BaseAudioEvent( instrument );
+    event->setBuffer( buffer, false );
+    event->setLoopeable( true );
     event->setSampleLength( AudioEngine::samples_per_bar );
     event->positionEvent( 0, 16, 0 );
     event->addToSequencer();
 
     // start the engine
 
-   // AudioEngine::start();
+    controller->setPlaying( true );
+
+    AudioEngine::start();
+
+    // evaluate results
+
+    // clean up
+
+    controller->setPlaying( false );
+    AudioEngine::render_iterations = 0;
 
     delete controller;
     delete instrument;

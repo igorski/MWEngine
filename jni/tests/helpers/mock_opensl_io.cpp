@@ -49,6 +49,32 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
         case 2:
 
+            if ( Sequencer::playing )
+            {
+                int currentIteration = AudioEngine::render_iterations;
+
+                Debug::logToFile( "/sdcard/log.txt", "---- receival %d of max. %d", currentIteration, ( AudioEngine::samples_per_bar / AudioEngineProps::BUFFER_SIZE ) );
+
+                for ( int i = 0; i < size; ++i ) {
+                    // TODO : separate between mono/stereo buffer (see global.h) !!
+                    Debug::logToFile( "/sdcard/log.txt", "value at %d is '%f'", i, buffer[ i ]);
+                    if ( isnan( buffer[ i ]))
+                    {
+                        Debug::log("FUCK THIS SHIT %f occurred at buffer position %d", buffer[ i ], AudioEngine::bufferPosition);
+                        AudioEngine::stop();
+                        break;
+                    }
+                }
+
+                // stop the engine once it has rendered an entire measure
+
+                if ( ++AudioEngine::render_iterations > ( AudioEngine::samples_per_bar / AudioEngineProps::BUFFER_SIZE ))
+                {
+                    Debug::logToFile( "/sdcard/log.txt", "---- stopping engine" );
+                    AudioEngine::stop();
+                }
+                Debug::logToFile( "/sdcard/log.txt", "--- end receival %d", currentIteration );
+            }
             break;
     }
     return size;

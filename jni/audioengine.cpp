@@ -350,7 +350,8 @@ namespace AudioEngine
                 }
             }
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
-            // makes it both unnecessarily audible and stalls this thread's execution
+            // makes it both unnecessarily audible and stalls this thread's execution)
+
             if ( !bouncing )
                 android_AudioOut( p, outbuffer, bufferSize * outputChannels );
 
@@ -495,6 +496,8 @@ namespace AudioEngine
 
     bool engine_started    = false;
     int test_program       = 0;
+    bool test_successful   = false;
+    int render_iterations  = 0;
     float mock_opensl_time = 0.0f;
 
 #endif

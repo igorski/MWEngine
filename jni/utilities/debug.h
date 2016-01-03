@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,16 +23,17 @@
 #ifndef __DEBUG_H_INCLUDED__
 #define __DEBUG_H_INCLUDED__
 
-/* convenience log methods that hook into the Android logcat */
+#include <stdio.h>
 
 namespace Debug
 {
-    extern void log( char const* aMessage );
-    extern void log( char const* aMessage, char const* aValue );
-    extern void log( char const* aMessage, int aValue );
-    extern void log( char const* aMessage, unsigned int aValue );
-    extern void log( char const* aMessage, float aValue );
-    extern void log( char const* aMessage, double aValue );
+    /* convenience log method that hooks into the Android logcat */
+
+    extern void log( const char* aMessage, ... );
+
+    /* log a message into a text file, text is appended at end of existing files */
+
+    extern void logToFile( const char* aFileName, const char* aMessage, ... );
 }
 
 #endif

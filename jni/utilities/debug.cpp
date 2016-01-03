@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,72 +23,37 @@
 #include "debug.h"
 #include "../global.h"
 #include <android/log.h>
+#include <string>
 
 /* logging */
 
 namespace Debug
 {
     /**
-     * send a debug message to the Android logcat
-     * @param aMessage {char} message string
+     * log a message into the logcat, messages can be concatenated
+     * with optional extra arguments to log variable output, e.g. :
+     *
+     * "this is an (un)signed integer %d, this is a float/double %f"
      */
-    void log( char const* aMessage )
+    void log( const char* aMessage, ... )
     {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, "%s", aMessage );
+        va_list args;
+        va_start( args, aMessage );
+        __android_log_vprint( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, args );
+        va_end( args );
     }
 
-    /**
-     * same as above, but traces contents of an char const*
-     * @param aValue {char const*} optional numerical value
-     *
-     * to trace char values pass "%s" in aMessage to show aValue
-     */
-    void log( char const* aMessage, char const* aValue )
+    void logToFile( const char* aFileName, const char* aMessage, ... )
     {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
-    }
+        FILE* file = fopen( aFileName, "a" );
 
-    /**
-     * same as above, but traces contents of an int
-     * @param aValue {int} optional numerical value
-     *
-     * to trace numerical values pass "%d" in aMessage to show aValue
-     */
-    void log( char const* aMessage, int aValue )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
-    }
+        aMessage = ( std::string( aMessage ) + std::string( "\n" )).c_str();
 
-    /**
-     * same as above, but traces contents of an int
-     * @param aValue {int} optional numerical value
-     *
-     * to trace numerical values pass "%d" in aMessage to show aValue
-     */
-    void log( char const* aMessage, unsigned int aValue )
-    {
-        Debug::log( aMessage, ( int ) aValue );
-    }
+        va_list args;
+        va_start( args, aMessage );
+        vfprintf( file, aMessage, args );
+        va_end( args );
 
-    /**
-     * same as above, but traces contents of a float value
-     * @param aValue {float} optional numerical value
-     *
-     * to trace float values pass "%f" in aMessage to show aValue
-     */
-    void log( char const* aMessage, float aValue )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
-    }
-
-    /**
-     * same as above, but traces contents of a double value
-     * @param aValue {double} optional numerical value
-     *
-     * to trace float values pass "%f" in aMessage to show aValue
-     */
-    void log( char const* aMessage, double aValue )
-    {
-        __android_log_print( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, aValue );
+        fclose( file );
     }
 }

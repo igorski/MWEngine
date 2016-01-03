@@ -40,7 +40,7 @@ SequencerController::SequencerController()
 
 SequencerController::~SequencerController()
 {
-
+    setPlaying( false );
 };
 
 /* public methods */

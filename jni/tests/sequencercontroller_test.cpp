@@ -129,7 +129,7 @@ TEST( SequencerController, SetPlaying )
     controller->setPlaying( false );
 
     ASSERT_FALSE( Sequencer::playing )
-        << "expected Sequencer to be playing";
+        << "expected Sequencer not to be playing";
 
     delete controller;
 }
