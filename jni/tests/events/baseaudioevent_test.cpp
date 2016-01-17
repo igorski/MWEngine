@@ -294,9 +294,16 @@ TEST( BaseAudioEvent, PositionEvent )
 TEST( BaseAudioEvent, Buffers )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
-    AudioBuffer* buffer        = fillAudioBuffer( randomAudioBuffer() );
+
+    ASSERT_FALSE( audioEvent->hasBuffer() )
+        << "expected event not to contain an AudioBuffer after construction";
+
+    AudioBuffer* buffer = fillAudioBuffer( randomAudioBuffer() );
 
     audioEvent->setBuffer( buffer, true );
+
+    ASSERT_TRUE( audioEvent->hasBuffer() )
+        << "expected event to contain an AudioBuffer after setter";
 
     ASSERT_TRUE( buffer == audioEvent->getBuffer() )
         << "expected AudioEvent to return set buffer";

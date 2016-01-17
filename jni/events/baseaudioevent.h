@@ -61,6 +61,7 @@ class BaseAudioEvent
          */
         virtual AudioBuffer* getBuffer();
         virtual void setBuffer( AudioBuffer* buffer, bool destroyable );
+        virtual bool hasBuffer();
 
         /**
          * an AudioEvent can also synthesize audio live, this

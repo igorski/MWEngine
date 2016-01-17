@@ -88,27 +88,35 @@ TEST( AudioEngine, TempoUpdate )
     ASSERT_FALSE( AudioEngine::samples_per_step == oldSPStep )
         << "expected engine to have updated its samples per step value after tempo change";
 
+    EXPECT_EQ( 2, AudioEngine::test_program )
+        << "expected program to have incremented";
+
     delete controller;
 }
 
 TEST( AudioEngine, Output )
 {
-    AudioEngine::test_program = 2; // help mocked OpenSL IO identify which test is running
+    AudioEngine::test_program    = 2;   // help mocked OpenSL IO identify which test is running
+    AudioEngine::test_successful = false;
 
     // prepare engine environment
 
     SequencerController* controller = new SequencerController();
-    controller->prepare( 16, 48000, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
+    controller->prepare( 16, 48000, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 16 samples
+    controller->setTempoNow( 130.0f, 4, 4 );
     controller->rewind();
 
     AudioEngine::volume = 1;    // QQQ : later on we test mix volume ;)
 
-    // create a SampleEvent that holds a simple waveform
+    // create an AudioEvent that holds a simple waveform
     // the resulting 16 sample mono buffer contains the following samples:
     //
     // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
     //
     // the event will last for an entire measure in duration
+
+    BaseInstrument* instrument = new BaseInstrument();
+    BaseAudioEvent* event      = new BaseAudioEvent( instrument );
 
     AudioBuffer* buffer    = new AudioBuffer( 1, 16 );
     SAMPLE_TYPE* rawBuffer = buffer->getBufferForChannel( 0 );
@@ -125,8 +133,6 @@ TEST( AudioEngine, Output )
     for ( int i = 12; i < 16; ++i )
         rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
 
-    BaseInstrument* instrument = new BaseInstrument();
-    BaseAudioEvent* event      = new BaseAudioEvent( instrument );
     event->setBuffer( buffer, false );
     event->setLoopeable( true );
     event->setSampleLength( AudioEngine::samples_per_bar );
@@ -138,7 +144,13 @@ TEST( AudioEngine, Output )
     controller->setPlaying( true );
     AudioEngine::start();
 
-    // evaluate results
+    // evaluate results (assertions are made in mock_opensl_io.cpp)
+
+    ASSERT_TRUE( AudioEngine::test_successful )
+        << "expected test to be successful";
+
+    EXPECT_EQ( 3, AudioEngine::test_program )
+        << "expected test program to have incremented";
 
     // clean up
 
@@ -151,29 +163,53 @@ TEST( AudioEngine, Output )
     delete buffer;
 }
 
-/*
-TEST( AudioEngine, GetAudioEventsAtLoopStart )
+TEST( AudioEngine, OutputAtLoopStart )
 {
+    AudioEngine::test_program    = 3;   // help mocked OpenSL IO identify which test is running
+    AudioEngine::test_successful = false;
+
     // setup sequencer
 
     std::vector<AudioChannel*>* channels = new std::vector<AudioChannel*>();
     BaseInstrument* instrument1 = new BaseInstrument();
     BaseInstrument* instrument2 = new BaseInstrument();
 
+    // prepare engine environment
+
+    SequencerController* controller = new SequencerController();
+    controller->prepare( 11025, 44100, 120.0f, 4, 4 ); // 44.1 kHz, 4/4 time at 120 BPM w/ buffer size of 11025 samples
+    controller->setTempoNow( 120.0f, 4, 4 );
+    controller->rewind();
+
     // setup audio events
 
-    // assume 88200 samples per bar (emulates 44.1 kHz sample rate at 120 BPM 4/4 time)
+    // test is working at 88200 samples per bar (emulates 44.1 kHz sample rate at 120 BPM 4/4 time)
     // use a buffer size that is the size of an 8th note (11025 samples)
-    AudioEngine::samples_per_bar     = 88200;
+
     AudioEngine::min_buffer_position = 0;
     AudioEngine::max_buffer_position = AudioEngine::samples_per_bar - 1;
     Sequencer::playing               = true;
-    int bufferSize                   = AudioEngine::samples_per_bar / 8;
+    int bufferSize                   = AudioEngineProps::BUFFER_SIZE;
+
+    // audioEvent1 start: 77175 end: 88199 (length: 11025)
+    // audioEvent2 start: 0 end: 11024 (length: 11025)
 
     BaseAudioEvent* audioEvent1 = enqueuedAudioEvent( instrument1, bufferSize, 0, 16, 14 );
     BaseAudioEvent* audioEvent2 = enqueuedAudioEvent( instrument2, bufferSize, 0, 16, 0 );
-    // audioEvent1 start: 77175 end: 88199 (length: 11025)
-    // audioEvent2 start: 0 end: 11024
+
+    // fill event 1 and event 2 with values (are validated in mock_opensl_io)
+
+    AudioBuffer* buffer1 = new AudioBuffer( 1, audioEvent1->getSampleLength() );
+    AudioBuffer* buffer2 = new AudioBuffer( 1, audioEvent2->getSampleLength() );
+
+    for ( int i = 0; i < buffer1->bufferSize; ++i )
+        buffer1->getBufferForChannel( 0 )[ i ] = ( SAMPLE_TYPE ) -0.25;
+
+    for ( int i = 0; i < buffer2->bufferSize; ++i )
+        buffer2->getBufferForChannel( 0 )[ i ] = ( SAMPLE_TYPE ) +0.5;
+
+    audioEvent1->setBuffer( buffer1, false );
+    audioEvent2->setBuffer( buffer2, false );
 
     // test check if Sequencer returns events when loop is about to start
     // e.g. start offset is 88100 while there are 88200 samples in the measure / loop range
@@ -183,22 +219,32 @@ TEST( AudioEngine, GetAudioEventsAtLoopStart )
     // we need to read from the start of the full Sequencer loop range, as such the calculation is:
     // ( 11025 - (( 88199 - 88100 ) + 1 )) == 10925 samples to read from start (which is min_buffer_position == 0 )
 
-    int startOffset = 88100;
-    Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
+    // start the engine
 
-    EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
-        << "expected to have collected 1 event for AudioChannel 1";
+    AudioEngine::bufferPosition = 88100;
+    AudioEngine::volume         = 1;
+    controller->setPlaying( true );
+    AudioEngine::start();
 
-    EXPECT_EQ( 1, channels->at( 1 )->audioEvents.size() )
-        << "expected to have collected 1 event for AudioChannel 2";
+    // evaluate results (assertions are made in mock_opensl_io.cpp)
 
-    // free allocated memory
+    ASSERT_TRUE( AudioEngine::test_successful )
+        << "expected test to be successful";
+
+    EXPECT_EQ( 4, AudioEngine::test_program )
+        << "expected test program to have incremented";
+
+    // clean up
+
+    controller->setPlaying( false );
+    AudioEngine::render_iterations = 0;
+
     delete channels;
+    delete controller;
     delete audioEvent1;
     delete audioEvent2;
+    delete buffer1;
+    delete buffer2;
     delete instrument1;
     delete instrument2;
-
-    Sequencer::playing = false;
 }
-*/

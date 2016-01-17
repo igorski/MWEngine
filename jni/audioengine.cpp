@@ -247,14 +247,6 @@ namespace AudioEngine
                                 audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
                                                        maxBufferPosition, loopStarted, loopOffset, useChannelRange );
                             }
-                            // QQQ
-                            SAMPLE_TYPE* buffer = channelBuffer->getBufferForChannel(0);
-                            for ( int z = 0; z < bufferSize; ++z ) {
-                                if ( isnan( buffer[ z ])) {
-                                    Debug::log( "NAN at index %d!!!! mixed at pos %d for mbp %d - mbp %d loopStarted %d offset %d", z, bufferPos, min_buffer_position, maxBufferPosition, loopStarted, loopOffset);
-                                }
-                            }
-                            // E.O. QQQ
                         }
                     }
                     else
@@ -347,7 +339,7 @@ namespace AudioEngine
                         // for higher accuracy we must calculate using floating point precision, it
                         // is a more expensive calculation than using integer modulo though, so we check
                         // only when the integer modulo operation check has passed
-                        // TODO : this attempted fmod calculation is innaccurate.
+                        // TODO : this attempted fmod calculation is inaccurate.
                         //if ( std::fmod(( float ) bufferPosition, samples_per_step ) == 0 )
                             handleSequencerPositionUpdate( i );
                     }
@@ -362,7 +354,6 @@ namespace AudioEngine
             }
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
             // makes it both unnecessarily audible and stalls this thread's execution)
-            Debug::logToFile("/sdcard/foo.txt","here we go outputtin' at %d", bufferPosition );
             if ( !bouncing )
                 android_AudioOut( p, outbuffer, outSampleNum );
 
@@ -470,9 +461,7 @@ namespace AudioEngine
                 JNIEnv* env = JavaBridge::getEnvironment();
 
                 if ( env != 0 )
-                {
                     env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id, AudioEngine::tempo );
-                }
             }
 #else
             Notifier::broadcast( Notifications::SEQUENCER_TEMPO_UPDATED );

@@ -253,6 +253,9 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                                 int minBufferPosition, int maxBufferPosition,
                                 bool loopStarted, int loopOffset, bool useChannelRange )
 {
+    if ( !hasBuffer() )
+        return;
+
     lock(); // prevents buffer mutations (from outside threads) during this read cycle
 
     int bufferSize = outputBuffer->bufferSize;
@@ -377,6 +380,11 @@ void BaseAudioEvent::setBuffer( AudioBuffer* buffer, bool destroyable )
     _destroyableBuffer = destroyable;
     destroyBuffer(); // clears existing buffer (if destroyable)
     _buffer = buffer;
+}
+
+bool BaseAudioEvent::hasBuffer()
+{
+    return _buffer != 0;
 }
 
 AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
