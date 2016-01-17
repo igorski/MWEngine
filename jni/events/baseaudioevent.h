@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -61,6 +61,7 @@ class BaseAudioEvent
          */
         virtual AudioBuffer* getBuffer();
         virtual void setBuffer( AudioBuffer* buffer, bool destroyable );
+        virtual bool hasBuffer();
 
         /**
          * an AudioEvent can also synthesize audio live, this
@@ -91,6 +92,8 @@ class BaseAudioEvent
         virtual void setSampleLength( int value );
         virtual void setSampleStart( int value );
         virtual void setSampleEnd( int value );
+
+        virtual int getReadPointer();
 
         // position the AudioEvent within the Sequencer using musical timing concepts
         // NOTE : this results in strict "on the grid" timing, using buffer samples instead (see setSampleStart() and
@@ -129,6 +132,7 @@ class BaseAudioEvent
         int _sampleStart;
         int _sampleEnd;
         int _sampleLength;
+        int _readPointer;  // when loopeable, used to internally keep track of last read buffer offset
 
         // properties
         bool _enabled;

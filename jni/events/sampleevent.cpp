@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -80,11 +80,6 @@ void SampleEvent::setBufferRangeEnd( int value )
         _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
-}
-
-int SampleEvent::getReadPointer()
-{
-    return _readPointer;
 }
 
 void SampleEvent::play()
@@ -197,7 +192,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBu
     // if we have a range length that is unequal to the total sample duration, read from the range
     // otherwise invoke the base mixBuffer method
 
-    if ( _loopeable || _bufferRangeLength != _sampleLength )
+    if ( _bufferRangeLength != _sampleLength )
         getBufferForRange( outputBuffer, bufferPos );
     else
         BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition,
@@ -243,7 +238,7 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
         }
 
         // if this is a loopeable sample (thus using internal read pointer)
-        // set the read pointer to the sample start so it keeps playing indefinetely
+        // set the read pointer to the sample start so it keeps playing indefinitely
 
         if ( ++readPos > _sampleEnd && _loopeable )
             readPos = _sampleStart;
@@ -260,7 +255,6 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 void SampleEvent::init( BaseInstrument* instrument )
 {
     _bufferRangeLength     = 0;
-    _readPointer           = 0;
     _rangePointer          = 0;
     _lastPlaybackPosition  = 0;
     _destroyableBuffer     = false; // is referenced via SampleManager !

@@ -94,16 +94,18 @@ namespace AudioEngine
 
     /**
      * unit test related
-
+     *
      * these variables aren't declared by the .cpp unless MOCK_TESTING is defined
-
+     *
      * as the unit tests use the MWEngine as a shared library we need to store
-     * engine status results inside the engine itself, as the mock_opensl_io.h
+     * engine test reports inside the engine itself, as the mock_opensl_io.h
      * driver (which hijacks the opensl_io.h methods) will be built by both libraries
-     * this would imply the mock_opensl_io would not share memory space
+     * implying the mock_opensl_io would not share memory space between the libraries
      */
     extern bool engine_started;
     extern int test_program;
+    extern bool test_successful;
+    extern int render_iterations;
     extern float mock_opensl_time;
 }
 #endif

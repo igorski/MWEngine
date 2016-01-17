@@ -1,6 +1,8 @@
 #include "mock_opensl_io.h"
 #include "../../utilities/debug.h"
 
+int lastIteration = -1;
+
 OPENSL_STREAM* mock_android_OpenAudioDevice( int sr, int inchannels, int outchannels, int bufferframes )
 {
     Debug::log( "mocked device opening" );
@@ -47,7 +49,90 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
             AudioEngine::stop();
             break;
 
-        case 2:
+        case 2: // output test
+
+            if ( Sequencer::playing )
+            {
+                // test 1. ensure all buffer iterations are calculated accordingly
+
+                int currentIteration = AudioEngine::render_iterations;
+                int maxIterations    = AudioEngine::samples_per_bar / AudioEngineProps::BUFFER_SIZE;
+
+                int expectedBufferPosition = (( currentIteration + 1 ) * AudioEngineProps::BUFFER_SIZE );
+
+                if ( currentIteration == 0 )
+                    AudioEngine::test_successful = true; // will be falsified by assertions below
+
+                else if ( currentIteration == maxIterations )
+                    expectedBufferPosition -= ( AudioEngine::max_buffer_position + 1 );
+
+                if ( AudioEngine::bufferPosition != expectedBufferPosition )
+                    AudioEngine::test_successful = false;
+
+                // test 2. evaluate buffer contents
+
+                for ( int i = 0; i < size; ++i )
+                {
+                    // expected samples as defined in audioengine_test.cpp
+                    SAMPLE_TYPE expected[] = { -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0 };
+
+                    SAMPLE_TYPE sample = buffer[ i ];
+                    int compareOffset = (( currentIteration * AudioEngineProps::BUFFER_SIZE ) + i ) % 16;
+
+                    if ( sample != expected[ i ])
+                    {
+                        Debug::log( "expected %f, got %f at buffer position %d", expected[ i ], sample, AudioEngine::bufferPosition );
+
+                        AudioEngine::test_successful = false;
+                        AudioEngine::stop();
+                        break;
+                    }
+                }
+
+                // stop the engine once it has rendered an entire measure
+
+                if ( ++AudioEngine::render_iterations > maxIterations )
+                {
+                    ++AudioEngine::test_program;    // advance to next test
+                    AudioEngine::stop();
+                }
+                lastIteration = currentIteration;
+            }
+            break;
+
+        case 3: // loop test
+
+            if ( Sequencer::playing )
+            {
+                AudioEngine::test_successful = true; // will be falsified by assertions below
+
+                // test: ensure the buffers of both the event at the end of the loop and
+                // at the start of the Sequencers loop have been mixed into the output buffer
+
+                for ( int i = 0, bufferPosition = 88100; i < size; ++i, ++bufferPosition )
+                {
+                    // 77175 being audioEvent1 start, -0.25f being audioEvent1 contents, _0.5f being audioEvent2 contents
+                    SAMPLE_TYPE expected = ( bufferPosition > 77175 ) ? -0.25f : +0.5f;
+                    SAMPLE_TYPE sample   = buffer[ i ];
+
+                    if ( sample != expected )
+                    {
+                        Debug::log( "expected %f, got %f at iteration %d (buffer pos %d)", expected, sample, i, bufferPosition );
+
+                        AudioEngine::test_successful = false;
+                        AudioEngine::stop();
+                        break;
+                    }
+
+                    if ( bufferPosition >= AudioEngine::max_buffer_position )
+                        bufferPosition = AudioEngine::min_buffer_position - 1; // will be incremented at end of iteration
+                }
+
+                // stop the engine
+
+                ++AudioEngine::test_program;    // advance to next test
+                AudioEngine::stop();
+            }
 
             break;
     }

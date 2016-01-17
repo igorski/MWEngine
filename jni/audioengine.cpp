@@ -123,11 +123,14 @@ namespace AudioEngine
         int loopOffset   = 0;     // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
         int loopAmount   = 0;     // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
 
-        float outbuffer[ bufferSize * outputChannels ]; // the output buffer rendered by the hardware
+        int outSampleNum = bufferSize * outputChannels;
+        float outbuffer[ outSampleNum ]; // the output buffer rendered by the hardware
 
 #ifdef ALLOW_RECORDING
+
         // generate the input buffer used for recording from device input
-        // as well as the remporary buffer used to merge the input into
+        // as well as the temporary buffer used to merge the input into
+
         float recbufferIn[ bufferSize ];
         AudioBuffer* recbuffer = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, bufferSize );
 #endif
@@ -336,7 +339,7 @@ namespace AudioEngine
                         // for higher accuracy we must calculate using floating point precision, it
                         // is a more expensive calculation than using integer modulo though, so we check
                         // only when the integer modulo operation check has passed
-                        // TODO : this is innaccurate.
+                        // TODO : this attempted fmod calculation is inaccurate.
                         //if ( std::fmod(( float ) bufferPosition, samples_per_step ) == 0 )
                             handleSequencerPositionUpdate( i );
                     }
@@ -350,9 +353,9 @@ namespace AudioEngine
                 }
             }
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
-            // makes it both unnecessarily audible and stalls this thread's execution
+            // makes it both unnecessarily audible and stalls this thread's execution)
             if ( !bouncing )
-                android_AudioOut( p, outbuffer, bufferSize * outputChannels );
+                android_AudioOut( p, outbuffer, outSampleNum );
 
 #ifdef ALLOW_RECORDING
             // record the output if the recording state is active
@@ -458,9 +461,7 @@ namespace AudioEngine
                 JNIEnv* env = JavaBridge::getEnvironment();
 
                 if ( env != 0 )
-                {
                     env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id, AudioEngine::tempo );
-                }
             }
 #else
             Notifier::broadcast( Notifications::SEQUENCER_TEMPO_UPDATED );
@@ -495,6 +496,8 @@ namespace AudioEngine
 
     bool engine_started    = false;
     int test_program       = 0;
+    bool test_successful   = false;
+    int render_iterations  = 0;
     float mock_opensl_time = 0.0f;
 
 #endif
