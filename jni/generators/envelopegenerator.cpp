@@ -1,9 +1,9 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
  *
- * wave table generation adapted from sources by Matt @ hackmeopen.com
+ * envelope generation adapted from sources by Christian Schoenebeck
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -30,7 +30,7 @@
 
 namespace EnvelopeGenerator
 {
-    void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude, float releaseTime )
+    void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude )
     {
         SAMPLE_TYPE* outputBuffer = waveTable->getBuffer();
         int numberOfSamples       = waveTable->tableLength;
@@ -40,15 +40,12 @@ namespace EnvelopeGenerator
         startAmplitude = std::max( 0.001, startAmplitude );
         endAmplitude   = std::max( 0.001, endAmplitude );
 
-        SAMPLE_TYPE releaseTimeInSeconds = ( SAMPLE_TYPE )( releaseTime * 1000.0 );
-
-        SAMPLE_TYPE sampleRate = ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE;
-        SAMPLE_TYPE coeff      = ( log( endAmplitude ) - log( startAmplitude )) / ( releaseTimeInSeconds * sampleRate );
+        SAMPLE_TYPE coeff      = MAX_PHASE + ( log( endAmplitude ) - log( startAmplitude )) / numberOfSamples;
         SAMPLE_TYPE sample     = startAmplitude;
 
         for ( int i = 0; i < numberOfSamples; ++i )
         {
-            sample += coeff * sample;
+            sample *= coeff;
             outputBuffer[ i ] = sample;
         }
     }

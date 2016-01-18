@@ -15,6 +15,7 @@
 #include "events/basesynthevent_test.cpp"
 //#include "events/drumevent_test.cpp"
 #include "events/sampleevent_test.cpp"
+#include "generators/envelopegenerator_test.cpp"
 #include "instruments/baseinstrument_test.cpp"
 //#include "processors/tremolo_test.cpp"
 #include "utilities/fastmath_test.cpp"

@@ -1,9 +1,9 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
  *
- * wave table generation adapted from sources by Matt @ hackmeopen.com
+ * envelope generation adapted from sources by Christian Schoenebeck
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -35,9 +35,8 @@ namespace EnvelopeGenerator
     // endAmplitude describes the amplitude level at the end of the envelope, e.g.
     // a startAmplitude of MAX_PHASE and an endAmplitude of 0.0 would create a fade out-envelope
     // and a startAmplitude of 0.0 and an endAmplitude of MAX_PHASE would create a fade in-envelope
-    // releaseTime describes the release of the envelope in milliseconds
 
-    extern void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude, float releaseTime );
+    extern void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude );
 }
 
 #endif

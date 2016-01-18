@@ -124,8 +124,14 @@ bool bufferHasContent( AudioBuffer* audioBuffer )
     return false;
 }
 
-// dump the sample contents of the buffer into the console (NOTE : this will easily
-// flood the console with messages for large buffers!!
+// dump the sample contents of AudioBuffers into the console (NOTE : this will easily
+// flood the console with messages for large buffers!!)
+
+void dumpBufferContents( SAMPLE_TYPE* buffer, int bufferSize )
+{
+    for ( int i = 0; i < bufferSize; ++i )
+        std::cout << i << ":" << buffer[ i ] << "\n";
+}
 
 void dumpBufferContents( AudioBuffer* audioBuffer )
 {
@@ -139,9 +145,7 @@ void dumpBufferContents( AudioBuffer* audioBuffer )
         std::cout << "---------\n";
 
         SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
-
-        for ( int i = 0; i < audioBuffer->bufferSize; ++i )
-            std::cout << i << ":" << buffer[ i ] << "\n";
+        dumpBufferContents( buffer, audioBuffer->bufferSize );
     }
 }
 
