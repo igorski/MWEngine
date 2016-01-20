@@ -31,6 +31,8 @@ TEST( EnvelopeGenerator, Generation )
 
         ASSERT_TRUE( fadeIn ? sample > lastSample : sample < lastSample )
             << "sample value " << sample << " doesn't match the expectation relative to " << lastSample;
+
+        lastSample = sample;
     }
 
     // clean up
