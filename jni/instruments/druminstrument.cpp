@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,6 +23,7 @@
 #include "druminstrument.h"
 #include "../audioengine.h"
 #include "../sequencer.h"
+#include <algorithm>
 #include <cstddef>
 #include <vector>
 
@@ -80,10 +81,27 @@ bool DrumInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
     if ( audioEvent != 0 )
     {
-        removed = BaseInstrument::removeEvent( audioEvent, isLiveEvent );
+        if ( !isLiveEvent )
+        {
+            // drum pattern store their AudioEvents in their own vectors (allows instant switching of patterns)
 
-        delete audioEvent;
-        audioEvent = 0;
+            std::vector<BaseAudioEvent*>* audioEvents = getEventsForActivePattern();
+
+            if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
+            {
+                audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
+                audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
+                removed = true;
+            }
+        }
+        else {
+            removed = BaseInstrument::removeEvent( audioEvent, isLiveEvent );
+        }
+
+        if ( removed ) {
+            delete audioEvent;
+            audioEvent = 0;
+        }
     }
     return removed;
 }
