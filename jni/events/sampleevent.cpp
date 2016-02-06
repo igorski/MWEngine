@@ -53,13 +53,18 @@ int SampleEvent::getBufferRangeStart()
 
 void SampleEvent::setBufferRangeStart( int value )
 {
-    _bufferRangeStart = value;
+    _bufferRangeStart = ( _bufferRangeEnd > 0 ) ? std::min( value, _bufferRangeEnd - 1 ) : value;
 
     if ( _rangePointer < _bufferRangeStart )
         _rangePointer = _bufferRangeStart;
 
     if ( _bufferRangeEnd <= _bufferRangeStart )
         _bufferRangeEnd = std::max( _bufferRangeStart + ( _bufferRangeLength - 1 ), _bufferRangeStart );
+
+    // buffer range may never exceed the length of the source buffer (which can be unequal to the sample length)
+
+    if ( _buffer != 0 && _bufferRangeEnd >= _buffer->bufferSize )
+        setBufferRangeEnd( _buffer->bufferSize - 1 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
 }
@@ -71,7 +76,9 @@ int SampleEvent::getBufferRangeEnd()
 
 void SampleEvent::setBufferRangeEnd( int value )
 {
-    _bufferRangeEnd = value;
+    // buffer range may never exceed the length of the source buffer (which can be unequal to the sample length)
+
+    _bufferRangeEnd = ( _buffer != 0 ) ? std::min( value, _buffer->bufferSize - 1 ): value;
 
     if ( _rangePointer > _bufferRangeEnd )
         _rangePointer = _bufferRangeEnd;
@@ -80,6 +87,11 @@ void SampleEvent::setBufferRangeEnd( int value )
         _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
+}
+
+int SampleEvent::getBufferRangeLength()
+{
+    return _bufferRangeLength;
 }
 
 void SampleEvent::play()
@@ -169,17 +181,13 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 
     _buffer->loopeable = _loopeable;
     setSampleLength( sampleLength );
+    setSampleEnd   ( _sampleStart + ( _sampleLength - 1 ));
 
-    if ( _bufferRangeLength == 0 )
-    {
-        _bufferRangeStart  = _sampleStart;
-        _bufferRangeEnd    = _sampleEnd;
-        _bufferRangeLength = _sampleLength;
-    }
-    else {
-        // ensures existing ranges remain within bounds
-        setBufferRangeStart( _bufferRangeStart );
-    }
+    // when switching samples, existing buffer ranges are reset
+
+    _bufferRangeStart  = 0;
+    setBufferRangeEnd( _bufferRangeStart + ( _sampleLength - 1 )); // also updates range length
+
     _updateAfterUnlock = false; // unnecessary
 
     if ( !wasLocked )
