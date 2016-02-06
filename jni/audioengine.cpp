@@ -28,9 +28,12 @@
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
-#include <utilities/diskwriter.h>
 #include <utilities/debug.h>
 #include <vector>
+
+#ifdef RECORD_TO_DISK
+#include <utilities/diskwriter.h>
+#endif
 
 // whether to include the OpenSL driver or the mocked driver (unit test mode)
 
@@ -126,7 +129,7 @@ namespace AudioEngine
         int outSampleNum = bufferSize * outputChannels;
         float outbuffer[ outSampleNum ]; // the output buffer rendered by the hardware
 
-#ifdef ALLOW_RECORDING
+#ifdef RECORD_DEVICE_INPUT
 
         // generate the input buffer used for recording from device input
         // as well as the temporary buffer used to merge the input into
@@ -166,8 +169,9 @@ namespace AudioEngine
                 // were we bouncing the audio ? save file and stop rendering
                 if ( bouncing )
                 {
+#ifdef RECORD_TO_DISK
                     DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, outputChannels, false );
-
+#endif
                     // broadcast update via JNI, pass buffer identifier name to identify last recording
                     Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
                     thread = 0; // stop thread, halts rendering
@@ -179,7 +183,7 @@ namespace AudioEngine
                 }
             }
 
-#ifdef ALLOW_RECORDING
+#ifdef RECORD_DEVICE_INPUT
             // record audio from Android device ?
             if ( recordFromDevice && AudioEngineProps::INPUT_CHANNELS > 0 )
             {
@@ -357,13 +361,15 @@ namespace AudioEngine
             if ( !bouncing )
                 android_AudioOut( p, outbuffer, outSampleNum );
 
-#ifdef ALLOW_RECORDING
-            // record the output if the recording state is active
+#ifdef RECORD_TO_DISK
+            // write the output to disk if a recording state is active
             if ( Sequencer::playing && ( recordOutput || recordFromDevice ))
             {
+#ifdef RECORD_DEVICE_INPUT
                 if ( recordFromDevice ) // recording from device input ? > write the record buffer
                     DiskWriter::appendBuffer( recbuffer );
                 else                    // recording global output ? > write the combined buffer
+#endif
                     DiskWriter::appendBuffer( outbuffer, bufferSize, outputChannels );
 
                 // exceeded maximum recording buffer amount ? > write current recording
@@ -392,7 +398,7 @@ namespace AudioEngine
         // clear heap memory allocated before thread loop
         delete channels;
         delete inbuffer;
-#ifdef ALLOW_RECORDING
+#ifdef RECORD_DEVICE_INPUT
         delete recbuffer;
 #endif
     }
