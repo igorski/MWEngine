@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -42,13 +42,13 @@
 
 #define PRECISION 2
 //#define RECORD_DEVICE_INPUT
-#define RECORD_TO_DISK
+//#define RECORD_TO_DISK
 #define USE_JNI
 
 namespace AudioEngineProps
 {
 #ifdef ALLOW_RECORDING
-     const int INPUT_CHANNELS  = 1;
+    const int INPUT_CHANNELS   = 1;
 #else
     const int INPUT_CHANNELS   = 0;
 #endif
