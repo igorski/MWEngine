@@ -30,23 +30,37 @@
 
 namespace EnvelopeGenerator
 {
-    void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude )
+    SAMPLE_TYPE* generateLinear( int tableLength, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude )
     {
-        SAMPLE_TYPE* outputBuffer = waveTable->getBuffer();
-        int numberOfSamples       = waveTable->tableLength;
+        SAMPLE_TYPE* out = new SAMPLE_TYPE[ tableLength ];
 
         // we can't use a 0.0 value as we would get Infinity values, sanitize to a small, positive number instead
 
         startAmplitude = std::max( 0.001, startAmplitude );
         endAmplitude   = std::max( 0.001, endAmplitude );
 
-        SAMPLE_TYPE coeff      = MAX_PHASE + ( log( endAmplitude ) - log( startAmplitude )) / numberOfSamples;
-        SAMPLE_TYPE sample     = startAmplitude;
+        SAMPLE_TYPE coeff  = MAX_PHASE + ( log( endAmplitude ) - log( startAmplitude )) / tableLength;
+        SAMPLE_TYPE sample = startAmplitude;
 
-        for ( int i = 0; i < numberOfSamples; ++i )
+        for ( int i = 0; i < tableLength; ++i )
         {
-            sample *= coeff;
-            outputBuffer[ i ] = sample;
+            sample  *= coeff;
+            out[ i ] = sample;
         }
+        return out;
+    }
+
+    SAMPLE_TYPE* generateExponential( int tableLength )
+    {
+        SAMPLE_TYPE* out = new SAMPLE_TYPE[ tableLength ];
+
+        // ensure the first index is 0.0
+
+        out[ 0 ] = 0.0;
+
+        for ( int i = 1; i < tableLength; i++ ) {
+            out[ i ] = pow( 10.0f, (( SAMPLE_TYPE ) ( tableLength - 1 ) - i ) / -200.0f );
+         }
+        return out;
     }
 }

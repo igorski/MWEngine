@@ -30,13 +30,19 @@
 
 namespace EnvelopeGenerator
 {
-    // waveTable is the output WaveTable the envelope shape is generated into
+    // generate a single envelope into a table
+    // tableLength describes the size of the table
     // startAmplitude describes the amplitude level at the beginning of the envelope where
     // endAmplitude describes the amplitude level at the end of the envelope, e.g.
     // a startAmplitude of MAX_PHASE and an endAmplitude of 0.0 would create a fade out-envelope
     // and a startAmplitude of 0.0 and an endAmplitude of MAX_PHASE would create a fade in-envelope
 
-    extern void generate( WaveTable* waveTable, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude );
+    extern SAMPLE_TYPE* generateLinear( int tableLength, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude );
+
+    // generates an exponential envelope
+    // for given tableLength (e.g. "960" for a 96 dB range)
+
+    extern SAMPLE_TYPE* generateExponential( int tableLength );
 }
 
 #endif

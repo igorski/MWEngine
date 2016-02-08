@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,93 +21,196 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "tremolo.h"
-#include <utilities/tablepool.h>
+#include "../global.h"
+#include <generators/envelopegenerator.h>
 
 /* constructors / destructor */
 
-Tremolo::Tremolo( int aLeftWaveForm, int aRightWaveForm, float aLeftFrequency, float aRightFrequency )
+Tremolo::Tremolo( int aLeftType,  int aLeftAttack,  int aLeftDecay,
+                  int aRightType, int aRightAttack, int aRightDecay )
 {
-    // create stereo tables
-    for ( int i = 0; i < 2; ++i )
-        _tables[ i ] = new WaveTable( WAVE_TABLE_PRECISION, ( i == 0 ) ? aLeftFrequency : aRightFrequency );
+    _tables = new std::vector<SAMPLE_TYPE*>( 2 );
 
-    setWaveFormForChannel ( 0, aLeftWaveForm );
-    setFrequencyForChannel( 0, aLeftFrequency );
-    setWaveFormForChannel ( 1, aRightWaveForm );
-    setFrequencyForChannel( 1, aRightFrequency );
+    // create stereo tables
+
+    SAMPLE_TYPE* leftTable;
+    SAMPLE_TYPE* rightTable;
+
+    if ( aLeftType == LINEAR )
+        leftTable = EnvelopeGenerator::generateLinear( ENVELOPE_PRECISION, 0.0, MAX_PHASE );
+    else
+        leftTable = EnvelopeGenerator::generateExponential( ENVELOPE_PRECISION );
+
+    if ( aRightType == LINEAR )
+        rightTable = EnvelopeGenerator::generateLinear( ENVELOPE_PRECISION, 0.0, MAX_PHASE );
+    else
+        rightTable = EnvelopeGenerator::generateExponential( ENVELOPE_PRECISION );
+
+    _tables->at( 0 ) = leftTable;
+    _tables->at( 1 ) = rightTable;
+
+    _leftType  = aLeftType;
+    _rightType = aRightType;
+
+    // set envelopes
+
+    setLeftAttack ( aLeftAttack );
+    setLeftDecay  ( aLeftDecay );
+    setRightAttack( aRightAttack );
+    setRightDecay ( aRightDecay );
+
+    _leftTableIndex  = 0.0;
+    _rightTableIndex = 0.0;
+    _leftState       = 0;
+    _rightState      = 0;
 }
 
 Tremolo::~Tremolo()
 {
     for ( int i = 0; i < 2; ++i )
-        delete _tables[ i ];
+        delete _tables->at( i );
+
+    delete _tables;
 }
 
 /* public methods */
 
-int Tremolo::getWaveFormForChannel( int aChannelNum )
+int Tremolo::getLeftAttack()
 {
-    return _waveforms[ aChannelNum ];
+    return _leftAttack;
 }
 
-void Tremolo::setWaveFormForChannel( int aChannelNum, int aWaveForm )
+void Tremolo::setLeftAttack( int aAttack )
 {
-    _waveforms[ aChannelNum ] = aWaveForm;
-    // TODO : USE ENVELOPE GENERATOR!!!
-    TablePool::getTable( getTableForChannel( aChannelNum ), aWaveForm );
+    _leftAttack     = aAttack;
+    _leftAttackIncr = ( SAMPLE_TYPE ) ENVELOPE_PRECISION;
+
+    if ( aAttack > 0 )
+        _leftAttackIncr /= (( SAMPLE_TYPE )( aAttack / 1000.0f ) * AudioEngineProps::SAMPLE_RATE );
 }
 
-float Tremolo::getFrequencyForChannel( int aChannelNum )
+int Tremolo::getRightAttack()
 {
-    return getTableForChannel( aChannelNum )->getFrequency();
+    return _rightAttack;
 }
 
-void Tremolo::setFrequencyForChannel( int aChannelNum, float aFrequency )
+void Tremolo::setRightAttack( int aAttack )
 {
-    getTableForChannel( aChannelNum )->setFrequency( aFrequency );
+    _rightAttack     = aAttack;
+    _rightAttackIncr = ( SAMPLE_TYPE ) ENVELOPE_PRECISION;
+
+    if ( aAttack > 0 )
+        _rightAttackIncr /= (( SAMPLE_TYPE )( aAttack / 1000.0f ) * AudioEngineProps::SAMPLE_RATE );
 }
 
-WaveTable* Tremolo::getTableForChannel( int aChannelNum )
+int Tremolo::getLeftDecay()
 {
-    return _tables[ aChannelNum ];
+    return _leftDecay;
+}
+
+void Tremolo::setLeftDecay( int aDecay )
+{
+    _leftDecay     = aDecay;
+    _leftDecayIncr = ( SAMPLE_TYPE ) ENVELOPE_PRECISION;
+
+    if ( aDecay > 0 )
+        _leftDecayIncr /= (( SAMPLE_TYPE )( aDecay / 1000.0f ) * AudioEngineProps::SAMPLE_RATE );
+}
+
+int Tremolo::getRightDecay()
+{
+    return _rightDecay;
+}
+
+void Tremolo::setRightDecay( int aDecay )
+{
+    _rightDecay     = aDecay;
+    _rightDecayIncr = ( SAMPLE_TYPE ) ENVELOPE_PRECISION;
+
+    if ( aDecay > 0 )
+        _rightDecayIncr /= (( SAMPLE_TYPE )( aDecay / 1000.0f ) * AudioEngineProps::SAMPLE_RATE );
+}
+
+SAMPLE_TYPE* Tremolo::getTableForChannel( int aChannelNum )
+{
+    return _tables->at( aChannelNum );
 }
 
 bool Tremolo::isStereo()
 {
-    if ( _waveforms[ 0 ] != _waveforms[ 1 ])
+    if ( _leftType   != _rightType   ||
+         _leftAttack != _rightAttack ||
+         _leftDecay  != _rightDecay )
+    {
         return true;
-
-    return getFrequencyForChannel( 0 ) != getFrequencyForChannel( 1 );
+    }
 }
 
 void Tremolo::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int bufferSize        = sampleBuffer->bufferSize;
-    bool doStereo         = isStereo() && sampleBuffer->amountOfChannels > 1;
-    WaveTable* leftTable  = getTableForChannel( 0 );
-    WaveTable* rightTable = getTableForChannel( 1 );
+    int bufferSize = sampleBuffer->bufferSize;
+    bool doStereo  = ( sampleBuffer->amountOfChannels > 1 ) && isStereo();
 
-    // in case sampleBuffer has more than 2 output channels we most
-    // store and restore the accumulators for every additional channel
-
-    int orgLeftAccumulator  = leftTable->getAccumulator();
-    int orgRightAccumulator = rightTable->getAccumulator();
+    SAMPLE_TYPE* envelopeTable;
+    SAMPLE_TYPE volume;
 
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
-        SAMPLE_TYPE* channelBuffer     = sampleBuffer->getBufferForChannel( c );
-        SAMPLE_TYPE* nextChannelBuffer = ( doStereo && ( c + 1 ) < ca ) ? sampleBuffer->getBufferForChannel( c + 1 ) : 0;
+        envelopeTable = getTableForChannel( c );
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
+        bool useLeft = !doStereo || c % 2 == 0;
 
         for ( int i = 0; i < bufferSize; ++i )
         {
-            if ( doStereo && nextChannelBuffer != 0 )
+            if ( useLeft )
             {
-                channelBuffer[ i ]     *= leftTable->peek();
-                nextChannelBuffer[ i ] *= rightTable->peek();
+                if ( _leftState == 0 )
+                {
+                    if (( _leftTableIndex += _leftAttackIncr ) >= ENVELOPE_PRECISION )
+                    {
+                        _leftTableIndex = ENVELOPE_PRECISION - 1;
+                        _leftState      = 1;
+                    }
+                }
+                else if ( _leftState == 1 )
+                {
+                    if (( _leftTableIndex -= _leftDecayIncr ) <= 0 )
+                    {
+                        _leftTableIndex = 0;
+
+                        // optional: hold state
+                        // if resulting volume is now smaller than sustain amp > increment _leftState
+                        _leftState = 0;
+                    }
+                }
+                volume = envelopeTable[( int ) _leftTableIndex ];
             }
             else {
-                channelBuffer[ i ] *= leftTable->peek();
+
+                // right channel
+
+                if ( _rightState == 0 )
+                {
+                    if (( _rightTableIndex += _rightAttackIncr ) >= ENVELOPE_PRECISION )
+                    {
+                        _rightTableIndex = ENVELOPE_PRECISION - 1;
+                        _rightState      = 1;
+                    }
+                }
+                else if ( _rightState == 1 )
+                {
+                    if (( _rightTableIndex -= _rightDecayIncr ) <= 0 )
+                    {
+                        _rightTableIndex = 0;
+
+                        // optional: hold state
+                        // if resulting volume is now smaller than sustain amp > increment _leftState
+                        _rightState = 0;
+                    }
+                }
+                volume = envelopeTable[( int ) _rightTableIndex ];
             }
+            channelBuffer[ i ] *= volume;
         }
 
         // save CPU cycles when source and output are mono
@@ -115,24 +218,6 @@ void Tremolo::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         {
             sampleBuffer->applyMonoSource();
             break;
-        }
-        else if ( doStereo )
-        {
-            // here we restore the accumulators for the additional channels, note the additional
-            // increment as the next buffer has already been filled
-
-            int nextChannelNum = ( ++c + 1 );
-
-            // if the amount of channels remaining for processing is an even
-            // number, also reset the right table
-
-            if ( nextChannelNum >= 2 && nextChannelNum < ca )
-            {
-                leftTable->setAccumulator( orgLeftAccumulator );
-
-                if (( ca - nextChannelNum ) % 2 == 0 )
-                    rightTable->setAccumulator( orgRightAccumulator );
-            }
         }
     }
 }

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,33 +25,68 @@
 
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
-#include "../wavetable.h"
 #include <events/sampleevent.h>
+#include <vector>
 
 class Tremolo : public BaseProcessor
 {
     public:
 
-        // Tremolo can work with two distinct channels, if the left or right channel
-        // have a different wave form or frequency, Tremolo functions as a stereo effect
+        // envelope types
 
-        Tremolo( int aLeftWaveForm, int aRightWaveForm, float aLeftFrequency, float aRightFrequency );
+        enum types {
+            LINEAR,
+            EXPONENTIAL
+        };
+
+        static const int ENVELOPE_PRECISION = 960; // 96 dB range
+
+        // Tremolo can work with two distinct channels, if the left or right channel
+        // have a different type or envelope length, the effect operates in stereo
+
+        Tremolo( int aLeftType,  int aLeftAttack,  int aLeftDecay,
+                 int aRightType, int aRightAttack, int aRightDecay );
+
         ~Tremolo();
+
+        int getLeftAttack();
+        void setLeftAttack ( int aAttack );
+        int getRightAttack();
+        void setRightAttack( int aAttack );
+        int getLeftDecay();
+        void setLeftDecay  ( int aDecay );
+        int getRightDecay();
+        void setRightDecay ( int aDecay );
 
         // aChannelNum 0 = left channel table, aChannelNum 1 = right channel table
 
-        int  getWaveFormForChannel   ( int aChannelNum );
-        void setWaveFormForChannel   ( int aChannelNum, int aWaveForm );
-        float getFrequencyForChannel ( int aChannelNum );
-        void  setFrequencyForChannel ( int aChannelNum, float aFrequency );
-        WaveTable* getTableForChannel( int aChannelNum );
+        SAMPLE_TYPE* getTableForChannel( int aChannelNum );
 
         bool isStereo();
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     protected:
-        WaveTable* _tables[ 2 ];
-        int        _waveforms[ 2 ];
+
+        std::vector<SAMPLE_TYPE*>* _tables;
+
+        SAMPLE_TYPE _leftTableIndex;
+        SAMPLE_TYPE _rightTableIndex;
+
+        // envelope state (0 = attack, 1 = decayy)
+        int _leftState;
+        int _rightState;
+
+        int _leftType;
+        int _rightType;
+        int _leftAttack;
+        int _rightAttack;
+        int _leftDecay;
+        int _rightDecay;
+
+        SAMPLE_TYPE _leftAttackIncr;
+        SAMPLE_TYPE _leftDecayIncr;
+        SAMPLE_TYPE _rightAttackIncr;
+        SAMPLE_TYPE _rightDecayIncr;
 };
 
 #endif
