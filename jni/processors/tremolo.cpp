@@ -67,7 +67,7 @@ Tremolo::Tremolo( int aLeftType,  int aLeftAttack,  int aLeftDecay,
 
 Tremolo::~Tremolo()
 {
-    for ( int i = 0; i < 2; ++i )
+    for ( int i = 0; i < _tables->size(); ++i )
         delete _tables->at( i );
 
     delete _tables;
@@ -204,7 +204,7 @@ void Tremolo::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                         _rightTableIndex = 0;
 
                         // optional: hold state
-                        // if resulting volume is now smaller than sustain amp > increment _leftState
+                        // if resulting volume is now smaller than sustain amp > increment _rightState
                         _rightState = 0;
                     }
                 }

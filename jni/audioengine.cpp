@@ -164,24 +164,8 @@ namespace AudioEngine
             loopOffset = ( max_buffer_position - bufferPosition ) + 1; // buffer index where the loop occurs
             loopAmount = bufferSize - loopOffset; // loopOffset is equal to the amount of samples read prior to loop start
 
-            if ( loopStarted )
-            {
-                // were we bouncing the audio ? save file and stop rendering
-                if ( bouncing )
-                {
-#ifdef RECORD_TO_DISK
-                    DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, outputChannels, false );
-#endif
-                    // broadcast update via JNI, pass buffer identifier name to identify last recording
-                    Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
-                    thread = 0; // stop thread, halts rendering
-                    break;
-                }
-                else
-                {
-                    Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
-                }
-            }
+            // collect all audio events that are eligible for playback for this iteration
+            Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
 
 #ifdef RECORD_DEVICE_INPUT
             // record audio from Android device ?
@@ -371,6 +355,17 @@ namespace AudioEngine
                 else                    // recording global output ? > write the combined buffer
 #endif
                     DiskWriter::appendBuffer( outbuffer, bufferSize, outputChannels );
+
+                // are we bouncing the current sequencer range and have we played throughed the full range?
+
+                if ( bouncing && ( loopStarted || bufferPosition == 0 ))
+                {
+                    DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, outputChannels, false );
+                    // broadcast update via JNI, pass buffer identifier name to identify last recording
+                    Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
+                    thread = 0; // stop thread, halts rendering
+                    break;
+                }
 
                 // exceeded maximum recording buffer amount ? > write current recording
                 if ( DiskWriter::bufferFull() || haltRecording )
