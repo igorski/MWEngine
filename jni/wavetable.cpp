@@ -85,34 +85,6 @@ void WaveTable::setBuffer( SAMPLE_TYPE* aBuffer )
     _buffer = aBuffer;
 }
 
-/**
- * returns a value from the wave table for the current
- * accumulator position, this method also increments
- * the accumulator (and keeps it within bounds)
- *
- * you can "peek" at the sample-level when working with
- * the mixing of AudioBuffers
- */
-SAMPLE_TYPE WaveTable::peek()
-{
-    int readOffset = 0;   // the wave table offset to read from
-
-    if ( _accumulator == 0 )
-        readOffset = 0;
-    else
-        readOffset = ( int ) ( _accumulator / SR_OVER_LENGTH );
-
-    // increment the accumulators read offset
-    _accumulator += _frequency;
-
-    // keep the accumulator in the bounds of the sample frequency
-    if ( _accumulator > AudioEngineProps::SAMPLE_RATE )
-        _accumulator -= AudioEngineProps::SAMPLE_RATE;
-
-    // return the sample present at the calculated offset within the table
-    return _buffer[ readOffset ];
-}
-
 void WaveTable::cloneTable( WaveTable* waveTable )
 {
     if ( tableLength != waveTable->tableLength )

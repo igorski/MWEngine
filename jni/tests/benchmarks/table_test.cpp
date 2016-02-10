@@ -112,8 +112,8 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
     std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
     std::cout << "test 3 " << totalTest3 << " ms for " << iterations << " iterations\n";
 
-    ASSERT_TRUE( totalTest2 > totalTest1 )
-        << "expected table lookup to be slower than inline generation due to repeated function calls";
+    ASSERT_TRUE( totalTest2 < totalTest1 )
+        << "expected table lookup to be faster than inline generation";
 
     ASSERT_TRUE( totalTest3 < totalTest1 )
         << "expected inline table lookup to be faster than inline generation";
