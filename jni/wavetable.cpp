@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,7 +32,7 @@ WaveTable::WaveTable( int aTableLength, float aFrequency )
     _buffer      = BufferUtility::generateSilentBuffer( tableLength );
     setFrequency( aFrequency );
 
-    SR_OVER_LENGTH = AudioEngineProps::SAMPLE_RATE / ( SAMPLE_TYPE ) tableLength;
+    SR_OVER_LENGTH = ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE / ( SAMPLE_TYPE ) tableLength;
 }
 
 WaveTable::~WaveTable()
@@ -77,6 +77,14 @@ SAMPLE_TYPE* WaveTable::getBuffer()
     return _buffer;
 }
 
+void WaveTable::setBuffer( SAMPLE_TYPE* aBuffer )
+{
+    if ( _buffer != 0 )
+        delete[] _buffer;
+
+    _buffer = aBuffer;
+}
+
 /**
  * returns a value from the wave table for the current
  * accumulator position, this method also increments
@@ -109,7 +117,7 @@ void WaveTable::cloneTable( WaveTable* waveTable )
 {
     if ( tableLength != waveTable->tableLength )
     {
-        delete _buffer;
+        delete[] _buffer;
         tableLength = waveTable->tableLength;
         _buffer = BufferUtility::generateSilentBuffer( tableLength );
     }

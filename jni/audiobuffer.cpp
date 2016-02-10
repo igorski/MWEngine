@@ -40,7 +40,7 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 AudioBuffer::~AudioBuffer()
 {
     while ( !_buffers->empty()) {
-        delete _buffers->back(), _buffers->pop_back();
+        delete[] _buffers->back(), _buffers->pop_back();
     }
     delete _buffers;
 }

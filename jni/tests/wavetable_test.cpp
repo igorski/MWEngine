@@ -63,6 +63,27 @@ TEST( WaveTable, HasContent )
     delete table;
 }
 
+TEST( WaveTable, GetSetBuffer )
+{
+    int length       = randomInt( 2, 256 );
+    float frequency  = randomFloat( 20, 880 );
+    WaveTable* table = new WaveTable( length, frequency );
+
+    SAMPLE_TYPE* oldBuffer = table->getBuffer();
+
+    SAMPLE_TYPE* newBuffer = new SAMPLE_TYPE[ length ];
+
+    table->setBuffer( newBuffer );
+
+    EXPECT_EQ( newBuffer, table->getBuffer() )
+        << "expected WaveTable to have replaced the buffer with given buffer";
+
+    ASSERT_FALSE( oldBuffer == table->getBuffer() )
+        << "expected WaveTable setter to have deleted the previous buffer";
+
+    delete table;
+}
+
 TEST( WaveTable, Accumulator )
 {
     int length       = randomInt( 2, 256 );
