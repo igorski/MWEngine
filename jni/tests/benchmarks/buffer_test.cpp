@@ -145,3 +145,56 @@ TEST( BufferBenchmark, FillVersusMemset )
 
     delete tempBuffer;
 }
+
+TEST( BufferBenchmark, LoopingVersusMemcpyCloning )
+{
+    int iterations = 100000;
+
+    long long test1start;
+    long long test1end;
+    long long test2start;
+    long long test2end;
+    long long totalTest1;
+    long long totalTest2;
+
+    int bufferSize            = randomInt( 512, 8192 );
+    SAMPLE_TYPE* sourceBuffer = new SAMPLE_TYPE[ bufferSize ];
+    SAMPLE_TYPE* tempBuffer   = new SAMPLE_TYPE[ bufferSize ];
+
+    int i, j;
+
+    for ( i = 0; i < bufferSize; ++i ) {
+        sourceBuffer[ i ] = randomSample( -MAX_PHASE, MAX_PHASE );
+    }
+
+    // test 4. cloning buffer contents using looping versus memcpy
+
+    test1start = now_ms();
+
+    for ( i = 0; i < iterations; ++i )
+    {
+        for ( j = 0; j < bufferSize; ++j )
+            tempBuffer[ j ] = sourceBuffer[ j ];
+    }
+
+    test1end   = now_ms();
+    test2start = now_ms();
+
+    for ( i = 0; i < iterations; ++i ) {
+        memcpy( tempBuffer, sourceBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
+    }
+
+    test2end = now_ms();
+
+    totalTest1 = test1end - test1start;
+    totalTest2 = test2end - test2start;
+
+    ASSERT_TRUE( totalTest2 < totalTest1 )
+        << "expected memcpy to be faster than looping";
+
+//    std::cout << "test 1 " << totalTest1 << " ms for " << iterations << " iterations\n";
+//    std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
+
+    delete sourceBuffer;
+    delete tempBuffer;
+}
