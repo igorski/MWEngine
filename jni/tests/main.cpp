@@ -11,6 +11,7 @@
 #include "sequencer_test.cpp"
 #include "sequencercontroller_test.cpp"
 #include "wavetable_test.cpp"
+#include "benchmarks/buffer_test.cpp"
 #include "events/baseaudioevent_test.cpp"
 #include "events/basesynthevent_test.cpp"
 //#include "events/drumevent_test.cpp"
