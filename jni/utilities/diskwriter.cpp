@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -70,7 +70,7 @@ namespace DiskWriter
         cachedBuffer->mergeBuffers( aBuffer, 0, outputWriterIndex, MAX_PHASE );
         outputWriterIndex += bufferSize;
     }
-    
+
     /**
      * append the actual output buffer from the engine
      * into the write buffer
@@ -80,11 +80,16 @@ namespace DiskWriter
         if ( cachedBuffer == 0 )
             generateOutputBuffer( amountOfChannels );
 
+        int i, c, ci;
+
         // write samples into cache buffers
 
-        for ( int i = 0, c = 0; i < aBufferSize; ++i, ++outputWriterIndex, c += amountOfChannels )
+        for ( i = 0, c = 0; i < aBufferSize; ++i, ++outputWriterIndex, c += amountOfChannels )
         {
-            for ( int ci = 0; ci < amountOfChannels; ++ci )
+            if ( outputWriterIndex == outputBufferSize )
+                return;
+
+            for ( ci = 0; ci < amountOfChannels; ++ci )
                 cachedBuffer->getBufferForChannel( ci )[ outputWriterIndex ] = aBuffer[ c + ci ];
         }
     }
