@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,6 +23,8 @@
 #ifndef __ARPEGGIATOR_H_INCLUDED__
 #define __ARPEGGIATOR_H_INCLUDED__
 
+#include <cmath>
+
 class Arpeggiator
 {
     public:
@@ -41,17 +43,58 @@ class Arpeggiator
         void setAmountOfSteps( int value );
         int getShiftForStep( int step );
         void setShiftForStep( int step, int shift );
-        int getStep();
         void setStep( int value );
+
+        inline int getStep()
+        {
+            return _step;
+        }
 
         // increment the current buffer position, will return
         // a boolean indicating whether the arpeggiator has moved to the next step
-        bool peek();
+
+        inline bool peek()
+        {
+            bool stepped = false;
+
+            // buffer position equals the buffer size of a single step > increment
+            if ( ++_bufferPosition >= _stepSize )
+            {
+                _bufferPosition = 0;
+
+                // increment step, but keep step in range
+                if ( ++_step >= _stepAmount )
+                    _step = 0;
+
+                stepped = true;
+            }
+            return stepped;
+        }
+
+        inline float getPitchForStep( int step, float basePitch )
+        {
+            float pitch = basePitch;
+            int shift   = _stepShifts[ step ];
+            int i       = 0;
+
+            // semitone up   = 1.0594
+            // semitone down = 0.9439
+
+            if ( shift > 0 )
+            {
+                for ( i; i < shift; ++i )
+                    pitch *= 1.0594;
+            }
+            else if ( shift < 0 )
+            {
+                for ( i; i < std::abs( shift ); ++i )
+                    pitch *= 0.9439;
+            }
+            return pitch;
+        }
 
         int getBufferPosition();
         void setBufferPosition( int value );
-
-        float getPitchForStep( int step, float basePitch );
 
         void cloneProperties( Arpeggiator* source );
         Arpeggiator* clone();

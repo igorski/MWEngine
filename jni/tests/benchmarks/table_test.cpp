@@ -74,7 +74,7 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
 
     test2end = now_ms();
 
-    // additional test : test reading from the table using inline table (omits need for repeated function calls)
+    // additional test : test reading from the table using inline code (omits the need for repeated function calls)
 
     int readOffset, accumulator = 0;
     test3start = now_ms();
@@ -108,9 +108,9 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
     totalTest2 = test2end - test2start;
     totalTest3 = test3end - test3start;
 
-    std::cout << "test 1 " << totalTest1 << " ms for " << iterations << " iterations\n";
-    std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
-    std::cout << "test 3 " << totalTest3 << " ms for " << iterations << " iterations\n";
+//    std::cout << "test 1 " << totalTest1 << " ms for " << iterations << " iterations\n";
+//    std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
+//    std::cout << "test 3 " << totalTest3 << " ms for " << iterations << " iterations\n";
 
     ASSERT_TRUE( totalTest2 < totalTest1 )
         << "expected table lookup to be faster than inline generation";

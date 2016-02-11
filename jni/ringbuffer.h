@@ -24,6 +24,7 @@
 #define __RINGBUFFER_H_INCLUDED__
 
 #include "global.h"
+#include <cstring>
 
 class RingBuffer
 {
@@ -34,10 +35,40 @@ class RingBuffer
         int getSize();
         bool isEmpty();
         bool isFull();
-        void flush();
-        void enqueue( SAMPLE_TYPE aSample );
-        SAMPLE_TYPE dequeue();
-        SAMPLE_TYPE peek();
+
+        inline void enqueue( SAMPLE_TYPE aSample )
+        {
+            _buffer[ _last ] = aSample;
+
+            if ( ++_last >= _bufferLength )
+                _last = 0;
+        }
+
+        inline SAMPLE_TYPE dequeue()
+        {
+            SAMPLE_TYPE item = _buffer[ _first ];
+
+            if ( ++_first >= _bufferLength )
+                _first = 0;
+
+            return item;
+        }
+
+        inline SAMPLE_TYPE peek()
+        {
+            return _buffer[ _first ];
+        }
+
+        inline void flush()
+        {
+            _first = 0;
+            _last  = 0;
+
+            // set buffer values to 0.0 for silence
+
+            if ( _buffer != 0 )
+                memset( _buffer, 0, _bufferLength * sizeof( SAMPLE_TYPE ));
+        }
 
     protected:
         SAMPLE_TYPE* _buffer;

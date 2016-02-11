@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,7 +22,6 @@
  */
 #include <modules/arpeggiator.h>
 #include <utilities/utils.h>
-#include <cmath>
 
 /* constructor / destructor */
 
@@ -80,54 +79,9 @@ void Arpeggiator::setShiftForStep( int step, int shift )
     _stepShifts[ step ] = shift;
 }
 
-int Arpeggiator::getStep()
-{
-    return _step;
-}
-
 void Arpeggiator::setStep( int value )
 {
     _step = value;
-}
-
-bool Arpeggiator::peek()
-{
-    bool stepped = false;
-
-    // buffer position equals the buffer size of a single step > increment
-    if ( ++_bufferPosition >= _stepSize )
-    {
-        _bufferPosition = 0;
-
-        // increment step, but keep step in range
-        if ( ++_step >= _stepAmount )
-            _step = 0;
-
-        stepped = true;
-    }
-    return stepped;
-}
-
-float Arpeggiator::getPitchForStep( int step, float basePitch )
-{
-    float pitch = basePitch;
-    int shift   = _stepShifts[ step ];
-    int i       = 0;
-
-    // semitone up   = 1.0594
-    // semitone down = 0.9439
-
-    if ( shift > 0 )
-    {
-        for ( i; i < shift; ++i )
-            pitch *= 1.0594;
-    }
-    else if ( shift < 0 )
-    {
-        for ( i; i < std::abs( shift ); ++i )
-            pitch *= 0.9439;
-    }
-    return pitch;
 }
 
 int Arpeggiator::getBufferPosition()
