@@ -123,7 +123,7 @@ public class MWEngineActivity extends Activity
         _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
 
         // add some funky delay to synth 2
-        _delay = new Delay( 250f, 2000f, .35f, .5f, 1 );
+        _delay = new Delay( 250, 2000, .35f, .5f, outputChannels );
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // prepare synthesizer volumes

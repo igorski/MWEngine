@@ -39,6 +39,10 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
     // android_AudioOut is called upon each iteration, here
     // we can check whether we can halt the thread
 
+    // note the output buffer is interleaved audio at this point!
+    int outputChannels   = AudioEngineProps::OUTPUT_CHANNELS;
+    int singleBufferSize = size / outputChannels;
+
     switch ( AudioEngine::test_program )
     {
         case 0: // engine start test
@@ -71,17 +75,18 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                 // test 2. evaluate buffer contents
 
-                for ( int i = 0; i < size; ++i )
+                for ( int i = 0, c = 0; i < singleBufferSize; ++i, c += outputChannels )
                 {
                     // expected samples as defined in audioengine_test.cpp
                     SAMPLE_TYPE expected[] = { -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0 };
+                    SAMPLE_TYPE sample     = buffer[ c ];
 
-                    SAMPLE_TYPE sample = buffer[ i ];
                     int compareOffset = (( currentIteration * AudioEngineProps::BUFFER_SIZE ) + i ) % 16;
 
                     if ( sample != expected[ i ])
                     {
-                        Debug::log( "expected %f, got %f at buffer position %d", expected[ i ], sample, AudioEngine::bufferPosition );
+                        Debug::log( "expected %f, got %f at output position %d for sequencer buffer position %d",
+                            expected[ i ], sample, c, AudioEngine::bufferPosition );
 
                         AudioEngine::test_successful = false;
                         AudioEngine::stop();
@@ -106,14 +111,14 @@ int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
             {
                 AudioEngine::test_successful = true; // will be falsified by assertions below
 
-                // test: ensure the buffers of both the event at the end of the loop and
+                // test 3. ensure the buffers of both the event at the end of the loop and
                 // at the start of the Sequencers loop have been mixed into the output buffer
 
-                for ( int i = 0, bufferPosition = 88100; i < size; ++i, ++bufferPosition )
+                for ( int i = 0, c = 0, bufferPosition = 88100; i < singleBufferSize; ++i, ++bufferPosition, c += outputChannels )
                 {
                     // 77175 being audioEvent1 start, -0.25f being audioEvent1 contents, _0.5f being audioEvent2 contents
                     SAMPLE_TYPE expected = ( bufferPosition > 77175 ) ? -0.25f : +0.5f;
-                    SAMPLE_TYPE sample   = buffer[ i ];
+                    SAMPLE_TYPE sample   = buffer[ c ];
 
                     if ( sample != expected )
                     {

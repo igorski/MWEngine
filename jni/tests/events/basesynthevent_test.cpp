@@ -325,5 +325,5 @@ TEST( BaseSynthEvent, LockedState )
     ASSERT_FALSE( audioEvent->isLocked() )
         << "expected audio event to be unlocked after unlocking";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }

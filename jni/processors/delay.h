@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -28,11 +28,11 @@
 class Delay : public BaseProcessor
 {
     public:
-        Delay( float aDelayTime, float aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels );
+        Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels );
         ~Delay();
 
-        float getDelayTime();
-        void setDelayTime( float aValue );
+        int getDelayTime();
+        void setDelayTime( int aValue );
         float getMix();
         void setMix( float aValue );
         float getFeedback();

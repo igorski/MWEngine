@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,20 +22,20 @@
  */
 #include "delay.h"
 #include "../global.h"
-#include "../utilities/utils.h"
+#include <utilities/utils.h>
 #include <math.h>
 
 /* constructor / destructor */
 
 /**
- * @param aDelayTime    {float} in milliseconds, time between consecutive repeats
- * @param aMaxDelayTime {float} in milliseconds, the maximum value we're likely to expect
+ * @param aDelayTime    {int} in milliseconds, time between consecutive repeats
+ * @param aMaxDelayTime {int} in milliseconds, the maximum value we're likely to expect
  *                               in case delay time will fluctuate in the application
  * @param aMix          {float} 0-1, percentage of dry/wet mix
  * @param aFeedback     {float} 0-1, amount of repeats
  * @param amountOfChannels {int} amount of output channels
  */
-Delay::Delay( float aDelayTime, float aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels )
+Delay::Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels )
 {
     _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aDelayTime );
     _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aMaxDelayTime );
@@ -60,7 +60,7 @@ Delay::~Delay()
 
 void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    float delay;
+    SAMPLE_TYPE delaySample;
     int readIndex, delayIndex;
 
     int bufferSize = sampleBuffer->bufferSize;
@@ -68,10 +68,10 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
-        SAMPLE_TYPE* delayBuffer   = _delayBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE* delayBuffer   = _delayBuffer->getBufferForChannel( std::min( c, _delayBuffer->amountOfChannels - 1 ));
         delayIndex                 = _delayIndices[ c ];
 
-        for ( int i  = 0; i < bufferSize; ++i )
+        for ( int i = 0; i < bufferSize; ++i )
         {
             readIndex = delayIndex - _time + 1;
 
@@ -81,18 +81,18 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             // read the previously delayed samples from the buffer
             // ( for feedback purposes ) and append the current sample to it
 
-            delay = delayBuffer[ readIndex ];
+            delaySample = delayBuffer[ readIndex ];
 
-            delayBuffer[ delayIndex ] = channelBuffer[ i ] + delay * _feedback;
+            delayBuffer[ delayIndex ] = channelBuffer[ i ] + delaySample * _feedback;
 
             if ( ++delayIndex == _time )
                 delayIndex = 0;
 
             // higher feedback levels can cause a massive noise-fest, "limit" them!
             if ( _feedback > .5f )
-                channelBuffer[ i ] += ( delay * _mix * ( 1.5f - _feedback ));
+                channelBuffer[ i ] += ( delaySample * _mix * ( 1.5f - _feedback ));
             else
-                channelBuffer[ i ] += ( delay * _mix );
+                channelBuffer[ i ] += ( delaySample * _mix );
         }
         _delayIndices[ c ]  = delayIndex; // update last index
 
@@ -117,18 +117,21 @@ void Delay::reset()
 
 /* getters / setters */
 
-float Delay::getDelayTime()
+int Delay::getDelayTime()
 {
     return _time / ( AudioEngineProps::SAMPLE_RATE / 1000 );
 }
 
-void Delay::setDelayTime( float aValue )
+void Delay::setDelayTime( int aValue )
 {
     _time = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aValue );
 
+    if ( _time > _maxTime )
+        _time = _maxTime; // keep within defines range
+
     for ( int i = 0; i < _amountOfChannels; ++i )
     {
-        if ( _delayIndices[ i ] > _time )
+        if ( _delayIndices[ i ] >= _time )
             _delayIndices[ i ] = 0;
     }
 }
