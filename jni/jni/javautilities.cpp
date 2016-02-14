@@ -71,7 +71,7 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
     SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( 0 );
 
     for ( i = 0; i < aBufferLength; i++ )
-        channelBuffer[ i ] = ( float ) c_array[ i ];
+        channelBuffer[ i ] = ( SAMPLE_TYPE ) c_array[ i ];
 
     // release the memory so Java can have it again
     JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aBuffer, c_array, 0 );
@@ -90,7 +90,7 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
         channelBuffer = sampleBuffer->getBufferForChannel( 1 );
 
         for ( i = 0; i < aBufferLength; i++ )
-            channelBuffer[ i ] = ( float ) c_array[ i ];
+            channelBuffer[ i ] = ( SAMPLE_TYPE ) c_array[ i ];
 
         // release the memory so Java can have it again
         JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aOptRightBuffer, c_array, 0 );
@@ -130,7 +130,7 @@ void JavaUtilities::cacheTable( jint tableLength, jint waveformType, jdoubleArra
     // copy buffer contents
 
     for ( int i = 0; i < tableLength; i++ )
-        buffer[ i ] = ( float ) c_array[ i ];
+        buffer[ i ] = ( SAMPLE_TYPE ) c_array[ i ];
 
     // release the memory so Java can have it again
     JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aBuffer, c_array, 0 );
