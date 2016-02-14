@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,27 +23,56 @@
 #include "tablepool.h"
 #include <generators/wavegenerator.h>
 
-namespace TablePool
+std::map<int, WaveTable*> TablePool::_cachedTables;
+
+WaveTable* TablePool::getTable( int waveformType )
 {
-    std::map<int, WaveTable*> _cachedTables;
+    std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
 
-    void getTable( WaveTable* waveTable, int waveformType )
+    if ( it != _cachedTables.end())
     {
-        std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
-
-        if ( it != _cachedTables.end())
-        {
-            // table existed, load the pooled version
-            waveTable->cloneTable(( WaveTable* )( it->second ));
-        }
-        else
-        {
-            // wave table hasn't been generated yet ? generate its contents on the fly
-            if ( !waveTable->hasContent() )
-                WaveGenerator::generate( waveTable, waveformType );
-
-            // insert a clone of the generated table into the pools table map
-            _cachedTables.insert( std::pair<int, WaveTable*>( waveformType, waveTable->clone() ));
-        }
+        // table existed, load the pooled version
+        return ( WaveTable* )( it->second );
     }
+    return 0;
+}
+
+void TablePool::setTable( WaveTable* waveTable, int waveformType )
+{
+    std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
+
+    if ( it != _cachedTables.end())
+    {
+        // table existed, remove it so we can replace it
+        delete ( WaveTable* )( it->second );
+        _cachedTables.erase( it );
+    }
+
+    // wave table hasn't been generated yet ? generate its contents on the fly
+    if ( !waveTable->hasContent() )
+        WaveGenerator::generate( waveTable, waveformType );
+
+    // insert the generated table into the pools table map
+    _cachedTables.insert( std::pair<int, WaveTable*>( waveformType, waveTable ));
+}
+
+bool TablePool::hasTable( int waveformType )
+{
+    std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
+    return it != _cachedTables.end();
+}
+
+bool TablePool::removeTable( int waveformType )
+{
+    std::map<int, WaveTable*>::iterator it = _cachedTables.find( waveformType );
+
+    if ( it != _cachedTables.end())
+    {
+        // table existed, remove it so we can replace it
+        delete ( WaveTable* )( it->second );
+        _cachedTables.erase( it );
+
+        return true;
+    }
+    return false;
 }

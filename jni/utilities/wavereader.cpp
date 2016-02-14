@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -36,7 +36,7 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
        char id[ 5 ];
        unsigned long size;
        short* sound_buffer;
-       short tag, amountOfChannels, blcokAlign, bps;
+       short tag, amountOfChannels, blockAlign, bps;
        unsigned int format, sampleRate, bytesPerSec, dataSize, i;
 
        // first we'll check the necessary headers identifying the WAV file
@@ -58,7 +58,7 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
                 fread( &amountOfChannels, sizeof( short ), 1, fp );
                 fread( &sampleRate,       sizeof( unsigned long ), 1, fp );
                 fread( &bytesPerSec,      sizeof( unsigned long ), 1, fp );
-                fread( &blcokAlign,       sizeof( short ), 1, fp );
+                fread( &blockAlign,       sizeof( short ), 1, fp );
                 fread( &bps,              sizeof( short ), 1, fp );
                 fread( id,                sizeof( char ), 4, fp );
                 fread( &dataSize,         sizeof( unsigned long ), 1, fp );
@@ -96,4 +96,27 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
         Debug::log( "WaveReader::Error could not open file '%s'", inputFile.c_str() );
     }
     return out;
- }
+}
+
+WaveTable* WaveReader::fileToTable( std::string inputFile )
+{
+    AudioBuffer* tempBuffer = fileToBuffer( inputFile );
+
+    if ( tempBuffer == 0 ) {
+        Debug::log( "WaveReader::could not convert file '%s' to WaveTable", inputFile.c_str() );
+        return 0;
+    }
+
+    WaveTable* out = new WaveTable( tempBuffer->bufferSize, 440.0f );
+
+    // clone the left/mono channel of the temporary buffer and
+    // assign the clone to the WaveTable
+
+    SAMPLE_TYPE* targetBuffer = new SAMPLE_TYPE[ tempBuffer->bufferSize ];
+    memcpy( targetBuffer, tempBuffer->getBufferForChannel( 0 ), tempBuffer->bufferSize * sizeof( SAMPLE_TYPE ));
+    out->setBuffer( targetBuffer );
+
+    delete tempBuffer; // free memory used by the temporary buffer
+
+    return out;
+}

@@ -115,7 +115,7 @@ void SynthInstrument::reserveOscillators( int aAmount )
     if ( oscillators.size() < aAmount )
     {
         while ( oscillators.size() < aAmount )
-            oscillators.push_back( new OscillatorTuning( WaveForms::SINE, 0.0, 0, 0 ) );
+            oscillators.push_back( new OscillatorProperties( WaveForms::SINE, 0.0, 0, 0 ) );
     }
     else {
         while ( oscillators.size() > aAmount ) {
@@ -125,7 +125,7 @@ void SynthInstrument::reserveOscillators( int aAmount )
     }
 }
 
-OscillatorTuning* SynthInstrument::getTuningForOscillator( int aOscillatorNum )
+OscillatorProperties* SynthInstrument::getOscillatorProperties( int aOscillatorNum )
 {
     return oscillators.at( aOscillatorNum );
 }

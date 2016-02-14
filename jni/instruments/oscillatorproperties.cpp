@@ -20,19 +20,46 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "oscillatortuning.h"
+#include "oscillatorproperties.h"
+#include <definitions/waveforms.h>
+#include <utilities/tablepool.h>
 
 /* constructor / destructor */
 
-OscillatorTuning::OscillatorTuning( int aWaveform, float aDetune, int aOctaveShift, int aFineShift )
+OscillatorProperties::OscillatorProperties( int aWaveform, float aDetune, int aOctaveShift, int aFineShift )
 {
-    waveform    = aWaveform;
     detune      = aDetune;
     octaveShift = aOctaveShift;
     fineShift   = aFineShift;
+    waveTable   = 0;
+
+    setWaveform( aWaveform );
 }
 
-OscillatorTuning::~OscillatorTuning()
+OscillatorProperties::~OscillatorProperties()
 {
+    delete waveTable;
+}
 
+/* public methods */
+
+int OscillatorProperties::getWaveform()
+{
+    return _waveform;
+}
+
+void OscillatorProperties::setWaveform( int aWaveform )
+{
+    if ( waveTable != 0 )
+        delete waveTable;
+
+    if ( aWaveform == WaveForms::TABLE ) {
+        WaveTable* tableFromPool = TablePool::getTable( aWaveform );
+
+        if ( tableFromPool != 0 )
+            waveTable = tableFromPool->clone();
+        else
+            aWaveform == WaveForms::SINE;
+    }
+    _waveform = aWaveform;
 }

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,19 +20,27 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __OSCILLATOR_TUNING_H_INCLUDED__
-#define __OSCILLATOR_TUNING_H_INCLUDED__
+#ifndef __OSCILLATOR_PROPERTIES_H_INCLUDED__
+#define __OSCILLATOR_PROPERTIES_H_INCLUDED__
 
-class OscillatorTuning
+#include "../wavetable.h"
+
+class OscillatorProperties
 {
     public:
-        OscillatorTuning( int aWaveform, float aDetune, int aOctaveShift, int aFineShift );
-        ~OscillatorTuning();
+        OscillatorProperties( int aWaveform, float aDetune, int aOctaveShift, int aFineShift );
+        ~OscillatorProperties();
 
-        int   waveform;
+        int getWaveform();
+        void setWaveform( int aWaveform );
+
         float detune;
         int   octaveShift;
         int   fineShift;
+        WaveTable* waveTable;
+
+    protected:
+        int _waveform;
 };
 
 #endif

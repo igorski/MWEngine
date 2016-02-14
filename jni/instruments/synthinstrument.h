@@ -25,7 +25,7 @@
 
 #include "baseinstrument.h"
 #include "../audiochannel.h"
-#include <instruments/oscillatortuning.h>
+#include <instruments/oscillatorproperties.h>
 #include <events/baseaudioevent.h>
 #include <generators/synthesizer.h>
 #include <modules/adsr.h>
@@ -49,7 +49,7 @@ class SynthInstrument : public BaseInstrument
         int getOscillatorAmount ();
         void setOscillatorAmount( int aAmount );
         void reserveOscillators ( int aAmount );
-        OscillatorTuning* getTuningForOscillator( int aOscillatorNum );
+        OscillatorProperties* getOscillatorProperties( int aOscillatorNum );
 
         // modules
 
@@ -67,7 +67,7 @@ class SynthInstrument : public BaseInstrument
     protected:
 
         int oscAmount;      // amount of oscillators, minimum == 1
-        std::vector<OscillatorTuning*> oscillators;
+        std::vector<OscillatorProperties*> oscillators;
 
         void init();
 };

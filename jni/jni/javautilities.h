@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -28,7 +28,7 @@
 /**
  * JavaUtilities provide convenient hooks into the engine to
  * register sample buffers directly into the SampleManager or TablePool
- * without having to use AudioBuffers (should remain a native layer component)
+ * without having to use AudioBuffers (these should preferably remain a native layer component)
  */
 class JavaUtilities
 {
@@ -49,6 +49,11 @@ class JavaUtilities
 
         static void cacheTable( jint tableLength, jint waveformType );
         static void cacheTable( jint tableLength, jint waveformType, jdoubleArray aBuffer );
+
+        // take the raw contents of a WAV file at given path and
+        // convert it to a WaveTable to be stored under given waveformType identifier inside the TablePool
+
+        static bool createTableFromFile( jint waveformType, jstring aWAVFilePath );
 };
 
 #endif

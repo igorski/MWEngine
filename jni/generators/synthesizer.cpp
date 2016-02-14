@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -57,8 +57,10 @@ Synthesizer::~Synthesizer()
 
 void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 {
-    int bufferLength = aOutputBuffer->bufferSize;
-    int type         = _instrument->getTuningForOscillator( _oscillatorNum )->waveform;
+    int bufferLength               = aOutputBuffer->bufferSize;
+    OscillatorProperties* oscProps = _instrument->getOscillatorProperties( _oscillatorNum );
+    int type                       = oscProps->getWaveform();
+    int SAMPLE_RATE                = AudioEngineProps::SAMPLE_RATE;
 
     if ( !hasParent ) aOutputBuffer->silenceBuffers(); // unset previous buffer contents
     SAMPLE_TYPE amp = 0.0;
@@ -99,19 +101,47 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
                                                   !hasParent ? baseFrequency : frequency );
         aEvent->setFrequency( frequency, false );
     }
+
     // envelopes
 
     _instrument->adsr->setBufferLength( aEvent->getSampleLength() );
 
     // Karplus-Strong specific
 
-    RingBuffer* ringBuffer;
-    if ( type == WaveForms::KARPLUS_STRONG ) ringBuffer = getRingBuffer( aEvent, frequency );
+    RingBuffer* ringBuffer = ( type == WaveForms::KARPLUS_STRONG ) ? getRingBuffer( aEvent, frequency ) : 0;
+
+    // WaveTable specific
+
+    WaveTable* waveTable = 0;
+    int tableReadOffset, waveTableAccumulator;
+    SAMPLE_TYPE* tableBuffer;
+    SAMPLE_TYPE tableDivider;
+
+    if ( type == WaveForms::TABLE ) {
+        waveTable            = oscProps->waveTable;
+        tableBuffer          = waveTable->getBuffer();
+        waveTableAccumulator = waveTable->getAccumulator();
+        tableDivider         = ( SAMPLE_TYPE ) SAMPLE_RATE / ( SAMPLE_TYPE ) waveTable->tableLength;
+    }
 
     for ( int i = renderStartOffset; i < renderEndOffset; ++i )
     {
         switch ( type )
         {
+            case WaveForms::TABLE:
+
+                // ---- Wave table based
+
+                tableReadOffset       = ( waveTableAccumulator == 0 ) ? 0 : ( int ) ( waveTableAccumulator / tableDivider );
+                waveTableAccumulator += frequency;
+
+                if ( waveTableAccumulator > SAMPLE_RATE )
+                    waveTableAccumulator -= SAMPLE_RATE;
+
+                amp = tableBuffer[ tableReadOffset ];
+
+                break;
+
             case WaveForms::SINE:
 
                 // ---- Sine wave
@@ -228,7 +258,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         }
 
         // --- phase update operations
-        if ( type != WaveForms::PWM && type != WaveForms::KARPLUS_STRONG )
+        if ( type != WaveForms::TABLE && type != WaveForms::PWM && type != WaveForms::KARPLUS_STRONG )
         {
             phase += aEvent->cachedProps.phaseIncr;
 
@@ -253,8 +283,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         // events frequency updated from outside (e.g. user shifted event note ?)
         // update the cached frequency
 
-        if ( aEvent->getFrequency() != frequency )
-            frequency = aEvent->getFrequency();
+        frequency = aEvent->getFrequency();
 
         // -- write the output into the buffers channels
 
@@ -285,8 +314,8 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     {
         _instrument->adsr->setLastEnvelope( aEvent->cachedProps.ADSRenvelope );
         _instrument->adsr->setBufferLength( aEvent->getSampleLength() );
-        aEvent->cachedProps.ADSRenvelope = _instrument->adsr->apply( aOutputBuffer, bufferWriteIndex );
 
+        aEvent->cachedProps.ADSRenvelope     = _instrument->adsr->apply( aOutputBuffer, bufferWriteIndex );
         aEvent->cachedProps.arpeggioPosition = arpeggiator->getBufferPosition();
         aEvent->cachedProps.arpeggioStep     = arpeggiator->getStep();
 
@@ -296,6 +325,9 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     // commit the updated event properties
 
     aEvent->setPhaseForOscillator( _oscillatorNum, phase );
+
+    if ( waveTable != 0 )
+        waveTable->setAccumulator( waveTableAccumulator );
 }
 
 void Synthesizer::updateProperties()
@@ -321,7 +353,7 @@ void Synthesizer::initializeEventProperties( BaseSynthEvent* aEvent, bool initia
         // in case of Karplus Strong synthesis ensure the ring buffers
         // are filled with noise (this caters for the "pluck" of the sound)
 
-        if ( _instrument->getTuningForOscillator( i )->waveform == WaveForms::KARPLUS_STRONG )
+        if ( _instrument->getOscillatorProperties( i )->getWaveform() == WaveForms::KARPLUS_STRONG )
         {
             SAMPLE_TYPE frequency  = tuneOscillator( i, aEvent->getFrequency() );
             RingBuffer* ringBuffer = getRingBuffer( aEvent, frequency );
@@ -361,24 +393,24 @@ void Synthesizer::destroyOscillator( int aOscillatorNum )
 
 float Synthesizer::tuneOscillator( int aOscillatorNum, float aFrequency )
 {
-    OscillatorTuning* tuning = _instrument->getTuningForOscillator( aOscillatorNum );
+    OscillatorProperties* oscProps = _instrument->getOscillatorProperties( aOscillatorNum );
 
-    float lfo2Tmpfreq = aFrequency + ( aFrequency / 1200 * tuning->detune ); // 1200 cents == octave
+    float lfo2Tmpfreq = aFrequency + ( aFrequency / 1200 * oscProps->detune ); // 1200 cents == octave
     float lfo2freq    = lfo2Tmpfreq;
 
     // octave shift ( -2 to +2 )
-    if ( tuning->octaveShift != 0 )
+    if ( oscProps->octaveShift != 0 )
     {
-        if ( tuning->octaveShift < 0 )
-            lfo2freq = lfo2Tmpfreq / std::abs(( float ) ( tuning->octaveShift * 2 ));
+        if ( oscProps->octaveShift < 0 )
+            lfo2freq = lfo2Tmpfreq / std::abs(( float ) ( oscProps->octaveShift * 2 ));
         else
-            lfo2freq += ( lfo2Tmpfreq * std::abs(( float ) ( tuning->octaveShift * 2 ) - 1 ));
+            lfo2freq += ( lfo2Tmpfreq * std::abs(( float ) ( oscProps->octaveShift * 2 ) - 1 ));
     }
 
     // fine shift ( -7 to +7 )
-    float fineShift = ( lfo2Tmpfreq / 12 * std::abs( tuning->fineShift ));
+    float fineShift = ( lfo2Tmpfreq / 12 * std::abs( oscProps->fineShift ));
 
-    if ( tuning->fineShift < 0 )
+    if ( oscProps->fineShift < 0 )
         lfo2freq -= fineShift;
      else
         lfo2freq += fineShift;

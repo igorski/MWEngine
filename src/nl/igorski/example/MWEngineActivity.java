@@ -106,8 +106,8 @@ public class MWEngineActivity extends Activity
         _synth1 = new SynthInstrument();
         _synth2 = new SynthInstrument();
 
-        _synth1.getTuningForOscillator( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
-        _synth2.getTuningForOscillator( 0 ).setWaveform( 5 ); // pulse width modulation
+        _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
+        _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
 
         // a high decay for synth 1 (bubblier effect)
         _synth1.getAdsr().setDecay( .9f );

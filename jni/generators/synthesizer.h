@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,11 +32,12 @@
 class SynthInstrument; // forward declaration, see <instruments/synthinstrument.h>
 
 /**
- * example renderer for a synthesizer.
+ * example renderer for a synthesizer
  * SynthInstrument describes the synthesizers properties
- * Synthesizer renders the properties into audio
+ * Synthesizer renders the properties into audio, either via live generation
+ * or via WaveTable-based lookups (see render()-method)
  *
- * It is the same class used for the synthesizers in MikroWave and Kosm
+ * This is the same class used for the synthesizers in MikroWave and Kosm
  *
  * see: https://play.google.com/store/apps/details?id=nl.igorski.mikrowave&hl=en
  * see: https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en
@@ -61,7 +62,7 @@ class Synthesizer
         SAMPLE_TYPE TWO_PI_OVER_SR;
 
         int _fadeInDuration, _fadeOutDuration;
-        float _pwr, _pwAmp, _pwmValue;                 // PWM-specific
+        float _pwr, _pwAmp, _pwmValue;      // PWM-specific
 
         // Karplus-Strong specific
         RingBuffer* getRingBuffer( BaseSynthEvent* aEvent, float aFrequency );

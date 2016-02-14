@@ -26,7 +26,7 @@ else
     instruments/druminstrument.cpp \
     instruments/sampledinstrument.cpp \
     instruments/synthinstrument.cpp \
-    instruments/oscillatortuning.cpp \
+    instruments/oscillatorproperties.cpp \
     drumpattern.cpp \
     events/baseaudioevent.cpp \
     events/basecacheableaudioevent.cpp \

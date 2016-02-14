@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,14 +21,23 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "../audiobuffer.h"
+#include "../wavetable.h"
 #include <string>
 
 class WaveReader
 {
     public:
-        // opens the File at the given path, read its WAV data and
+
+        // opens the File at the given path, reads its WAV data and
         // returns an AudioBuffer representing this file, NOTE : if
         // file doesn't exist / is not a valid WAV file, a null
         // pointer is returned
         static AudioBuffer* fileToBuffer( std::string inputFile );
+
+        // opens the File at the given path, reads its WAV data and
+        // returns an WaveTable holding this file's contents
+        // NOTE : if file doesn't exist / is not a valid WAV file, a null
+        // pointer is returned
+
+        static WaveTable* fileToTable( std::string inputFile );
 };

@@ -23,6 +23,7 @@
 #include "processors/delay_test.cpp"
 #include "processors/tremolo_test.cpp"
 #include "utilities/fastmath_test.cpp"
+#include "utilities/tablepool_test.cpp"
 
 int main( int argc, char *argv[] )
 {

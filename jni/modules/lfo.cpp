@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,9 +20,9 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <modules/lfo.h>
-#include "global.h"
-#include "audioengine.h"
+#include "lfo.h"
+#include "../global.h"
+#include "../audioengine.h"
 #include <definitions/waveforms.h>
 #include <utilities/utils.h>
 #include <utilities/tablepool.h>
@@ -68,7 +68,10 @@ void LFO::setWave( int value )
 
 void LFO::generate()
 {
-    TablePool::getTable( _table, _wave );
+    WaveTable* table = TablePool::getTable( _wave );
+
+    if ( table != 0 )
+        _table->cloneTable( table );
 }
 
 WaveTable* LFO::getTable()
