@@ -1,0 +1,48 @@
+apply plugin: 'com.android.application'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.2.3'
+    }
+}
+
+android {
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
+
+    defaultConfig {
+        applicationId "nl.igorski.example"
+        minSdkVersion 14
+        targetSdkVersion 17
+        versionCode 1
+        versionName "1.0.0"
+    }
+    if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
+        signingConfigs {
+            release {
+                storeFile file(RELEASE_STORE_FILE)
+                storePassword RELEASE_STORE_PASSWORD
+                keyAlias RELEASE_KEY_ALIAS
+                keyPassword RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+    buildTypes {
+        if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
+            release {
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+    sourceSets {
+        main {
+            java.srcDirs    = [ 'src/main/java' ]
+            jniLibs.srcDirs = [ 'libs' ]
+        }
+    }
+}

@@ -44,9 +44,23 @@ through the PATH settings of your system (or adjust the shell scripts accordingl
 
 After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.nativeaudio_-namespace, making the code available to Java.
 
-You can then run the Ant build script to create the .APK package and deploy it into an attached device / emulator, e.g. :
+You can create the .APK package and deploy it instantly onto an attached device / emulator by using Gradle e.g. :
 
-    ant debug install
+    gradle installDebug
+
+The usual Gradle suspects such as "clean", "build", etc. are also present.
+
+To create a signed release build, add the following into your Gradle's properties file (_~/.gradle/gradle.properties_) and
+replace the values accordingly:
+
+RELEASE_STORE_FILE={path_to_.keystore_file}
+RELEASE_STORE_PASSWORD={password_for_.keystore}
+RELEASE_KEY_ALIAS={alias_for_.keystore}
+RELEASE_KEY_PASSWORD={password_for_.keystore}
+
+You can now build and sign a releasable APK by running:
+
+    gradle build
     
 ### Unit tests
 

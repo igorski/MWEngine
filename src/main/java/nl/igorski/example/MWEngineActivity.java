@@ -6,10 +6,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
+import nl.igorski.lib.audio.MWEngine;
 import nl.igorski.lib.audio.definitions.Pitch;
 import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
 import nl.igorski.lib.audio.nativeaudio.*;
-import nl.igorski.lib.audio.MWEngine;
 
 import java.util.Vector;
 
@@ -24,14 +24,14 @@ public class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer           _finalizer;
-    private LPFHPFilter         _lpfhpf;
-    private SynthInstrument     _synth1;
+    private Finalizer _finalizer;
+    private LPFHPFilter _lpfhpf;
+    private SynthInstrument _synth1;
     private SynthInstrument     _synth2;
     private Filter              _filter;
     private Phaser              _phaser;
     private Delay               _delay;
-    private MWEngine            _engine;
+    private MWEngine _engine;
     private SequencerController _sequencerController;
     private Vector<SynthEvent>  _synth1Events;
     private Vector<SynthEvent>  _synth2Events;

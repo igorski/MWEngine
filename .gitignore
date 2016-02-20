@@ -1,10 +1,10 @@
-*.iml
 *.DS_Store
 *.idea
-intelliJ project
-src/nl/igorski/lib/audio/nativeaudio/*
+.gradle
+src/main/java/nl/igorski/lib/audio/nativeaudio/*
 jni/jni/java_interface_wrap.cpp
-obj
-bin/*
-gen/*
 libs/*
+obj
+build
+*.iml
+intelliJ project
