@@ -47,6 +47,20 @@ float scale( float value, float maxValue, float maxCompareValue )
     return ( float ) ( value * ratio );
 }
 
+/**
+ * keep given value within the accepted
+ * phase range this prevents clipped output
+ */
+SAMPLE_TYPE cap( SAMPLE_TYPE value )
+{
+    if ( value < -MAX_PHASE )
+        return -MAX_PHASE;
+    else if ( value > MAX_PHASE )
+        return MAX_PHASE;
+
+    return value;
+}
+
 //
 // Generate a random number between 0 and 1
 // return a uniform number in [0,1].

@@ -13,13 +13,13 @@ TEST( Delay, ConstructorArguments )
     Delay* delay = new Delay( delayTime, maxDelayTime, mix, feedback, channels );
 
     EXPECT_EQ( delayTime, delay->getDelayTime() )
-        << "expected delay time to be return unchanged after construction";
+        << "expected delay time to be returned unchanged after construction";
 
     EXPECT_EQ( mix, delay->getMix() )
-        << "expected delay mix to be return unchanged after construction";
+        << "expected delay mix to be returned unchanged after construction";
 
     EXPECT_EQ( feedback, delay->getFeedback() )
-        << "expected delay feedback to be return unchanged after construction";
+        << "expected delay feedback to be returned unchanged after construction";
 
     delete delay;
 }

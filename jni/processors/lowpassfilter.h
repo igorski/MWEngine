@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2016 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,35 +20,31 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __UTILS_H_INCLUDED__
-#define __UTILS_H_INCLUDED__
+#ifndef __LOWPASSFILTER_H_INCLUDED__
+#define __LOWPASSFILTER_H_INCLUDED__
 
-#include <math.h>
-#include <sstream>
-#include "global.h"
+#include "baseprocessor.h"
 
-/* convenience methods */
-
-float scale( float value, float maxValue, float maxCompareValue );
-SAMPLE_TYPE cap( SAMPLE_TYPE value );
-float randomFloat();
-unsigned long long now_ms();
-
-/* volume util */
-
-namespace VolumeUtil
+/**
+ * a simple two pole low-pass filter
+ */
+class LowPassFilter : public BaseProcessor
 {
-    extern float FACTOR1;
-    extern float FACTOR2;
+    public:
+        LowPassFilter( float cutoff );
+        ~LowPassFilter();
 
-    extern float lin2log( float dLinear );
-    extern float log2lin( float dLogarithmic );
-}
+        float getCutoff();
+        void setCutoff( float value);
 
-/* convenience methods */
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+        SAMPLE_TYPE processSingle( SAMPLE_TYPE sample );
 
-// numbers to string
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
- ( std::ostringstream() << std::dec << x ) ).str()
+    protected:
+        SAMPLE_TYPE x1, x2, y1, y2;
+        SAMPLE_TYPE a0, a1, a2, b0, b1, b2, w0, alpha;
+
+        float _cutoff;
+};
 
 #endif

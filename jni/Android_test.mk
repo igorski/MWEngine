@@ -35,10 +35,12 @@ processors/decimator.cpp \
 processors/delay.cpp \
 processors/filter.cpp \
 processors/finalizer.cpp \
+processors/flanger.cpp \
 processors/fm.cpp \
 processors/formantfilter.cpp \
 processors/glitcher.cpp \
 processors/limiter.cpp \
+processors/lowpassfilter.cpp \
 processors/lpfhpfilter.cpp \
 processors/phaser.cpp \
 processors/tremolo.cpp \
