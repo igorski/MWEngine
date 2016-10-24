@@ -47,7 +47,7 @@ void LowPassFilter::setCutoff( float value )
     _cutoff = value;
 
     SAMPLE_TYPE Q = 1.1f;
-    w0 = TWO_PI * _cutoff / AudioEngineProps::SAMPLE_RATE;
+    w0 = TWO_PI * _cutoff / ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE;
     alpha = sin(w0) / (2.0 * Q);
     b0 =  (1.0 - cos(w0))/2;
     b1 =   1.0 - cos(w0);

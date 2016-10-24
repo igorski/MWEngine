@@ -67,9 +67,9 @@ class Flanger : public BaseProcessor
         float _feedback;
         float _delay;
         float _mix;
-        SAMPLE_TYPE _feedbackPhase;     // -1.0 to 1.0
-        SAMPLE_TYPE _sweepSamples;      // sweep width in # of samples
-        SAMPLE_TYPE _maxSweepSamples;   // upper bound of sweep in samples
+        SAMPLE_TYPE _feedbackPhase;
+        SAMPLE_TYPE _sweepSamples;
+        SAMPLE_TYPE _maxSweepSamples;
         int _writePointer;
         SAMPLE_TYPE _step;
         SAMPLE_TYPE _sweep;
