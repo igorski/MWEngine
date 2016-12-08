@@ -26,16 +26,15 @@
 #include <utilities/samplemanager.h>
 #include <utilities/tablepool.h>
 #include <utilities/wavereader.h>
+#include <stdio.h>
+#include <sys/mman.h>
+#include "../utilities/debug.h" // QQQ
 
 /* SampleManager hooks */
 
 bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
 {
-    // convert jstring describing aWAVFilePath to std::string
-    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aWAVFilePath, NULL );
-    std::string thePath = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aWAVFilePath, s );
-
+    std::string thePath = JavaBridge::getString( aWAVFilePath );
     AudioBuffer* sampleBuffer = WaveReader::fileToBuffer( thePath );
 
     // error during loading of WAV file ?
@@ -43,14 +42,36 @@ bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
     if ( sampleBuffer == NULL )
         return false;
 
-    // convert jstring describing aKey to std::string
-    s = JavaBridge::getEnvironment()->GetStringUTFChars( aKey, NULL );
-    std::string theKey = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aKey, s );
-
-    SampleManager::setSample( theKey, sampleBuffer );
+    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
 
     return true;
+}
+
+bool JavaUtilities::createSampleFromResource( jstring aKey, jstring aAssetPath, jint aAssetOffset, jint aAssetLength )
+{
+    std::string thePath = JavaBridge::getString( aAssetPath );
+
+    int fileOffset = 0;
+    FILE* file;
+
+    if ( aAssetOffset > 0 ) {
+        file = fopen( thePath.c_str(), "rb" );
+        fileOffset += aAssetOffset;
+    }
+
+    // error during opening of resource ?
+
+    if ( file == NULL )
+        return false;
+
+    uint32_t fileoffset_aligned = fileOffset & (~( aAssetLength - 1 ));
+    void* mmapptr = mmap( NULL, aAssetLength, PROT_READ, MAP_SHARED, fileno( file ), fileoffset_aligned );
+
+Debug::log("got something?");
+
+    // free used resources
+    fclose( file );
+    munmap( mmapptr, aAssetLength );
 }
 
 void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, jint aChannelAmount, jdoubleArray aBuffer, jdoubleArray aOptRightBuffer )
@@ -95,13 +116,7 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
         // release the memory so Java can have it again
         JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aOptRightBuffer, c_array, 0 );
     }
-
-    // convert jstring to std::string
-    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aKey, NULL );
-    std::string theKey = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aKey, s );
-
-    SampleManager::setSample( theKey, sampleBuffer );
+    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
 }
 
 /* TablePool hooks */
@@ -141,11 +156,7 @@ void JavaUtilities::cacheTable( jint tableLength, jint waveformType, jdoubleArra
 
 bool JavaUtilities::createTableFromFile( jint waveformType, jstring aWAVFilePath )
 {
-    // convert jstring describing aWAVFilePath to std::string
-    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aWAVFilePath, NULL );
-    std::string thePath = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aWAVFilePath, s );
-
+    std::string thePath = JavaBridge::getString( aWAVFilePath );
     WaveTable* table = WaveReader::fileToTable( thePath );
 
     // error during loading of WAV file ?

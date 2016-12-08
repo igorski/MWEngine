@@ -39,6 +39,11 @@ class JavaUtilities
 
         static bool createSampleFromFile( jstring aKey, jstring aWAVFilePath );
 
+        // creates an AudioBuffer from a resource and stores it inside
+        // the SampleManager under given key "aKey"
+
+        static bool createSampleFromResource( jstring aKey, jstring aAssetPath, jint aAssetOffset, jint aAssetLength );
+
         // creates an AudioBuffer from given sample buffers and stores it inside
         // the SampleManager under given key "aKey", aOptRightBuffer can be null
 

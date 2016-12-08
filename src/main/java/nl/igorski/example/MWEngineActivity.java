@@ -13,7 +13,7 @@ import nl.igorski.lib.audio.nativeaudio.*;
 
 import java.util.Vector;
 
-public class MWEngineActivity extends Activity
+public final class MWEngineActivity extends Activity
 {
     public final String LOG_ID = "MWENGINE";
 
@@ -24,10 +24,11 @@ public class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer _finalizer;
-    private LPFHPFilter _lpfhpf;
-    private SynthInstrument _synth1;
+    private Finalizer           _finalizer;
+    private LPFHPFilter         _lpfhpf;
+    private SynthInstrument     _synth1;
     private SynthInstrument     _synth2;
+    private SampledInstrument   _sampler;
     private Filter              _filter;
     private Phaser              _phaser;
     private Delay               _delay;
@@ -103,8 +104,11 @@ public class MWEngineActivity extends Activity
 
         // STEP 2 : let's create some instruments =D
 
-        _synth1 = new SynthInstrument();
-        _synth2 = new SynthInstrument();
+        _synth1  = new SynthInstrument();
+        _synth2  = new SynthInstrument();
+        _sampler = new SampledInstrument();
+
+        loadWAVResource( R.raw.kick );
 
         _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
         _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
@@ -365,5 +369,26 @@ public class MWEngineActivity extends Activity
             _synth1Events.add( event );
         else
             _synth2Events.add( event );
+    }
+
+    /**
+     * convenience method to load WAV files packaged in the APK's
+     * resource folder and read their audio content into MWEngine's SampleManager
+     *
+     * @param filename {int} resourceId identifier for the resource
+     */
+    private void loadWAVResource( int resourceId )
+    {
+        // consider: http://www.50ply.com/blog/2013/01/19/loading-compressed-android-assets-with-file-pointer/
+        // use assets instead of raw resources
+        
+        android.content.res.AssetFileDescriptor fd = getResources().openRawResourceFd( resourceId );
+        int fileOffset = ( int ) fd.getStartOffset();
+        int fileLength = ( int ) fd.getLength();
+
+        //fd.close();
+
+        String packagePath = this.getPackageResourcePath();
+        JavaUtilities.createSampleFromResource( "cock", packagePath, fileOffset, fileLength );
     }
 }
