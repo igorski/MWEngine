@@ -136,8 +136,8 @@ public final class MWEngineActivity extends Activity
 
         // STEP 3 : load some samples from the packaged assets folder into the SampleManager
 
-        loadWAVAsset( "kick.wav",  "kick" );
-        loadWAVAsset( "snare.wav", "snare" );
+        loadWAVAsset( "kick.wav", "kick" );
+        loadWAVAsset( "clap.wav", "clap" );
 
         // STEP 4 : let's create some music !
 
@@ -149,10 +149,10 @@ public final class MWEngineActivity extends Activity
 
         // STEP 4.1 : Sample events to play back a drum beat
 
-        createDrumEvent( "kick", 0 );   // kick on first step of the bar
-        createDrumEvent( "kick", 8 );   // another kick half-way through the bar
-        createDrumEvent( "snare", 4 );  // snare hit on 2nd quarter note
-        createDrumEvent( "snare", 12 ); // snare hit on 4th quarter note
+        //createDrumEvent( "kick", 0 );   // kick on first step of the bar
+        //createDrumEvent( "kick", 8 );   // another kick half-way through the bar
+        createDrumEvent( "clap", 4 );  // snare hit on 2nd quarter note
+      //  createDrumEvent( "clap", 12 ); // snare hit on 4th quarter note
 
         // STEP 4.2 : Real-time synthesis events
 
@@ -401,7 +401,7 @@ public final class MWEngineActivity extends Activity
         final SampleEvent drumEvent = new SampleEvent( _sampler );
         drumEvent.setSample( SampleManager.getSample( sampleName ));
         drumEvent.positionEvent( 0, STEPS_PER_MEASURE, position );
-        drumEvent.addToSequencer();
+        drumEvent.addToSequencer(); // samples have to be explicitly added for playback
 
         _drumEvents.add( drumEvent );
     }

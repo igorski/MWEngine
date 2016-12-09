@@ -66,7 +66,7 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
 
     off64_t length = AAsset_getLength64( asset );
     off64_t remaining = AAsset_getRemainingLength64(asset);
-    size_t Mb = 1000 * 1024; // read in one megabyte chunks
+    size_t Mb = 1000 * 1024; // read assets in one megabyte chunks
     size_t currChunk;
     buffer.reserve( length );
 
@@ -81,7 +81,7 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
 
         // read next chunk and append to data vector
         if ( AAsset_read( asset, chunk, currChunk ) > 0 ) {
-            buffer.insert( buffer.end(),chunk, chunk + currChunk );
+            buffer.insert( buffer.end(), chunk, chunk + currChunk );
             remaining = AAsset_getRemainingLength64( asset );
         }
     }
