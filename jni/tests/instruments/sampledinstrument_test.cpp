@@ -32,11 +32,13 @@ TEST( SampledInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ(( int )( sampleStart / factor ), event->getSampleStart() )
+    int expectedStart = ( int )( sampleStart / factor );
+
+    EXPECT_EQ( expectedStart, event->getSampleStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( sampleEnd - 1 ), event->getSampleEnd() )
-        << "expected event end offset not to have updated after tempo change and invocation of updateEvents()";
+    EXPECT_EQ( expectedStart + ( sampleLength - 1 ), event->getSampleEnd() )
+        << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
     EXPECT_EQ( sampleLength, event->getSampleLength() )
         << "expected event length not to have updated after tempo change and invocation of updateEvents()";
@@ -52,7 +54,7 @@ TEST( SampledInstrument, UpdateEvents )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
     EXPECT_EQ(( sampleEnd - 1 ), event->getSampleEnd() )
-        << "expected event end offset not to have updated after tempo change and invocation of updateEvents()";
+        << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
     EXPECT_EQ( sampleLength, event->getSampleLength() )
         << "expected event length not to have updated after tempo change and invocation of updateEvents()";
