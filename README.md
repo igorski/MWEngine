@@ -40,8 +40,8 @@ Additionally, you will need [SWIG])(http://www.swig.org) (available on most pack
 
 You will need [Gradle](https://gradle.org) to run the build scripts.
 
-Long story short: nothing out of the ordinary with exception of the NDK and SWIG that might not be part of the
-average Android development environment. All aforementioned utilities are available on all major Operating Systems.
+Long story short: nothing out of the ordinary with the possible exception of the NDK and SWIG which might not be part of
+the average Android development environment. All aforementioned utilities are available on all major Operating Systems.
 
 ### Build instructions
 
@@ -116,4 +116,5 @@ MWEngine has received welcome contributions (either suggestions on improving the
 solving of bugs, etc.) from the following developers :
 
  * Andrey Stavrinov (@hypeastrum)
+ * Koert Gaaikema (@koertgaaikema)
  * Aran Arunakiri

@@ -162,7 +162,7 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
             // 2 is sizeof short
 
             for ( i = 44, l = i + dataSize, w = 0; i < l; i += 2, ++w )
-                sound_buffer[ w ] = byteArray[ i ] | ( byteArray[ i + 1 ] << 8  );
+                sound_buffer[ w ] = ( uint8_t ) byteArray[ i ] | (( uint8_t ) byteArray[ i + 1 ] << 8 );
 
             unsigned long bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
