@@ -67,6 +67,7 @@ void SampleEvent::setBufferRangeStart( int value )
         setBufferRangeEnd( _buffer->bufferSize - 1 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
+    setRangeBasedPlayback( _bufferRangeLength != _sampleLength );
 }
 
 int SampleEvent::getBufferRangeEnd()
@@ -77,7 +78,6 @@ int SampleEvent::getBufferRangeEnd()
 void SampleEvent::setBufferRangeEnd( int value )
 {
     // buffer range may never exceed the length of the source buffer (which can be unequal to the sample length)
-
     _bufferRangeEnd = ( _buffer != 0 ) ? std::min( value, _buffer->bufferSize - 1 ): value;
 
     if ( _rangePointer > _bufferRangeEnd )
@@ -87,6 +87,7 @@ void SampleEvent::setBufferRangeEnd( int value )
         _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
+    setRangeBasedPlayback( _bufferRangeLength != _sampleLength );
 }
 
 int SampleEvent::getBufferRangeLength()
@@ -187,6 +188,7 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 
     _bufferRangeStart  = 0;
     setBufferRangeEnd( _bufferRangeStart + ( _sampleLength - 1 )); // also updates range length
+    setRangeBasedPlayback( false );
 
     _updateAfterUnlock = false; // unnecessary
 
@@ -200,11 +202,21 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBu
     // if we have a range length that is unequal to the total sample duration, read from the range
     // otherwise invoke the base mixBuffer method
 
-    if ( _bufferRangeLength != _sampleLength )
+    if ( _useBufferRange )
         getBufferForRange( outputBuffer, bufferPos );
     else
         BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition,
                                    loopStarted, loopOffset, useChannelRange );
+}
+
+bool SampleEvent::getRangeBasedPlayback()
+{
+    return _useBufferRange;
+}
+
+void SampleEvent::setRangeBasedPlayback( bool value )
+{
+    _useBufferRange = value;
 }
 
 bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
@@ -266,6 +278,7 @@ void SampleEvent::init( BaseInstrument* instrument )
     _rangePointer          = 0;
     _lastPlaybackPosition  = 0;
     _destroyableBuffer     = false; // is referenced via SampleManager !
+    _useBufferRange        = false;
     _instrument            = instrument;
     _liveBuffer            = 0;
 }

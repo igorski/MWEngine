@@ -32,6 +32,7 @@
 #define JAVA_BRIDGE_H
 
 #include <jni.h>
+#include <string>
 
 /* this is the classpath to the Java class the MWEngine communicates with */
 
@@ -63,6 +64,10 @@ namespace JavaBridge
     JNIEnv* getEnvironment();                       // get a pointer to the Java environment (for C to Java communication)
     JavaVM* getVM();                                // the Java VM
     jmethodID getJavaMethod( javaAPI aAPImethod );  // retrieve the identifier of a Java method
+
+    /* convenience methods to convert Java data types to C types */
+
+    std::string getString( jstring aString );
 }
 
 #endif

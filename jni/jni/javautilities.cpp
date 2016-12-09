@@ -26,16 +26,15 @@
 #include <utilities/samplemanager.h>
 #include <utilities/tablepool.h>
 #include <utilities/wavereader.h>
+#include <sys/types.h>
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 
 /* SampleManager hooks */
 
 bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
 {
-    // convert jstring describing aWAVFilePath to std::string
-    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aWAVFilePath, NULL );
-    std::string thePath = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aWAVFilePath, s );
-
+    std::string thePath = JavaBridge::getString( aWAVFilePath );
     AudioBuffer* sampleBuffer = WaveReader::fileToBuffer( thePath );
 
     // error during loading of WAV file ?
@@ -43,12 +42,59 @@ bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
     if ( sampleBuffer == NULL )
         return false;
 
-    // convert jstring describing aKey to std::string
-    s = JavaBridge::getEnvironment()->GetStringUTFChars( aKey, NULL );
-    std::string theKey = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aKey, s );
+    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
 
-    SampleManager::setSample( theKey, sampleBuffer );
+    return true;
+}
+
+bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, jstring assetName )
+{
+    std::string filename = JavaBridge::getString( assetName );
+
+    // use asset manager to open asset by filename
+    AAssetManager* mgr = AAssetManager_fromJava( JavaBridge::getEnvironment(), assetManager );
+
+    if ( mgr == NULL )
+        return false;
+
+    AAsset* asset = AAssetManager_open( mgr, filename.c_str(), AASSET_MODE_UNKNOWN );
+
+    if ( asset == NULL )
+        return false;
+
+    std::vector<char> buffer;
+
+    off64_t length = AAsset_getLength64( asset );
+    off64_t remaining = AAsset_getRemainingLength64(asset);
+    size_t Mb = 1000 * 1024; // read assets in one megabyte chunks
+    size_t currChunk;
+    buffer.reserve( length );
+
+    while ( remaining != 0 ) {
+        //set proper size for our next chunk
+        if ( remaining >= Mb )
+            currChunk = Mb;
+        else
+            currChunk = remaining;
+
+        char chunk[ currChunk ];
+
+        // read next chunk and append to data vector
+        if ( AAsset_read( asset, chunk, currChunk ) > 0 ) {
+            buffer.insert( buffer.end(), chunk, chunk + currChunk );
+            remaining = AAsset_getRemainingLength64( asset );
+        }
+    }
+    AAsset_close( asset );
+
+    AudioBuffer* sampleBuffer = WaveReader::byteArrayToBuffer( buffer );
+
+    // error during loading of WAV file ?
+
+    if ( sampleBuffer == NULL )
+        return false;
+
+    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
 
     return true;
 }
@@ -95,13 +141,7 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
         // release the memory so Java can have it again
         JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aOptRightBuffer, c_array, 0 );
     }
-
-    // convert jstring to std::string
-    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aKey, NULL );
-    std::string theKey = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aKey, s );
-
-    SampleManager::setSample( theKey, sampleBuffer );
+    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
 }
 
 /* TablePool hooks */
@@ -141,11 +181,7 @@ void JavaUtilities::cacheTable( jint tableLength, jint waveformType, jdoubleArra
 
 bool JavaUtilities::createTableFromFile( jint waveformType, jstring aWAVFilePath )
 {
-    // convert jstring describing aWAVFilePath to std::string
-    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aWAVFilePath, NULL );
-    std::string thePath = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aWAVFilePath, s );
-
+    std::string thePath = JavaBridge::getString( aWAVFilePath );
     WaveTable* table = WaveReader::fileToTable( thePath );
 
     // error during loading of WAV file ?

@@ -94,6 +94,51 @@ TEST( SampleEvent, BufferRangeEndSanitizing )
     delete buffer;
 }
 
+TEST( SampleEvent, RangeBasedPlayback )
+{
+    SampleEvent* event = new SampleEvent();
+    ASSERT_FALSE( event->getRangeBasedPlayback())
+        << "expected SampleEvent to not use range based playback by default";
+
+    int sampleStart  = 500;
+    int sampleLength = 1000;
+    int sampleEnd    = sampleStart + sampleLength;
+
+    event->setSampleStart ( sampleStart );
+    event->setSampleEnd   ( sampleEnd );
+    event->setSampleLength( sampleLength );
+
+    int rangeStart   = 200;
+    int rangeLength  = sampleLength - rangeStart;
+    int rangeEnd     = rangeStart + rangeLength;
+
+    event->setBufferRangeStart( rangeStart );
+
+    ASSERT_TRUE( event->getRangeBasedPlayback())
+        << "expected range based playback to be active now SampleEvent has a buffer range different to the sample length";
+
+/*
+    event->setBufferRangeStart( 0 );
+
+    ASSERT_FALSE( event->getRangeBasedPlayback())
+        << "expected range based playback to be inactive now SampleEvent has no longer got a buffer range different to the sample length";
+*/
+
+    delete event;
+    event = new SampleEvent();
+
+    event->setSampleStart ( sampleStart );
+    event->setSampleEnd   ( sampleEnd );
+    event->setSampleLength( sampleLength );
+
+    event->setBufferRangeEnd( rangeEnd - 10 );
+
+    ASSERT_TRUE( event->getRangeBasedPlayback())
+        << "expected range based playback to be active now SampleEvent has a buffer range different to the sample length";
+
+    delete event;
+}
+
 TEST( SampleEvent, SetSample )
 {
     SampledInstrument* instrument = new SampledInstrument();

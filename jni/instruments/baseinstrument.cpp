@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "baseinstrument.h"
+#include "../audioengine.h"
 #include "../sequencer.h"
 #include <algorithm>
 
@@ -65,9 +66,30 @@ std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
 
 void BaseInstrument::updateEvents()
 {
-    // when updating to reflect changes in the instruments changes
+    // when updating to reflect changes in the instruments propertes
     // or to update event properties responding to tempo changes
     // override this function in your derived class for custom implementations
+
+    if ( _oldTempo != AudioEngine::tempo ) {
+
+        // when tempo has updated, we update the offsets of all associated events
+
+        float ratio = _oldTempo / AudioEngine::tempo;
+
+        for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
+        {
+            BaseAudioEvent* event = _audioEvents->at( i );
+
+            float orgStart  = ( float ) event->getSampleStart();
+            float orgEnd    = ( float ) event->getSampleEnd();
+            float orgLength = ( float ) event->getSampleLength();
+
+            event->setSampleStart ( orgStart  * ratio );
+            event->setSampleLength( orgLength * ratio );
+            event->setSampleEnd   (( orgEnd + 1 ) * ratio ); // add 1 to correct for rounding of float
+        }
+        _oldTempo = AudioEngine::tempo;
+    }
 }
 
 void BaseInstrument::clearEvents()
@@ -110,7 +132,8 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
 void BaseInstrument::registerInSequencer()
 {
-    index = Sequencer::registerInstrument( this );
+    index     = Sequencer::registerInstrument( this );
+    _oldTempo = AudioEngine::tempo;
 }
 
 void BaseInstrument::unregisterFromSequencer()
@@ -123,8 +146,8 @@ void BaseInstrument::unregisterFromSequencer()
 
 void BaseInstrument::construct()
 {
-    volume          = MAX_PHASE;
-    audioChannel    = new AudioChannel( volume );
+    volume       = MAX_PHASE;
+    audioChannel = new AudioChannel( volume );
 
     // events
 

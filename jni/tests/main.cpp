@@ -20,6 +20,7 @@
 #include "events/sampleevent_test.cpp"
 #include "generators/envelopegenerator_test.cpp"
 #include "instruments/baseinstrument_test.cpp"
+#include "instruments/sampledinstrument_test.cpp"
 #include "processors/delay_test.cpp"
 #include "processors/flanger_test.cpp"
 #include "processors/tremolo_test.cpp"

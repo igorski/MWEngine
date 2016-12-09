@@ -87,6 +87,37 @@ unsigned long long now_ms()
     return ret;
 }
 
+/**
+ * slice the contents of given inputBuffer in the range defined by startOffset to
+ * startOffset + length and append it to given outputBuffer
+ */
+char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startOffset, int length )
+{
+    for ( int i = startOffset, l = startOffset + length, w = 0; i < l; ++i, ++w )
+        outputBuffer[ w ] = inputBuffer[ i ];
+
+    return outputBuffer;
+}
+
+/**
+ * note: unsigned long has size of 4 so we read the next 4 bytes (in reverse) from
+ * given startOffset to calculate the corresponding unsigned long value
+ * littleEndian defines in what order the bytes are arranged
+ */
+unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool littleEndian )
+{
+    if ( littleEndian ) {
+        return inputBuffer[ startOffset + 0 ] |
+               ( inputBuffer[ startOffset + 1 ] << 8  ) |
+               ( inputBuffer[ startOffset + 2 ] << 16 ) |
+               ( inputBuffer[ startOffset + 3 ] << 24 );
+    }
+    return inputBuffer[ startOffset + 3 ] << 24 ||
+           inputBuffer[ startOffset + 2 ] << 16 ||
+           inputBuffer[ startOffset + 1 ] <<  8 ||
+           inputBuffer[ startOffset + 0 ];
+}
+
 /* volume util */
 
 namespace VolumeUtil

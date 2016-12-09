@@ -13,7 +13,7 @@ import nl.igorski.lib.audio.nativeaudio.*;
 
 import java.util.Vector;
 
-public class MWEngineActivity extends Activity
+public final class MWEngineActivity extends Activity
 {
     public final String LOG_ID = "MWENGINE";
 
@@ -24,17 +24,19 @@ public class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer _finalizer;
-    private LPFHPFilter _lpfhpf;
-    private SynthInstrument _synth1;
+    private Finalizer           _finalizer;
+    private LPFHPFilter         _lpfhpf;
+    private SynthInstrument     _synth1;
     private SynthInstrument     _synth2;
+    private SampledInstrument   _sampler;
     private Filter              _filter;
     private Phaser              _phaser;
     private Delay               _delay;
-    private MWEngine _engine;
+    private MWEngine            _engine;
     private SequencerController _sequencerController;
     private Vector<SynthEvent>  _synth1Events;
     private Vector<SynthEvent>  _synth2Events;
+    private Vector<SampleEvent> _drumEvents;
 
     private boolean _sequencerPlaying = false;
     private boolean _inited           = false;
@@ -44,6 +46,8 @@ public class MWEngineActivity extends Activity
 
     private int SAMPLE_RATE;
     private int BUFFER_SIZE;
+
+    private static int STEPS_PER_MEASURE = 16; // amount of subdivisions within a single measure
 
     private static String LOG_TAG = "MWENGINE"; // logcat identifier
 
@@ -89,8 +93,8 @@ public class MWEngineActivity extends Activity
         final ProcessingChain masterBus     = _engine.getMasterBusProcessors();
         final SequencerController sequencer = _engine.getSequencerController();
 
-        sequencer.updateMeasures( 1, 16 ); // we'll loop just a single measure with 16th note subdivisions
-        _engine.start();                   // starts engines render thread (NOTE : sequencer is still paused!)
+        sequencer.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
+        _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
         final int outputChannels = 1;   // see global.h
 
@@ -103,8 +107,9 @@ public class MWEngineActivity extends Activity
 
         // STEP 2 : let's create some instruments =D
 
-        _synth1 = new SynthInstrument();
-        _synth2 = new SynthInstrument();
+        _synth1  = new SynthInstrument();
+        _synth2  = new SynthInstrument();
+        _sampler = new SampledInstrument();
 
         _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
         _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
@@ -129,11 +134,29 @@ public class MWEngineActivity extends Activity
         // prepare synthesizer volumes
         _synth2.setVolume( .7f );
 
-        // STEP 3 : let's create some music !
+        // STEP 3 : load some samples from the packaged assets folder into the SampleManager
 
-        _synth1Events = new Vector<SynthEvent>();   // remember : strong references!
-        _synth2Events = new Vector<SynthEvent>();   // remember : strong references!
-        sequencer.setTempoNow( 130.0f, 4, 4 );      // 130 BPM at 4/4 time
+        loadWAVAsset( "hat.wav",  "hat" );
+        loadWAVAsset( "clap.wav", "clap" );
+
+        // STEP 4 : let's create some music !
+
+        _synth1Events = new Vector<SynthEvent>();
+        _synth2Events = new Vector<SynthEvent>();
+        _drumEvents   = new Vector<SampleEvent>();
+
+        sequencer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
+
+        // STEP 4.1 : Sample events to play back a drum beat
+
+        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
+        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
+        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
+        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+
+        // STEP 4.2 : Real-time synthesis events
 
         // bubbly sixteenth note bass line for synth 1
 
@@ -166,7 +189,7 @@ public class MWEngineActivity extends Activity
         createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
         createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
-        // STEP 4 : attach event handler to the UI elements (see main.xml layout)
+        // STEP 5 : attach event handlers to the UI elements (see main.xml layout)
 
         final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
         playPauseButton.setOnClickListener( new PlayClickHandler() );
@@ -356,7 +379,9 @@ public class MWEngineActivity extends Activity
      */
     private void createSynthEvent( SynthInstrument synth, double frequency, int position )
     {
-        final int duration     = 1; // 16th note at a BAR_SUBDIVISION of 16 (see MWEngine)
+        // duration in measure subdivisions, essentially a 16th note for the current STEPS_PER_MEASURE (16)
+
+        final int duration = 1;
         final SynthEvent event = new SynthEvent(( float ) frequency, position, duration, synth );
 
         event.calculateBuffers();
@@ -365,5 +390,33 @@ public class MWEngineActivity extends Activity
             _synth1Events.add( event );
         else
             _synth2Events.add( event );
+    }
+
+    /**
+     * convenience method for creating a new SampleEvent
+     *
+     * @param sampleName {String} identifier (inside the SampleManager) of the sample to use
+     * @param position {int} position within the composition to place the event at
+     */
+    private void createDrumEvent( String sampleName, int position )
+    {
+        final SampleEvent drumEvent = new SampleEvent( _sampler );
+        drumEvent.setSample( SampleManager.getSample( sampleName ));
+        drumEvent.positionEvent( 0, STEPS_PER_MEASURE, position );
+        drumEvent.addToSequencer(); // samples have to be explicitly added for playback
+
+        _drumEvents.add( drumEvent );
+    }
+
+    /**
+     * convenience method to load WAV files packaged in the APK
+     * and read their audio content into MWEngine's SampleManager
+     *
+     * @param assetName {String} assetName filename for the resource in the /assets folder
+     * @param sampleName {String} identifier for the files WAV content inside the SampleManager
+     */
+    private void loadWAVAsset( String assetName, String sampleName )
+    {
+        JavaUtilities.createSampleFromAsset( sampleName, getApplicationContext().getAssets(), assetName );
     }
 }

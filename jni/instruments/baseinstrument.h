@@ -54,6 +54,8 @@ class BaseInstrument
 
         std::vector<BaseAudioEvent*>* _audioEvents;
         std::vector<BaseAudioEvent*>* _liveAudioEvents;
+
+        float _oldTempo; // last known sequencer tempo
 };
 
 #endif

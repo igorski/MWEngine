@@ -22,36 +22,40 @@
  */
 #include "wavereader.h"
 #include "debug.h"
+#include "utils.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
 { 
-   FILE* fp;
-   AudioBuffer* out = 0;
+    FILE* fp;
+    AudioBuffer* out = 0;
 
-   fp = fopen( inputFile.c_str(), "rb" );
+    fp = fopen( inputFile.c_str(), "rb" );
 
-   if ( fp )
-   {
-       char id[ 5 ];
-       unsigned long size;
-       short* sound_buffer;
-       short tag, amountOfChannels, blockAlign, bps;
-       unsigned int format, sampleRate, bytesPerSec, dataSize, i;
+    if ( fp )
+    {
+        char id[ 5 ];
+        unsigned long size;
+        short* sound_buffer;
+        short tag, amountOfChannels, blockAlign, bps;
+        unsigned int format, sampleRate, bytesPerSec, dataSize, i;
 
-       // first we'll check the necessary headers identifying the WAV file
+        // first we'll check the necessary headers identifying the WAV file
 
-       fread( id, sizeof( char ), 4, fp );
-       id[ 4 ] = '\0';
+        fread( id, sizeof( char ), 4, fp );
+        id[ 4 ] = '\0';
 
-      if ( !strcmp( id, "RIFF" ))
-      {
-            fread( &size, sizeof( unsigned long ),  1, fp );
+        if ( !strcmp( id, "RIFF" ))
+        {
+            fread( &size, sizeof( unsigned long ), 1, fp );
             fread( id,    sizeof( unsigned char ), 4, fp );
             id[ 4 ] = '\0';
 
             if ( !strcmp( id, "WAVE" ))
             {
+                // read the header data (see http://soundfile.sapp.org/doc/WaveFormat/)
+
                 fread( id,                sizeof( char ), 4, fp );
                 fread( &format,           sizeof( unsigned long ), 1, fp );
                 fread( &tag,              sizeof( short ), 1, fp );
@@ -117,6 +121,71 @@ WaveTable* WaveReader::fileToTable( std::string inputFile )
     out->setBuffer( targetBuffer );
 
     delete tempBuffer; // free memory used by the temporary buffer
+
+    return out;
+}
+
+AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
+{
+    // TODO: this mostly mirrors the fileToBuffer-method, clean this up!
+
+    AudioBuffer* out = 0;
+
+    // first we'll check the necessary headers identifying the WAV file
+
+    char id[ 5 ];
+    short* sound_buffer;
+    short amountOfChannels;
+    unsigned int format, sampleRate, bytesPerSec, dataSize, i, l, w;
+
+    sliceString( byteArray, id, 0, 4 );
+    id[ 4 ] = '\0';
+
+    if ( !strcmp( id, "RIFF" ))
+    {
+        unsigned long size = sliceLong( byteArray, 4, true );
+
+        sliceString( byteArray, id, 8, 4 );
+        id[ 4 ] = '\0';
+
+        if ( !strcmp( id, "WAVE" ))
+        {
+            // read the header data (see http://soundfile.sapp.org/doc/WaveFormat/)
+
+            format = sliceLong( byteArray, 20, true );
+            amountOfChannels = ( short ) sliceLong( byteArray, 22, true );
+            sampleRate = sliceLong( byteArray, 24, true );
+            dataSize = sliceLong( byteArray, 40, true );
+
+            sound_buffer = ( short* ) malloc( dataSize );
+
+            // 2 is sizeof short
+
+            for ( i = 44, l = i + dataSize, w = 0; i < l; i += 2, ++w )
+                sound_buffer[ w ] = ( uint8_t ) byteArray[ i ] | (( uint8_t ) byteArray[ i + 1 ] << 8 );
+
+            unsigned long bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
+
+            out = new AudioBuffer( amountOfChannels, bufferSize );
+
+            // convert short values into SAMPLE_TYPE
+
+            SAMPLE_TYPE MAX_VALUE = ( SAMPLE_TYPE ) 32767; // max size for either side of a signed short
+
+            int cb = 0;
+
+            for ( i = 0; i < bufferSize; ++i, cb += amountOfChannels )
+            {
+                for ( int c = 0; c < amountOfChannels; ++c )
+                    out->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( sound_buffer[ cb + c ]) / MAX_VALUE;
+            }
+            free( sound_buffer );
+        }
+        else
+            Debug::log( "WaveReader::Error not a valid WAVE file" );
+    }
+    else
+        Debug::log( "WaveReader::Error not a valid WAVE file (no RIFF header)" );
 
     return out;
 }

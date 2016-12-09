@@ -33,6 +33,16 @@ destructors of the native objects are invoked, which can lead to unpredictable r
 As such, audio engine objects such as effects processors or events that are created on the Java side, must also hold
 strong references during their lifecycle.
 
+### Environment setup
+
+You will need both the [Android SDK](https://developer.android.com/studio/index.html) and the [Android NDK](https://developer.android.com/ndk/downloads/index.html).
+Additionally, you will need [SWIG])(http://www.swig.org) (available on most package managers like _Brew_ for OS X or _apt-get_ on Linux) 
+
+You will need [Gradle](https://gradle.org) to run the build scripts.
+
+Long story short: nothing out of the ordinary with the possible exception of the NDK and SWIG which might not be part of
+the average Android development environment. All aforementioned utilities are available on all major Operating Systems.
+
 ### Build instructions
 
 The makefile (_/jni/Android.mk_) will by default compile the library with all available modules. The SWIG interface file
@@ -95,7 +105,7 @@ The repository contains an example Activity that is ready to deploy onto any And
 x86- or MIPS-architecture and running Android 2.3 or higher. The example will demonstrate how to quickly get a musical
 sequence going using the library.
 
-To install the demo : first build the library as described above, and then run the Ant build script to deploy the .APK unto an
+To install the demo : first build the library as described above, and then run the build script to deploy the .APK unto an
 attached device/emulator (note that emulated devices can only operate at a sample rate of 8 kHz!). This requires both the Android NDK and the Android SDK.
 
 Be sure to point towards the installation locations of these in both the _build.sh_-file and the _local.properties_-file.
@@ -106,4 +116,5 @@ MWEngine has received welcome contributions (either suggestions on improving the
 solving of bugs, etc.) from the following developers :
 
  * Andrey Stavrinov (@hypeastrum)
+ * Koert Gaaikema (@koertgaaikema)
  * Aran Arunakiri
