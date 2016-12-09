@@ -141,8 +141,8 @@ JNIEnv* JavaBridge::getEnvironment()
 std::string JavaBridge::getString( jstring aString )
 {
     const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aString, NULL );
-    std::string thePath = s;
+    std::string theString = s;
     JavaBridge::getEnvironment()->ReleaseStringUTFChars( aString, s );
 
-    return thePath;
+    return theString;
 }

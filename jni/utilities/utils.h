@@ -25,6 +25,7 @@
 
 #include <math.h>
 #include <sstream>
+#include <vector>
 #include "global.h"
 
 /* convenience methods */
@@ -33,6 +34,8 @@ float scale( float value, float maxValue, float maxCompareValue );
 SAMPLE_TYPE cap( SAMPLE_TYPE value );
 float randomFloat();
 unsigned long long now_ms();
+char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startOffset, int length );
+unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool littleEndian );
 
 /* volume util */
 

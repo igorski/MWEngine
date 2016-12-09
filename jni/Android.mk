@@ -78,7 +78,7 @@ else
     modules/lfo.cpp \
     modules/routeableoscillator.cpp \
 
-    LOCAL_LDLIBS := -llog -lOpenSLES -latomic
+    LOCAL_LDLIBS := -llog -lOpenSLES -latomic -landroid
 
     include $(BUILD_SHARED_LIBRARY)
 

@@ -40,4 +40,6 @@ class WaveReader
         // pointer is returned
 
         static WaveTable* fileToTable( std::string inputFile );
+
+        static AudioBuffer* byteArrayToBuffer( std::vector<char> byteArray );
 };

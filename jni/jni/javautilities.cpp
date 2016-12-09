@@ -26,9 +26,9 @@
 #include <utilities/samplemanager.h>
 #include <utilities/tablepool.h>
 #include <utilities/wavereader.h>
-#include <stdio.h>
-#include <sys/mman.h>
-#include "../utilities/debug.h" // QQQ
+#include <sys/types.h>
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 
 /* SampleManager hooks */
 
@@ -47,31 +47,56 @@ bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
     return true;
 }
 
-bool JavaUtilities::createSampleFromResource( jstring aKey, jstring aAssetPath, jint aAssetOffset, jint aAssetLength )
+bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, jstring assetName )
 {
-    std::string thePath = JavaBridge::getString( aAssetPath );
+    std::string filename = JavaBridge::getString( assetName );
 
-    int fileOffset = 0;
-    FILE* file;
+    // use asset manager to open asset by filename
+    AAssetManager* mgr = AAssetManager_fromJava( JavaBridge::getEnvironment(), assetManager );
 
-    if ( aAssetOffset > 0 ) {
-        file = fopen( thePath.c_str(), "rb" );
-        fileOffset += aAssetOffset;
-    }
-
-    // error during opening of resource ?
-
-    if ( file == NULL )
+    if ( mgr == NULL )
         return false;
 
-    uint32_t fileoffset_aligned = fileOffset & (~( aAssetLength - 1 ));
-    void* mmapptr = mmap( NULL, aAssetLength, PROT_READ, MAP_SHARED, fileno( file ), fileoffset_aligned );
+    AAsset* asset = AAssetManager_open( mgr, filename.c_str(), AASSET_MODE_UNKNOWN );
 
-Debug::log("got something?");
+    if ( asset == NULL )
+        return false;
 
-    // free used resources
-    fclose( file );
-    munmap( mmapptr, aAssetLength );
+    std::vector<char> buffer;
+
+    off64_t length = AAsset_getLength64( asset );
+    off64_t remaining = AAsset_getRemainingLength64(asset);
+    size_t Mb = 1000 * 1024; // read in one megabyte chunks
+    size_t currChunk;
+    buffer.reserve( length );
+
+    while ( remaining != 0 ) {
+        //set proper size for our next chunk
+        if ( remaining >= Mb )
+            currChunk = Mb;
+        else
+            currChunk = remaining;
+
+        char chunk[ currChunk ];
+
+        // read next chunk and append to data vector
+        if ( AAsset_read( asset, chunk, currChunk ) > 0 ) {
+            buffer.insert( buffer.end(),chunk, chunk + currChunk );
+            remaining = AAsset_getRemainingLength64( asset );
+        }
+    }
+    AAsset_close( asset );
+
+    AudioBuffer* sampleBuffer = WaveReader::byteArrayToBuffer( buffer );
+
+    // error during loading of WAV file ?
+
+    if ( sampleBuffer == NULL )
+        return false;
+
+    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
+
+    return true;
 }
 
 void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, jint aChannelAmount, jdoubleArray aBuffer, jdoubleArray aOptRightBuffer )
