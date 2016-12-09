@@ -33,6 +33,7 @@ class SampledInstrument : public BaseInstrument
         ~SampledInstrument();
 
         bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
+        void updateEvents();
 };
 
 #endif

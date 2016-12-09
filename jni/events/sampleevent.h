@@ -46,7 +46,12 @@ class SampleEvent : public BaseAudioEvent
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
 
+        // whether to mix sample data from a specific range instead of the full sampleLength range
+
+        bool getRangeBasedPlayback();
+        void setRangeBasedPlayback( bool value );
         bool getBufferForRange( AudioBuffer* buffer, int readPos );
+
         int getPlaybackPosition();
 
         void play(); // enable the event and play it back immediately (for auditioning purposes)
@@ -62,6 +67,7 @@ class SampleEvent : public BaseAudioEvent
         int _bufferRangeStart;
         int _bufferRangeEnd;
         int _bufferRangeLength;
+        bool _useBufferRange;
 
         AudioBuffer*    _liveBuffer;
         int _lastPlaybackPosition;

@@ -152,7 +152,7 @@ public final class MWEngineActivity extends Activity
         //createDrumEvent( "kick", 0 );   // kick on first step of the bar
         //createDrumEvent( "kick", 8 );   // another kick half-way through the bar
         createDrumEvent( "clap", 4 );  // snare hit on 2nd quarter note
-      //  createDrumEvent( "clap", 12 ); // snare hit on 4th quarter note
+        createDrumEvent( "clap", 12 ); // snare hit on 4th quarter note
 
         // STEP 4.2 : Real-time synthesis events
 

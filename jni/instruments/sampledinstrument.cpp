@@ -72,3 +72,23 @@ bool SampledInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEven
     }
     return removed;
 }
+
+void SampledInstrument::updateEvents()
+{
+    // for a SampledInstrument we don't update the events end and length ranges
+    // as the length cannot exceed the bufferSize of the sample
+
+    if ( _oldTempo != AudioEngine::tempo ) {
+
+        // when tempo has updated, we update the offsets of all associated events
+
+        float ratio = _oldTempo / AudioEngine::tempo;
+
+        for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
+        {
+            BaseAudioEvent* event = _audioEvents->at( i );
+            event->setSampleStart(( float ) event->getSampleStart()  * ratio );
+        }
+        _oldTempo = AudioEngine::tempo;
+    }
+}

@@ -69,6 +69,10 @@ SynthInstrument::~SynthInstrument()
 
 void SynthInstrument::updateEvents()
 {
+    // SynthEvents are mapped to position relative to the measure's subdivisions
+    // as such we don't require to invoke the BaseInstrument::updateEvents() method
+    // to resync the offsets on a tempo change
+
     for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
     {
         BaseSynthEvent* event = ( BaseSynthEvent* ) ( _audioEvents->at( i ) );
