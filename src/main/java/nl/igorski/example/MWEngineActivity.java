@@ -31,6 +31,7 @@ public final class MWEngineActivity extends Activity
     private SampledInstrument   _sampler;
     private Filter              _filter;
     private Phaser              _phaser;
+    private PitchShifter        _pitchShifter;
     private Delay               _delay;
     private MWEngine            _engine;
     private SequencerController _sequencerController;
@@ -133,6 +134,12 @@ public final class MWEngineActivity extends Activity
 
         // prepare synthesizer volumes
         _synth2.setVolume( .7f );
+
+        // KOERT : add PitchShifter to master bus
+        final float pitchShift = 1.0f; // 1 == no shift
+        final int quality = 16; // between 4 - 32, higher quality is more CPU consumption
+        _pitchShifter = new PitchShifter( pitchShift, quality );
+        masterBus.addProcessor( _pitchShifter );
 
         // STEP 3 : load some samples from the packaged assets folder into the SampleManager
 
@@ -362,6 +369,17 @@ public final class MWEngineActivity extends Activity
 
                     Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
                             ", elapsed samples: " + elapsedSamples );
+
+                    // KOERT
+                    // pitch shift wijzigen a.d.h.v. sequencer positie
+                    // maximum sequencer positie in dit voorbeeld is 15 (sequencer step 16)
+                    // een shift van 1.0f is geen pitch shift, 0.5f is een octaaf omlaag, 2.0f is een octaaf omhoog
+                    // naarmate de sequencer position richting het einde gaat hoe maar de shift richting een octaaf omhoog gaat
+
+                    if ( sequencerPosition % 3 == 0 ) {
+                        final float shift = 1.0f + (( 1.0f / 15 ) * sequencerPosition );
+                        _pitchShifter.setPitchShift( shift );
+                    }
                     break;
             }
         }

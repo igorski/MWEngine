@@ -43,6 +43,7 @@ processors/limiter.cpp \
 processors/lowpassfilter.cpp \
 processors/lpfhpfilter.cpp \
 processors/phaser.cpp \
+processors/pitchshifter.cpp \
 processors/tremolo.cpp \
 processors/waveshaper.cpp \
 generators/envelopegenerator.cpp \
