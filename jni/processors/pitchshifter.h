@@ -77,13 +77,11 @@ class PitchShifter : public BaseProcessor
         float gSynFreq    [ MAX_FRAME_LENGTH ];
         float gSynMagn    [ MAX_FRAME_LENGTH ];
         long gRover;
-        SAMPLE_TYPE magn, phase, tmp, window, real, imag;
-        SAMPLE_TYPE freqPerBin, expct;
+        SAMPLE_TYPE magn, phase, tmp, window, real, imag, freqPerBin, expct;
         long qpd, index, inFifoLatency, stepSize, fftFrameSize, fftFrameSize2, osamp;
 
-        /*
-         * inlining this FFT routine (by S.M. Bernsee, 1996) provides a 21% performance boost
-        */
+        // inlining this FFT routine (by S.M. Bernsee, 1996) provides a 21% performance boost
+
         inline void smbFft( float *fftBuffer, long fftFrameSize, long sign )
         {
             float wr, wi, arg, *p1, *p2, temp;

@@ -48,20 +48,19 @@ PitchShifter::PitchShifter( float shiftAmount, long osampAmount )
 
     /* initialize our static arrays */
 
-    memset( gInFIFO,      0, MAX_FRAME_LENGTH * sizeof( float ));
-    memset( gOutFIFO,     0, MAX_FRAME_LENGTH * sizeof( float ));
-    memset( gFFTworksp,   0, 2 * MAX_FRAME_LENGTH * sizeof( float ));
-    memset( gLastPhase,   0, ( MAX_FRAME_LENGTH / 2 + 1 ) * sizeof( float ));
-    memset( gSumPhase,    0, ( MAX_FRAME_LENGTH / 2 + 1 ) * sizeof( float ));
-    memset( gOutputAccum, 0, 2 * MAX_FRAME_LENGTH * sizeof( float ));
-    memset( gAnaFreq,     0, MAX_FRAME_LENGTH * sizeof( float ));
-    memset( gAnaMagn,     0, MAX_FRAME_LENGTH * sizeof( float ));
+    memset( gInFIFO,      0, sizeof( float ) * MAX_FRAME_LENGTH );
+    memset( gOutFIFO,     0, sizeof( float ) * MAX_FRAME_LENGTH );
+    memset( gFFTworksp,   0, sizeof( float ) * 2 * MAX_FRAME_LENGTH );
+    memset( gLastPhase,   0, sizeof( float ) * ( MAX_FRAME_LENGTH / 2 + 1 ));
+    memset( gSumPhase,    0, sizeof( float ) * ( MAX_FRAME_LENGTH / 2 + 1 ));
+    memset( gOutputAccum, 0, sizeof( float ) * 2 * MAX_FRAME_LENGTH );
+    memset( gAnaFreq,     0, sizeof( float ) * MAX_FRAME_LENGTH );
+    memset( gAnaMagn,     0, sizeof( float ) * MAX_FRAME_LENGTH );
 }
 
 PitchShifter::~PitchShifter()
 {
-    // TODO: clear memsets!
-    // ...though in the current implementation this is never destructed
+
 }
 
 /* public methods */
@@ -73,7 +72,8 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     if ( pitchShift == 1.0f )
         return;
 
-    long i, k;
+    int i;
+    long k;
 
     if ( gRover == false )
         gRover = inFifoLatency;
@@ -154,14 +154,12 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
                 /* ***************** PROCESSING ******************* */
                 /* this does the actual pitch shifting */
-                memset( gSynMagn, 0, fftFrameSize * sizeof( float ));
-                memset( gSynFreq, 0, fftFrameSize * sizeof( float ));
+                memset( gSynMagn, 0, sizeof( float ) * fftFrameSize );
+                memset( gSynFreq, 0, sizeof( float ) * fftFrameSize );
 
-                for ( k = 0; k <= fftFrameSize2; ++k )
-                {
+                for ( k = 0; k <= fftFrameSize2; ++k ) {
                     index = k * pitchShift;
-                    if ( index <= fftFrameSize2 )
-                    {
+                    if ( index <= fftFrameSize2 ) {
                         gSynMagn[ index ] += gAnaMagn[ k ];
                         gSynFreq[ index ] = gAnaFreq[ k ] * pitchShift;
                     }
@@ -169,8 +167,7 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
                 /* ***************** SYNTHESIS ******************* */
                 /* this is the synthesis step */
-                for ( k = 0; k <= fftFrameSize2; ++k )
-                {
+                for ( k = 0; k <= fftFrameSize2; ++k ) {
                     /* get magnitude and true frequency from synthesis arrays */
                     magn = gSynMagn[ k ];
                     tmp  = gSynFreq[ k ];
