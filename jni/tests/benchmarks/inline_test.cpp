@@ -219,7 +219,7 @@ TEST( ArpeggiatorBenchmark, GetPitchForStepBenchmark )
 
 TEST( PitchshifterBenchmark, ProcessBenchmark )
 {
-    int iterations = 500;
+    int iterations = 100;
     PitchShifter* pitchshifter = new PitchShifter( 2.0f, 32 );
     AudioBuffer* buffer = new AudioBuffer( 512, 1 );
 
