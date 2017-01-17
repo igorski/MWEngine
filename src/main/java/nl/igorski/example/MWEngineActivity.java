@@ -133,7 +133,8 @@ public final class MWEngineActivity extends Activity
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // prepare synthesizer volumes
-        _synth2.setVolume( .7f );
+        _synth1.setVolume( .3f );
+        _synth2.setVolume( .3f );
 
         // KOERT : add PitchShifter to master bus
         final float pitchShift = 1.0f; // 1 == no shift
@@ -143,8 +144,7 @@ public final class MWEngineActivity extends Activity
 
         // STEP 3 : load some samples from the packaged assets folder into the SampleManager
 
-        loadWAVAsset( "hat.wav",  "hat" );
-        loadWAVAsset( "clap.wav", "clap" );
+        loadWAVAsset( "plopperdeplop.wav", "plop" );
 
         // STEP 4 : let's create some music !
 
@@ -152,16 +152,14 @@ public final class MWEngineActivity extends Activity
         _synth2Events = new Vector<SynthEvent>();
         _drumEvents   = new Vector<SampleEvent>();
 
-        sequencer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
+        sequencer.setTempoNow( 90, 4, 4 ); // 90 BPM in 4/4 time
 
         // STEP 4.1 : Sample events to play back a drum beat
 
-        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
-        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
-        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
-        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
-        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+        createDrumEvent( "plop",  0 );  // "plopperdeplop" on the first beat of the bar
+        createDrumEvent( "plop",  4 );  // "plopperdeplop" on the second beat of the bar
+        createDrumEvent( "plop",  8 );  // "plopperdeplop" on the third beat of the bar
+        createDrumEvent( "plop",  12 ); // "plopperdeplop" on the fourth beat of the bar
 
         // STEP 4.2 : Real-time synthesis events
 
