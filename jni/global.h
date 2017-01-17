@@ -30,7 +30,7 @@
 // PRECISION defines the floating-point precision used to synthesize the audio samples
 // valid values are 1 (32-bit float) and 2 (64-bit double)
 
-// if you wish to record audio from the Android device input, uncomment the ALLOW_RECORDING definition
+// if you wish to record audio from the Android device input, uncomment the RECORD_DEVICE_INPUT definition
 // (note this requires both android.permission.RECORD_AUDIO and android.permission.MODIFY_AUDIO_SETTINGS with a
 // positive value for AudioEngineProps::INPUT_CHANNELS)
 
@@ -47,7 +47,7 @@
 
 namespace AudioEngineProps
 {
-#ifdef ALLOW_RECORDING
+#ifdef RECORD_DEVICE_INPUT
     const int INPUT_CHANNELS   = 1;
 #else
     const int INPUT_CHANNELS   = 0;
