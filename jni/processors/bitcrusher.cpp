@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,6 +23,7 @@
 #include "bitcrusher.h"
 #include "../global.h"
 #include "../utilities/utils.h"
+#include <limits.h>
 
 /* constructor */
 
@@ -38,6 +39,7 @@ BitCrusher::BitCrusher( float amount, float inputMix, float outputMix )
 void BitCrusher::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize = sampleBuffer->bufferSize;
+    int bits = _bits + 1;
 
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
@@ -45,10 +47,10 @@ void BitCrusher::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
         for ( int j = 0; j < bufferSize; ++j )
         {
-            short input = ( short ) (( channelBuffer[ j ] * _inputMix ) * 32767 );
-            short prevent_offset = ( short )( -1 >> _bits + 1 );
+            short input = ( short ) (( channelBuffer[ j ] * _inputMix ) * SHRT_MAX );
+            short prevent_offset = ( short )( -1 >> bits );
             input &= ( -1 << ( 16 - _bits ));
-            channelBuffer[ j ] = ((( input + prevent_offset ) * _outputMix ) / 32767 );
+            channelBuffer[ j ] = (( input + prevent_offset ) * _outputMix ) / SHRT_MAX;
         }
 
         // omit unnecessary cycles by copying the mono content
