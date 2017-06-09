@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@ package nl.igorski.lib.audio;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Process;
 import android.util.Log;
 import nl.igorski.lib.audio.nativeaudio.*;
 
@@ -113,6 +114,9 @@ public final class MWEngine extends Thread
      */
     public MWEngine( Context aContext, IObserver aObserver )
     {
+        if ( INSTANCE != null )
+            throw new Error( "MWEngine already instantiated" );
+
         INSTANCE   = this;
         _context   = aContext;
         _observer  = aObserver;
@@ -120,7 +124,7 @@ public final class MWEngine extends Thread
 
         initJNI();
 
-        //setPriority( MAX_PRIORITY ); // no need, all in native layer
+        android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
     }
 
     /* public methods */
