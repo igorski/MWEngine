@@ -29,13 +29,6 @@ import android.os.Process;
 import android.util.Log;
 import nl.igorski.lib.audio.nativeaudio.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: igorzinken
- * Date: 10-04-12
- * Time: 20:16
- * To change this template use File | Settings | File Templates.
- */
 public final class MWEngine extends Thread
 {
     /**
@@ -148,6 +141,11 @@ public final class MWEngine extends Thread
         _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, 120.0f, 4, 4 );
 
         _disposed = false;
+    }
+
+    public static MWEngine getInstance()
+    {
+        return INSTANCE;
     }
 
     public float getVolume()
