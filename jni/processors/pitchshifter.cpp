@@ -106,9 +106,8 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
                 /* do windowing and re,im interleave */
 
-/*              TODO: optimize
-                for ( k = 0, n = 0, t = 0; k < fftFrameSize; ++k, ++n, ++n, t += invFftFrameSizePI2 )
-                {
+/*              TODO: optimize window calculation like below
+                for ( k = 0, n = 0, t = 0; k < fftFrameSize; ++k, ++n, ++n, t += invFftFrameSizePI2 )                {
                     window = -.5 * cos(( SAMPLE_TYPE ) t ) + .5;
                     gFFTworksp[ n ]     = gInFIFO[ k ] * window;
                     gFFTworksp[ n + 1 ] = 0.0;
@@ -214,9 +213,8 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
                 /* do windowing and add to output accumulator */
                 /*
-                TODO: optimize
-                for ( k = 0, n = 0, t = 0; k < fftFrameSize; ++k, ++n, ++n, t += invFftFrameSizePI2 )
-                {
+                TODO: optimize window calculation like below
+                for ( k = 0, n = 0, t = 0; k < fftFrameSize; ++k, ++n, ++n, t += invFftFrameSizePI2 ){
                     window             = -.5 * cos(( SAMPLE_TYPE ) t ) + .5;
                     gOutputAccum[ k ] += window * gFFTworksp[ n ] * invFftFrameSize2;
                 }
