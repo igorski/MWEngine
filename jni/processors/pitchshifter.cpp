@@ -72,7 +72,7 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     if ( pitchShift == 1.0f )
         return;
 
-    int i;
+    int i, n, t;
     long k;
 
     if ( gRover == false )
@@ -83,6 +83,10 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     for ( int cn = 0, cl = sampleBuffer->amountOfChannels; cn < cl; ++cn )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( cn );
+        SAMPLE_TYPE mPi2   = 2.0 * M_PI;
+        invFftFrameSizePI2 = mPi2 / fftFrameSize;
+        invFftFrameSize2   = 2 / ( fftFrameSize2 * osamp );
+        osampPI2           = osamp / mPi2;
 
         /* main processing loop */
 
@@ -102,13 +106,20 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
                 /* do windowing and re,im interleave */
 
-                for ( k = 0; k < fftFrameSize; ++k )
+/*              TODO: optimize
+                for ( k = 0, n = 0, t = 0; k < fftFrameSize; ++k, ++n, ++n, t += invFftFrameSizePI2 )
                 {
-                    window                  = -.5 * cos( 2. * M_PI * ( SAMPLE_TYPE ) k / ( SAMPLE_TYPE ) fftFrameSize ) + .5;
-                    gFFTworksp[ 2 * k ]     = gInFIFO[ k ] * window;
-                    gFFTworksp[ 2 * k + 1 ] = 0.;
+                    window = -.5 * cos(( SAMPLE_TYPE ) t ) + .5;
+                    gFFTworksp[ n ]     = gInFIFO[ k ] * window;
+                    gFFTworksp[ n + 1 ] = 0.0;
                 }
-
+*/
+                for ( k = 0, n = 0; k < fftFrameSize; ++k, n += 2 )
+                {
+                    window              = -.5 * cos( mPi2 * ( SAMPLE_TYPE ) k / ( SAMPLE_TYPE ) fftFrameSize ) + .5;
+                    gFFTworksp[ n ]     = gInFIFO[ k ] * window;
+                    gFFTworksp[ n + 1 ] = 0.;
+                }
                 /* ***************** ANALYSIS ******************* */
                 /* do transform */
                 smbFft( gFFTworksp, fftFrameSize, -1 );
@@ -118,8 +129,8 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                 for ( k = 0; k <= fftFrameSize2; ++k )
                 {
                     /* de-interlace FFT buffer */
-                    real = gFFTworksp[ 2 * k ];
-                    imag = gFFTworksp[ 2 * k + 1 ];
+                    real = gFFTworksp[ k << 1 ];     // [ 2 * k ]
+                    imag = gFFTworksp[ k << 1 + 1 ]; // [ 2 * k + 1 ]
 
                     /* compute magnitude and phase */
                     magn  = 2. * sqrt( real * real + imag * imag );
@@ -135,17 +146,17 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                     /* map delta phase into +/- Pi interval */
                     qpd = tmp / M_PI;
                     if ( qpd >= 0 )
-                        qpd += qpd&1;
+                        qpd += qpd & 1;
                     else
-                        qpd -= qpd&1;
+                        qpd -= qpd & 1;
 
                     tmp -= M_PI * ( SAMPLE_TYPE ) qpd;
 
                     /* get deviation from bin frequency from the +/- Pi interval */
-                    tmp = osamp * tmp / ( 2. * M_PI );
+                    tmp *= osampPI2;
 
                     /* compute the k-th partials' true frequency */
-                    tmp = ( SAMPLE_TYPE ) k * freqPerBin + tmp * freqPerBin;
+                    tmp = (( SAMPLE_TYPE ) k + tmp ) * freqPerBin;
 
                     /* store magnitude and true frequency in analysis arrays */
                     gAnaMagn[ k ] = magn;
@@ -161,7 +172,7 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                     index = k * pitchShift;
                     if ( index <= fftFrameSize2 ) {
                         gSynMagn[ index ] += gAnaMagn[ k ];
-                        gSynFreq[ index ] = gAnaFreq[ k ] * pitchShift;
+                        gSynFreq[ index ]  = gAnaFreq[ k ] * pitchShift;
                     }
                 }
 
@@ -179,7 +190,7 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                     tmp /= freqPerBin;
 
                     /* take osamp into account */
-                    tmp = 2. * M_PI * tmp / osamp;
+                    tmp = mPi2 * tmp / osamp;
 
                     /* add the overlap phase advance back in */
                     tmp += ( SAMPLE_TYPE ) k * expct;
@@ -189,24 +200,32 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                     phase           = gSumPhase[ k ];
 
                     /* get real and imag part and re-interleave */
-                    gFFTworksp[ 2 * k ]     = magn * cos( phase );
-                    gFFTworksp[ 2 * k + 1 ] = magn * sin( phase );
+                    gFFTworksp[ k << 1 ]     = magn * cos( phase ); // [ 2 * k ]
+                    gFFTworksp[ k << 1 + 1 ] = magn * sin( phase ); // [ 2 * k + 1 ]
                 }
 
                 /* zero negative frequencies */
-                for ( k = fftFrameSize + 2; k < 2 * fftFrameSize; ++k )
+                //for ( k = fftFrameSize + 2; k < 2 * fftFrameSize; ++k )
+                for ( k = fftFrameSize + 2, n = fftFrameSize << 1; k < n; ++k )
                     gFFTworksp[ k ] = 0.;
 
                 /* do inverse transform */
                 smbFft( gFFTworksp, fftFrameSize, 1 );
 
                 /* do windowing and add to output accumulator */
-                for ( k = 0; k < fftFrameSize; ++k )
+                /*
+                TODO: optimize
+                for ( k = 0, n = 0, t = 0; k < fftFrameSize; ++k, ++n, ++n, t += invFftFrameSizePI2 )
                 {
-                    window             = -.5 * cos( 2. * M_PI * ( SAMPLE_TYPE ) k / ( SAMPLE_TYPE ) fftFrameSize ) + .5;
-                    gOutputAccum[ k ] += 2. * window * gFFTworksp[ 2 * k ] / ( fftFrameSize2 * osamp );
+                    window             = -.5 * cos(( SAMPLE_TYPE ) t ) + .5;
+                    gOutputAccum[ k ] += window * gFFTworksp[ n ] * invFftFrameSize2;
                 }
-
+                */
+                for ( k = 0, n = 0, t = 0; k < fftFrameSize; ++k, n += 2, t += invFftFrameSizePI2 )
+                {
+                    window             = -.5 * cos( mPi2 * ( SAMPLE_TYPE ) k / ( SAMPLE_TYPE ) fftFrameSize ) + .5;
+                    gOutputAccum[ k ] += 2. * window * gFFTworksp[ n ] / ( fftFrameSize2 * osamp );
+                }
                 for ( k = 0; k < stepSize; ++k )
                     gOutFIFO[ k ] = gOutputAccum[ k ];
 

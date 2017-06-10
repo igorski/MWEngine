@@ -77,7 +77,7 @@ class PitchShifter : public BaseProcessor
         float gSynFreq    [ MAX_FRAME_LENGTH ];
         float gSynMagn    [ MAX_FRAME_LENGTH ];
         long gRover;
-        SAMPLE_TYPE magn, phase, tmp, window, real, imag, freqPerBin, expct;
+        SAMPLE_TYPE magn, phase, tmp, window, real, imag, freqPerBin, expct, invFftFrameSizePI2, invFftFrameSize2, osampPI2;
         long qpd, index, inFifoLatency, stepSize, fftFrameSize, fftFrameSize2, osamp;
 
         // inlining this FFT routine (by S.M. Bernsee, 1996) provides a 21% performance boost
@@ -86,33 +86,38 @@ class PitchShifter : public BaseProcessor
         {
             float wr, wi, arg, *p1, *p2, temp;
             float tr, ti, ur, ui, *p1r, *p1i, *p2r, *p2i;
-            long i, bitm, j, le, le2, k;
+            long doubleFftFrameSize = 2 * fftFrameSize, i, end, bitm, j, le, le2, k;
 
-            for (i = 2; i < 2*fftFrameSize-2; i += 2) {
-                for (bitm = 2, j = 0; bitm < 2*fftFrameSize; bitm <<= 1) {
-                    if (i & bitm) j++;
+            for ( i = 2, end = doubleFftFrameSize - 2; i < end; i += 2 ) {
+                for ( bitm = 2, j = 0; bitm < doubleFftFrameSize; bitm <<= 1 ) {
+                    if ( i & bitm ) ++j;
                     j <<= 1;
                 }
-                if (i < j) {
-                    p1 = fftBuffer+i; p2 = fftBuffer+j;
+                if ( i < j ) {
+                    p1 = fftBuffer+i;
+                    p2 = fftBuffer+j;
                     temp = *p1; *(p1++) = *p2;
                     *(p2++) = temp; temp = *p1;
                     *p1 = *p2; *p2 = temp;
                 }
             }
-            for (k = 0, le = 2; k < (long)(log(fftFrameSize)/log(2.)+.5); k++)
+
+            for ( k = 0, le = 2, end = ( long )( log( fftFrameSize ) / log( 2. ) + .5 ); k < end; ++k )
             {
                 le <<= 1;
-                le2 = le>>1;
-                ur = 1.0;
-                ui = 0.0;
-                arg = M_PI / (le2>>1);
-                wr = cos(arg);
-                wi = sign*sin(arg);
-                for (j = 0; j < le2; j += 2) {
-                    p1r = fftBuffer+j; p1i = p1r+1;
-                    p2r = p1r+le2; p2i = p2r+1;
-                    for (i = j; i < 2*fftFrameSize; i += le) {
+                le2  = le >> 1;
+                ur  = 1.0;
+                ui  = 0.0;
+                arg = M_PI / ( le2 >>1 );
+                wr  = cos( arg );
+                wi  = sign * sin( arg );
+                for ( j = 0; j < le2; j += 2 ) {
+                    p1r = fftBuffer + j;
+                    p1i = p1r + 1;
+                    p2r = p1r + le2;
+                    p2i = p2r + 1;
+
+                    for ( i = j; i < doubleFftFrameSize; i += le ) {
                         tr = *p2r * ur - *p2i * ui;
                         ti = *p2r * ui + *p2i * ur;
                         *p2r = *p1r - tr; *p2i = *p1i - ti;
