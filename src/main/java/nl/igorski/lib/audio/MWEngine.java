@@ -123,8 +123,6 @@ public final class MWEngine extends Thread
         _pauseLock = new Object();
 
         initJNI();
-
-        android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
     }
 
     /* public methods */
@@ -312,6 +310,7 @@ public final class MWEngine extends Thread
     {
         //DebugTool.log( "MWEngine STARTING NATIVE AUDIO RENDER THREAD" );
 
+        android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
         handleThreadStartTimeout();
 
         while ( _isRunning )
