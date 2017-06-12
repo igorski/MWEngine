@@ -31,14 +31,14 @@ bool randomBool()
 
 float randomFloat()
 {
-    return rand() / float( RAND_MAX );
+    return ( float ) rand() / float( RAND_MAX );
 }
 
 // return a random floating point value between given min - max range
 
 float randomFloat( float min, float max )
 {
-    float f = rand() / float( RAND_MAX );
+    float f = ( float ) rand() / float( RAND_MAX );
     return ( min + f * ( max - min ));
 }
 

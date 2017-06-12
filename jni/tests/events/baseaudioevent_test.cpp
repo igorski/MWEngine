@@ -1,4 +1,5 @@
 #include "../../events/baseaudioevent.h"
+#include "../../utilities/bufferutility.h"
 #include "../../instruments/baseinstrument.h"
 #include "../../audioengine.h"
 
@@ -220,7 +221,7 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     delete instrument;
 }
 
-TEST( BaseAudioEvent, SampleProperties )
+TEST( BaseAudioEvent, PositionInSamples )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
 
@@ -234,6 +235,17 @@ TEST( BaseAudioEvent, SampleProperties )
     EXPECT_EQ( sampleStart,  audioEvent->getSampleStart() );
     EXPECT_EQ( expectedEnd,  audioEvent->getSampleEnd() );
     EXPECT_EQ( sampleLength, audioEvent->getSampleLength() );
+
+    // test whether values in seconds have updated accordingly
+
+    int SAMPLE_RATE = 44100;
+    float expectedStartPosition = BufferUtility::bufferToMilliseconds( sampleStart, SAMPLE_RATE ) / 1000.f;
+    float expectedEndPosition   = BufferUtility::bufferToMilliseconds( expectedEnd, SAMPLE_RATE ) / 1000.f;
+    float expectedDuration      = expectedEndPosition - expectedStartPosition;
+
+    EXPECT_FLOAT_EQ( expectedStartPosition, audioEvent->getStartPosition() );
+    EXPECT_FLOAT_EQ( expectedEndPosition,   audioEvent->getEndPosition() );
+    EXPECT_FLOAT_EQ( expectedDuration,      audioEvent->getDuration() );
 
     // test auto sanitation of properties
 
@@ -263,6 +275,52 @@ TEST( BaseAudioEvent, SampleProperties )
 
     EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
         << "expected sample end to exceed the range set by the sample start and updated length properties for loopeable event";
+
+    deleteAudioEvent( audioEvent );
+}
+
+TEST( BaseAudioEvent, PositionInSeconds )
+{
+    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+
+    float startPosition = randomFloat( 0, 10 );
+    float endPosition   = startPosition + randomFloat( 0, 10 );
+
+    int SAMPLE_RATE = 44100;
+
+    float expectedDuration   = endPosition - startPosition;
+    int expectedSampleStart  = BufferUtility::millisecondsToBuffer(( int )( 1000.f * startPosition ), SAMPLE_RATE );
+    int expectedSampleEnd    = BufferUtility::millisecondsToBuffer(( int )( 1000.f * endPosition ), SAMPLE_RATE );
+    int expectedSampleLength = expectedSampleEnd - expectedSampleStart;
+    audioEvent->setStartPosition( startPosition );
+
+    EXPECT_FLOAT_EQ( startPosition, audioEvent->getStartPosition() );
+    EXPECT_FLOAT_EQ( startPosition, audioEvent->getEndPosition() )
+        << "expected end position to equal start position (hasn't been explicitly set yet)";
+    EXPECT_FLOAT_EQ( 0, audioEvent->getDuration())
+        << "expected zero duration (duration nor end haven't been explicitly set yet)";
+    EXPECT_EQ( 0, audioEvent->getSampleLength())
+        << "expected zero sample length (duration nor end haven't been explicitly set yet)";
+    EXPECT_EQ( expectedSampleStart, audioEvent->getSampleStart() )
+        << "expected sample start to have been updated after setting start position";
+
+    audioEvent->setEndPosition( endPosition );
+
+    EXPECT_FLOAT_EQ( startPosition, audioEvent->getStartPosition() );
+    EXPECT_FLOAT_EQ( endPosition, audioEvent->getEndPosition() );
+    EXPECT_FLOAT_EQ( expectedDuration, audioEvent->getDuration() );
+    EXPECT_EQ( expectedSampleEnd, audioEvent->getSampleEnd())
+        << "expected sample end to have been updated after setting end position";
+    EXPECT_EQ( expectedSampleLength, audioEvent->getSampleLength())
+        << "expected sample length to have been updated after setting end position";
+
+    expectedDuration /= 2;
+    float expectedEndPosition = startPosition + expectedDuration;
+    audioEvent->setDuration( expectedDuration );
+
+    EXPECT_FLOAT_EQ( expectedDuration, audioEvent->getDuration() );
+    EXPECT_FLOAT_EQ( expectedEndPosition, audioEvent->getEndPosition())
+        << "expected end position to have corrected after updating of duration";
 
     deleteAudioEvent( audioEvent );
 }

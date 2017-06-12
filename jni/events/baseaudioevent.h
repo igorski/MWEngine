@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -81,11 +81,7 @@ class BaseAudioEvent
                                             // when false, this is a live event playing immediately (this has nothing
                                             // to do with this Event actually being added/removed from the sequencer!!)
 
-        virtual int getSampleLength();
-        virtual int getSampleStart();
-        virtual int getSampleEnd();
-
-        // position the AudioEvent within the Sequencer using buffer samples as unit
+        // position the AudioEvent within the Sequencer using buffer samples as a unit
         // this allows for high precision positioning, see positionEvent() for a
         // positioning example using musical concepts
 
@@ -93,11 +89,27 @@ class BaseAudioEvent
         virtual void setSampleStart( int value );
         virtual void setSampleEnd( int value );
 
-        virtual int getReadPointer();
+        virtual int getSampleLength();
+        virtual int getSampleStart();
+        virtual int getSampleEnd();
+
+        // position the AudioEvent within the Sequencer by specifying seconds relative
+        // from the sequence start. internally, MWEngine will update the range pointers
+        // (setSampleStart(), setSampleEnd(), setSampleLength()) for querying by the Sequencer
+        // this method is for convenience
+
+        virtual void setStartPosition( float value );
+        virtual void setEndPosition( float value );
+        virtual void setDuration( float value );
+
+        virtual float getStartPosition();
+        virtual float getEndPosition();
+        virtual float getDuration();
 
         // position the AudioEvent within the Sequencer using musical timing concepts
         // NOTE : this results in strict "on the grid" timing, using buffer samples instead (see setSampleStart() and
-        // setSampleEnd() ) allows for more accurate positioning for drifting / swing / early / late events
+        // setSampleEnd() ) or seconds (see setStartPosition() and setEndPosition() ) allows for more accurate positioning
+        // for drifting / swing / early / late events
         //
         // startMeasure describes which measure the event belongs to (NOTE : first measure starts at 0)
         // subdivisions describes the amount of "steps" in each measure (e.g. 16 for 16 steps within a single measure)
@@ -107,6 +119,8 @@ class BaseAudioEvent
         // ( 0, 16, 4 ) positions audioEvent at 4 / 16 = start of the 2nd quaver in the first measure
         // ( 1, 32, 4 ) positions audioEvent at 4 / 32 = 1/8th note in the second measure
         virtual void positionEvent( int startMeasure, int subdivisions, int offset );
+
+        virtual int getReadPointer();
 
         virtual bool isLoopeable();
         virtual void setLoopeable( bool value );
@@ -133,6 +147,8 @@ class BaseAudioEvent
         int _sampleEnd;
         int _sampleLength;
         int _readPointer;  // when loopeable, used to internally keep track of last read buffer offset
+        float _startPosition;
+        float _endPosition;
 
         // properties
         bool _enabled;

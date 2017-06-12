@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #include "../global.h"
 #include "../audioengine.h"
 #include <instruments/baseinstrument.h>
+#include <utilities/bufferutility.h>
 #include <algorithm>
 
 // constructors / destructor
@@ -132,6 +133,8 @@ void BaseAudioEvent::setSampleLength( int value )
             _sampleEnd = _sampleStart + ( _sampleLength - 1 );
         }
     }
+    // update end position in seconds
+    _endPosition = BufferUtility::bufferToMilliseconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
 }
 
 int BaseAudioEvent::getSampleStart()
@@ -149,7 +152,12 @@ void BaseAudioEvent::setSampleStart( int value )
             _sampleEnd = _sampleStart + ( _sampleLength - 1 );
         else
             _sampleEnd = _sampleStart;
+
+        // update end position in seconds
+        _endPosition = BufferUtility::bufferToMilliseconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
     }
+    // update start position in seconds
+    _startPosition = BufferUtility::bufferToMilliseconds( _sampleStart, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
 }
 
 int BaseAudioEvent::getSampleEnd()
@@ -167,6 +175,9 @@ void BaseAudioEvent::setSampleEnd( int value )
         _sampleEnd = _sampleStart + ( _sampleLength - 1 );
     else
         _sampleEnd = value;
+
+    // update end position in seconds
+    _endPosition = BufferUtility::bufferToMilliseconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
 }
 
 int BaseAudioEvent::getReadPointer()
@@ -183,6 +194,53 @@ void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offs
 
     setSampleStart( startOffset );
     setSampleEnd  (( startOffset + _sampleLength ) - 1 );
+}
+
+void BaseAudioEvent::setStartPosition( float value )
+{
+    _startPosition = value;
+
+    if ( _endPosition <= _startPosition ) {
+        float duration = getDuration();
+        setEndPosition(( duration > 0 ) ? value + duration : value );
+    }
+
+    // update position in buffer samples
+    _sampleStart   = BufferUtility::millisecondsToBuffer(( int )( 1000.f * value ), AudioEngineProps::SAMPLE_RATE );
+    _sampleLength = _sampleEnd - _sampleStart;
+}
+
+void BaseAudioEvent::setEndPosition( float value )
+{
+    _endPosition = value;
+
+    if ( _endPosition <= _startPosition ) {
+        _endPosition = _startPosition;
+    }
+
+    // update position in buffer samples
+    _sampleEnd    = BufferUtility::millisecondsToBuffer(( int )( 1000.f * _endPosition ), AudioEngineProps::SAMPLE_RATE );
+    _sampleLength = _sampleEnd - _sampleStart;
+}
+
+void BaseAudioEvent::setDuration( float value )
+{
+    setEndPosition( _startPosition + value );
+}
+
+float BaseAudioEvent::getStartPosition()
+{
+    return _startPosition;
+}
+
+float BaseAudioEvent::getEndPosition()
+{
+    return _endPosition;
+}
+
+float BaseAudioEvent::getDuration()
+{
+    return _endPosition - _startPosition;
 }
 
 bool BaseAudioEvent::isLoopeable()
@@ -410,6 +468,8 @@ void BaseAudioEvent::construct()
     _sampleEnd         = 0;
     _sampleLength      = 0;
     _readPointer       = 0;
+    _startPosition     = 0.f;
+    _endPosition       = 0.f;
     _instrument        = 0;
     _deleteMe          = false;
     isSequenced        = true;

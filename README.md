@@ -79,15 +79,8 @@ To run the tests, simply execute the _test.sh_ (sorry Unix-only shell at the mom
 This will also build the library prior to running the tests by calling the build script described above.
 Note: _adb_ must be specified in your global path settings.
 
-To repeat the tests you can provide an optional numerical argument to the shell script, for instance :
-
-    ./sh test.sh 500
-
-will repeat all tests 500 times or break on the first failed test. This can be a convenient method to hunt down a
-unit test that fails at random.
-
 *Note on unit testing:* To build the application for unit testing observe that there are separate makefiles for the
-unit test mode (see suffix _test_ for the .mk files). In short these files set the compiler preprocesser MOCK_ENGINE which
+unit test mode (see suffix _test_ for the .mk files). In short: these files set the compiler preprocesser MOCK_ENGINE which
 replaces the OpenSL driver with a mocked driver so the engine can be unit tested "offline".
 
 ### Documentation
