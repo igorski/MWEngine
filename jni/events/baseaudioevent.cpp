@@ -309,7 +309,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 {
                     readPointer -= _sampleStart;
 
-                    for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
+                    for ( c = 0; c < outputChannels; ++c )
                     {
                         srcBuffer = _buffer->getBufferForChannel( c );
                         tgtBuffer = outputBuffer->getBufferForChannel( c );

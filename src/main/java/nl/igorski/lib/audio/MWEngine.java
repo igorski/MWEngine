@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,16 +25,10 @@ package nl.igorski.lib.audio;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Process;
 import android.util.Log;
 import nl.igorski.lib.audio.nativeaudio.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: igorzinken
- * Date: 10-04-12
- * Time: 20:16
- * To change this template use File | Settings | File Templates.
- */
 public final class MWEngine extends Thread
 {
     /**
@@ -113,14 +107,15 @@ public final class MWEngine extends Thread
      */
     public MWEngine( Context aContext, IObserver aObserver )
     {
+        if ( INSTANCE != null )
+            throw new Error( "MWEngine already instantiated" );
+
         INSTANCE   = this;
         _context   = aContext;
         _observer  = aObserver;
         _pauseLock = new Object();
 
         initJNI();
-
-        //setPriority( MAX_PRIORITY ); // no need, all in native layer
     }
 
     /* public methods */
@@ -146,6 +141,11 @@ public final class MWEngine extends Thread
         _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, 120.0f, 4, 4 );
 
         _disposed = false;
+    }
+
+    public static MWEngine getInstance()
+    {
+        return INSTANCE;
     }
 
     public float getVolume()
@@ -308,6 +308,7 @@ public final class MWEngine extends Thread
     {
         //DebugTool.log( "MWEngine STARTING NATIVE AUDIO RENDER THREAD" );
 
+        android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
         handleThreadStartTimeout();
 
         while ( _isRunning )

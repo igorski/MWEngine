@@ -1,4 +1,5 @@
 #include "../../modules/arpeggiator.h"
+#include "../../processors/pitchshifter.h"
 #include "../../utilities/utils.h"
 #include "../../global.h"
 #include "../../ringbuffer.h"
@@ -211,7 +212,33 @@ TEST( ArpeggiatorBenchmark, GetPitchForStepBenchmark )
     test1end   = now_ms();
     totalTest1 = test1end - test1start;
 
-    std::cout << "arpeggiator get pitch fot step test " << totalTest1 << " ms for " << iterations << " iterations\n";
+    std::cout << "arpeggiator get pitch for step test " << totalTest1 << " ms for " << iterations << " iterations\n";
 
     delete arpeggiator;
+}
+
+TEST( PitchshifterBenchmark, ProcessBenchmark )
+{
+    int iterations = 100;
+    PitchShifter* pitchshifter = new PitchShifter( 2.0f, 32 );
+    AudioBuffer* buffer = new AudioBuffer( 512, 1 );
+
+    long long test1start;
+    long long test1end;
+    long long totalTest1;
+
+    test1start = now_ms();
+
+    for ( int i = 0; i < iterations; ++i )
+    {
+        pitchshifter->process( buffer, false );
+    }
+
+    test1end   = now_ms();
+    totalTest1 = test1end - test1start;
+
+    std::cout << "pitchshifter processing test " << totalTest1 << " ms for " << iterations << " iterations\n";
+
+    delete pitchshifter;
+    delete buffer;
 }
