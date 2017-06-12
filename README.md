@@ -117,4 +117,5 @@ solving of bugs, etc.) from the following developers :
 
  * Andrey Stavrinov (@hypeastrum)
  * Koert Gaaikema (@koertgaaikema)
+ * Matt Logan (@mattlogan)
  * Aran Arunakiri
