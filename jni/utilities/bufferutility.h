@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -38,6 +38,8 @@ class BufferUtility
         static double getBPMbySamples( int length, int amountOfBars, int sampleRate );
         static int bufferToMilliseconds( int bufferSize, int sampleRate );
         static int millisecondsToBuffer( int milliSeconds, int sampleRate );
+        static float bufferToSeconds( int bufferSize, int sampleRate );
+        static int secondsToBuffer( float seconds, int sampleRate );
         static int getBitRate( int sampleRate, int bitDepth, int channels );
         static int calculateSamplesPerBeatDivision( int sampleRate, double tempo, int subdivision );
         static int getSamplesPerBeat( int sampleRate, double tempo );

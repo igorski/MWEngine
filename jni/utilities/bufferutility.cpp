@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -67,6 +67,17 @@ int BufferUtility::bufferToMilliseconds( int bufferSize, int sampleRate )
 }
 
 /**
+ * translates the size of a given buffer to its duration in seconds
+ *
+ * @param {int} bufferSize
+ * @param {int} sampleRate in Hz
+ */
+float BufferUtility::bufferToSeconds( int bufferSize, int sampleRate )
+{
+    return ( float ) bufferSize / ( float ) sampleRate;
+}
+
+/**
  * return the required buffer size for a value in milliseconds
  *
  * @param {int} milliSeconds
@@ -75,6 +86,17 @@ int BufferUtility::bufferToMilliseconds( int bufferSize, int sampleRate )
 int BufferUtility::millisecondsToBuffer( int milliSeconds, int sampleRate )
 {
     return ( int ) ( milliSeconds * ( sampleRate / 1000 ));
+}
+
+/**
+ * return the required buffer size for a value in seconds
+ *
+ * @param {float} seconds
+ * @param {int} sampleRate in Hz
+ */
+int BufferUtility::secondsToBuffer( float seconds, int sampleRate )
+{
+    return ( int ) ( seconds * sampleRate );
 }
 
 /**

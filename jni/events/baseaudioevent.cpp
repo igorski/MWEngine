@@ -134,7 +134,7 @@ void BaseAudioEvent::setSampleLength( int value )
         }
     }
     // update end position in seconds
-    _endPosition = BufferUtility::bufferToMilliseconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
+    _endPosition = BufferUtility::bufferToSeconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE );
 }
 
 int BaseAudioEvent::getSampleStart()
@@ -154,10 +154,10 @@ void BaseAudioEvent::setSampleStart( int value )
             _sampleEnd = _sampleStart;
 
         // update end position in seconds
-        _endPosition = BufferUtility::bufferToMilliseconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
+        _endPosition = BufferUtility::bufferToSeconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE );
     }
     // update start position in seconds
-    _startPosition = BufferUtility::bufferToMilliseconds( _sampleStart, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
+    _startPosition = BufferUtility::bufferToSeconds( _sampleStart, AudioEngineProps::SAMPLE_RATE );
 }
 
 int BaseAudioEvent::getSampleEnd()
@@ -177,7 +177,7 @@ void BaseAudioEvent::setSampleEnd( int value )
         _sampleEnd = value;
 
     // update end position in seconds
-    _endPosition = BufferUtility::bufferToMilliseconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE ) / 1000.f;
+    _endPosition = BufferUtility::bufferToSeconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE );
 }
 
 int BaseAudioEvent::getReadPointer()
@@ -200,27 +200,27 @@ void BaseAudioEvent::setStartPosition( float value )
 {
     _startPosition = value;
 
-    if ( _endPosition <= _startPosition ) {
+    if ( _endPosition < _startPosition ) {
         float duration = getDuration();
         setEndPosition(( duration > 0 ) ? value + duration : value );
     }
 
     // update position in buffer samples
-    _sampleStart   = BufferUtility::millisecondsToBuffer(( int )( 1000.f * value ), AudioEngineProps::SAMPLE_RATE );
-    _sampleLength = _sampleEnd - _sampleStart;
+    _sampleStart  = BufferUtility::secondsToBuffer( _startPosition, AudioEngineProps::SAMPLE_RATE );
+    _sampleLength = std::max( 0, ( _sampleEnd - 1 ) - _sampleStart );
 }
 
 void BaseAudioEvent::setEndPosition( float value )
 {
     _endPosition = value;
 
-    if ( _endPosition <= _startPosition ) {
+    if ( _endPosition < _startPosition ) {
         _endPosition = _startPosition;
     }
 
     // update position in buffer samples
-    _sampleEnd    = BufferUtility::millisecondsToBuffer(( int )( 1000.f * _endPosition ), AudioEngineProps::SAMPLE_RATE );
-    _sampleLength = _sampleEnd - _sampleStart;
+    _sampleEnd    = BufferUtility::secondsToBuffer( _endPosition, AudioEngineProps::SAMPLE_RATE );
+    _sampleLength = std::max( 0, ( _sampleEnd - 1 ) - _sampleStart );
 }
 
 void BaseAudioEvent::setDuration( float value )

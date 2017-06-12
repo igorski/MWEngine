@@ -239,8 +239,8 @@ TEST( BaseAudioEvent, PositionInSamples )
     // test whether values in seconds have updated accordingly
 
     int SAMPLE_RATE = 44100;
-    float expectedStartPosition = BufferUtility::bufferToMilliseconds( sampleStart, SAMPLE_RATE ) / 1000.f;
-    float expectedEndPosition   = BufferUtility::bufferToMilliseconds( expectedEnd, SAMPLE_RATE ) / 1000.f;
+    float expectedStartPosition = BufferUtility::bufferToSeconds( sampleStart, SAMPLE_RATE );
+    float expectedEndPosition   = BufferUtility::bufferToSeconds( expectedEnd, SAMPLE_RATE );
     float expectedDuration      = expectedEndPosition - expectedStartPosition;
 
     EXPECT_FLOAT_EQ( expectedStartPosition, audioEvent->getStartPosition() );
@@ -289,9 +289,9 @@ TEST( BaseAudioEvent, PositionInSeconds )
     int SAMPLE_RATE = 44100;
 
     float expectedDuration   = endPosition - startPosition;
-    int expectedSampleStart  = BufferUtility::millisecondsToBuffer(( int )( 1000.f * startPosition ), SAMPLE_RATE );
-    int expectedSampleEnd    = BufferUtility::millisecondsToBuffer(( int )( 1000.f * endPosition ), SAMPLE_RATE );
-    int expectedSampleLength = expectedSampleEnd - expectedSampleStart;
+    int expectedSampleStart  = BufferUtility::secondsToBuffer( startPosition, SAMPLE_RATE );
+    int expectedSampleEnd    = BufferUtility::secondsToBuffer( endPosition, SAMPLE_RATE );
+    int expectedSampleLength = ( expectedSampleEnd - expectedSampleStart ) - 1;
     audioEvent->setStartPosition( startPosition );
 
     EXPECT_FLOAT_EQ( startPosition, audioEvent->getStartPosition() );

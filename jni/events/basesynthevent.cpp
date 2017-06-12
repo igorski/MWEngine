@@ -144,15 +144,15 @@ void BaseSynthEvent::calculateBuffers()
 
     if ( isSequenced )
     {
-        oldLength     = _sampleLength;
-        _sampleLength = ( int )( length * AudioEngine::samples_per_step );
-        _sampleStart  = position * ( int ) AudioEngine::samples_per_step;
-        _sampleEnd    = _sampleStart + _sampleLength;
+        oldLength = _sampleLength;
+        setSampleStart( position * ( int ) AudioEngine::samples_per_step );
+        setSampleLength(( int )( length * AudioEngine::samples_per_step ));
+        setSampleEnd( _sampleStart + _sampleLength );
     }
     else {
         // quick releases of a noteOn-instruction should ring for at least a 64th note
+        setSampleLength( AudioEngine::samples_per_bar );     // important for amplitude swell in
         _minLength    = AudioEngine::samples_per_bar / 64;
-        _sampleLength = AudioEngine::samples_per_bar;     // important for amplitude swell in
         oldLength     = AudioEngineProps::BUFFER_SIZE;  // buffer is as long as the engine's buffer size
         _hasMinLength = false;                          // keeping track if the min length has been rendered
     }
