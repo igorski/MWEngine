@@ -128,8 +128,8 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                 for ( k = 0; k <= fftFrameSize2; ++k )
                 {
                     /* de-interlace FFT buffer */
-                    real = gFFTworksp[ k << 1 ];     // [ 2 * k ]
-                    imag = gFFTworksp[ k << 1 + 1 ]; // [ 2 * k + 1 ]
+                    real = gFFTworksp[ k << 1 ];         // [ 2 * k ]
+                    imag = gFFTworksp[ ( k << 1 ) + 1 ]; // [ ( 2 * k ) + 1 ]
 
                     /* compute magnitude and phase */
                     magn  = 2. * sqrt( real * real + imag * imag );
@@ -199,8 +199,8 @@ void PitchShifter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                     phase           = gSumPhase[ k ];
 
                     /* get real and imag part and re-interleave */
-                    gFFTworksp[ k << 1 ]     = magn * cos( phase ); // [ 2 * k ]
-                    gFFTworksp[ k << 1 + 1 ] = magn * sin( phase ); // [ 2 * k + 1 ]
+                    gFFTworksp[ k << 1 ]     = magn * cos( phase );     // [ 2 * k ]
+                    gFFTworksp[ ( k << 1 ) + 1 ] = magn * sin( phase ); // [ (2 * k) + 1 ]
                 }
 
                 /* zero negative frequencies */
