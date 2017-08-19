@@ -297,8 +297,10 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
   // invoke the render() method of the engine to collect audio
   // if it returns false, we can stop this stream (render thread has stopped)
 
-  if ( !( render && AudioEngine::render( numFrames ))
-    return AAUDIO_CALLBACK_RESULT_STOP;
+  if ( render ) {
+    if ( !AudioEngine::render( numFrames ))
+      return AAUDIO_CALLBACK_RESULT_STOP;
+  }
 
   // write enqueued buffer into the output buffer (both interleaved int16_t)
 
