@@ -74,7 +74,7 @@ modules/envelopefollower.cpp \
 modules/lfo.cpp \
 modules/routeableoscillator.cpp \
 
-LOCAL_LDLIBS := -llog -lOpenSLES -latomic -landroid
+LOCAL_LDLIBS := -lOpenSLES -landroid -latomic -llog
 
 include $(BUILD_SHARED_LIBRARY)
 

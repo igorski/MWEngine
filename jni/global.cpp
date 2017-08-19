@@ -32,5 +32,5 @@ int AudioEngineProps::BUFFER_SIZE = 1024;
 
 void *print_message( void* )
 {
-
+    return 0;
 }

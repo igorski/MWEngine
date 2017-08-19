@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -262,7 +262,7 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
 {
     // in case Sequencer was recording input from the Android device, halt recording of input
     if ( AudioEngine::recordFromDevice )
-        setRecordingFromDeviceState( false, 0, '\0' );
+        setRecordingFromDeviceState( false, 0, ( char* ) "\0" );
 
     bool wasRecording         = AudioEngine::recordOutput;
     AudioEngine::recordOutput = aRecording;
@@ -300,7 +300,7 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
 {
     // in case Sequencer was recording its output, halt recording of output
     if ( AudioEngine::recordOutput )
-        setRecordingState( false, 0, '\0' );
+        setRecordingState( false, 0, ( char* ) "\0" );
 
     bool wasRecording             = AudioEngine::recordFromDevice;
     AudioEngine::recordFromDevice = aRecording;

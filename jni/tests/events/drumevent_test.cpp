@@ -7,10 +7,7 @@ TEST( DrumEvent, Constructor )
 {
     int MAX_TYPE = 3;
 
-    // prepare samplemanager
-
-    for ( int i = 0; i < MAX_TYPE; ++i )
-        SampleManager::setSample( SSTR( i ), randomAudioBuffer() );
+    prepareSampleManager();
 
     int position               = randomInt( 0, 15 );
     int type                   = randomInt( 0, MAX_TYPE );
@@ -28,11 +25,7 @@ TEST( DrumEvent, Constructor )
     EXPECT_EQ( timbre, audioEvent->getTimbre() )
         << "expected timbre to equal the value given in constructor";
 
-    // clean samplemanager
-
-    for ( int i = 0; i < MAX_TYPE; ++i )
-        SampleManager::removeSample( SSTR( i ) );
-
+    SampleManager::flushSamples();
     deleteAudioEvent( audioEvent );
 }
 
@@ -40,10 +33,7 @@ TEST( DrumEvent, GettersSetters )
 {
     int MAX_TYPE = 3;
 
-    // prepare samplemanager
-
-    for ( int i = 0; i < MAX_TYPE; ++i )
-        SampleManager::setSample( SSTR( i ), randomAudioBuffer() );
+    prepareSampleManager();
 
     int position               = randomInt( 0, 15 );
     int type                   = randomInt( 0, MAX_TYPE );
@@ -65,11 +55,7 @@ TEST( DrumEvent, GettersSetters )
     EXPECT_EQ( timbre, audioEvent->getTimbre() )
         << "expected timbre to equal the value given in the setter";
 
-    // clean samplemanager
-
-        for ( int i = 0; i < MAX_TYPE; ++i )
-            SampleManager::removeSample( SSTR( i ) );
-
+    SampleManager::flushSamples();
     deleteAudioEvent( audioEvent );
 }
 
@@ -79,10 +65,7 @@ TEST( DrumEvent, LockedState )
 {
     int MAX_TYPE = 3;
 
-    // prepare samplemanager
-
-    for ( int i = 0; i < MAX_TYPE; ++i )
-        SampleManager::setSample( SSTR( i ), randomAudioBuffer() );
+    prepareSampleManager();
 
     int position               = randomInt( 0, 15 );
     int type                   = randomInt( 0, MAX_TYPE );
@@ -104,10 +87,6 @@ TEST( DrumEvent, LockedState )
     ASSERT_FALSE( audioEvent->isLocked() )
         << "expected audio event to be unlocked after unlocking";
 
-    // clean samplemanager
-
-    for ( int i = 0; i < MAX_TYPE; ++i )
-        SampleManager::removeSample( SSTR( i ) );
-
+    SampleManager::flushSamples();
     deleteAudioEvent( audioEvent );
 }

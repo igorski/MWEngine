@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -37,6 +37,12 @@ namespace Debug
      */
     void log( const char* aMessage, ... )
     {
+      /**
+       * TODO can we refactor to use systrace?? Tracing is preferable to logging
+       * inside the callback since tracing does not block.
+       *
+       * See https://developer.android.com/studio/profile/systrace-commandline.html
+       */
         va_list args;
         va_start( args, aMessage );
         __android_log_vprint( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, args );

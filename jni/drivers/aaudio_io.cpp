@@ -14,28 +14,74 @@
  * limitations under the License.
  */
 
+#include "aaudio_io.h"
 #include <assert.h>
-#include <trace.h>
 #include <inttypes.h>
-#include "aaudio.h"
+#include <utilities/debug.h>
+
+static const int32_t audioFormatEnum[] = {
+    AAUDIO_FORMAT_INVALID,
+    AAUDIO_FORMAT_UNSPECIFIED,
+    AAUDIO_FORMAT_PCM_I16,
+    AAUDIO_FORMAT_PCM_FLOAT,
+};
+static const int32_t audioFormatCount = sizeof(audioFormatEnum)/
+                                        sizeof(audioFormatEnum[0]);
+
+static const uint32_t sampleFormatBPP[] = {
+    0xffff,
+    0xffff,
+    16, //I16
+    32, //FLOAT
+};
+uint16_t SampleFormatToBpp(aaudio_format_t format) {
+    for (int32_t i = 0; i < audioFormatCount; ++i) {
+      if (audioFormatEnum[i] == format)
+        return sampleFormatBPP[i];
+    }
+    return 0xffff;
+}
+static const char * audioFormatStr[] = {
+    "AAUDIO_FORMAT_INVALID", // = -1,
+    "AAUDIO_FORMAT_UNSPECIFIED", // = 0,
+    "AAUDIO_FORMAT_PCM_I16",
+    "AAUDIO_FORMAT_PCM_FLOAT",
+};
+const char* FormatToString(aaudio_format_t format) {
+    for (int32_t i = 0; i < audioFormatCount; ++i) {
+        if (audioFormatEnum[i] == format)
+            return audioFormatStr[i];
+    }
+    return "UNKNOW_AUDIO_FORMAT";
+}
+
+int64_t timestamp_to_nanoseconds(timespec ts){
+  return (ts.tv_sec * (int64_t) NANOS_PER_SECOND) + ts.tv_nsec;
+}
+
+int64_t get_time_nanoseconds(clockid_t clockid){
+  timespec ts;
+  clock_gettime(clockid, &ts);
+  return timestamp_to_nanoseconds(ts);
+}
 
 /**
  * Every time the playback stream requires data this method will be called.
  *
  * @param stream the audio stream which is requesting data, this is the playStream_ object
  * @param userData the context in which the function is being called, in this case it will be the
- * PlayAudioEngine instance
+ * AAudio instance
  * @param audioData an empty buffer into which we can write our audio data
  * @param numFrames the number of audio frames which are required
  * @return Either AAUDIO_CALLBACK_RESULT_CONTINUE if the stream should continue requesting data
  * or AAUDIO_CALLBACK_RESULT_STOP if the stream should stop.
  *
- * @see PlayAudioEngine#dataCallback
+ * @see AAudio#dataCallback
  */
 aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
                                            void *audioData, int32_t numFrames) {
   assert(userData && audioData);
-  PlayAudioEngine *audioEngine = reinterpret_cast<PlayAudioEngine *>(userData);
+  AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>(userData);
   return audioEngine->dataCallback(stream, audioData, numFrames);
 }
 
@@ -47,25 +93,21 @@ aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
  *
  * @param stream the stream with the error
  * @param userData the context in which the function is being called, in this case it will be the
- * PlayAudioEngine instance
+ * AAudio instance
  * @param error the error which occured, a human readable string can be obtained using
  * AAudio_convertResultToText(error);
  *
- * @see PlayAudioEngine#errorCallback
+ * @see AAudio#errorCallback
  */
 void errorCallback(AAudioStream *stream,
                    void *userData,
                    aaudio_result_t error) {
   assert(userData);
-  PlayAudioEngine *audioEngine = reinterpret_cast<PlayAudioEngine *>(userData);
+  AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>(userData);
   audioEngine->errorCallback(stream, error);
 }
 
-PlayAudioEngine::PlayAudioEngine() {
-
-  // Initialize the trace functions, this enables you to output trace statements without
-  // blocking. See https://developer.android.com/studio/profile/systrace-commandline.html
-  Trace::initialize();
+AAudio_IO::AAudio_IO() {
 
   sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
   sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
@@ -75,11 +117,9 @@ PlayAudioEngine::PlayAudioEngine() {
   createPlaybackStream();
 }
 
-PlayAudioEngine::~PlayAudioEngine(){
+AAudio_IO::~AAudio_IO(){
 
   closeOutputStream();
-  delete sineOscLeft_;
-  delete sineOscRight_;
 }
 
 /**
@@ -90,7 +130,7 @@ PlayAudioEngine::~PlayAudioEngine(){
  * @param deviceId the audio device id, can be obtained through an {@link AudioDeviceInfo} object
  * using Java/JNI.
  */
-void PlayAudioEngine::setDeviceId(int32_t deviceId){
+void AAudio_IO::setDeviceId(int32_t deviceId){
 
   playbackDeviceId_ = deviceId;
 
@@ -103,12 +143,12 @@ void PlayAudioEngine::setDeviceId(int32_t deviceId){
  * Creates a stream builder which can be used to construct streams
  * @return a new stream builder object
  */
-AAudioStreamBuilder* PlayAudioEngine::createStreamBuilder() {
+AAudioStreamBuilder* AAudio_IO::createStreamBuilder() {
 
   AAudioStreamBuilder *builder = nullptr;
   aaudio_result_t result = AAudio_createStreamBuilder(&builder);
   if (result != AAUDIO_OK && !builder) {
-    LOGE("Error creating stream builder: %s", AAudio_convertResultToText(result));
+    Debug::log("Error creating stream builder: %s", AAudio_convertResultToText(result));
   }
   return builder;
 }
@@ -116,7 +156,7 @@ AAudioStreamBuilder* PlayAudioEngine::createStreamBuilder() {
 /**
  * Creates an audio stream for playback. The audio device used will depend on playbackDeviceId_.
  */
-void PlayAudioEngine::createPlaybackStream(){
+void AAudio_IO::createPlaybackStream(){
 
   AAudioStreamBuilder* builder = createStreamBuilder();
 
@@ -130,7 +170,7 @@ void PlayAudioEngine::createPlaybackStream(){
 
       // check that we got PCM_I16 format
       if (sampleFormat_ != AAudioStream_getFormat(playStream_)) {
-        LOGW("Sample format is not PCM_I16");
+        Debug::log("Sample format is not PCM_I16");
       }
 
       sampleRate_ = AAudioStream_getSampleRate(playStream_);
@@ -140,25 +180,25 @@ void PlayAudioEngine::createPlaybackStream(){
       AAudioStream_setBufferSizeInFrames(playStream_, framesPerBurst_);
       bufSizeInFrames_ = framesPerBurst_;
 
-      PrintAudioStreamInfo(playStream_);
+//      PrintAudioStreamInfo(playStream_);
 
       // Start the stream - the dataCallback function will start being called
       result = AAudioStream_requestStart(playStream_);
       if (result != AAUDIO_OK) {
-        LOGE("Error starting stream. %s", AAudio_convertResultToText(result));
+        Debug::log("Error starting stream. %s", AAudio_convertResultToText(result));
       }
 
       // Store the underrun count so we can tune the latency in the dataCallback
       playStreamUnderrunCount_ = AAudioStream_getXRunCount(playStream_);
 
     } else {
-      LOGE("Failed to create stream. Error: %s", AAudio_convertResultToText(result));
+      Debug::log("Failed to create stream. Error: %s", AAudio_convertResultToText(result));
     }
 
   AAudioStreamBuilder_delete(builder);
 
   } else {
-    LOGE("Unable to obtain an AAudioStreamBuilder object");
+    Debug::log("Unable to obtain an AAudioStreamBuilder object");
   }
 }
 
@@ -167,7 +207,7 @@ void PlayAudioEngine::createPlaybackStream(){
  * dataCallback function, which must be set for low latency playback.
  * @param builder The playback stream builder
  */
-void PlayAudioEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder) {
+void AAudio_IO::setupPlaybackStreamParameters(AAudioStreamBuilder *builder) {
   AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);
   AAudioStreamBuilder_setFormat(builder, sampleFormat_);
   AAudioStreamBuilder_setChannelCount(builder, sampleChannels_);
@@ -181,17 +221,17 @@ void PlayAudioEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder
   AAudioStreamBuilder_setErrorCallback(builder, ::errorCallback, this);
 }
 
-void PlayAudioEngine::closeOutputStream(){
+void AAudio_IO::closeOutputStream(){
 
   if (playStream_ != nullptr){
     aaudio_result_t result = AAudioStream_requestStop(playStream_);
     if (result != AAUDIO_OK){
-      LOGE("Error stopping output stream. %s", AAudio_convertResultToText(result));
+      Debug::log("Error stopping output stream. %s", AAudio_convertResultToText(result));
     }
 
     result = AAudioStream_close(playStream_);
     if (result != AAUDIO_OK){
-      LOGE("Error closing output stream. %s", AAudio_convertResultToText(result));
+      Debug::log("Error closing output stream. %s", AAudio_convertResultToText(result));
     }
   }
 }
@@ -199,7 +239,7 @@ void PlayAudioEngine::closeOutputStream(){
 /**
  * @see dataCallback function at top of this file
  */
-aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream,
+aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
                                                         void *audioData,
                                                         int32_t numFrames) {
   assert(stream == playStream_);
@@ -232,27 +272,25 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
   }
 
   if (shouldChangeBufferSize){
-    LOGD("Setting buffer size to %d", bufferSize);
+    Debug::log("Setting buffer size to %d", bufferSize);
     bufferSize = AAudioStream_setBufferSizeInFrames(stream, bufferSize);
     if (bufferSize > 0) {
       bufSizeInFrames_ = bufferSize;
     } else {
-      LOGE("Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
+      Debug::log("Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
     }
   }
 
-  /**
-   * The following output can be seen by running a systrace. Tracing is preferable to logging
-   * inside the callback since tracing does not block.
-   *
-   * See https://developer.android.com/studio/profile/systrace-commandline.html
-   */
-  Trace::beginSection("numFrames %d, Underruns %d, buffer size %d",
+  Debug::log("numFrames %d, Underruns %d, buffer size %d",
                       numFrames, underrunCount, bufferSize);
 
+  // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
+
+  // TODO : fill with buffer from AudioEngine :)
+
+  /*
   int32_t samplesPerFrame = sampleChannels_;
 
-  // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
   if (isToneOn_) {
     sineOscRight_->render(static_cast<int16_t *>(audioData),
                                       samplesPerFrame, numFrames);
@@ -264,10 +302,9 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
     memset(static_cast<uint8_t *>(audioData), 0,
            sizeof(int16_t) * samplesPerFrame * numFrames);
   }
-
+  */
   calculateCurrentOutputLatencyMillis(stream, &currentOutputLatencyMillis_);
 
-  Trace::endSection();
   return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
@@ -291,7 +328,7 @@ aaudio_data_callback_result_t PlayAudioEngine::dataCallback(AAudioStream *stream
  * has started because the timestamps are not yet available.
  */
 aaudio_result_t
-PlayAudioEngine::calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis) {
+AAudio_IO::calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis) {
 
   // Get the time that a known audio frame was presented for playing
   int64_t existingFrameIndex;
@@ -320,7 +357,7 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(AAudioStream *stream, doubl
     *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
                            / NANOS_PER_MILLISECOND;
   } else {
-    LOGE("Error calculating latency: %s", AAudio_convertResultToText(result));
+    Debug::log("Error calculating latency: %s", AAudio_convertResultToText(result));
   }
 
   return result;
@@ -329,41 +366,41 @@ PlayAudioEngine::calculateCurrentOutputLatencyMillis(AAudioStream *stream, doubl
 /**
  * @see errorCallback function at top of this file
  */
-void PlayAudioEngine::errorCallback(AAudioStream *stream,
+void AAudio_IO::errorCallback(AAudioStream *stream,
                    aaudio_result_t error){
 
   assert(stream == playStream_);
-  LOGD("errorCallback result: %s", AAudio_convertResultToText(error));
+  Debug::log("errorCallback result: %s", AAudio_convertResultToText(error));
 
   aaudio_stream_state_t streamState = AAudioStream_getState(playStream_);
   if (streamState == AAUDIO_STREAM_STATE_DISCONNECTED){
 
     // Handle stream restart on a separate thread
-    std::function<void(void)> restartStream = std::bind(&PlayAudioEngine::restartStream, this);
+    std::function<void(void)> restartStream = std::bind(&AAudio_IO::restartStream, this);
     streamRestartThread_ = new std::thread(restartStream);
   }
 }
 
-void PlayAudioEngine::restartStream(){
+void AAudio_IO::restartStream(){
 
-  LOGI("Restarting stream");
+  Debug::log("Restarting stream");
 
   if (restartingLock_.try_lock()){
     closeOutputStream();
     createPlaybackStream();
     restartingLock_.unlock();
   } else {
-    LOGW("Restart stream operation already in progress - ignoring this request");
+    Debug::log("Restart stream operation already in progress - ignoring this request");
     // We were unable to obtain the restarting lock which means the restart operation is currently
     // active. This is probably because we received successive "stream disconnected" events.
     // Internal issue b/63087953
   }
 }
 
-double PlayAudioEngine::getCurrentOutputLatencyMillis() {
+double AAudio_IO::getCurrentOutputLatencyMillis() {
   return currentOutputLatencyMillis_;
 }
 
-void PlayAudioEngine::setBufferSizeInBursts(int32_t numBursts) {
-  PlayAudioEngine::bufferSizeSelection_ = numBursts;
+void AAudio_IO::setBufferSizeInBursts(int32_t numBursts) {
+  AAudio_IO::bufferSizeSelection_ = numBursts;
 }

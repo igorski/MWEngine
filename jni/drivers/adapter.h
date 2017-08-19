@@ -59,7 +59,8 @@ extern OPENSL_STREAM* driver_openSL;
 #elif DRIVER == 1
 
 // AAudio
-#include "aaudio.h"
+#include "aaudio_io.h"
+extern AAudio_IO* driver_aAudio;
 
 #endif
 

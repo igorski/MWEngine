@@ -27,7 +27,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Process;
 import android.util.Log;
-import nl.igorski.lib.audio.nativeaudio.*;
+import nl.igorski.lib.audio.mwengine.*;
 
 public final class MWEngine extends Thread
 {

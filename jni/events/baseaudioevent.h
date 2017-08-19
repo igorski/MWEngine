@@ -32,7 +32,7 @@ class BaseAudioEvent
     public:
         BaseAudioEvent( BaseInstrument* instrument );
         BaseAudioEvent();
-        ~BaseAudioEvent();
+        virtual ~BaseAudioEvent();
 
         /**
          * used by the AudioEngine to mix in parts of this

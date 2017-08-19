@@ -13,20 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef AAUDIO_PLAYAUDIOENGINE_H
 #define AAUDIO_PLAYAUDIOENGINE_H
 
+#include <aaudio/AAudio.h>
 #include <thread>
-#include "audio_common.h"
+#include <mutex>
 
 #define BUFFER_SIZE_AUTOMATIC 0
+// Time constants
+#define NANOS_PER_SECOND 1000000000L
+#define NANOS_PER_MILLISECOND 1000000L
 
-class PlayAudioEngine {
+/*
+ * Audio Sample Controls...
+ */
+#define AUDIO_SAMPLE_CHANNELS               1
+
+uint16_t SampleFormatToBpp(aaudio_format_t format);
+/*
+ * GetSystemTicks(void):  return the time in micro sec
+ */
+__inline__ uint64_t GetSystemTicks(void) {
+    struct timeval Time;
+    gettimeofday( &Time, NULL );
+
+    return (static_cast<uint64_t>(1000000) * Time.tv_sec + Time.tv_usec);
+}
+
+void PrintAudioStreamInfo(const AAudioStream * stream);
+
+int64_t timestamp_to_nanoseconds(timespec ts);
+int64_t get_time_nanoseconds(clockid_t clockid);
+
+class AAudio_IO {
 
 public:
-  PlayAudioEngine();
-  ~PlayAudioEngine();
+  AAudio_IO();
+  ~AAudio_IO();
   void setDeviceId(int32_t deviceId);
   void setBufferSizeInBursts(int32_t numBursts);
   aaudio_data_callback_result_t dataCallback(AAudioStream *stream,

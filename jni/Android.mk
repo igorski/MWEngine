@@ -80,7 +80,11 @@ else
     modules/lfo.cpp \
     modules/routeableoscillator.cpp \
 
-    LOCAL_LDLIBS := -llog -lOpenSLES -latomic -landroid
+# Experimental AAudio support, uncomment when building for AAudio
+#    LOCAL_SRC_FILES   := \
+#    drivers/aaudio_io.cpp \
+
+    LOCAL_LDLIBS := -lOpenSLES -landroid -latomic -llog
 
     include $(BUILD_SHARED_LIBRARY)
 

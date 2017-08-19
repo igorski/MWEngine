@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -136,15 +136,13 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
     char id[ 5 ];
     short* sound_buffer;
     short amountOfChannels;
-    unsigned int format, sampleRate, bytesPerSec, dataSize, i, l, w;
+    unsigned int format, sampleRate, dataSize, i, l, w;
 
     sliceString( byteArray, id, 0, 4 );
     id[ 4 ] = '\0';
 
     if ( !strcmp( id, "RIFF" ))
     {
-        unsigned long size = sliceLong( byteArray, 4, true );
-
         sliceString( byteArray, id, 8, 4 );
         id[ 4 ] = '\0';
 

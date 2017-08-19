@@ -183,7 +183,6 @@ namespace AudioEngine
                 AudioChannel* channel = channels->at( j );
                 bool isCached         = channel->hasCache;                // whether this channel has a fully cached buffer
                 bool mustCache        = AudioEngineProps::CHANNEL_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
-                bool gotBuffer        = false;
                 int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
                 SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->mixVolume;
@@ -284,7 +283,6 @@ namespace AudioEngine
 
             for ( int k = 0; k < processors.size(); k++ )
             {
-                BaseProcessor* processor = processors[ k ];
                 processors[ k ]->process( inbuffer, isMono );
             }
 

@@ -51,7 +51,8 @@ The makefile (_/jni/Android.mk_) will by default compile the library with all av
 
 Those of a Unix-bent can run the _build.sh_-file in the root folder of the repository whereas Windows users can run the
 _build.bat_-file that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available
-through the PATH settings of your system (or adjust the shell scripts accordingly).
+through the PATH settings of your system (or adjust the shell scripts accordingly). Note: the NDK platform version is
+defined in _project.properties_.
 
 After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.mwengine-namespace, making the code available to Java.
 
@@ -102,15 +103,21 @@ sequence going using the library.
 To install the demo : first build the library as described above, and then run the build script to deploy the .APK unto an
 attached device/emulator (note that emulated devices can only operate at a sample rate of 8 kHz!). This requires both the Android NDK and the Android SDK.
 
-Be sure to point towards the installation locations of these in both the _build.sh_-file and the _local.properties_-file.
+Be sure to point towards the installation locations of these in both the _build.sh_- and _local.properties_-files.
 
 ### Note on AAudio
 
 The AAudio implementation has been built using (in Googles words): _"a Preview release of the AAudio library. The API
 might change in backward-incompatible ways in future releases. It is not recommended for production use."_ so use it
-at your own peril. You can use AAudio instead of OpenSL by changing the desired driver in _global.h_.
+at your own peril. To use AAudio instead of OpenSL:
+ 
+ * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
+ * update the _Android.mk_ file to include _drivers/aaudio_io.cpp_ (uncommented at the bottom)
+ * update target in _project.properties_ to _android-26_
+ 
+Once AAudio is a stable library, MWEngine will allow on-the-fly switching between OpenSL and AAudio drivers.
 
-(!) MWEngine does not support live audio recording on AAudio just yet.
+(!) MWEngine does not support recording from the device inputs using AAudio just yet.
 
 ### Contributors
 

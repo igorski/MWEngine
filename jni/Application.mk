@@ -1,6 +1,7 @@
 APP_OPTIM := release
 APP_STL := gnustl_static
-APP_CPPFLAGS += -fexceptions -frtti
+APP_CPPFLAGS += -std=c++11 -Werror -fexceptions -frtti
+#APP_CLPPFLAGS += -Wall
 APP_ABI := armeabi armeabi-v7a x86 mips
 
 ifeq ($(TARGET_ARCH_ABI), x86)

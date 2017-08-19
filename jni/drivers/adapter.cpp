@@ -23,9 +23,9 @@
 #include "adapter.h"
 
 #if DRIVER == 0
-OPENSL_STREAM* driver_openSL = 0; // OpenSL
+OPENSL_STREAM* driver_openSL = NULL; // OpenSL
 #elif DRIVER == 1
-// AAudio
+AAudio_IO* driver_aAudio = NULL;   // AAudio
 #endif
 
 namespace DriverAdapter {
@@ -41,6 +41,15 @@ namespace DriverAdapter {
         );
         return ( driver_openSL != NULL );
 
+#elif DRIVER == 1
+
+        // AAudio
+        driver_aAudio = new AAudio_IO();
+       // driver_aAudio->setDeviceId();
+        driver_aAudio->setBufferSizeInBursts( 2 ); // Google provides {0, 1, 2, 4, 8} as values
+
+        return ( driver_aAudio != NULL );
+
 #endif
     }
 
@@ -50,7 +59,12 @@ namespace DriverAdapter {
         // OpenSL
         android_CloseAudioDevice( driver_openSL );
         delete driver_openSL;
-        driver_openSL = 0;
+        driver_openSL = NULL;
+
+#elif DRIVER == 1
+        // AAudio
+        delete driver_aAudio;
+        driver_aAudio = NULL;
 #endif
 
     }
@@ -71,5 +85,7 @@ namespace DriverAdapter {
         return android_AudioIn( driver_openSL, recordBuffer, AudioEngineProps::BUFFER_SIZE );
 #endif
         // TODO: no AAudio recording yet
+
+        return 0;
     }
 }

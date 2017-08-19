@@ -19,7 +19,7 @@
 #include "benchmarks/table_test.cpp"
 #include "events/baseaudioevent_test.cpp"
 #include "events/basesynthevent_test.cpp"
-//#include "events/drumevent_test.cpp"
+#include "events/drumevent_test.cpp"
 #include "events/sampleevent_test.cpp"
 #include "generators/envelopegenerator_test.cpp"
 #include "instruments/baseinstrument_test.cpp"

@@ -504,6 +504,8 @@ int waitThreadLock(void *lock)
   }
   p->s = (unsigned char) 0;
   pthread_mutex_unlock(&(p->m));
+
+  return retval;
 }
 
 void notifyThreadLock(void *lock)

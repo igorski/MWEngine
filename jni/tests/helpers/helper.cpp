@@ -9,6 +9,8 @@
 #include "../../events/baseaudioevent.h"
 #include "../../instruments/baseinstrument.h"
 #include "../../utilities/bufferutility.h"
+#include "../../utilities/samplemanager.h"
+
 #define NANOS_IN_SECOND 1000000000
 
 // ---------------------
@@ -193,6 +195,18 @@ BaseAudioEvent* enqueuedAudioEvent( BaseInstrument* instrument, int sampleLength
     audioEvent->addToSequencer();
 
     return audioEvent;
+}
+
+void prepareSampleManager() {
+    // creates all samples that might be used by DrumEvent
+    SampleManager::setSample( "kd",  randomAudioBuffer() );
+    SampleManager::setSample( "kdg", randomAudioBuffer() );
+    SampleManager::setSample( "st",  randomAudioBuffer() );
+    SampleManager::setSample( "stg", randomAudioBuffer() );
+    SampleManager::setSample( "sn",  randomAudioBuffer() );
+    SampleManager::setSample( "sng", randomAudioBuffer() );
+    SampleManager::setSample( "hh",  randomAudioBuffer() );
+    SampleManager::setSample( "hhg", randomAudioBuffer() );
 }
 
 void dumpEventProperties( BaseAudioEvent* audioEvent )

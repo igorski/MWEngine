@@ -130,7 +130,7 @@ DrumPattern* DrumInstrument::getDrumPattern( int patternNum )
 int DrumInstrument::setDrumPattern( DrumPattern* pattern )
 {
     // make sure we don't allow double additions of the same pattern
-    for ( int i; i < drumPatterns->size(); i++ )
+    for ( int i = 0; i < drumPatterns->size(); i++ )
     {
         if ( drumPatterns->at( i ) == pattern )
             return i;
