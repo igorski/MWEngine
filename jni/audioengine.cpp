@@ -54,6 +54,19 @@ namespace AudioEngine
     bool monitorRecording = false; // might introduce feedback when using internal microphone ;)
     int recordingFileId = 0;
 
+    bool loopStarted = false;
+    int loopOffset   = 0;
+    int loopAmount   = 0;
+
+    int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
+    bool isMono        = ( outputChannels == 1 );
+    float* outbuffer   = 0;
+    float* recbufferIn = 0;
+
+    AudioBuffer* inBuffer  = 0;
+    AudioBuffer* recBuffer = 0;
+    std::vector<AudioChannel*>* channels = 0;
+
     /* tempo / sequencer position related */
 
     int samples_per_beat;                // strictly speaking sequencer specific, but scoped onto the AudioEngine
@@ -92,6 +105,8 @@ namespace AudioEngine
      */
     void start()
     {
+        DebugTool::log( "STARTING engine" );
+
         // create the output driver using the adapter. If creation failed
         // prevent thread start and trigger JNI callback for error handler
 
@@ -101,297 +116,71 @@ namespace AudioEngine
             return;
         }
 
+        DebugTool::log( "STARTED engine" );
+
         // audio hardware available, prepare environment
 
-        int bufferSize, i, c, ci;
-        bufferSize         = AudioEngineProps::BUFFER_SIZE;
-        int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
-        bool isMono        = ( outputChannels == 1 );
-        std::vector<AudioChannel*>* channels = new std::vector<AudioChannel*>();
+        bool loopStarted = false;
+        int loopOffset   = 0;
+        int loopAmount   = 0;
 
-        bool loopStarted = false; // whether the current buffer will exceed the end offset of the loop (read remaining samples from the start)
-        int loopOffset   = 0;     // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
-        int loopAmount   = 0;     // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
-
-        int outSampleNum = bufferSize * outputChannels;
-        float outbuffer[ outSampleNum ]; // the output buffer rendered by the hardware
+        channels  = new std::vector<AudioChannel*>();
+        outbuffer = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
 
 #ifdef RECORD_DEVICE_INPUT
 
         // generate the input buffer used for recording from device input
         // as well as the temporary buffer used to merge the input into
 
-        float recbufferIn[ bufferSize ];
-        AudioBuffer* recbuffer = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, bufferSize );
+        recbufferIn = new float[ AudioEngineProps::BUFFER_SIZE ]();
+        recbuffer   = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 #endif
-        AudioBuffer* inbuffer  = new AudioBuffer( outputChannels, bufferSize ); // accumulates all channels ("master strip")
+        // accumulates all channels ("master strip")
+
+        inBuffer = new AudioBuffer( outputChannels, AudioEngineProps::BUFFER_SIZE );
 
         // ensure all AudioChannel buffers have the correct properties (in case engine is
         // restarting after changing buffer size, for instance)
 
         std::vector<BaseInstrument*> instruments = Sequencer::instruments;
 
-        for ( i = 0; i < instruments.size(); ++i )
+        for ( int i = 0; i < instruments.size(); ++i )
             instruments.at( i )->audioChannel->createOutputBuffer();
 
-        // start thread
+        // start thread and request first render (gets render loop going)
 
         thread = 1;
+        DriverAdapter::render();
 
         while ( thread )
         {
-            // erase previous buffer contents
-            inbuffer->silenceBuffers();
-
-            // gather the audio events by the buffer range currently being processed
-            loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, bufferSize, true, true );
-
-            // read pointer exceeds maximum allowed offset (max_buffer_position) ? => sequencer has started its loop
-            // we must now also gather extra events at the start position (min_buffer_position)
-            loopOffset = ( max_buffer_position - bufferPosition ) + 1; // buffer index where the loop occurs
-            loopAmount = bufferSize - loopOffset; // loopOffset is equal to the amount of samples read prior to loop start
-
-            // collect all audio events that are eligible for playback for this iteration
-            Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
-
-#ifdef RECORD_DEVICE_INPUT
-            // record audio from Android device ?
-            if ( recordFromDevice && AudioEngineProps::INPUT_CHANNELS > 0 )
-            {
-                int recSamps                  = DriverAdapter::getInput( recbufferIn );
-                SAMPLE_TYPE* recBufferChannel = recbuffer->getBufferForChannel( 0 );
-
-                for ( int j = 0; j < recSamps; ++j )
-                {
-                    recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
-
-                    // merge recording into current input buffer for instant monitoring
-                    if ( monitorRecording )
-                    {
-                        for ( int k = 0; k < outputChannels; ++k )
-                            inbuffer->getBufferForChannel( k )[ j ] = recBufferChannel[ j ];
-                    }
-                }
-            }
-#endif
-            // channel loop
-            int j = 0;
-            int channelAmount = channels->size();
-
-            for ( ; j < channelAmount; ++j )
-            {
-                AudioChannel* channel = channels->at( j );
-                bool isCached         = channel->hasCache;                // whether this channel has a fully cached buffer
-                bool mustCache        = AudioEngineProps::CHANNEL_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
-                int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
-
-                SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->mixVolume;
-                std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
-                int amount                               = audioEvents.size();
-
-                // get channel output buffer and clear previous contents
-                AudioBuffer* channelBuffer = channel->getOutputBuffer();
-                channelBuffer->silenceBuffers();
-
-                bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
-                int maxBufferPosition = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
-
-                // we make a copy of the current buffer position indicator
-                int bufferPos = bufferPosition;
-
-                // ...in case the AudioChannels maxBufferPosition differs from the sequencer loop range
-                // note that these buffer positions are always a full measure in length (as we loop by measures)
-                while ( bufferPos > maxBufferPosition )
-                    bufferPos -= samples_per_bar;
-
-                // only render sequenced events when the sequencer isn't in the paused state
-                // and the channel volume is actually at an audible level! ( > 0 )
-
-                if ( Sequencer::playing && amount > 0 && channelVolume > 0.0 )
-                {
-                    if ( !isCached )
-                    {
-                        // write the audioEvent buffers into the main output buffer
-                        for ( int k = 0; k < amount; ++k )
-                        {
-                            BaseAudioEvent* audioEvent = audioEvents[ k ];
-
-                            if ( audioEvent != 0 && !audioEvent->isLocked()) // make sure we're allowed to query the contents
-                            {
-                                audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
-                                                       maxBufferPosition, loopStarted, loopOffset, useChannelRange );
-                            }
-                        }
-                    }
-                    else
-                    {
-                        channel->readCachedBuffer( channelBuffer, bufferPos );
-                    }
-                }
-
-                // perform live rendering for this instrument
-                if ( channel->hasLiveEvents )
-                {
-                    int lAmount = channel->liveEvents.size();
-
-                    // the volume of the live events is divided by the channel mix as a live event
-                    // is played on the same instrument, but just as a different voice (note the
-                    // events can have their own mix level)
-
-                    float lAmp = channel->mixVolume > 0.0 ? MAX_PHASE / channel->mixVolume : MAX_PHASE;
-
-                    for ( int k = 0; k < lAmount; ++k )
-                    {
-                        BaseAudioEvent* vo = channel->liveEvents[ k ];
-                        channelBuffer->mergeBuffers( vo->synthesize( bufferSize ), 0, 0, lAmp );
-                    }
-                }
-
-                // apply the processing chains processors / modulators
-                ProcessingChain* chain = channel->processingChain;
-                std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
-
-                for ( int k = 0; k < processors.size(); k++ )
-                {
-                    BaseProcessor* processor = processors[ k ];
-                    bool canCacheProcessor   = processor->isCacheable();
-
-                    // only apply processor when we're not caching or cannot cache its output
-                    if ( !isCached || !canCacheProcessor )
-                    {
-                        // cannot cache this processor and we're caching ? write all contents
-                        // of the channelBuffer into the channels cache
-                        if ( mustCache && !canCacheProcessor )
-                            mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
-
-                        processors[ k ]->process( channelBuffer, channel->isMono );
-                    }
-                }
-
-                // write cache if it didn't happen yet ;) (bus processors are (currently) non-cacheable)
-                if ( mustCache )
-                    mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
-
-                // write the channel buffer into the combined output buffer, apply channel volume
-                // note live events are always audible as their volume is relative to the instrument
-                if ( channel->hasLiveEvents && channelVolume == 0.0 ) channelVolume = MAX_PHASE;
-                inbuffer->mergeBuffers( channelBuffer, 0, 0, channelVolume );
-            }
-
-            // apply master bus processors (e.g. high pass filter, limiter, etc.)
-            std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
-
-            for ( int k = 0; k < processors.size(); k++ )
-            {
-                processors[ k ]->process( inbuffer, isMono );
-            }
-
-            // write the accumulated buffers into the output buffer
-            for ( i = 0, c = 0; i < bufferSize; i++, c += outputChannels )
-            {
-                for ( ci = 0; ci < outputChannels; ci++ )
-                {
-                    // we apply the master volume here
-                    float sample = ( float ) inbuffer->getBufferForChannel( ci )[ i ] * volume;
-
-                    // and a fail-safe in extreme limiting (hitting the ceiling?)
-                    if ( sample < -MAX_PHASE )
-                        sample = -MAX_PHASE;
-
-                    else if ( sample > +MAX_PHASE )
-                        sample = +MAX_PHASE;
-
-                    outbuffer[ c + ci ] = sample; // interleaved output
-                }
-
-                // update the buffer pointers and sequencer position
-                if ( Sequencer::playing )
-                {
-                    if ( bufferPosition % ( int ) samples_per_step == 0 )
-                    {
-                        // for higher accuracy we must calculate using floating point precision, it
-                        // is a more expensive calculation than using integer modulo though, so we check
-                        // only when the integer modulo operation check has passed
-                        // TODO : this attempted fmod calculation is inaccurate.
-                        //if ( std::fmod(( float ) bufferPosition, samples_per_step ) == 0 )
-                            handleSequencerPositionUpdate( i );
-                    }
-                    if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position )
-                         Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
-
-                    bufferPosition++;
-
-                    if ( bufferPosition > max_buffer_position )
-                        bufferPosition = min_buffer_position;
-                }
-            }
-            // render the buffer in the audio hardware (unless we're bouncing as writing the output
-            // makes it both unnecessarily audible and stalls this thread's execution)
-            if ( !bouncing )
-                DriverAdapter::writeOutput( outbuffer, outSampleNum );
-
-#ifdef RECORD_TO_DISK
-            // write the output to disk if a recording state is active
-            if ( Sequencer::playing && ( recordOutput || recordFromDevice ))
-            {
-#ifdef RECORD_DEVICE_INPUT
-                if ( recordFromDevice ) // recording from device input ? > write the record buffer
-                    DiskWriter::appendBuffer( recbuffer );
-                else                    // recording global output ? > write the combined buffer
-#endif
-                    DiskWriter::appendBuffer( outbuffer, bufferSize, outputChannels );
-
-                // are we bouncing the current sequencer range and have we played throughed the full range?
-
-                if ( bouncing && ( loopStarted || bufferPosition == 0 ))
-                {
-                    DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, outputChannels, false );
-                    // broadcast update via JNI, pass buffer identifier name to identify last recording
-                    Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
-                    thread = 0; // stop thread, halts rendering
-                    break;
-                }
-
-                // exceeded maximum recording buffer amount ? > write current recording
-                if ( DiskWriter::bufferFull() || haltRecording )
-                {
-                    int amountOfChannels = recordFromDevice ? AudioEngineProps::INPUT_CHANNELS : outputChannels;
-                    DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, amountOfChannels, true );
-
-                    if ( !haltRecording )
-                    {
-                        DiskWriter::generateOutputBuffer( amountOfChannels ); // allocate new buffer for next iteration
-                        ++recordingFileId;
-                    }
-                    else {
-                        haltRecording = false;
-                    }
-                }
-            }
-#endif
-            // tempo update queued ?
-            if ( queuedTempo != tempo )
-                handleTempoUpdate( queuedTempo, true );
+            // will only be interrupted if thread is set to 0 in render() method
+            // the audio drivers are responsible for calling render() at the
+            // appropriate time during this threads execution
         }
+
+        Debug::log( "STOPPED engine" );
+
         DriverAdapter::destroy();
 
         // clear heap memory allocated before thread loop
         delete channels;
-        delete inbuffer;
+        delete outbuffer;
+        delete inBuffer;
 #ifdef RECORD_DEVICE_INPUT
         delete recbuffer;
+        delete recbufferIn;
 #endif
     }
 
     void stop()
     {
         thread = 0;
-        Debug::log( "MWENGINE :: STOPPED OpenSL engine" );
     }
 
     void reset()
     {
-        Debug::log( "MWENGINE :: RESET" );
+        Debug::log( "RESET engine" );
 
         // nothing much... references are currently maintained by Java, causing SWIG to destruct referenced Objects
 
@@ -402,6 +191,247 @@ namespace AudioEngine
         recordOutput     = false;
         recordFromDevice = false;
         bouncing         = false;
+    }
+
+    bool render( int amountOfSamples )
+    {
+        if ( thread == 0 )
+            return false;
+
+        int i, c, ci;
+
+        // erase previous buffer contents
+        inBuffer->silenceBuffers();
+
+        // gather the audio events by the buffer range currently being processed
+        loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
+
+        // read pointer exceeds maximum allowed offset (max_buffer_position) ? => sequencer has started its loop
+        // we must now also gather extra events at the start position (min_buffer_position)
+        loopOffset = ( max_buffer_position - bufferPosition ) + 1; // buffer index where the loop occurs
+        loopAmount = amountOfSamples - loopOffset; // loopOffset is equal to the amount of samples read prior to loop start
+
+        // collect all audio events that are eligible for playback for this iteration
+        Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
+
+#ifdef RECORD_DEVICE_INPUT
+        // record audio from Android device ?
+        if ( recordFromDevice && AudioEngineProps::INPUT_CHANNELS > 0 )
+        {
+            int recSamps                  = DriverAdapter::getInput( recbufferIn );
+            SAMPLE_TYPE* recBufferChannel = recbuffer->getBufferForChannel( 0 );
+
+            for ( int j = 0; j < recSamps; ++j )
+            {
+                recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
+
+                // merge recording into current input buffer for instant monitoring
+                if ( monitorRecording )
+                {
+                    for ( int k = 0; k < outputChannels; ++k )
+                        inBuffer->getBufferForChannel( k )[ j ] = recBufferChannel[ j ];
+                }
+            }
+        }
+#endif
+        // channel loop
+        int j = 0;
+        int channelAmount = channels->size();
+
+        for ( ; j < channelAmount; ++j )
+        {
+            AudioChannel* channel = channels->at( j );
+            bool isCached         = channel->hasCache;                // whether this channel has a fully cached buffer
+            bool mustCache        = AudioEngineProps::CHANNEL_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
+            int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
+
+            SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->mixVolume;
+            std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
+            int amount                               = audioEvents.size();
+
+            // get channel output buffer and clear previous contents
+            AudioBuffer* channelBuffer = channel->getOutputBuffer();
+            channelBuffer->silenceBuffers();
+
+            bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
+            int maxBufferPosition = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
+
+            // we make a copy of the current buffer position indicator
+            int bufferPos = bufferPosition;
+
+            // ...in case the AudioChannels maxBufferPosition differs from the sequencer loop range
+            // note that these buffer positions are always a full measure in length (as we loop by measures)
+            while ( bufferPos > maxBufferPosition )
+                bufferPos -= samples_per_bar;
+
+            // only render sequenced events when the sequencer isn't in the paused state
+            // and the channel volume is actually at an audible level! ( > 0 )
+
+            if ( Sequencer::playing && amount > 0 && channelVolume > 0.0 )
+            {
+                if ( !isCached )
+                {
+                    // write the audioEvent buffers into the main output buffer
+                    for ( int k = 0; k < amount; ++k )
+                    {
+                        BaseAudioEvent* audioEvent = audioEvents[ k ];
+
+                        if ( audioEvent != 0 && !audioEvent->isLocked()) // make sure we're allowed to query the contents
+                        {
+                            audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
+                                                   maxBufferPosition, loopStarted, loopOffset, useChannelRange );
+                        }
+                    }
+                }
+                else
+                {
+                    channel->readCachedBuffer( channelBuffer, bufferPos );
+                }
+            }
+
+            // perform live rendering for this instrument
+            if ( channel->hasLiveEvents )
+            {
+                int lAmount = channel->liveEvents.size();
+
+                // the volume of the live events is divided by the channel mix as a live event
+                // is played on the same instrument, but just as a different voice (note the
+                // events can have their own mix level)
+
+                float lAmp = channel->mixVolume > 0.0 ? MAX_PHASE / channel->mixVolume : MAX_PHASE;
+
+                for ( int k = 0; k < lAmount; ++k )
+                {
+                    BaseAudioEvent* vo = channel->liveEvents[ k ];
+                    channelBuffer->mergeBuffers( vo->synthesize( amountOfSamples ), 0, 0, lAmp );
+                }
+            }
+
+            // apply the processing chains processors / modulators
+            ProcessingChain* chain = channel->processingChain;
+            std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
+
+            for ( int k = 0; k < processors.size(); k++ )
+            {
+                BaseProcessor* processor = processors[ k ];
+                bool canCacheProcessor   = processor->isCacheable();
+
+                // only apply processor when we're not caching or cannot cache its output
+                if ( !isCached || !canCacheProcessor )
+                {
+                    // cannot cache this processor and we're caching ? write all contents
+                    // of the channelBuffer into the channels cache
+                    if ( mustCache && !canCacheProcessor )
+                        mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
+
+                    processors[ k ]->process( channelBuffer, channel->isMono );
+                }
+            }
+
+            // write cache if it didn't happen yet ;) (bus processors are (currently) non-cacheable)
+            if ( mustCache )
+                mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
+
+            // write the channel buffer into the combined output buffer, apply channel volume
+            // note live events are always audible as their volume is relative to the instrument
+            if ( channel->hasLiveEvents && channelVolume == 0.0 ) channelVolume = MAX_PHASE;
+            inBuffer->mergeBuffers( channelBuffer, 0, 0, channelVolume );
+        }
+
+        // apply master bus processors (e.g. high pass filter, limiter, etc.)
+        std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
+
+        for ( int k = 0; k < processors.size(); k++ )
+            processors[ k ]->process( inBuffer, isMono );
+
+        // write the accumulated buffers into the output buffer
+        for ( i = 0, c = 0; i < amountOfSamples; i++, c += outputChannels )
+        {
+            for ( ci = 0; ci < outputChannels; ci++ )
+            {
+                // we apply the master volume here
+                float sample = ( float ) inBuffer->getBufferForChannel( ci )[ i ] * volume;
+
+                // and a fail-safe in extreme limiting (hitting the ceiling?)
+                if ( sample < -MAX_PHASE )
+                    sample = -MAX_PHASE;
+
+                else if ( sample > +MAX_PHASE )
+                    sample = +MAX_PHASE;
+
+                outbuffer[ c + ci ] = sample; // interleaved output
+            }
+
+            // update the buffer pointers and sequencer position
+            if ( Sequencer::playing )
+            {
+                if ( bufferPosition % ( int ) samples_per_step == 0 )
+                {
+                    // for higher accuracy we must calculate using floating point precision, it
+                    // is a more expensive calculation than using integer modulo though, so we check
+                    // only when the integer modulo operation check has passed
+                    // TODO : this attempted fmod calculation is inaccurate.
+                    //if ( std::fmod(( float ) bufferPosition, samples_per_step ) == 0 )
+                        handleSequencerPositionUpdate( i );
+                }
+                if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position )
+                     Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
+
+                bufferPosition++;
+
+                if ( bufferPosition > max_buffer_position )
+                    bufferPosition = min_buffer_position;
+            }
+        }
+
+#ifdef RECORD_TO_DISK
+        // write the output to disk if a recording state is active
+        if ( Sequencer::playing && ( recordOutput || recordFromDevice ))
+        {
+#ifdef RECORD_DEVICE_INPUT
+            if ( recordFromDevice ) // recording from device input ? > write the record buffer
+                DiskWriter::appendBuffer( recbuffer );
+            else                    // recording global output ? > write the combined buffer
+#endif
+            DiskWriter::appendBuffer( outbuffer, amountOfSamples, outputChannels );
+
+            // are we bouncing the current sequencer range and have we played throughed the full range?
+
+            if ( bouncing && ( loopStarted || bufferPosition == 0 ))
+            {
+                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, outputChannels, false );
+                // broadcast update via JNI, pass buffer identifier name to identify last recording
+                Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
+                stop(); // stops thread, halts rendering
+            }
+
+            // exceeded maximum recording buffer amount ? > write current recording
+            if ( DiskWriter::bufferFull() || haltRecording )
+            {
+                int amountOfChannels = recordFromDevice ? AudioEngineProps::INPUT_CHANNELS : outputChannels;
+                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, amountOfChannels, true );
+
+                if ( !haltRecording )
+                {
+                    DiskWriter::generateOutputBuffer( amountOfChannels ); // allocate new buffer for next iteration
+                    ++recordingFileId;
+                }
+                else {
+                    haltRecording = false;
+                }
+            }
+        }
+#endif
+        // tempo update queued ?
+        if ( queuedTempo != tempo )
+            handleTempoUpdate( queuedTempo, true );
+
+        // render the buffer in the audio hardware (unless we're bouncing as writing the output
+        // makes it both unnecessarily audible and stalls this thread's execution)
+        if ( !bouncing )
+            DriverAdapter::writeOutput( outbuffer, amountOfSamples * outputChannels );
+
+        return ( thread == 1 );
     }
 
     /* internal methods */

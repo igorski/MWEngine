@@ -21,11 +21,12 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "adapter.h"
+#include "../audioengine.h"
 
 #if DRIVER == 0
 OPENSL_STREAM* driver_openSL = NULL; // OpenSL
 #elif DRIVER == 1
-AAudio_IO* driver_aAudio = NULL;   // AAudio
+AAudio_IO* driver_aAudio = NULL;     // AAudio
 #endif
 
 namespace DriverAdapter {
@@ -63,7 +64,6 @@ namespace DriverAdapter {
         android_CloseAudioDevice( driver_openSL );
         delete driver_openSL;
         driver_openSL = NULL;
-
 #elif DRIVER == 1
         // AAudio
         delete driver_aAudio;
@@ -72,16 +72,28 @@ namespace DriverAdapter {
 
     }
 
+    void render() {
+#if DRIVER == 0
+        // OpenSL
+        AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
+#elif DRIVER == 1
+        // AAudio
+        driver_aAudio->render = true;
+#endif
+    }
+
     void writeOutput( float* outputBuffer, int amountOfSamples ) {
 
 #if DRIVER == 0
         // OpenSL
         android_AudioOut( driver_openSL, outputBuffer, amountOfSamples );
+        // OpenSL handles its own thread lock, as thus we can call render() directly
+        AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
 #elif DRIVER == 1
         // AAudio
         driver_aAudio->enqueueBuffer( outputBuffer, amountOfSamples );
+        // AAudio triggers its callback when ready, AAudio will request render() on its own
 #endif
-
     }
 
     int getInput( float* recordBuffer ) {

@@ -16,6 +16,7 @@
 
 #include "aaudio_io.h"
 #include "../global.h"
+#include "../audioengine.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <utilities/debug.h>
@@ -122,6 +123,8 @@ AAudio_IO::AAudio_IO( int amountOfChannels ) {
 
   // created the buffer the output will be written into
   _enqueuedBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * sampleChannels_ ]();
+
+  render = false;
 }
 
 AAudio_IO::~AAudio_IO(){
@@ -291,9 +294,14 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
 
   //Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
 
-// TODO: numFrames does not equal a full buffer !!
+  // invoke the render() method of the engine to collect audio
+  // if it returns false, we can stop this stream (render thread has stopped)
 
-  // writer enqueued buffer into the output buffer (both interleaved int16_t)
+  if ( !( render && AudioEngine::render( numFrames ))
+    return AAUDIO_CALLBACK_RESULT_STOP;
+
+  // write enqueued buffer into the output buffer (both interleaved int16_t)
+
   int16_t* outputBuffer = static_cast<int16_t*>( audioData );
   for ( int i = 0; i < numFrames; ++i ) {
     outputBuffer[ i ] = _enqueuedBuffer[ i ];

@@ -37,12 +37,15 @@ namespace Debug
      */
     void log( const char* aMessage, ... )
     {
-      /**
-       * TODO can we refactor to use systrace?? Tracing is preferable to logging
-       * inside the callback since tracing does not block.
-       *
-       * See https://developer.android.com/studio/profile/systrace-commandline.html
-       */
+#ifndef DEBUG
+        return;
+#endif
+        /**
+         * TODO can we refactor to use systrace?? Tracing is preferable to logging
+         * inside the callback since tracing does not block.
+         *
+         * See https://developer.android.com/studio/profile/systrace-commandline.html
+         */
         va_list args;
         va_start( args, aMessage );
         __android_log_vprint( ANDROID_LOG_VERBOSE, LOGTAG, aMessage, args );
@@ -51,6 +54,9 @@ namespace Debug
 
     void logToFile( const char* aFileName, const char* aMessage, ... )
     {
+#ifndef DEBUG
+        return;
+#endif
         FILE* file = fopen( aFileName, "a" );
 
         aMessage = ( std::string( aMessage ) + std::string( "\n" )).c_str();

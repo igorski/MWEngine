@@ -55,6 +55,7 @@ public:
                      aaudio_result_t  __unused error);
   double getCurrentOutputLatencyMillis();
   void enqueueBuffer( float* outputBuffer, int amountOfSamples );
+  bool render;
 
 private:
 
@@ -71,8 +72,6 @@ private:
   int32_t framesPerBurst_;
   double currentOutputLatencyMillis_ = 0;
   int32_t bufferSizeSelection_ = BUFFER_SIZE_AUTOMATIC;
-
-private:
 
   std::thread* streamRestartThread_;
   std::mutex restartingLock_;

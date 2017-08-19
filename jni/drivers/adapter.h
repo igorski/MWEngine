@@ -37,6 +37,13 @@ namespace DriverAdapter {
     bool create();
     void destroy();
 
+    // start the render loop
+    void render();
+
+    /* internal methods */
+
+    // these are invoked during the render cycle and should not be called directly
+
     // write the contents of given outputBuffer into the drivers output
     // so we can hear sound. outputBuffer contains interleaved samples
     void writeOutput( float *outputBuffer, int amountOfSamples );

@@ -89,13 +89,13 @@ public final class MWEngine extends Thread
 
     /* engine / thread states */
 
-    private boolean _openSLrunning     = false;
-    private int     _openSLRetry       = 0;
-    private boolean _initialCreation   = true;
-    private boolean _disposed          = false;
-    private boolean _threadStarted     = false;
-    private boolean _isRunning         = false;
-    private boolean _paused            = false;
+    private boolean _nativeEngineRunning = false;
+    private int     _nativeEngineRetries = 0;
+    private boolean _initialCreation     = true;
+    private boolean _disposed            = false;
+    private boolean _threadStarted       = false;
+    private boolean _isRunning           = false;
+    private boolean _paused              = false;
     private final Object _pauseLock;
 
     /**
@@ -223,7 +223,7 @@ public final class MWEngine extends Thread
     public void reset()
     {
         MWEngineCore.reset();
-        _openSLRetry = 0;
+        _nativeEngineRetries = 0;
     }
 
     /**
@@ -235,7 +235,7 @@ public final class MWEngine extends Thread
      */
     public boolean canRestartEngine()
     {
-        return ++_openSLRetry < 5;
+        return ++_nativeEngineRetries < 5;
     }
 
     // due to Object pooling we keep the thread alive by just pausing its execution, NOT actual cleanup
@@ -246,7 +246,7 @@ public final class MWEngine extends Thread
         pause();
 
         _disposed      = true;
-        _openSLrunning = false;
+        _nativeEngineRunning = false;
 
         MWEngineCore.stop();       // halt the Native audio thread
         //_isRunning     = false;  // nope, we won't halt this thread (pooled)
@@ -314,11 +314,11 @@ public final class MWEngine extends Thread
         while ( _isRunning )
         {
             // start the Native audio thread
-            if ( !_openSLrunning )
+            if ( !_nativeEngineRunning)
             {
                 Log.d( "MWENGINE", "STARTING NATIVE THREAD @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
-                _openSLrunning = true;
+                _nativeEngineRunning = true;
                 MWEngineCore.start();
             }
 
@@ -327,7 +327,7 @@ public final class MWEngine extends Thread
 
             Log.d( "MWENGINE", "MWEngine THREAD STOPPED");
 
-            _openSLrunning = false;
+            _nativeEngineRunning = false;
 
             synchronized ( _pauseLock )
             {
@@ -363,14 +363,14 @@ public final class MWEngine extends Thread
      */
     private void handleThreadStartTimeout()
     {
-        if ( !_openSLrunning )
+        if ( !_nativeEngineRunning)
         {
             final Handler handler = new Handler( _context.getMainLooper() );
             handler.postDelayed( new Runnable()
             {
                 public void run()
                 {
-                    if ( !_disposed && !_openSLrunning )
+                    if ( !_disposed && !_nativeEngineRunning)
                         _observer.handleNotification( Notifications.ids.ERROR_THREAD_START.ordinal() );
                 }
 

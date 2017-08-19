@@ -44,6 +44,11 @@ namespace AudioEngine
     void stop();
     void reset();
 
+    // renders the audio. this should not be called directly (is called
+    // by the audio drivers). Use start() instead (triggers driver activity)
+
+    bool render( int amountOfSamples );
+
     /* engine properties */
 
     extern int samples_per_beat;      // the amount of samples necessary for a single beat at the current tempo and sample rate
@@ -65,6 +70,19 @@ namespace AudioEngine
     extern int recordingFileId;
     extern bool recordFromDevice;   // whether to record audio from the Android devices input
     extern bool monitorRecording;   // whether to make recorded audio audible in the output channel
+
+    /* render properties */
+
+    extern bool loopStarted; // whether the current buffer will exceed the end offset of the loop (read remaining samples from the start)
+    extern int loopOffset;   // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
+    extern int loopAmount;   // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
+    extern int outputChannels;
+    extern bool isMono;
+    extern float* outbuffer;
+    extern float* recbufferIn;
+    extern AudioBuffer* inBuffer;
+    extern AudioBuffer* recBuffer;
+    extern std::vector<AudioChannel*>* channels;
 
     /* buffer read/write pointers */
 

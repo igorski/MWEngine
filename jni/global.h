@@ -47,6 +47,9 @@
 
 //#define RECORD_TO_DISK
 
+// if you don't wish to get logcat messages uncomment this (e.g. release build)
+#define DEBUG
+
 // if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
 #define USE_JNI
 
