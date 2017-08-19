@@ -191,4 +191,6 @@ bool JavaUtilities::createTableFromFile( jint waveformType, jstring aWAVFilePath
 
     // store the table inside the pool
     TablePool::setTable( table, waveformType );
+
+    return true;
 }

@@ -73,8 +73,7 @@ void DrumPattern::removeFromInstrument()
 {
     DrumInstrument* instrument = (( DrumInstrument* ) _instrument );
 
-    int i = 0;
-    for ( i; i < instrument->drumPatterns->size(); i++ )
+    for ( int i = 0; i < instrument->drumPatterns->size(); i++ )
     {
         if ( instrument->drumPatterns->at( i ) == this )
         {
@@ -130,8 +129,7 @@ void DrumPattern::setHatPattern( int* aDrumPattern, int arrayLength )
 
 void DrumPattern::updateTimbre( int newTimbre )
 {
-    int i = 0;
-    for ( i; i < audioEvents->size(); i++ )
+    for ( int i = 0; i < audioEvents->size(); i++ )
     {
         (( DrumEvent* ) audioEvents->at( i ))->setTimbre( newTimbre );
     }
@@ -222,8 +220,7 @@ void DrumPattern::clear()
 
 void DrumPattern::destroyAudioEvents()
 {
-    int i = 0;
-    for ( i; i < audioEvents->size(); i++ )
+    for ( int i = 0; i < audioEvents->size(); i++ )
     {
         BaseAudioEvent* vo = audioEvents->at( i );
         delete vo;

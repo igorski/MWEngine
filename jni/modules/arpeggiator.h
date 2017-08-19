@@ -82,12 +82,12 @@ class Arpeggiator
 
             if ( shift > 0 )
             {
-                for ( i; i < shift; ++i )
+                for ( ; i < shift; ++i )
                     pitch *= 1.0594;
             }
             else if ( shift < 0 )
             {
-                for ( i; i < std::abs( shift ); ++i )
+                for ( ; i < std::abs( shift ); ++i )
                     pitch *= 0.9439;
             }
             return pitch;

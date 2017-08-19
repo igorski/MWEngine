@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,61 +20,47 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "lfo.h"
+#ifndef __DRIVER_H_INCLUDED__
+#define __DRIVER_H_INCLUDED__
+
 #include "../global.h"
-#include "../audioengine.h"
-#include <definitions/waveforms.h>
-#include <utilities/utils.h>
-#include <utilities/tablepool.h>
-#include <math.h>
 
-// constructor / destructor
+/**
+ * DriverAdapter acts as a proxy for all the available driver types
+ * within MWEngine (OpenSL, AAudio or mocked OpenSL)
+ *
+ * DriverAdapter will maintain its own references to the driver instances
+ * AudioEngine will operate via the DriverAdapter
+ */
+namespace DriverAdapter {
 
-LFO::LFO()
-{
-    _wave  = WaveForms::SINE;
-    _rate  = MIN_LFO_RATE();
-    _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+    bool create();
+    void destroy();
+
+    // write the contents of given outputBuffer into the drivers output
+    // so we can hear sound
+    void writeOutput( float *outputBuffer, int amountOfSamples );
+
+    // get the input buffer from the driver (when recording)
+    // and write it into given recordBuffer
+    // returns integer value of amount of recorded samples
+    int getInput( float* recordBuffer );
 }
 
-LFO::~LFO()
-{
-    delete _table;
-}
+// whether to include the OpenSL, AAudio or mocked (unit test mode) driver for audio output
 
-/* public methods */
+#if DRIVER == 0
 
-float LFO::getRate()
-{
-    return _rate;
-}
+// OpenSL (note if mocking was requested - unit testing - mock_opensl_io.h has been included)
 
-void LFO::setRate( float value )
-{
-    _rate = value;
-    _table->setFrequency( _rate );
-}
+#include "opensl_io.h"
+extern OPENSL_STREAM* driver_openSL;
 
-int LFO::getWave()
-{
-    return _wave;
-}
+#elif DRIVER == 1
 
-void LFO::setWave( int value )
-{
-    _wave = value;
-    generate();
-}
+// AAudio
+#include "aaudio.h"
 
-void LFO::generate()
-{
-    WaveTable* table = TablePool::getTable( _wave );
+#endif
 
-    if ( table != 0 )
-        _table->cloneTable( table );
-}
-
-WaveTable* LFO::getTable()
-{
-    return _table;
-}
+#endif

@@ -1,7 +1,7 @@
 #ifndef MOCK_OPENSL_IO
 #define MOCK_OPENSL_IO
 
-#include "../../opensl_io.h"
+#include "../../drivers/opensl_io.h"
 #include "mock_opensl_io.cpp"
 
 // we don't need to have an actual OpenSL connection when

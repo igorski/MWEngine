@@ -1,9 +1,10 @@
 MWEngine is..
 =============
 
-...an audio engine for Android written in C++, using OpenSL for low latency performance. The engine has
-been written for the MikroWave synthesis/sequencing-application and works from API level 9 (Android 2.3/Gingerbread)
-and up.
+...an audio engine for Android written in C++, using either OpenSL (compatible with Android 2.3 and up) or the new
+AAUdio driver (Android 8.0 and up) for low latency performance. The engine has been written for use in both
+[MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
+[Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) for live audio synthesis.
 
 The engine provides an architecture that allows you to work with audio within a musical context. It is easy to
 build upon the base classes and create your own noise generating mayhem. A few keywords describing the
@@ -88,7 +89,7 @@ replaces the OpenSL driver with a mocked driver so the engine can be unit tested
 This repository is constantly being updated and as such so is the documentation. You can view the Wiki (which will document the basic
 engine architecture) here:
 
-https://github.com/igorski/MWEngine/wiki
+[https://github.com/igorski/MWEngine/wiki](https://github.com/igorski/MWEngine/wiki)
 
 Note you can always view the contents of the header files to get more details about the inner workings of each class.
 
@@ -102,6 +103,14 @@ To install the demo : first build the library as described above, and then run t
 attached device/emulator (note that emulated devices can only operate at a sample rate of 8 kHz!). This requires both the Android NDK and the Android SDK.
 
 Be sure to point towards the installation locations of these in both the _build.sh_-file and the _local.properties_-file.
+
+### Note on AAudio
+
+The AAudio implementation has been built using (in Googles words): _"a Preview release of the AAudio library. The API
+might change in backward-incompatible ways in future releases. It is not recommended for production use."_ so use it
+at your own peril. You can use AAudio instead of OpenSL by changing the desired driver in _global.h_.
+
+(!) MWEngine does not support live audio recording on AAudio just yet.
 
 ### Contributors
 

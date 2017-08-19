@@ -31,7 +31,7 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
 
     // test generating a sine wave on the fly
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -60,8 +60,8 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
         }
     }
 
-    test1end   = now_ms();
-    test2start = now_ms();
+    test1end   = getTime();
+    test2start = getTime();
 
     // test reading from the table
 
@@ -72,12 +72,12 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
         }
     }
 
-    test2end = now_ms();
+    test2end = getTime();
 
     // additional test : test reading from the table using inline code (omits the need for repeated function calls)
 
     int readOffset, accumulator = 0;
-    test3start = now_ms();
+    test3start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -102,7 +102,7 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
         }
     }
 
-    test3end = now_ms();
+    test3end = getTime();
 
     totalTest1 = test1end - test1start;
     totalTest2 = test2end - test2start;
@@ -113,10 +113,12 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
 //    std::cout << "test 3 " << totalTest3 << " ms for " << iterations << " iterations\n";
 
     ASSERT_TRUE( totalTest2 < totalTest1 )
-        << "expected table lookup to be faster than inline generation";
+        << "expected table lookup (clocked at " << totalTest2 << ") to be faster than "
+        << "inline generation (clocked at << " << totalTest1 << ")";
 
     ASSERT_TRUE( totalTest3 < totalTest1 )
-        << "expected inline table lookup to be faster than inline generation";
+        << "expected inline table lookup (clocked at " << totalTest3 << " to be faster than "
+        << "inline generation (clocked at << " << totalTest1 << ")";
 
     delete table;
 }

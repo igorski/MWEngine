@@ -250,7 +250,7 @@ TEST( SampleEvent, PlayStop )
     ASSERT_TRUE( audioEvent->isEnabled() )
         << "expected SampleEvent to be enabled after invocation of play()";
 
-    // 2. deactive play-state
+    // 2. deactivate play-state
 
     audioEvent->stop();
 

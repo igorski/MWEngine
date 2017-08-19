@@ -99,7 +99,7 @@ TEST( Tremolo, IsStereo )
 
     // test 2. unequal decay
 
-    tremolo->setLeftDecay( 10 );
+    tremolo->setLeftDecay( 11 );
     ASSERT_TRUE( tremolo->isStereo() ) << "expected tremolo to be operating in stereo as decay is unequal";
 
     // test. 3 unequal types

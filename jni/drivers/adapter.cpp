@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,37 +20,56 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LFO_H_INCLUDED__
-#define __LFO_H_INCLUDED__
+#include "adapter.h"
 
-#include "global.h"
-#include "wavetable.h"
+#if DRIVER == 0
+OPENSL_STREAM* driver_openSL = 0; // OpenSL
+#elif DRIVER == 1
+// AAudio
+#endif
 
-class LFO
-{
-    public:
-        LFO();
-        ~LFO();
+namespace DriverAdapter {
 
-        static const double MAX_LFO_RATE() { return 10; }  // the maximum rate of oscillation in Hz
-        static const double MIN_LFO_RATE() { return .1; }  // the minimum rate of oscillation in Hz
+    bool create() {
 
-        float getRate();
-        void setRate( float value );
-        int getWave();
-        void setWave( int value );
+#if DRIVER == 0
 
-        void generate();
-        WaveTable* getTable();
-
-    protected:
-
-        SAMPLE_TYPE _rate;
-
-        int _wave;
-        WaveTable* _table;
-
-        int calculateBufferLength( float aMinRate );
-};
+        // OpenSL
+        driver_openSL = android_OpenAudioDevice(
+            AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS,
+            AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE
+        );
+        return ( driver_openSL != NULL );
 
 #endif
+    }
+
+    void destroy() {
+
+#if DRIVER == 0
+        // OpenSL
+        android_CloseAudioDevice( driver_openSL );
+        delete driver_openSL;
+        driver_openSL = 0;
+#endif
+
+    }
+
+    void writeOutput( float* outputBuffer, int amountOfSamples ) {
+
+#if DRIVER == 0
+        // OpenSL
+        android_AudioOut( driver_openSL, outputBuffer, amountOfSamples );
+#endif
+
+    }
+
+    int getInput( float* recordBuffer ) {
+
+#if DRIVER == 0
+        // OpenSL
+        return android_AudioIn( driver_openSL, recordBuffer, AudioEngineProps::BUFFER_SIZE );
+#endif
+        // TODO: no AAudio recording yet
+    }
+}

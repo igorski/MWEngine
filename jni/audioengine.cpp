@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 #include "audiochannel.h"
 #include "processingchain.h"
 #include "sequencer.h"
+#include <drivers/adapter.h>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
@@ -33,16 +34,6 @@
 
 #ifdef RECORD_TO_DISK
 #include <utilities/diskwriter.h>
-#endif
-
-// whether to include the OpenSL driver or the mocked driver (unit test mode)
-
-#ifdef MOCK_ENGINE
-
-#include "tests/helpers/mock_opensl_io.h"
-#else
-#include "opensl_io.h"
-
 #endif
 
 // whether to include JNI classes to add the Java bridge
@@ -101,14 +92,10 @@ namespace AudioEngine
      */
     void start()
     {
-        OPENSL_STREAM *p;
+        // create the output driver using the adapter. If creation failed
+        // prevent thread start and trigger JNI callback for error handler
 
-        p = android_OpenAudioDevice( AudioEngineProps::SAMPLE_RATE,     AudioEngineProps::INPUT_CHANNELS,
-                                     AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
-
-        // hardware unavailable ? halt thread, trigger JNI callback for error handler
-
-        if ( p == NULL )
+        if ( !DriverAdapter::create() )
         {
             Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
             return;
@@ -171,7 +158,7 @@ namespace AudioEngine
             // record audio from Android device ?
             if ( recordFromDevice && AudioEngineProps::INPUT_CHANNELS > 0 )
             {
-                int recSamps                  = android_AudioIn( p, recbufferIn, AudioEngineProps::BUFFER_SIZE );
+                int recSamps                  = DriverAdapter::getInput( recbufferIn );
                 SAMPLE_TYPE* recBufferChannel = recbuffer->getBufferForChannel( 0 );
 
                 for ( int j = 0; j < recSamps; ++j )
@@ -191,7 +178,7 @@ namespace AudioEngine
             int j = 0;
             int channelAmount = channels->size();
 
-            for ( j; j < channelAmount; ++j )
+            for ( ; j < channelAmount; ++j )
             {
                 AudioChannel* channel = channels->at( j );
                 bool isCached         = channel->hasCache;                // whether this channel has a fully cached buffer
@@ -343,7 +330,7 @@ namespace AudioEngine
             // render the buffer in the audio hardware (unless we're bouncing as writing the output
             // makes it both unnecessarily audible and stalls this thread's execution)
             if ( !bouncing )
-                android_AudioOut( p, outbuffer, outSampleNum );
+                DriverAdapter::writeOutput( outbuffer, outSampleNum );
 
 #ifdef RECORD_TO_DISK
             // write the output to disk if a recording state is active
@@ -388,7 +375,7 @@ namespace AudioEngine
             if ( queuedTempo != tempo )
                 handleTempoUpdate( queuedTempo, true );
         }
-        android_CloseAudioDevice( p );
+        DriverAdapter::destroy();
 
         // clear heap memory allocated before thread loop
         delete channels;

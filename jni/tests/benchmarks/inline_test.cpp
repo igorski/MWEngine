@@ -21,7 +21,7 @@ TEST( RingBufferBenchmark, PeekBenchmark )
     int i, j;
 
     SAMPLE_TYPE value;
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -31,7 +31,7 @@ TEST( RingBufferBenchmark, PeekBenchmark )
         }
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "ringbuffer peek test " << totalTest1 << " ms for " << iterations << " iterations\n";
@@ -55,7 +55,7 @@ TEST( RingBufferBenchmark, EnqueueBenchmark )
     SAMPLE_TYPE value;
     SAMPLE_TYPE sample = randomSample( -MAX_PHASE, MAX_PHASE );
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -63,7 +63,7 @@ TEST( RingBufferBenchmark, EnqueueBenchmark )
             buffer->enqueue( sample );
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "ringbuffer enqueue test " << totalTest1 << " ms for " << iterations << " iterations\n";
@@ -85,7 +85,7 @@ TEST( RingBufferBenchmark, DequeueBenchmark )
     int i, j;
 
     SAMPLE_TYPE value;
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -95,7 +95,7 @@ TEST( RingBufferBenchmark, DequeueBenchmark )
         }
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "ringbuffer dequeue test " << totalTest1 << " ms for " << iterations << " iterations\n";
@@ -116,7 +116,7 @@ TEST( RingBufferBenchmark, FlushBenchmark )
 
     int i, j;
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -126,7 +126,7 @@ TEST( RingBufferBenchmark, FlushBenchmark )
         }
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "ringbuffer flush test " << totalTest1 << " ms for " << iterations << " iterations\n";
@@ -146,14 +146,14 @@ TEST( ArpeggiatorBenchmark, PeekBenchmark )
     int i;
     SAMPLE_TYPE value;
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
         value = arpeggiator->peek();
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "arpeggiator peek test " << totalTest1 << " ms for " << iterations << " iterations\n";
@@ -173,14 +173,14 @@ TEST( ArpeggiatorBenchmark, GetStepBenchmark )
     int i;
     SAMPLE_TYPE value;
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
         value = arpeggiator->getStep();
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "arpeggiator get step test " << totalTest1 << " ms for " << iterations << " iterations\n";
@@ -202,14 +202,14 @@ TEST( ArpeggiatorBenchmark, GetPitchForStepBenchmark )
     int step = 1;
     float pitch = randomFloat( 40.0f, 880.f );
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
         value = arpeggiator->getPitchForStep( step, pitch );
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "arpeggiator get pitch for step test " << totalTest1 << " ms for " << iterations << " iterations\n";
@@ -227,14 +227,14 @@ TEST( PitchshifterBenchmark, ProcessBenchmark )
     long long test1end;
     long long totalTest1;
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( int i = 0; i < iterations; ++i )
     {
         pitchshifter->process( buffer, false );
     }
 
-    test1end   = now_ms();
+    test1end   = getTime();
     totalTest1 = test1end - test1start;
 
     std::cout << "pitchshifter processing test " << totalTest1 << " ms for " << iterations << " iterations\n";

@@ -23,6 +23,7 @@
 #include "audiobuffer.h"
 #include <utilities/bufferutility.h>
 #include <algorithm>
+#include <string.h>
 
 AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 {

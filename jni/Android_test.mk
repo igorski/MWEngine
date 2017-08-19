@@ -11,9 +11,10 @@ jni/java_interface_wrap.cpp \
 jni/javabridge.cpp \
 jni/javautilities.cpp \
 global.cpp \
+drivers/adapter.cpp \
+drivers/opensl_io.c \
 utilities/utils.cpp \
 audioengine.cpp \
-opensl_io.c \
 audiobuffer.cpp \
 audiochannel.cpp \
 instruments/baseinstrument.cpp \

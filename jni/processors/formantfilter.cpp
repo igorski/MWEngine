@@ -34,7 +34,7 @@
 FormantFilter::FormantFilter( double aVowel )
 {
     int i = 0;
-    for ( i; i < 11; i++ )
+    for ( ; i < 11; i++ )
         _currentCoeffs[ i ] = 0.0;
 
     for ( i = 0; i < 10; i++ )

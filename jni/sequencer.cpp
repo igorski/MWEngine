@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -146,7 +146,7 @@ namespace Sequencer
             }
         }
         int i = 0, amount = audioEvents->size();
-        for ( i; i < amount; i++ )
+        for ( ; i < amount; i++ )
         {
             BaseAudioEvent* audioEvent = audioEvents->at( i );
 
@@ -170,8 +170,7 @@ namespace Sequencer
         // remove "deleted" AudioEvents without errors occurring
         if ( removes.size() > 0 )
         {
-            int i = 0;
-            for ( i; i < removes.size(); i++ )
+            for ( int i = 0; i < removes.size(); i++ )
             {
                 BaseAudioEvent* audioEvent = removes[ i ];
                 instrument->removeEvent( audioEvent, false );
@@ -187,8 +186,7 @@ namespace Sequencer
         // removal queue
         std::vector<BaseAudioEvent*> removes;
 
-        int i = 0;
-        for ( i; i < liveEvents->size(); i++ )
+        for ( int i = 0; i < liveEvents->size(); i++ )
         {
             BaseAudioEvent* audioEvent = liveEvents->at( i );
 
@@ -201,8 +199,7 @@ namespace Sequencer
         // remove "deleted" AudioEvents without errors occurring
         if ( removes.size() > 0 )
         {
-            int i = 0;
-            for ( i; i < removes.size(); i++ )
+            for ( int i = 0; i < removes.size(); i++ )
             {
                 BaseAudioEvent* audioEvent = removes[ i ];
                 instrument->removeEvent( audioEvent, true );

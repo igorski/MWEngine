@@ -3,11 +3,13 @@
  * for use with unit tests
  */
 #include <cstdlib>
+#include <time.h>
 #include "../../global.h"
 #include "../../audiobuffer.h"
 #include "../../events/baseaudioevent.h"
 #include "../../instruments/baseinstrument.h"
 #include "../../utilities/bufferutility.h"
+#define NANOS_IN_SECOND 1000000000
 
 // ---------------------
 // HELPER MATH FUNCTIONS
@@ -147,6 +149,12 @@ void dumpBufferContents( AudioBuffer* audioBuffer )
         SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
         dumpBufferContents( buffer, audioBuffer->bufferSize );
     }
+}
+
+long long getTime() {
+    struct timespec res;
+    clock_gettime(CLOCK_MONOTONIC, &res);
+    return (res.tv_sec * NANOS_IN_SECOND) + res.tv_nsec;
 }
 
 // ----------------------------

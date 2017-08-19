@@ -46,9 +46,8 @@ BulkCacher::~BulkCacher()
 
 void BulkCacher::addToQueue( std::vector<BaseCacheableAudioEvent*>* aEvents )
 {
-    int i = 0;
     int amount = aEvents->size();
-    for ( i; i < amount; i++ )
+    for ( int i = 0; i < amount; i++ )
     {
         BaseCacheableAudioEvent* event = aEvents->at( i );
         event->setBulkCacheable( true );
@@ -93,12 +92,11 @@ bool BulkCacher::hasQueue()
  */
 void BulkCacher::cacheQueue()
 {
-    int i = 0;
     int amount = _queue->size();
 
     //Debug::log( "BulkCacher::caching %d events", amount );
 
-    for ( i; i < amount; i++ )
+    for ( int i = 0; i < amount; i++ )
     {
         BaseCacheableAudioEvent* event = _queue->at( i );
 

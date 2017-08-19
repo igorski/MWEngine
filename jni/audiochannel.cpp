@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -65,7 +65,7 @@ void AudioChannel::addLiveEvent( BaseAudioEvent* aLiveEvent )
     liveEvents.push_back( aLiveEvent );
 }
 
-AudioBuffer* AudioChannel::readCachedBuffer( AudioBuffer* aOutputBuffer, int aReadOffset )
+void AudioChannel::readCachedBuffer( AudioBuffer* aOutputBuffer, int aReadOffset )
 {
     if ( aReadOffset >= _cacheStartOffset && aReadOffset <= _cacheEndOffset )
     {

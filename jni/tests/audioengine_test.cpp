@@ -10,7 +10,6 @@ TEST( AudioEngine, Start )
     AudioEngine::test_program = 0; // help mocked OpenSL IO identify which test is running
 
     // prepare engine environment
-
     SequencerController* controller = new SequencerController();
     controller->prepare( 240, 48000, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
 

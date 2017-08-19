@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,15 +20,18 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef GLOBAL_H
-#define GLOBAL_H
+#ifndef __GLOBAL_H_INCLUDED__
+#define __GLOBAL_H_INCLUDED__
 
 #include <cmath>
 
 // audio engine configuration
 
+// DRIVER defines which driver to use
+// valid options are 0 (OpenSL, works from Android 2.3 up) and 1 (AAudio, Android 8 up)
+
 // PRECISION defines the floating-point precision used to synthesize the audio samples
-// valid values are 1 (32-bit float) and 2 (64-bit double)
+// valid options are 1 (32-bit float) and 2 (64-bit double)
 
 // if you wish to record audio from the Android device input, uncomment the RECORD_DEVICE_INPUT definition
 // (note this requires both android.permission.RECORD_AUDIO and android.permission.MODIFY_AUDIO_SETTINGS with a
@@ -40,6 +43,7 @@
 
 // if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
 
+#define DRIVER 0
 #define PRECISION 2
 //#define RECORD_DEVICE_INPUT
 //#define RECORD_TO_DISK

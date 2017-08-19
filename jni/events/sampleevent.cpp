@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -287,7 +287,7 @@ void SampleEvent::removeLiveEvent()
 {
     std::vector<BaseAudioEvent*>* liveAudioEvents = _instrument->getLiveEvents();
 
-    for ( int i; i < liveAudioEvents->size(); i++ )
+    for ( int i = 0; i < liveAudioEvents->size(); i++ )
     {
         if ( liveAudioEvents->at( i ) == this )
         {

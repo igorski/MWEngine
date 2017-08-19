@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -138,12 +138,11 @@ SAMPLE_TYPE* Tremolo::getTableForChannel( int aChannelNum )
 
 bool Tremolo::isStereo()
 {
-    if ( _leftType   != _rightType   ||
-         _leftAttack != _rightAttack ||
-         _leftDecay  != _rightDecay )
-    {
-        return true;
-    }
+    return (
+        _leftType   != _rightType   ||
+        _leftAttack != _rightAttack ||
+        _leftDecay  != _rightDecay
+    );
 }
 
 void Tremolo::process( AudioBuffer* sampleBuffer, bool isMonoSource )

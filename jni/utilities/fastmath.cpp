@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2016-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -30,7 +30,8 @@ namespace FastMath
 
     float fmod( float x, float y )
     {
-         return (( _fmodTmp = x / y ) - ( int ) _fmodTmp ) * y;
+        _fmodTmp = x / y;
+         return ( _fmodTmp - ( int ) _fmodTmp ) * y;
     }
 
     /* private properties */

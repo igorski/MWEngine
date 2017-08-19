@@ -20,7 +20,7 @@ TEST( BufferBenchmark, LoopVersusMemset )
 
     // test 1. creating an empty buffer by loop vs. memset
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -28,14 +28,14 @@ TEST( BufferBenchmark, LoopVersusMemset )
             tempBuffer[ j ] = 0.0;
     }
 
-    test1end   = now_ms();
-    test2start = now_ms();
+    test1end   = getTime();
+    test2start = getTime();
 
     for ( i = 0; i < iterations; ++i ) {
         memset( tempBuffer, 0, bufferSize * sizeof( SAMPLE_TYPE )); // zero bits should equal 0.0f
     }
 
-    test2end = now_ms();
+    test2end = getTime();
 
     totalTest1 = test1end - test1start;
     totalTest2 = test2end - test2start;
@@ -46,7 +46,7 @@ TEST( BufferBenchmark, LoopVersusMemset )
 //    std::cout << "test 1 " << totalTest1 << " ms for " << iterations << " iterations\n";
 //    std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
 
-    delete tempBuffer;
+    delete[] tempBuffer;
 }
 
 TEST( BufferBenchmark, LoopingVersusMemcpy )
@@ -68,7 +68,7 @@ TEST( BufferBenchmark, LoopingVersusMemcpy )
 
     // test 2. creating an empty buffer by loop vs. memcpy
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -76,29 +76,29 @@ TEST( BufferBenchmark, LoopingVersusMemcpy )
             tempBuffer[ j ] = 0.0;
     }
 
-    test1end   = now_ms();
-    test2start = now_ms();
+    test1end   = getTime();
+    test2start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
-        delete tempBuffer;
+        delete[] tempBuffer;
         tempBuffer = new SAMPLE_TYPE[ bufferSize ];
         memcpy( tempBuffer, silentBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
 
-    test2end = now_ms();
+    test2end = getTime();
 
     totalTest1 = test1end - test1start;
     totalTest2 = test2end - test2start;
 
     ASSERT_TRUE( totalTest2 < totalTest1 )
-        << "expected memcpy to be faster than looping";
+        << "expected memcpy (clocked at " << totalTest2 << " ) to be faster than looping (clocked at " << totalTest1 << ")";
 
 //    std::cout << "test 1 " << totalTest1 << " ms for " << iterations << " iterations\n";
 //    std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
 
     delete silentBuffer;
-    delete tempBuffer;
+    delete[] tempBuffer;
 }
 
 TEST( BufferBenchmark, FillVersusMemset )
@@ -119,31 +119,31 @@ TEST( BufferBenchmark, FillVersusMemset )
 
     // test 3. erasing buffer contents using fill versus memset
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i ) {
         std::fill( tempBuffer, tempBuffer + bufferSize, 0.0 );
     }
 
-    test1end   = now_ms();
-    test2start = now_ms();
+    test1end   = getTime();
+    test2start = getTime();
 
     for ( i = 0; i < iterations; ++i ) {
         memset( tempBuffer, 0, bufferSize * sizeof( SAMPLE_TYPE ));
     }
 
-    test2end = now_ms();
+    test2end = getTime();
 
     totalTest1 = test1end - test1start;
     totalTest2 = test2end - test2start;
 
     ASSERT_TRUE( totalTest2 < totalTest1 )
-        << "expected memset to be faster than fill";
+        << "expected memset (clocked at " << totalTest2 << ") to be faster than fill (clocked at " << totalTest1 << ")";
 
 //    std::cout << "test 1 " << totalTest1 << " ms for " << iterations << " iterations\n";
 //    std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
 
-    delete tempBuffer;
+    delete[] tempBuffer;
 }
 
 TEST( BufferBenchmark, LoopingVersusMemcpyCloning )
@@ -169,7 +169,7 @@ TEST( BufferBenchmark, LoopingVersusMemcpyCloning )
 
     // test 4. cloning buffer contents using looping versus memcpy
 
-    test1start = now_ms();
+    test1start = getTime();
 
     for ( i = 0; i < iterations; ++i )
     {
@@ -177,24 +177,24 @@ TEST( BufferBenchmark, LoopingVersusMemcpyCloning )
             tempBuffer[ j ] = sourceBuffer[ j ];
     }
 
-    test1end   = now_ms();
-    test2start = now_ms();
+    test1end   = getTime();
+    test2start = getTime();
 
     for ( i = 0; i < iterations; ++i ) {
         memcpy( tempBuffer, sourceBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
 
-    test2end = now_ms();
+    test2end = getTime();
 
     totalTest1 = test1end - test1start;
     totalTest2 = test2end - test2start;
 
     ASSERT_TRUE( totalTest2 < totalTest1 )
-        << "expected memcpy to be faster than looping";
+        << "expected memcpy (clocked at " << totalTest2 << " ) to be faster than looping (clocked at " << totalTest1 << ")";
 
-//    std::cout << "test 1 " << totalTest1 << " ms for " << iterations << " iterations\n";
-//    std::cout << "test 2 " << totalTest2 << " ms for " << iterations << " iterations\n";
+//    std::cout << "test 1 (looping) " << totalTest1 << " ms for " << iterations << " iterations\n";
+//    std::cout << "test 2 (memcpy) " << totalTest2 << " ms for " << iterations << " iterations\n";
 
-    delete sourceBuffer;
-    delete tempBuffer;
+    delete[] sourceBuffer;
+    delete[] tempBuffer;
 }
