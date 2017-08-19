@@ -38,7 +38,7 @@ namespace DriverAdapter {
     void destroy();
 
     // write the contents of given outputBuffer into the drivers output
-    // so we can hear sound
+    // so we can hear sound. outputBuffer contains interleaved samples
     void writeOutput( float *outputBuffer, int amountOfSamples );
 
     // get the input buffer from the driver (when recording)

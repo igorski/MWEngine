@@ -150,12 +150,13 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
         {
             // read the header data (see http://soundfile.sapp.org/doc/WaveFormat/)
 
-            format = sliceLong( byteArray, 20, true );
+            format           = sliceLong( byteArray, 20, true );
             amountOfChannels = ( short ) sliceLong( byteArray, 22, true );
-            sampleRate = sliceLong( byteArray, 24, true );
-            dataSize = sliceLong( byteArray, 40, true );
+            sampleRate       = sliceLong( byteArray, 24, true );
+            dataSize         = sliceLong( byteArray, 40, true );
+            sound_buffer     = ( short* ) malloc( dataSize );
 
-            sound_buffer = ( short* ) malloc( dataSize );
+            Debug::log("WaveReader::reading %d channels w/ %d samples @ %d Hz", amountOfChannels, dataSize, sampleRate );
 
             // 2 is sizeof short
 

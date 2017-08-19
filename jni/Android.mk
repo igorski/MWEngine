@@ -91,20 +91,22 @@ modules/lfo.cpp \
 modules/routeableoscillator.cpp \
 
 ifeq ($(BUILD_AAUDIO),true)
-    LOCAL_SRC_FILES   := \
+    LOCAL_SRC_FILES   += \
     drivers/aaudio_io.cpp \
-    LOCAL_LDLIBS      := -laaudio
+
+    LOCAL_LDLIBS := -laaudio
 endif
 
-LOCAL_LDLIBS := -lOpenSLES -landroid -latomic -llog
+LOCAL_LDLIBS += -lOpenSLES -landroid -latomic -llog
+
 include $(BUILD_SHARED_LIBRARY)
 
 # when creating a unit test build, create test runner as instantly executable file
 
 ifeq ($(MW_BUILD_TYPE),test)
     include $(CLEAR_VARS)
-    LOCAL_MODULE := mwengine_unittest
-    LOCAL_SRC_FILES := tests/main.cpp
+    LOCAL_MODULE           := mwengine_unittest
+    LOCAL_SRC_FILES        := tests/main.cpp
     LOCAL_SHARED_LIBRARIES := mwengine_test
     LOCAL_STATIC_LIBRARIES := googletest_main
     include $(BUILD_EXECUTABLE)

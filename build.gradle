@@ -2,24 +2,20 @@ apply plugin: 'com.android.application'
 
 buildscript {
     repositories {
+        google()
         jcenter()
-        maven {
-            url 'https://maven.google.com'
-        }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.2'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta2'
     }
 }
 
 android {
     compileSdkVersion 22
-    buildToolsVersion "22.0.1"
 
     defaultConfig {
         applicationId "nl.igorski.example"
         minSdkVersion 14
-        targetSdkVersion 17
         versionCode 1
         versionName "1.0.0"
     }

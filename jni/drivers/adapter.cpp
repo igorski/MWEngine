@@ -44,9 +44,12 @@ namespace DriverAdapter {
 #elif DRIVER == 1
 
         // AAudio
-        driver_aAudio = new AAudio_IO();
+        driver_aAudio = new AAudio_IO(
+            AudioEngineProps::OUTPUT_CHANNELS
+        );
+        // TODO: specify these from outside?
        // driver_aAudio->setDeviceId();
-        driver_aAudio->setBufferSizeInBursts( 2 ); // Google provides {0, 1, 2, 4, 8} as values
+        driver_aAudio->setBufferSizeInBursts( 1 ); // Google provides {0, 1, 2, 4, 8} as values
 
         return ( driver_aAudio != NULL );
 
@@ -74,6 +77,9 @@ namespace DriverAdapter {
 #if DRIVER == 0
         // OpenSL
         android_AudioOut( driver_openSL, outputBuffer, amountOfSamples );
+#elif DRIVER == 1
+        // AAudio
+        driver_aAudio->enqueueBuffer( outputBuffer, amountOfSamples );
 #endif
 
     }

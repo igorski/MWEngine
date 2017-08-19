@@ -15,9 +15,13 @@
  */
 
 #include "aaudio_io.h"
+#include "../global.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <utilities/debug.h>
+
+#define CONV16BIT 32768
+#define CONVMYFLT (1./32768.)
 
 static const int32_t audioFormatEnum[] = {
     AAUDIO_FORMAT_INVALID,
@@ -107,19 +111,23 @@ void errorCallback(AAudioStream *stream,
   audioEngine->errorCallback(stream, error);
 }
 
-AAudio_IO::AAudio_IO() {
+AAudio_IO::AAudio_IO( int amountOfChannels ) {
 
-  sampleChannels_ = AUDIO_SAMPLE_CHANNELS;
-  sampleFormat_ = AAUDIO_FORMAT_PCM_I16;
+  sampleChannels_ = amountOfChannels;
+  sampleFormat_   = AAUDIO_FORMAT_PCM_I16;
 
   // Create the output stream. By not specifying an audio device id we are telling AAudio that
   // we want the stream to be created using the default playback audio device.
   createPlaybackStream();
+
+  // created the buffer the output will be written into
+  _enqueuedBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * sampleChannels_ ]();
 }
 
 AAudio_IO::~AAudio_IO(){
 
   closeOutputStream();
+  delete _enqueuedBuffer;
 }
 
 /**
@@ -148,7 +156,7 @@ AAudioStreamBuilder* AAudio_IO::createStreamBuilder() {
   AAudioStreamBuilder *builder = nullptr;
   aaudio_result_t result = AAudio_createStreamBuilder(&builder);
   if (result != AAUDIO_OK && !builder) {
-    Debug::log("Error creating stream builder: %s", AAudio_convertResultToText(result));
+    Debug::log( "AAudio_IO::Error creating stream builder: %s", AAudio_convertResultToText(result));
   }
   return builder;
 }
@@ -170,7 +178,7 @@ void AAudio_IO::createPlaybackStream(){
 
       // check that we got PCM_I16 format
       if (sampleFormat_ != AAudioStream_getFormat(playStream_)) {
-        Debug::log("Sample format is not PCM_I16");
+        Debug::log( "AAudio_IO::Sample format is not PCM_I16");
       }
 
       sampleRate_ = AAudioStream_getSampleRate(playStream_);
@@ -185,20 +193,20 @@ void AAudio_IO::createPlaybackStream(){
       // Start the stream - the dataCallback function will start being called
       result = AAudioStream_requestStart(playStream_);
       if (result != AAUDIO_OK) {
-        Debug::log("Error starting stream. %s", AAudio_convertResultToText(result));
+        Debug::log( "AAudio_IO::Error starting stream. %s", AAudio_convertResultToText(result));
       }
 
       // Store the underrun count so we can tune the latency in the dataCallback
       playStreamUnderrunCount_ = AAudioStream_getXRunCount(playStream_);
 
     } else {
-      Debug::log("Failed to create stream. Error: %s", AAudio_convertResultToText(result));
+      Debug::log( "AAudio_IO::Failed to create stream. Error: %s", AAudio_convertResultToText(result));
     }
 
   AAudioStreamBuilder_delete(builder);
 
   } else {
-    Debug::log("Unable to obtain an AAudioStreamBuilder object");
+    Debug::log( "AAudio_IO::Unable to obtain an AAudioStreamBuilder object");
   }
 }
 
@@ -226,12 +234,12 @@ void AAudio_IO::closeOutputStream(){
   if (playStream_ != nullptr){
     aaudio_result_t result = AAudioStream_requestStop(playStream_);
     if (result != AAUDIO_OK){
-      Debug::log("Error stopping output stream. %s", AAudio_convertResultToText(result));
+      Debug::log( "AAudio_IO::Error stopping output stream. %s", AAudio_convertResultToText(result));
     }
 
     result = AAudioStream_close(playStream_);
     if (result != AAUDIO_OK){
-      Debug::log("Error closing output stream. %s", AAudio_convertResultToText(result));
+      Debug::log( "AAudio_IO::Error closing output stream. %s", AAudio_convertResultToText(result));
     }
   }
 }
@@ -272,40 +280,37 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
   }
 
   if (shouldChangeBufferSize){
-    Debug::log("Setting buffer size to %d", bufferSize);
+    Debug::log( "AAudio_IO::Setting buffer size to %d", bufferSize);
     bufferSize = AAudioStream_setBufferSizeInFrames(stream, bufferSize);
     if (bufferSize > 0) {
       bufSizeInFrames_ = bufferSize;
     } else {
-      Debug::log("Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
+      Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
     }
   }
 
-  Debug::log("numFrames %d, Underruns %d, buffer size %d",
-                      numFrames, underrunCount, bufferSize);
+  //Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
 
-  // If the tone is on we need to use our synthesizer to render the audio data for the sine waves
+// TODO: numFrames does not equal a full buffer !!
 
-  // TODO : fill with buffer from AudioEngine :)
-
-  /*
-  int32_t samplesPerFrame = sampleChannels_;
-
-  if (isToneOn_) {
-    sineOscRight_->render(static_cast<int16_t *>(audioData),
-                                      samplesPerFrame, numFrames);
-    if (sampleChannels_ == 2) {
-      sineOscLeft_->render(static_cast<int16_t *>(audioData) + 1,
-                                       samplesPerFrame, numFrames);
-    }
-  } else {
-    memset(static_cast<uint8_t *>(audioData), 0,
-           sizeof(int16_t) * samplesPerFrame * numFrames);
+  // writer enqueued buffer into the output buffer (both interleaved int16_t)
+  int16_t* outputBuffer = static_cast<int16_t*>( audioData );
+  for ( int i = 0; i < numFrames; ++i ) {
+    outputBuffer[ i ] = _enqueuedBuffer[ i ];
   }
-  */
+
   calculateCurrentOutputLatencyMillis(stream, &currentOutputLatencyMillis_);
 
   return AAUDIO_CALLBACK_RESULT_CONTINUE;
+}
+
+/**
+ * enqueue a buffer for rendering in the next callback
+ */
+void AAudio_IO::enqueueBuffer( float* outputBuffer, int amountOfSamples ) {
+    for ( int i = 0; i < amountOfSamples; ++i ) {
+        _enqueuedBuffer[ i ] = ( int16_t )( outputBuffer[ i ] * CONV16BIT );
+    }
 }
 
 /**
@@ -357,7 +362,7 @@ AAudio_IO::calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *lat
     *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
                            / NANOS_PER_MILLISECOND;
   } else {
-    Debug::log("Error calculating latency: %s", AAudio_convertResultToText(result));
+    Debug::log( "AAudio_IO::Error calculating latency: %s", AAudio_convertResultToText(result));
   }
 
   return result;
@@ -370,7 +375,7 @@ void AAudio_IO::errorCallback(AAudioStream *stream,
                    aaudio_result_t error){
 
   assert(stream == playStream_);
-  Debug::log("errorCallback result: %s", AAudio_convertResultToText(error));
+  Debug::log( "AAudio_IO::errorCallback result: %s", AAudio_convertResultToText(error));
 
   aaudio_stream_state_t streamState = AAudioStream_getState(playStream_);
   if (streamState == AAUDIO_STREAM_STATE_DISCONNECTED){
@@ -383,14 +388,14 @@ void AAudio_IO::errorCallback(AAudioStream *stream,
 
 void AAudio_IO::restartStream(){
 
-  Debug::log("Restarting stream");
+  Debug::log( "AAudio_IO::Restarting stream");
 
   if (restartingLock_.try_lock()){
     closeOutputStream();
     createPlaybackStream();
     restartingLock_.unlock();
   } else {
-    Debug::log("Restart stream operation already in progress - ignoring this request");
+    Debug::log( "AAudio_IO::Restart stream operation already in progress - ignoring this request");
     // We were unable to obtain the restarting lock which means the restart operation is currently
     // active. This is probably because we received successive "stream disconnected" events.
     // Internal issue b/63087953

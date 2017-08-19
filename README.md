@@ -37,7 +37,7 @@ strong references during their lifecycle.
 ### Environment setup
 
 You will need both the [Android SDK](https://developer.android.com/studio/index.html) and the [Android NDK](https://developer.android.com/ndk/downloads/index.html).
-Additionally, you will need [SWIG])(http://www.swig.org) (available on most package managers like _Brew_ for OS X or _apt-get_ on Linux) 
+Additionally, you will need [SWIG](http://www.swig.org) (available on most package managers like _Brew_ for OS X or _apt-get_ on Linux)
 
 You will need [Gradle](https://gradle.org) to run the build scripts.
 
@@ -54,7 +54,7 @@ _build.bat_-file that resides in the same directory, just make sure "_ndk-build_
 through the PATH settings of your system (or adjust the shell scripts accordingly). Note: the NDK platform version is
 defined in _project.properties_.
 
-After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.mwengine-namespace, making the code available to Java.
+After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.mwengine_-namespace, making the code available to Java.
 
 You can create the .APK package and deploy it instantly onto an attached device / emulator by using Gradle e.g. :
 

@@ -25,11 +25,6 @@
 #define NANOS_PER_SECOND 1000000000L
 #define NANOS_PER_MILLISECOND 1000000L
 
-/*
- * Audio Sample Controls...
- */
-#define AUDIO_SAMPLE_CHANNELS               1
-
 uint16_t SampleFormatToBpp(aaudio_format_t format);
 /*
  * GetSystemTicks(void):  return the time in micro sec
@@ -49,7 +44,7 @@ int64_t get_time_nanoseconds(clockid_t clockid);
 class AAudio_IO {
 
 public:
-  AAudio_IO();
+  AAudio_IO( int amountOfChannels );
   ~AAudio_IO();
   void setDeviceId(int32_t deviceId);
   void setBufferSizeInBursts(int32_t numBursts);
@@ -59,12 +54,14 @@ public:
   void errorCallback(AAudioStream *stream,
                      aaudio_result_t  __unused error);
   double getCurrentOutputLatencyMillis();
+  void enqueueBuffer( float* outputBuffer, int amountOfSamples );
 
 private:
 
   int32_t playbackDeviceId_ = AAUDIO_UNSPECIFIED;
   int32_t sampleRate_;
   int16_t sampleChannels_;
+  int16_t* _enqueuedBuffer;
   aaudio_format_t sampleFormat_;
 
   AAudioStream *playStream_;
@@ -90,5 +87,4 @@ private:
   aaudio_result_t calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis);
 };
 
-
-#endif //AAUDIO_PLAYAUDIOENGINE_H
+#endif
