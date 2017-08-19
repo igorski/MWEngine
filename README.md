@@ -81,8 +81,8 @@ To run the tests, simply execute the _test.sh_ (sorry Unix-only shell at the mom
 This will also build the library prior to running the tests by calling the build script described above.
 Note: _adb_ must be specified in your global path settings.
 
-*Note on unit testing:* To build the application for unit testing observe that there are separate makefiles for the
-unit test mode (see suffix _test_ for the .mk files). In short: these files set the compiler preprocesser MOCK_ENGINE which
+*Note on unit testing:* To build the application for unit testing observe that there is a separate makefile for the
+unit test mode (see _Application_test.mk_). In short: this files set the compiler preprocesser MOCK_ENGINE which
 replaces the OpenSL driver with a mocked driver so the engine can be unit tested "offline".
 
 ### Documentation
