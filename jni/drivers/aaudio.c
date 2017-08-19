@@ -19,7 +19,6 @@
 #include <inttypes.h>
 #include "aaudio.h"
 
-
 /**
  * Every time the playback stream requires data this method will be called.
  *
@@ -195,10 +194,6 @@ void PlayAudioEngine::closeOutputStream(){
       LOGE("Error closing output stream. %s", AAudio_convertResultToText(result));
     }
   }
-}
-
-void PlayAudioEngine::setToneOn(bool isToneOn){
-  isToneOn_ = isToneOn;
 }
 
 /**

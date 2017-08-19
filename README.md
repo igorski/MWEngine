@@ -53,7 +53,7 @@ Those of a Unix-bent can run the _build.sh_-file in the root folder of the repos
 _build.bat_-file that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available
 through the PATH settings of your system (or adjust the shell scripts accordingly).
 
-After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.nativeaudio_-namespace, making the code available to Java.
+After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.mwengine-namespace, making the code available to Java.
 
 You can create the .APK package and deploy it instantly onto an attached device / emulator by using Gradle e.g. :
 
