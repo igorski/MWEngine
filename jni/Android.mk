@@ -1,3 +1,6 @@
+# Experimental AAudio support, set to true when building for AAudio (requires NDK target 26)
+BUILD_AAUDIO = false
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -87,9 +90,11 @@ modules/envelopefollower.cpp \
 modules/lfo.cpp \
 modules/routeableoscillator.cpp \
 
-# Experimental AAudio support, uncomment when building for AAudio
-#    LOCAL_SRC_FILES   := \
-#    drivers/aaudio_io.cpp \
+ifeq ($(BUILD_AAUDIO),true)
+    LOCAL_SRC_FILES   := \
+    drivers/aaudio_io.cpp \
+    LOCAL_LDLIBS      := -laaudio
+endif
 
 LOCAL_LDLIBS := -lOpenSLES -landroid -latomic -llog
 include $(BUILD_SHARED_LIBRARY)

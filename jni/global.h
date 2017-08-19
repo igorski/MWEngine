@@ -25,42 +25,44 @@
 
 #include <cmath>
 
-// audio engine configuration
-
 // DRIVER defines which driver to use
 // valid options are 0 (OpenSL, works from Android 2.3 up) and 1 (AAudio, Android 8 up)
 
+#define DRIVER 0
+
 // PRECISION defines the floating-point precision used to synthesize the audio samples
 // valid options are 1 (32-bit float) and 2 (64-bit double)
+
+#define PRECISION 2
 
 // if you wish to record audio from the Android device input, uncomment the RECORD_DEVICE_INPUT definition
 // (note this requires both android.permission.RECORD_AUDIO and android.permission.MODIFY_AUDIO_SETTINGS with a
 // positive value for AudioEngineProps::INPUT_CHANNELS)
 
+//#define RECORD_DEVICE_INPUT
+
 // if you wish to write the engine output to the devices file system, uncomment the ALLOW_WRITING definition
 // (note this requires android.permission.WRITE_EXTERNAL_STORAGE), like RECORD_AUDIO this requires a Runtime Permission
 // grant when compiling for target SDK level 23 (Android M)
 
-// if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
-
-#define DRIVER 0
-#define PRECISION 2
-//#define RECORD_DEVICE_INPUT
 //#define RECORD_TO_DISK
+
+// if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
 #define USE_JNI
 
 namespace AudioEngineProps
 {
+    const int OUTPUT_CHANNELS  = 1;     // min 1 (mono)
+    const bool CHANNEL_CACHING = false; // whether to cache AudioChannels and their compatible modules in their ProcessingChain
+
+    extern int SAMPLE_RATE;             // initialized on engine start == device specific
+    extern int BUFFER_SIZE;             // initialized on engine start == device specific
+
 #ifdef RECORD_DEVICE_INPUT
     const int INPUT_CHANNELS   = 1;
 #else
     const int INPUT_CHANNELS   = 0;
 #endif
-    const int OUTPUT_CHANNELS  = 1;      // min 1 (mono)
-    const bool CHANNEL_CACHING = false;  // whether to cache AudioChannels and their compatible modules in their ProcessingChain
-
-    extern int SAMPLE_RATE;            // initialized on engine start == device specific
-    extern int BUFFER_SIZE;            // initialized on engine start == device specific
 }
 
 // E.O. audio engine configuration

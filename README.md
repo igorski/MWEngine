@@ -112,7 +112,7 @@ might change in backward-incompatible ways in future releases. It is not recomme
 at your own peril. To use AAudio instead of OpenSL:
  
  * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
- * update the _Android.mk_ file to include _drivers/aaudio_io.cpp_ (uncommented at the bottom)
+ * update the _Android.mk_ file to include _drivers/aaudio_io.cpp_ (set _BUILD_AAUDIO_ to 'true')
  * update target in _project.properties_ to _android-26_
  
 Once AAudio is a stable library, MWEngine will allow on-the-fly switching between OpenSL and AAudio drivers.
