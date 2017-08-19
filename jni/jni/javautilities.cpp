@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -47,9 +47,10 @@ bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
     return true;
 }
 
-bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, jstring assetName )
+bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, jstring cacheDir, jstring assetName )
 {
-    std::string filename = JavaBridge::getString( assetName );
+    std::string filename   = JavaBridge::getString( assetName );
+    std::string tempFolder = JavaBridge::getString( cacheDir );
 
     // use asset manager to open asset by filename
     AAssetManager* mgr = AAssetManager_fromJava( JavaBridge::getEnvironment(), assetManager );
@@ -70,6 +71,15 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
     size_t currChunk;
     buffer.reserve( length );
 
+    // TODO: hackaroni. Prior to Android NDK 26 we could read an asset directly
+    // as a ByteArray (well, we still can) and read the WAV data from it (in WaveReader, this
+    // now fails...) for now we do the wasteful thing by creating a temporary file...
+
+    std::string tempFile = tempFolder + "/tmp";
+    FILE* tmp = fopen( tempFile.c_str(), "w" );
+    bool readUsingTempFile = ( tmp != 0 );
+    int nb_read = 0;
+
     while ( remaining != 0 ) {
         //set proper size for our next chunk
         if ( remaining >= Mb )
@@ -79,15 +89,29 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
 
         char chunk[ currChunk ];
 
-        // read next chunk and append to data vector
-        if ( AAsset_read( asset, chunk, currChunk ) > 0 ) {
-            buffer.insert( buffer.end(), chunk, chunk + currChunk );
+        // read next chunk and append to temporary buffer
+
+        if (( nb_read = AAsset_read( asset, chunk, currChunk )) > 0 ) {
+
+            if ( !readUsingTempFile )
+                buffer.insert( buffer.end(), chunk, chunk + currChunk );
+            else
+                fwrite( chunk, nb_read, 1, tmp );
+
             remaining = AAsset_getRemainingLength64( asset );
         }
     }
     AAsset_close( asset );
+    AudioBuffer* sampleBuffer;
 
-    AudioBuffer* sampleBuffer = WaveReader::byteArrayToBuffer( buffer );
+    if ( readUsingTempFile ) {
+        fclose( tmp );
+        sampleBuffer = WaveReader::fileToBuffer( tempFile );
+        remove( tempFile.c_str() );
+    }
+    else {
+        sampleBuffer = WaveReader::byteArrayToBuffer( buffer );
+    }
 
     // error during loading of WAV file ?
 

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -40,9 +40,10 @@ class JavaUtilities
         static bool createSampleFromFile( jstring aKey, jstring aWAVFilePath );
 
         // creates an AudioBuffer from a packaged asset and stores it inside
-        // the SampleManager under given key "aKey"
+        // the SampleManager under given key "aKey". cacheDir specifies the cache directory
+        // the application can make a temporary swap file in during reading
 
-        static bool createSampleFromAsset( jstring aKey, jobject assetManager, jstring assetName );
+        static bool createSampleFromAsset( jstring aKey, jobject assetManager, jstring cacheDir, jstring assetName );
 
         // creates an AudioBuffer from given sample buffers and stores it inside
         // the SampleManager under given key "aKey", aOptRightBuffer can be null

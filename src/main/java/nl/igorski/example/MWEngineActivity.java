@@ -1,6 +1,7 @@
 package nl.igorski.example;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -417,6 +418,9 @@ public final class MWEngineActivity extends Activity
      */
     private void loadWAVAsset( String assetName, String sampleName )
     {
-        JavaUtilities.createSampleFromAsset( sampleName, getApplicationContext().getAssets(), assetName );
+        final Context ctx = getApplicationContext();
+        JavaUtilities.createSampleFromAsset(
+            sampleName, ctx.getAssets(), ctx.getCacheDir().getAbsolutePath(), assetName
+        );
     }
 }

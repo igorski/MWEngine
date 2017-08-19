@@ -158,6 +158,13 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
 
             Debug::log("WaveReader::reading %d channels w/ %d samples @ %d Hz", amountOfChannels, dataSize, sampleRate );
 
+            // in Android NDK 26 reading of byte array is horribly broken...
+
+            if ( !( dataSize > 1 )) {
+                Debug::log("WaveReader::Could not parse WAVE file" );
+                return out;
+            }
+
             // 2 is sizeof short
 
             for ( i = 44, l = i + dataSize, w = 0; i < l; i += 2, ++w )
