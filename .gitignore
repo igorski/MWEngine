@@ -1,7 +1,7 @@
 *.DS_Store
 *.idea
 .gradle
-src/main/java/nl/igorski/lib/audio/nativeaudio/*
+src/main/java/nl/igorski/lib/audio/mwengine/*
 jni/jni/java_interface_wrap.cpp
 libs/*
 obj

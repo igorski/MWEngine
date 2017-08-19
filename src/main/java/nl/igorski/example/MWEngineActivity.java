@@ -9,7 +9,7 @@ import android.widget.SeekBar;
 import nl.igorski.lib.audio.MWEngine;
 import nl.igorski.lib.audio.definitions.Pitch;
 import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
-import nl.igorski.lib.audio.nativeaudio.*;
+import nl.igorski.lib.audio.mwengine.*;
 
 import java.util.Vector;
 
