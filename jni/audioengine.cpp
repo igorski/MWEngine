@@ -105,7 +105,7 @@ namespace AudioEngine
      */
     void start()
     {
-        DebugTool::log( "STARTING engine" );
+        Debug::log( "STARTING engine" );
 
         // create the output driver using the adapter. If creation failed
         // prevent thread start and trigger JNI callback for error handler
@@ -116,7 +116,7 @@ namespace AudioEngine
             return;
         }
 
-        DebugTool::log( "STARTED engine" );
+        Debug::log( "STARTED engine" );
 
         // audio hardware available, prepare environment
 
