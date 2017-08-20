@@ -73,11 +73,14 @@ namespace DriverAdapter {
     }
 
     void render() {
+
 #if DRIVER == 0
-        // OpenSL
+        // OpenSL maintains its own locking mechanism, we can invoke
+        // the render cycle directly from the audio engine thread loop
         AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
 #elif DRIVER == 1
-        // AAudio
+        // AAudio triggers its callback internally when ready
+        // AAudio driver will request render() on its own
         driver_aAudio->render = true;
 #endif
     }
@@ -87,12 +90,9 @@ namespace DriverAdapter {
 #if DRIVER == 0
         // OpenSL
         android_AudioOut( driver_openSL, outputBuffer, amountOfSamples );
-        // OpenSL handles its own thread lock, as thus we can call render() directly
-        AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
 #elif DRIVER == 1
         // AAudio
         driver_aAudio->enqueueBuffer( outputBuffer, amountOfSamples );
-        // AAudio triggers its callback when ready, AAudio will request render() on its own
 #endif
     }
 

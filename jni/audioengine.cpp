@@ -150,13 +150,14 @@ namespace AudioEngine
         // start thread and request first render (gets render loop going)
 
         thread = 1;
-        DriverAdapter::render();
 
         while ( thread )
         {
             // will only be interrupted if thread is set to 0 in render() method
             // the audio drivers are responsible for calling render() at the
             // appropriate time during this threads execution
+
+            DriverAdapter::render();
         }
 
         Debug::log( "STOPPED engine" );
@@ -175,6 +176,7 @@ namespace AudioEngine
 
     void stop()
     {
+        Debug::log( "STOPPING engine" );
         thread = 0;
     }
 
@@ -384,6 +386,12 @@ namespace AudioEngine
             }
         }
 
+        // write the synthesized output into the audio driver
+
+        if ( !bouncing )
+            DriverAdapter::writeOutput( outbuffer, amountOfSamples * outputChannels );
+
+
 #ifdef RECORD_TO_DISK
         // write the output to disk if a recording state is active
         if ( Sequencer::playing && ( recordOutput || recordFromDevice ))
@@ -428,10 +436,14 @@ namespace AudioEngine
 
         // render the buffer in the audio hardware (unless we're bouncing as writing the output
         // makes it both unnecessarily audible and stalls this thread's execution)
-        if ( !bouncing )
-            DriverAdapter::writeOutput( outbuffer, amountOfSamples * outputChannels );
+        bool keepRendering = ( thread == 1 );
 
-        return ( thread == 1 );
+#if DRIVER == 1
+        // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
+        if ( bouncing && keepRendering )
+            render( amountOfSamples );
+#endif
+        return keepRendering;
     }
 
     /* internal methods */

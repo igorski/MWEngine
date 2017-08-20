@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="nl.igorski.example">
 
+    <uses-feature android:name="android.hardware.audio.output" android:required="true" />
+
     <!-- minimum version is API 10 ( 2.3.3 Gingerbread ) but we target API 17
          ( 4.2 Jellybean ) for low latency audio -->
 

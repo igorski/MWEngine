@@ -122,7 +122,7 @@ AAudio_IO::AAudio_IO( int amountOfChannels ) {
   createPlaybackStream();
 
   // created the buffer the output will be written into
-  _enqueuedBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * sampleChannels_ ]();
+  _enqueuedBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * sampleChannels_ ]{ 0 };
 
   render = false;
 }
@@ -294,10 +294,13 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
 
   //Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
 
-  // invoke the render() method of the engine to collect audio
-  // if it returns false, we can stop this stream (render thread has stopped)
+  // rendering requested ?
 
   if ( render ) {
+
+    // invoke the render() method of the engine to collect audio
+    // if it returns false, we can stop this stream (render thread has stopped)
+
     if ( !AudioEngine::render( numFrames ))
       return AAUDIO_CALLBACK_RESULT_STOP;
   }
@@ -316,6 +319,10 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
 
 /**
  * enqueue a buffer for rendering in the next callback
+ * this is invoked by AudioEngine::render()
+ *
+ * buffer already contains interleaved samples, merely need to be converted
+ * from floating point values into 16-bit shorts
  */
 void AAudio_IO::enqueueBuffer( float* outputBuffer, int amountOfSamples ) {
     for ( int i = 0; i < amountOfSamples; ++i ) {

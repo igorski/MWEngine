@@ -306,7 +306,7 @@ public final class MWEngine extends Thread
 
     public void run()
     {
-        //DebugTool.log( "MWEngine STARTING NATIVE AUDIO RENDER THREAD" );
+        Log.d( "MWENGINE", "STARTING NATIVE AUDIO RENDER THREAD" );
 
         android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
         handleThreadStartTimeout();
