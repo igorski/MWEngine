@@ -26,7 +26,7 @@
 #include <cmath>
 
 // DRIVER defines which driver to use
-// valid options are 0 (OpenSL, works from Android 2.3 up) and 1 (AAudio, Android 8 up)
+// valid options are 0 (OpenSL, works from Android 4.1 up) and 1 (AAudio, Android 8 up)
 
 #define DRIVER 0
 
