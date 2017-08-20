@@ -4,10 +4,10 @@
 
     <uses-feature android:name="android.hardware.audio.output" android:required="true" />
 
-    <!-- minimum version is API 10 ( 2.3.3 Gingerbread ) but we target API 17
-         ( 4.2 Jellybean ) for low latency audio -->
+    <!-- minimum version is API 16 ( 4.1 ) whereas API 17 ( 4.2 Jellybean ) supplies
+         better low latency audio support, API 26 ( 8.0 Oreo ) supplies AAudio -->
 
-    <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="17" />
+    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="17" />
 
     <!-- required permissions -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
