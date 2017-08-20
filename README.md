@@ -64,8 +64,8 @@ You can create the .APK package and deploy it instantly onto an attached device 
 
 The usual Gradle suspects such as "clean", "build", etc. are also present.
 
-To create a signed release build, add the following into your Gradle's properties file (_~/.gradle/gradle.properties_) and
-replace the values accordingly:
+To create a signed release build, add the following into the Gradle's properties file inside your
+home folder (_~/.gradle/gradle.properties_) and replace the values accordingly:
 
     RELEASE_STORE_FILE={path_to_.keystore_file}
     RELEASE_STORE_PASSWORD={password_for_.keystore}
@@ -117,7 +117,7 @@ might change in backward-incompatible ways in future releases. It is not recomme
 at your own peril. To use AAudio instead of OpenSL:
  
  * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
- * update the _Android.mk_ file to include _drivers/aaudio_io.cpp_ (set _BUILD_AAUDIO_ to 'true')
+ * update the _Android.mk_ file to include all required adapters and libraries (simply set _BUILD_AAUDIO_ to 'true')
  * update target in _project.properties_ to _android-26_
  
 Once AAudio is a stable library, MWEngine will allow on-the-fly switching between OpenSL and AAudio drivers.
