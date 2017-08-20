@@ -47,8 +47,9 @@
 
 //#define RECORD_TO_DISK
 
-// if you don't wish to get logcat messages uncomment this (e.g. release build)
+// if you don't wish to get logcat messages uncomment DEBUG (e.g. release build)
 #define DEBUG
+#define LOGTAG "MWENGINE" // the logtag used when logging messages to logcat
 
 // if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
 #define USE_JNI
@@ -87,6 +88,5 @@ const SAMPLE_TYPE HALF_PI = PI / 2.0;
 const int WAVE_TABLE_PRECISION = 128; // the amount of samples in a wave table
 
 extern void *print_message( void* );
-#define LOGTAG "MWENGINE"             // the logtag used when logging messages to logcat
 
 #endif

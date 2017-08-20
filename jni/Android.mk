@@ -18,7 +18,7 @@ endif
 
 LOCAL_C_INCLUDES  := $(LOCAL_PATH)
 LOCAL_CFLAGS      := -O3
-LOCAL_CPPFLAGS    := $(LOCAL_CFLAGS)
+LOCAL_CPPFLAGS    += $(LOCAL_CFLAGS)
 
 # source files
 

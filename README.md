@@ -2,7 +2,7 @@ MWEngine is..
 =============
 
 ...an audio engine for Android written in C++, using either OpenSL (compatible with Android 2.3 and up) or the new
-AAUdio driver (Android 8.0 and up) for low latency performance. The engine has been written for use in both
+AAudio driver (Android 8.0 and up) for low latency performance. The engine has been written for use in both
 [MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
 [Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) for live audio synthesis.
 
@@ -46,6 +46,8 @@ the average Android development environment. All aforementioned utilities are av
 
 ### Build instructions
 
+After making sure you have all the correct tools (see _Environment setup_):
+
 The makefile (_/jni/Android.mk_) will by default compile the library with all available modules. The SWIG interface file
 (_/jni/mwengine.i_) includes all the engine's actors that will be exposed to Java.
 
@@ -73,7 +75,21 @@ replace the values accordingly:
 You can now build and sign a releasable APK by running:
 
     gradle build
-    
+
+### FAQ / Troubleshooting
+
+The contents of this repository should result in a stable application. If you experience issues with
+the setup, consult the [Troubleshooting Wiki page](https://github.com/igorski/MWEngine/wiki/Troubleshooting-MWEngine).
+
+### Documentation
+
+This repository is constantly being updated and as such so is the documentation. You can view the Wiki (which will document the basic
+engine architecture) here:
+
+[https://github.com/igorski/MWEngine/wiki](https://github.com/igorski/MWEngine/wiki)
+
+Note you can also view the contents of the header files to get more details about the inner workings of each class.
+
 ### Unit tests
 
 The library comes with unit tests (_/jni/tests/_), written using the Googletest C++ testing framework (distributed with NDK 10).
@@ -85,25 +101,14 @@ Note: _adb_ must be specified in your global path settings.
 unit test mode (see _Application_test.mk_). In short: this files set the compiler preprocesser MOCK_ENGINE which
 replaces the OpenSL driver with a mocked driver so the engine can be unit tested "offline".
 
-### Documentation
-
-This repository is constantly being updated and as such so is the documentation. You can view the Wiki (which will document the basic
-engine architecture) here:
-
-[https://github.com/igorski/MWEngine/wiki](https://github.com/igorski/MWEngine/wiki)
-
-Note you can always view the contents of the header files to get more details about the inner workings of each class.
-
 ### Demo
 
 The repository contains an example Activity that is ready to deploy onto any Android device/emulator supporting ARM-, ARMv7-,
 x86- or MIPS-architecture and running Android 2.3 or higher. The example will demonstrate how to quickly get a musical
 sequence going using the library.
 
-To install the demo : first build the library as described above, and then run the build script to deploy the .APK unto an
-attached device/emulator (note that emulated devices can only operate at a sample rate of 8 kHz!). This requires both the Android NDK and the Android SDK.
-
-Be sure to point towards the installation locations of these in both the _build.sh_- and _local.properties_-files.
+To install the demo: first build the library as described above, and then run the build script to deploy the .APK unto an
+attached device/emulator (note that older emulated devices can only operate at a sample rate of 8 kHz!).
 
 ### Note on AAudio
 
