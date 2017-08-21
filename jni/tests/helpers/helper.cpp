@@ -54,6 +54,13 @@ SAMPLE_TYPE randomSample( double min, double max )
     return ( SAMPLE_TYPE )( min + f * ( max - min ));
 }
 
+// verify whether given floating point values are identical enough ;)
+
+bool compareFloat( float value1, float value2 )
+{
+    return std::fabs( value1 - value2 ) < std::fabs(std::min( value1, value2 )) * std::numeric_limits<double>::epsilon();
+}
+
 // ----------------------------
 // HELPER AUDIOBUFFER FUNCTIONS
 // ----------------------------

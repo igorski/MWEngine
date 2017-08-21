@@ -26,17 +26,17 @@ unsigned int AudioChannel::INSTANCE_COUNT = 0;
 
 /* constructor / destructor */
 
-AudioChannel::AudioChannel( float aMixVolume )
+AudioChannel::AudioChannel( float aVolume )
 {
-    mixVolume         = aMixVolume;
+    volume            = aVolume;
     maxBufferPosition = 0;
 
     init();
 }
 
-AudioChannel::AudioChannel( float aMixVolume, int aMaxBufferPosition )
+AudioChannel::AudioChannel( float aVolume, int aMaxBufferPosition )
 {
-    mixVolume         = aMixVolume;
+    volume            = aVolume;
     maxBufferPosition = aMaxBufferPosition;
 
     init();
@@ -121,6 +121,44 @@ AudioBuffer* AudioChannel::getOutputBuffer()
     return _outputBuffer;
 }
 
+void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume ) {
+
+    // if channels panning is set to center, use AudioBuffer mix method
+
+    if ( _pan == 0 ) {
+        bufferToMixInto->mergeBuffers( _outputBuffer, 0, 0, mixVolume );
+    }
+    else {
+
+        int buffersToWrite = std::min( bufferToMixInto->bufferSize, _outputBuffer->bufferSize );
+
+        // TODO: currently stereo only
+        // assumption that buffers have equal amount of channels
+
+        SAMPLE_TYPE* leftSrcBuffer     = _outputBuffer->getBufferForChannel( 0 );
+        SAMPLE_TYPE* rightSrcBuffer    = _outputBuffer->getBufferForChannel( 1 );
+        SAMPLE_TYPE* leftTargetBuffer  = bufferToMixInto->getBufferForChannel( 0 );
+        SAMPLE_TYPE* rightTargetBuffer = bufferToMixInto->getBufferForChannel( 1 );
+
+        // apply pan to output volume
+        float leftVolume  = mixVolume * _leftVolume;
+        float rightVolume = mixVolume * _rightVolume;
+        bool isLeftPanned = ( _pan < 0 );
+
+        for ( int i = 0; i < buffersToWrite; ++i ) {
+            leftTargetBuffer[ i ]  += leftSrcBuffer[ i ]  * leftVolume;
+            rightTargetBuffer[ i ] += rightSrcBuffer[ i ] * rightVolume;
+
+            // pan the channel contents into the opposite channel
+
+            if ( isLeftPanned )
+                leftTargetBuffer[ i ] += rightSrcBuffer[ i ] * -_pan;
+            else
+                rightTargetBuffer[ i ] += leftSrcBuffer[ i ] * _pan;
+        }
+    }
+}
+
 /**
  * write the current contents of the buffer
  * into the cached buffer
@@ -159,6 +197,18 @@ void AudioChannel::reset()
     hasLiveEvents = false;
 }
 
+float AudioChannel::getPan()
+{
+    return _pan;
+}
+
+void AudioChannel::setPan( float value )
+{
+    _pan = value;
+    _leftVolume  = ( _pan < 0 ) ? 1 : 1 - _pan;
+    _rightVolume = ( _pan > 0 ) ? 1 : _pan + 1;
+}
+
 /* protected methods */
 
 void AudioChannel::init()
@@ -177,5 +227,6 @@ void AudioChannel::init()
     _cacheEndOffset    = 0;
     processingChain    = new ProcessingChain();
 
+    setPan( 0 );
     createOutputBuffer();
 }

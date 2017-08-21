@@ -45,7 +45,6 @@ class BaseInstrument
         void registerInSequencer();
         void unregisterFromSequencer();
 
-        float volume;
         AudioChannel *audioChannel;
         int index;  // index in the Sequencers instrument Vector
 

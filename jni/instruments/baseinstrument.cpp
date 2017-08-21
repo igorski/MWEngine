@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -146,8 +146,7 @@ void BaseInstrument::unregisterFromSequencer()
 
 void BaseInstrument::construct()
 {
-    volume       = MAX_PHASE;
-    audioChannel = new AudioChannel( volume );
+    audioChannel = new AudioChannel( MAX_PHASE );
 
     // events
 

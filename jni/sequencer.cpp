@@ -85,8 +85,6 @@ namespace Sequencer
             if ( flushChannels )
                 instrumentChannel->reset();
 
-            instrumentChannel->mixVolume = instrument->volume;
-
             if ( !instrumentChannel->muted )
             {
                 if ( playing )

@@ -145,13 +145,12 @@ void SynthInstrument::init()
     // default values
     octave          = 4;
     keyboardOctave  = 4;
-    volume          = 0.8;
     keyboardVolume  = 0.5;
 
     // modules
 
     rOsc              = new RouteableOscillator();
-    audioChannel      = new AudioChannel( volume );
+    audioChannel      = new AudioChannel( 0.8 );
     synthesizer       = new Synthesizer( this, 0 );
     arpeggiator       = new Arpeggiator();
     arpeggiatorActive = false;

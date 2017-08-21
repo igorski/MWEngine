@@ -3,20 +3,20 @@
 
 TEST( AudioChannel, Construction )
 {
-    float mixVolume = ( float ) randomSample( 0, MAX_PHASE );
-    AudioChannel* audioChannel = new AudioChannel( mixVolume );
+    float volume = ( float ) randomSample( 0, MAX_PHASE );
+    AudioChannel* audioChannel = new AudioChannel( volume );
 
-    EXPECT_EQ( audioChannel->mixVolume, mixVolume )
-        << "expected:" << mixVolume << ", got:" << audioChannel->mixVolume << " for mix volume";
+    EXPECT_EQ( audioChannel->volume, volume )
+        << "expected:" << volume << ", got:" << audioChannel->volume << " for mix volume";
 
     delete audioChannel;
 
     int maxBufferPosition = randomInt( 0, 8192 );
 
-    audioChannel = new AudioChannel( mixVolume, maxBufferPosition );
+    audioChannel = new AudioChannel( volume, maxBufferPosition );
 
-    EXPECT_EQ( audioChannel->mixVolume, mixVolume )
-            << "expected:" << mixVolume << ", got:" << audioChannel->mixVolume << " for mix volume";
+    EXPECT_EQ( audioChannel->volume, volume )
+            << "expected:" << volume << ", got:" << audioChannel->volume << " for mix volume";
 
     EXPECT_EQ( audioChannel->maxBufferPosition, maxBufferPosition )
             << "expected:" << maxBufferPosition << ", got:" << audioChannel->maxBufferPosition << " for max buffer position";
@@ -26,17 +26,17 @@ TEST( AudioChannel, Construction )
 
 TEST( AudioChannel, InstanceId )
 {
-    float mixVolume = ( float ) randomSample( 0, MAX_PHASE );
+    float volume = ( float ) randomSample( 0, MAX_PHASE );
 
     // 1. create first channel
 
-    AudioChannel* audioChannel = new AudioChannel( mixVolume );
+    AudioChannel* audioChannel = new AudioChannel( volume );
 
     int firstInstanceId = audioChannel->instanceId;
 
     // 2. create second channel
 
-    AudioChannel* audioChannel2 = new AudioChannel( mixVolume );
+    AudioChannel* audioChannel2 = new AudioChannel( volume );
 
     EXPECT_EQ( firstInstanceId + 1, audioChannel2->instanceId )
         << "expected second AudioChannel to have an id 1 higher than the first";
@@ -48,7 +48,7 @@ TEST( AudioChannel, InstanceId )
 
     // 4. create third channel
     // TODO: destructor doesn't seem to do anything ??
-//    audioChannel = new AudioChannel( mixVolume );
+//    audioChannel = new AudioChannel( volume );
 //
 //    EXPECT_EQ( firstInstanceId, audioChannel->instanceId )
 //        << "expected old instance id to be equal to the new AudioChannel id as the old events have been disposed";
@@ -236,4 +236,64 @@ TEST( AudioChannel, Caching )
 
     delete audioChannel;
     delete audioBuffer;
+}
+
+TEST( AudioChannel, Panning )
+{
+    AudioChannel* audioChannel = new AudioChannel( 1.0f );
+
+    EXPECT_EQ( 0, audioChannel->getPan())
+        << "expected default pan to be 0 (center)";
+
+    float targetPan = randomFloat( -1, 1 );
+    audioChannel->setPan( targetPan);
+
+    EXPECT_EQ( targetPan, audioChannel->getPan())
+        << "expected pan to have been set to given value";
+
+    delete audioChannel;
+}
+
+TEST( AudioChannel, MixPannedBuffer )
+{
+    AudioChannel* audioChannel = new AudioChannel( 1.0f );
+
+    AudioEngineProps::BUFFER_SIZE     = 1;
+    AudioEngineProps::OUTPUT_CHANNELS = 2;
+
+    AudioBuffer* mixBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
+    audioChannel->createOutputBuffer();
+    AudioBuffer* channelBuffer = audioChannel->getOutputBuffer();
+
+    SAMPLE_TYPE* srcLeft  = channelBuffer->getBufferForChannel( 0 );
+    SAMPLE_TYPE* srcRight = channelBuffer->getBufferForChannel( 1 );
+    SAMPLE_TYPE* tgtLeft  = mixBuffer->getBufferForChannel( 0 );
+    SAMPLE_TYPE* tgtRight = mixBuffer->getBufferForChannel( 1 );
+
+    // TEST 1. right panning (source buffer has only left channel content, no right channel)
+
+    srcLeft[0] = MAX_PHASE;
+    srcRight[0] = 0.0f;
+
+    audioChannel->setPan( 0.3 ); // set pan slightly to the right
+    audioChannel->mixBuffer( mixBuffer, 1 );
+
+    ASSERT_TRUE( compareFloat( 0.7, tgtLeft[0])) << "expected left channel signal to be 0.7 for a +0.3 pan";
+    ASSERT_TRUE( compareFloat( 0.3, tgtRight[0])) << "expected right channel signal to be 0.3 for a +0.3 pan";
+
+    mixBuffer->silenceBuffers(); // clean up mix buffer contents
+
+    // TEST 2. left panning (source buffer has only right channel content, no left channel)
+
+    srcLeft[0] = 0.0f;
+    srcRight[0] = MAX_PHASE;
+
+    audioChannel->setPan( -0.7 ); // set pan slightly to the left
+    audioChannel->mixBuffer( mixBuffer, 1 );
+
+    ASSERT_TRUE( compareFloat( 0.7, tgtLeft[0])) << "expected left channel signal to be 0.7 for a -0.7 pan";;
+    ASSERT_TRUE( compareFloat( 0.3, tgtRight[0])) << "expected right channel signal to be 0.3 for a +0.3 pan";
+
+    delete audioChannel;
+    delete mixBuffer;
 }

@@ -131,7 +131,7 @@ public final class MWEngineActivity extends Activity
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // prepare synthesizer volumes
-        _synth2.setVolume( .7f );
+        _synth2.getAudioChannel().setVolume( .7f );
 
         // STEP 3 : load some samples from the packaged assets folder into the SampleManager
 

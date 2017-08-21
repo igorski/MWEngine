@@ -32,8 +32,8 @@ class AudioChannel
 {
     public:
 
-        AudioChannel( float aMixVolume );
-        AudioChannel( float aMixVolume, int aMaxBufferPosition );
+        AudioChannel( float aVolume );
+        AudioChannel( float aVolume, int aMaxBufferPosition );
         ~AudioChannel();
 
         // queried and modified by Sequencer (these are temporary
@@ -45,13 +45,29 @@ class AudioChannel
 
         ProcessingChain *processingChain;
 
+        float volume; // 0-1 range
+
         bool hasLiveEvents;
         bool isMono;
         bool muted;
         bool hasCache;
         bool isCaching;
-        float mixVolume;
         int instanceId;
+
+        /**
+         * an AudioChannel may contain audio that spans a different
+         * buffer range than the other channels in a Sequencer
+         * (for instance: a looping one bar drum pattern over
+         * four bars of synthesis)
+         *
+         * specify a max buffer position for the AudioChannel
+         * to have the AudioRenderer loop its contents while
+         * processing the whole buffer range for the other channels
+         *
+         * if the max buffer position is equal to the sequencer
+         * max range, pass no value or 0 for maxBufferPosition
+         */
+        int maxBufferPosition;
 
         /**
          * invoked by the sequencer when collecting all the events the instrument
@@ -73,24 +89,12 @@ class AudioChannel
         void addLiveEvent( BaseAudioEvent* aLiveEvent );
 
         /**
-         * an AudioChannel may contain audio that spans a different
-         * buffer range than the other channels in a Sequencer
-         * (for instance: a looping one bar drum pattern over
-         * four bars of synthesis)
-         *
-         * specify a max buffer position for the AudioChannel
-         * to have the AudioRenderer loop its contents while
-         * processing the whole buffer range for the other channels
-         *
-         * if the max buffer position is equal to the sequencer
-         * max range, pass no value or 0 for maxBufferPosition
-         */
-        int maxBufferPosition;
-
-        /**
          * clears all references to previously linked events
          */
         void reset();
+
+        float getPan();
+        void setPan( float value ); // -1 (fully left) 0 (center) +1 (fully right)
 
         /**
          * AudioChannel has its own output buffer which will contain
@@ -100,6 +104,14 @@ class AudioChannel
          */
         void createOutputBuffer();
         AudioBuffer* getOutputBuffer();
+
+        /**
+         * merges the contents of the AudioChannels output buffer
+         * into given bufferToMixInto
+         * this is queried by AudioEngine during render cycle
+         * if this AudioChannel has stereo panning, it is applied here
+         */
+        void mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume );
 
         /**
          * AudioChannel can also have a large cache buffer that holds pre-rendered
@@ -121,6 +133,10 @@ class AudioChannel
         static unsigned int INSTANCE_COUNT;
 
         void init();
+
+        float _leftVolume;
+        float _rightVolume;
+        float _pan;
 
         AudioBuffer* _outputBuffer;
         AudioBuffer* _cachedBuffer;

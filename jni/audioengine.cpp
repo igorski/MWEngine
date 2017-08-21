@@ -256,7 +256,7 @@ namespace AudioEngine
             bool mustCache        = AudioEngineProps::CHANNEL_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
             int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
-            SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->mixVolume;
+            SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->volume;
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
             int amount                               = audioEvents.size();
 
@@ -300,7 +300,7 @@ namespace AudioEngine
                 }
             }
 
-            // perform live rendering for this instrument
+            // perform live rendering for this channels instrument
             if ( channel->hasLiveEvents )
             {
                 int lAmount = channel->liveEvents.size();
@@ -309,7 +309,7 @@ namespace AudioEngine
                 // is played on the same instrument, but just as a different voice (note the
                 // events can have their own mix level)
 
-                float lAmp = channel->mixVolume > 0.0 ? MAX_PHASE / channel->mixVolume : MAX_PHASE;
+                float lAmp = channelVolume > 0.0 ? MAX_PHASE / channelVolume : MAX_PHASE;
 
                 for ( int k = 0; k < lAmount; ++k )
                 {
@@ -345,8 +345,10 @@ namespace AudioEngine
 
             // write the channel buffer into the combined output buffer, apply channel volume
             // note live events are always audible as their volume is relative to the instrument
-            if ( channel->hasLiveEvents && channelVolume == 0.0 ) channelVolume = MAX_PHASE;
-            inBuffer->mergeBuffers( channelBuffer, 0, 0, channelVolume );
+            if ( channel->hasLiveEvents && channelVolume == 0.0 )
+                channelVolume = MAX_PHASE;
+
+            channel->mixBuffer( inBuffer, channelVolume );
         }
 
         // apply master bus processors (e.g. high pass filter, limiter, etc.)
