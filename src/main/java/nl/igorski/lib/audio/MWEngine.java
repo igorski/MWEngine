@@ -76,8 +76,9 @@ public final class MWEngine extends Thread
 
     /* audio generation related, should be overridden to match device-specific values */
 
-    public static int SAMPLE_RATE = 44100;
-    public static int BUFFER_SIZE = 2048;
+    public static int SAMPLE_RATE     = 44100;
+    public static int BUFFER_SIZE     = 2048;
+    public static int OUTPUT_CHANNELS = 1; // 1 = mono, 2 = stereo
 
     // we CAN multiply the output the volume to decrease it, preventing rapidly distorting audio ( especially on filters )
     private static final float VOLUME_MULTIPLIER = .85f;
@@ -126,19 +127,22 @@ public final class MWEngine extends Thread
         MWEngineCore.init();
     }
 
-    public void createOutput( int aSampleRate, int aBufferSize )
+    public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels )
     {
-        SAMPLE_RATE = aSampleRate;
-        BUFFER_SIZE = aBufferSize;
+        SAMPLE_RATE     = aSampleRate;
+        BUFFER_SIZE     = aBufferSize;
+        OUTPUT_CHANNELS = aOutputChannels;
 
-        // Android emulators can only work at 8 kHz or crash...
+        // older Android emulators can only work at 8 kHz or crash violently...
         if ( Build.FINGERPRINT.startsWith( "generic" ))
             SAMPLE_RATE = 8000;
+
+        MWEngineCore.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
 
         // start w/ default of 120 BPM in 4/4 time
 
         _sequencerController = new SequencerController();
-        _sequencerController.prepare( BUFFER_SIZE, SAMPLE_RATE, 120.0f, 4, 4 );
+        _sequencerController.prepare( 120.0f, 4, 4 );
 
         _disposed = false;
     }

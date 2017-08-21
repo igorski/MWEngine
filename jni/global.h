@@ -56,11 +56,11 @@
 
 namespace AudioEngineProps
 {
-    const int OUTPUT_CHANNELS  = 1;     // valid options are 1 (mono) and 2 (stereo)
     const bool CHANNEL_CACHING = false; // whether to cache AudioChannels and their FX module output in their ProcessingChain
 
-    extern int SAMPLE_RATE;             // initialized on engine start == device specific
-    extern int BUFFER_SIZE;             // initialized on engine start == device specific
+    extern int SAMPLE_RATE;     // initialized on engine start == device specific
+    extern int BUFFER_SIZE;     // initialized on engine start == device specific
+    extern int OUTPUT_CHANNELS; // initialized on engine start, valid options are 1 (mono) and 2 (stereo)
 
 #ifdef RECORD_DEVICE_INPUT
     const int INPUT_CHANNELS   = 1;

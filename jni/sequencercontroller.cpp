@@ -45,13 +45,8 @@ SequencerController::~SequencerController()
 
 /* public methods */
 
-void SequencerController::prepare( int aBufferSize, int aSampleRate, float aQueuedTempo,
-                                   int aTimeSigBeatAmount, int aTimeSigBeatUnit )
+void SequencerController::prepare( float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
-    // set renderer output variables
-    AudioEngineProps::BUFFER_SIZE = aBufferSize;
-    AudioEngineProps::SAMPLE_RATE = aSampleRate;
-
     // calculate buffers and ranges
     if ( aQueuedTempo > 0 )
     {

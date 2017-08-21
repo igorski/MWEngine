@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -61,15 +61,18 @@ Delay::~Delay()
 void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     SAMPLE_TYPE delaySample;
-    int readIndex, delayIndex;
+    int readIndex, delayIndex, delayBufferChannel;
 
     int bufferSize = sampleBuffer->bufferSize;
 
     for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
     {
+        // delay might be configured to use less channels than the output
+        delayBufferChannel = std::min( c, _delayBuffer->amountOfChannels - 1 );
+
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
-        SAMPLE_TYPE* delayBuffer   = _delayBuffer->getBufferForChannel( std::min( c, _delayBuffer->amountOfChannels - 1 ));
-        delayIndex                 = _delayIndices[ c ];
+        SAMPLE_TYPE* delayBuffer   = _delayBuffer->getBufferForChannel( delayBufferChannel );
+        delayIndex                 = _delayIndices[ delayBufferChannel ];
 
         for ( int i = 0; i < bufferSize; ++i )
         {
@@ -94,7 +97,7 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             else
                 channelBuffer[ i ] += ( delaySample * _mix );
         }
-        _delayIndices[ c ]  = delayIndex; // update last index
+        _delayIndices[ delayBufferChannel ] = delayIndex; // update last index
 
         // omit unnecessary cycles by copying the mono content
         // TODO: make delay stereo multi-tap ! ;)

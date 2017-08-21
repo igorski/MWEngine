@@ -58,7 +58,7 @@ namespace AudioEngine
     int loopOffset   = 0;
     int loopAmount   = 0;
 
-    int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
+    int outputChannels = 1;
     bool isMono        = ( outputChannels == 1 );
     float* outbuffer   = 0;
     float* recbufferIn = 0;
@@ -98,6 +98,13 @@ namespace AudioEngine
 
     static int thread;
 
+    void setup( int bufferSize, int sampleRate, int amountOfChannels )
+    {
+        AudioEngineProps::BUFFER_SIZE     = bufferSize;
+        AudioEngineProps::SAMPLE_RATE     = sampleRate;
+        AudioEngineProps::OUTPUT_CHANNELS = amountOfChannels;
+    }
+
     /**
      * starts the render thread
      * NOTE: the render thread is always active, even when the
@@ -124,8 +131,9 @@ namespace AudioEngine
         int loopOffset   = 0;
         int loopAmount   = 0;
 
-        channels  = new std::vector<AudioChannel*>();
-        outbuffer = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
+        channels       = new std::vector<AudioChannel*>();
+        outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
+        outbuffer      = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
 
 #ifdef RECORD_DEVICE_INPUT
 
@@ -535,7 +543,10 @@ namespace AudioEngine
 /**
  * the remainder is only in use when USE_JNI is set to true to allow using
  * the engine from Java. These method provide a proxied hook into the
- * public methods of the AudioEngine
+ * public methods of the AudioEngine, these shouldn't be called directly
+ * but are proxied via nl.igorski.lib.audio.MWEngine
+ *
+ * they are exposed in javabridge_api.h
  */
 #ifdef USE_JNI
 
@@ -548,6 +559,12 @@ extern "C"
 void init( JNIEnv* env, jobject jobj )
 {
     JavaBridge::registerInterface( env, jobj );
+}
+
+extern "C"
+void setup( int bufferSize, int sampleRate, int amountOfChannels )
+{
+    AudioEngine::setup( bufferSize, sampleRate, amountOfChannels );
 }
 
 /**

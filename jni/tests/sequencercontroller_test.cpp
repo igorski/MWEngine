@@ -16,19 +16,11 @@ TEST( SequencerController, Prepare )
 {
     SequencerController* controller = new SequencerController();
 
-    int bufferSize = randomInt( 24, 512 );
-    int sampleRate = randomInt( 8000, 48000 );
     float tempo    = randomFloat( 40.0f, 300.0f );
     int tsBeatAmount = randomInt( 2, 12 );
     int tsBeatUnit   = randomInt( 2, 8 );
 
-    controller->prepare( bufferSize, sampleRate, tempo, tsBeatAmount, tsBeatUnit );
-
-    EXPECT_EQ( bufferSize, AudioEngineProps::BUFFER_SIZE )
-        << "expected AudioEngine BUFFER_SIZE to have been updated";
-
-    EXPECT_EQ( sampleRate, AudioEngineProps::SAMPLE_RATE )
-        << "expected AudioEngine BUFFER_SIZE to have been updated";
+    controller->prepare( tempo, tsBeatAmount, tsBeatUnit );
 
     EXPECT_EQ( tempo, AudioEngine::queuedTempo )
         << "expected tempo to have been enqueued";

@@ -25,8 +25,9 @@
 
 // default values (overridden by audio engine initializer for platform-specific values)
 
-int AudioEngineProps::SAMPLE_RATE = 44100;
-int AudioEngineProps::BUFFER_SIZE = 1024;
+int AudioEngineProps::SAMPLE_RATE     = 44100;
+int AudioEngineProps::BUFFER_SIZE     = 1024;
+int AudioEngineProps::OUTPUT_CHANNELS = 1;
 
 /* used for threading */
 

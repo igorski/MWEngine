@@ -40,6 +40,7 @@ namespace AudioEngine
 #ifdef USE_JNI
     void init();
 #endif
+    void setup( int bufferSize, int sampleRate, int amountOfChannels );
     void start();
     void stop();
     void reset();

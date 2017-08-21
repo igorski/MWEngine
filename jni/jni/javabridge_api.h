@@ -43,6 +43,7 @@
 extern "C"
 {
     void init();
+    void setup( int bufferSize, int sampleRate, int amountOfChannels );
     void start();
     void stop();
     void reset();

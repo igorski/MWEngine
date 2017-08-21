@@ -47,9 +47,9 @@ public final class MWEngineActivity extends Activity
 
     private int SAMPLE_RATE;
     private int BUFFER_SIZE;
+    private int OUTPUT_CHANNELS = 1; // 1 = mono, 2 = stereo
 
     private static int STEPS_PER_MEASURE = 16; // amount of subdivisions within a single measure
-
     private static String LOG_TAG = "MWENGINE"; // logcat identifier
 
     /* public methods */
@@ -86,7 +86,7 @@ public final class MWEngineActivity extends Activity
         BUFFER_SIZE = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
         SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
-        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
         _sequencerController = _engine.getSequencerController();
 
         // cache some of the engines properties
@@ -97,11 +97,9 @@ public final class MWEngineActivity extends Activity
         sequencer.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
         _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
-        final int outputChannels = 1;   // see global.h
-
         // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
-        _lpfhpf    = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, outputChannels );
-        _finalizer = new Finalizer  ( 2f, 500f, MWEngine.SAMPLE_RATE,     outputChannels );
+        _lpfhpf    = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
+        _finalizer = new Finalizer  ( 2f, 500f, MWEngine.SAMPLE_RATE,     OUTPUT_CHANNELS );
 
         masterBus.addProcessor( _finalizer );
         masterBus.addProcessor( _lpfhpf );
@@ -129,7 +127,7 @@ public final class MWEngineActivity extends Activity
         _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
 
         // add some funky delay to synth 2
-        _delay = new Delay( 250, 2000, .35f, .5f, outputChannels );
+        _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // prepare synthesizer volumes
@@ -332,7 +330,7 @@ public final class MWEngineActivity extends Activity
                     if ( _engine.canRestartEngine() )
                     {
                         _engine.dispose();
-                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE );
+                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
                         _engine.start();
                     }
                     else {

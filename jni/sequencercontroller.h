@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -37,7 +37,7 @@ class SequencerController
         SequencerController();
         ~SequencerController();
         
-        void prepare    ( int aBufferSize, int aSampleRate, float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
+        void prepare    ( float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
         float getTempo  ();
         void setTempo   ( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
         void setTempoNow( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
