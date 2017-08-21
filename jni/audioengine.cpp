@@ -58,7 +58,7 @@ namespace AudioEngine
     int loopOffset   = 0;
     int loopAmount   = 0;
 
-    int outputChannels = 1;
+    int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
     bool isMono        = ( outputChannels == 1 );
     float* outbuffer   = 0;
     float* recbufferIn = 0;
@@ -133,6 +133,7 @@ namespace AudioEngine
 
         channels       = new std::vector<AudioChannel*>();
         outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
+        isMono         = ( outputChannels == 1 );
         outbuffer      = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
 
 #ifdef RECORD_DEVICE_INPUT

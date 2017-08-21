@@ -39,6 +39,7 @@ Delay::Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, in
 {
     _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aDelayTime );
     _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aMaxDelayTime );
+
     _delayBuffer = new AudioBuffer( amountOfChannels, _maxTime );
     _mix         = aMix;
     _feedback    = aFeedback;
@@ -78,24 +79,27 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         {
             readIndex = delayIndex - _time + 1;
 
-            if ( readIndex < 0 )
+            if ( readIndex < 0 ) {
                 readIndex += _time;
+            }
 
             // read the previously delayed samples from the buffer
             // ( for feedback purposes ) and append the current sample to it
 
             delaySample = delayBuffer[ readIndex ];
-
             delayBuffer[ delayIndex ] = channelBuffer[ i ] + delaySample * _feedback;
 
-            if ( ++delayIndex == _time )
+            if ( ++delayIndex == _time ) {
                 delayIndex = 0;
+            }
 
             // higher feedback levels can cause a massive noise-fest, "limit" them!
-            if ( _feedback > .5f )
+            if ( _feedback > .5f ) {
                 channelBuffer[ i ] += ( delaySample * _mix * ( 1.5f - _feedback ));
-            else
+            }
+            else {
                 channelBuffer[ i ] += ( delaySample * _mix );
+            }
         }
         _delayIndices[ delayBufferChannel ] = delayIndex; // update last index
 

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -34,8 +34,9 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 
     // create silent buffers for each channel
 
-    for ( int i = 0; i < amountOfChannels; ++i )
+    for ( int i = 0; i < amountOfChannels; ++i ) {
         _buffers->at( i ) = BufferUtility::generateSilentBuffer( bufferSize );
+    }
 }
 
 AudioBuffer::~AudioBuffer()
