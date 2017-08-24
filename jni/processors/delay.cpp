@@ -63,17 +63,15 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     SAMPLE_TYPE delaySample;
     int readIndex, delayIndex, delayBufferChannel;
+    int amountOfChannels = std::min( _delayBuffer->amountOfChannels, sampleBuffer->amountOfChannels );
 
     int bufferSize = sampleBuffer->bufferSize;
 
-    for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
+    for ( int c = 0; c < amountOfChannels; ++c )
     {
-        // delay might be configured to use less channels than the output
-        delayBufferChannel = std::min( c, _delayBuffer->amountOfChannels - 1 );
-
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
-        SAMPLE_TYPE* delayBuffer   = _delayBuffer->getBufferForChannel( delayBufferChannel );
-        delayIndex                 = _delayIndices[ delayBufferChannel ];
+        SAMPLE_TYPE* delayBuffer   = _delayBuffer->getBufferForChannel( c );
+        delayIndex                 = _delayIndices[ c ];
 
         for ( int i = 0; i < bufferSize; ++i )
         {
@@ -101,7 +99,7 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
                 channelBuffer[ i ] += ( delaySample * _mix );
             }
         }
-        _delayIndices[ delayBufferChannel ] = delayIndex; // update last index
+        _delayIndices[ c ] = delayIndex; // update last index
 
         // omit unnecessary cycles by copying the mono content
         // TODO: make delay stereo multi-tap ! ;)

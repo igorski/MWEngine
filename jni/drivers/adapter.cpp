@@ -49,12 +49,12 @@ namespace DriverAdapter {
             AudioEngineProps::OUTPUT_CHANNELS
         );
         // TODO: specify these from outside?
-       // driver_aAudio->setDeviceId();
+        // driver_aAudio->setDeviceId();
         driver_aAudio->setBufferSizeInBursts( 1 ); // Google provides {0, 1, 2, 4, 8} as values
 
         return ( driver_aAudio != NULL );
-
 #endif
+
     }
 
     void destroy() {

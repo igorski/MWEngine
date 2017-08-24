@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -35,29 +35,31 @@
  */
 Phaser::Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq )
 {
-    _lfoPhase = 0.0;
-    _zm1      = 0.0;
+    init( aRate, aFeedback, aDepth, aMinFreq, aMaxFreq, AudioEngineProps::OUTPUT_CHANNELS );
+}
 
-    setRange( aMinFreq, aMaxFreq );
-    setRate( aRate );
-
-    _fb       = aFeedback;
-    _depth    = aDepth;
-
-    int stages = 6; // six-stage phaser
-
-    for ( int i = 0; i < stages; ++i )
-        _alps[ i ] = new AllPassDelay();
+/**
+ * @param aRate     {float} desired LFO rate in Hz
+ * @param aFeedback {float} 0 - 1
+ * @param aDepth    {float} 0 - 1
+ * @param aMinFreq  {float} minimum frequency value in Hz allowed for the filters range
+ * @param aMaxFreq  {float} maxiumum frequency value in Hz allowed for the filters range
+ * @param amountOfChannels {int} amount of channels
+ */
+Phaser::Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels )
+{
+    init( aRate, aFeedback, aDepth, aMinFreq, aMaxFreq, amountOfChannels );
 }
 
 Phaser::~Phaser()
 {
-    int stages = 6;
+    for ( int i = 0; i < _channels; ++i ) {
+        for ( int j = 0; j < STAGES; ++j )
+            delete _alps->at( i ).at( j );
 
-    for ( int i = 0; i < stages; ++i )
-        delete _alps[ i ];
-
-    // _alps wasn't allocated with new[], nothing to delete[] ;)
+        _alps->erase( _alps->begin() + i );
+    }
+    delete _alps;
 }
 
 /* public methods */
@@ -110,14 +112,14 @@ void Phaser::setDepth( float depth )
 void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize = sampleBuffer->bufferSize;
+    int amountOfChannels = std::min( _channels, sampleBuffer->amountOfChannels );
 
-    SAMPLE_TYPE maxPhase = 3.14159 * 2; // two PI
-
-    for ( int c = 0, ca = sampleBuffer->amountOfChannels; c < ca; ++c )
+    for ( int c = 0; c < amountOfChannels; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
         int i, j;
+        std::vector<AllPassDelay*> delay = _alps->at( c );
 
         for ( i = 0; i < bufferSize; ++i )
         {
@@ -125,31 +127,53 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             SAMPLE_TYPE d  = _dmin + ( _dmax - _dmin ) * (( sin( _lfoPhase ) + 1.0 ) / 2.0 );
             _lfoPhase     += _lfoInc;
 
-            if ( _lfoPhase >= maxPhase )
-                _lfoPhase -= maxPhase;
+            if ( _lfoPhase >= TWO_PI )
+                _lfoPhase -= TWO_PI;
 
-            // update filter coeffs
-            for ( j = 0; j < 6; ++j )
-                _alps[ j ]->delay( d );
+            // update filter coefficients
+            for ( j = 0; j < STAGES; ++j )
+                delay.at( j )->delay( d );
 
             // calculate output
-            float y = _alps[ 0 ]->update(
-                      _alps[ 1 ]->update(
-                      _alps[ 2 ]->update(
-                      _alps[ 3 ]->update(
-                      _alps[ 4 ]->update(
-                      _alps[ 5 ]->update( channelBuffer[ i ] + _zm1 * _fb ))))));
+            float y = delay[ 0 ]->update(
+                      delay[ 1 ]->update(
+                      delay[ 2 ]->update(
+                      delay[ 3 ]->update(
+                      delay[ 4 ]->update(
+                      delay[ 5 ]->update( channelBuffer[ i ] + _zm1 * _fb ))))));
 
             _zm1 = y;
 
             channelBuffer[ i ] += ( y * _depth );
         }
-        // save CPU cycles when mono source
+        // save CPU cycles when working on a mono source
         if ( isMonoSource )
         {
             sampleBuffer->applyMonoSource();
             break;
         }
+    }
+}
+
+void Phaser::init( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels )
+{
+    _lfoPhase = 0.0;
+    _zm1      = 0.0;
+    _channels = amountOfChannels;
+
+    setRange( aMinFreq, aMaxFreq );
+    setRate( aRate );
+
+    _fb       = aFeedback;
+    _depth    = aDepth;
+
+    _alps = new std::vector<std::vector<AllPassDelay*>>( amountOfChannels );
+
+    for ( int i = 0; i < _channels; ++i ) {
+        _alps->at( i ) = std::vector<AllPassDelay*>( STAGES );
+
+        for ( int j = 0; j < STAGES; ++j )
+            _alps->at( i ).at( j ) = new AllPassDelay();
     }
 }
 

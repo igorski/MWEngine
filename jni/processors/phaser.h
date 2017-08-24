@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #define __PHASER_H_INCLUDED__
 
 #include "baseprocessor.h"
+#include <vector>
 
 class AllPassDelay
 {
@@ -39,8 +40,11 @@ class AllPassDelay
 
 class Phaser : public BaseProcessor
 {
+    static const int STAGES = 6;
+
     public:
         Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq );
+        Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels );
         ~Phaser();
 
         void setDepth( float depth );
@@ -53,6 +57,7 @@ class Phaser : public BaseProcessor
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     private:
+        int _channels;
         float _dmin;
         float _dmax;
         float _fb;
@@ -62,7 +67,9 @@ class Phaser : public BaseProcessor
         float _lfoInc;
         float _rate;
 
-        AllPassDelay *_alps[ 6 ]; // six-stage phaser
+        std::vector<std::vector<AllPassDelay*>>* _alps;
+
+        void init( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels );
 };
 
 #endif
