@@ -57,7 +57,7 @@ class Phaser : public BaseProcessor
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
     private:
-        int _channels;
+        int _amountOfChannels;
         float _dmin;
         float _dmax;
         float _fb;

@@ -22,6 +22,7 @@
  */
 #include "delay.h"
 #include "../global.h"
+#include <utilities/debug.h>
 #include <utilities/utils.h>
 #include <math.h>
 
@@ -80,6 +81,7 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             if ( readIndex < 0 ) {
                 readIndex += _time;
             }
+         Debug::log("read index %d for time %d and delayBuffer size %d delayIndex %d", readIndex, _time, _delayBuffer->bufferSize, delayIndex);
 
             // read the previously delayed samples from the buffer
             // ( for feedback purposes ) and append the current sample to it
