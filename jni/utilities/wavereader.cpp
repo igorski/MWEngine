@@ -36,7 +36,7 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
     if ( fp )
     {
         char id[ 5 ];
-        unsigned long size;
+        unsigned int size;
         short* sound_buffer;
         short tag, amountOfChannels, blockAlign, bps;
         unsigned int format, sampleRate, bytesPerSec, dataSize, i;
@@ -48,7 +48,7 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
 
         if ( !strcmp( id, "RIFF" ))
         {
-            fread( &size, sizeof( unsigned long ), 1, fp );
+            fread( &size, sizeof( unsigned int ),  1, fp );
             fread( id,    sizeof( unsigned char ), 4, fp );
             id[ 4 ] = '\0';
 
@@ -57,20 +57,20 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
                 // read the header data (see http://soundfile.sapp.org/doc/WaveFormat/)
 
                 fread( id,                sizeof( char ), 4, fp );
-                fread( &format,           sizeof( unsigned long ), 1, fp );
+                fread( &format,           sizeof( unsigned int ), 1, fp );
                 fread( &tag,              sizeof( short ), 1, fp );
                 fread( &amountOfChannels, sizeof( short ), 1, fp );
-                fread( &sampleRate,       sizeof( unsigned long ), 1, fp );
-                fread( &bytesPerSec,      sizeof( unsigned long ), 1, fp );
+                fread( &sampleRate,       sizeof( unsigned int ), 1, fp );
+                fread( &bytesPerSec,      sizeof( unsigned int ), 1, fp );
                 fread( &blockAlign,       sizeof( short ), 1, fp );
                 fread( &bps,              sizeof( short ), 1, fp );
                 fread( id,                sizeof( char ), 4, fp );
-                fread( &dataSize,         sizeof( unsigned long ), 1, fp );
+                fread( &dataSize,         sizeof( unsigned int ), 1, fp );
 
                 sound_buffer = ( short* ) malloc( dataSize );
 
                 fread( sound_buffer, sizeof( short ), dataSize / sizeof( short ), fp );
-                unsigned long bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
+                unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
                 out = new AudioBuffer( amountOfChannels, bufferSize );
 
@@ -170,7 +170,7 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
             for ( i = 44, l = i + dataSize, w = 0; i < l; i += 2, ++w )
                 sound_buffer[ w ] = ( uint8_t ) byteArray[ i ] | (( uint8_t ) byteArray[ i + 1 ] << 8 );
 
-            unsigned long bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
+            unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
             out = new AudioBuffer( amountOfChannels, bufferSize );
 
