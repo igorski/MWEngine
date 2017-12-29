@@ -25,6 +25,7 @@
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 
 AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
 { 
