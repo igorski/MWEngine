@@ -40,10 +40,13 @@ Delay::Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, in
 {
     _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aDelayTime );
     _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aMaxDelayTime );
-
-    _delayBuffer = new AudioBuffer( amountOfChannels, _maxTime );
-    _mix         = aMix;
-    _feedback    = aFeedback;
+   Debug::log("construct with %d", amountOfChannels);
+    _delayBuffer  = new AudioBuffer( amountOfChannels, _maxTime );
+    Debug::log("buffer address > %d", _delayBuffer);
+    Debug::log("buffer at 0 > %d", _delayBuffer->getBufferForChannel(0));
+    Debug::log("buffer at 1 > %d", _delayBuffer->getBufferForChannel(1));
+    _mix          = aMix;
+    _feedback     = aFeedback;
     _delayIndices = new int[ amountOfChannels ];
 
     for ( int i = 0; i < amountOfChannels; ++i )
@@ -81,14 +84,16 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             if ( readIndex < 0 ) {
                 readIndex += _time;
             }
-         Debug::log("read index %d for time %d and delayBuffer size %d delayIndex %d", readIndex, _time, _delayBuffer->bufferSize, delayIndex);
-
+         Debug::log("channel %d read index %d for time %d and delayBuffer size %d delayIndex %d", c, readIndex, _time, _delayBuffer->bufferSize, delayIndex);
+         Debug::log("what is this %d AudioBuffer", _delayBuffer);
+         Debug::log("what is this %d float*", delayBuffer);
             // read the previously delayed samples from the buffer
             // ( for feedback purposes ) and append the current sample to it
 
             delaySample = delayBuffer[ readIndex ];
+            Debug::log("got sample %f", delaySample );
             delayBuffer[ delayIndex ] = channelBuffer[ i ] + delaySample * _feedback;
-
+                                                      Debug::log("wrote sample %f", delayBuffer[delayIndex]);
             if ( ++delayIndex == _time ) {
                 delayIndex = 0;
             }

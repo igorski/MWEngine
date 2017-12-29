@@ -22,6 +22,7 @@
  */
 #include "audiobuffer.h"
 #include <utilities/bufferutility.h>
+#include <utilities/debug.h>
 #include <algorithm>
 #include <string.h>
 
@@ -41,6 +42,7 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 
 AudioBuffer::~AudioBuffer()
 {
+Debug::log("deleting %d", this);
     while ( !_buffers->empty()) {
         delete[] _buffers->back(), _buffers->pop_back();
     }
@@ -56,6 +58,7 @@ SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
 
 int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume )
 {
+ Debug::log("merge %d with %d", aBuffer, this );
     if ( aBuffer == 0 || aWriteOffset >= bufferSize ) return 0;
 
     int sourceLength     = aBuffer->bufferSize;
@@ -103,7 +106,6 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
 void AudioBuffer::silenceBuffers()
 {
     // use mem set to quickly erase existing buffer contents, zero bits should equal 0.0f
-
     for ( int i = 0; i < amountOfChannels; ++i )
         memset( getBufferForChannel( i ), 0, bufferSize * sizeof( SAMPLE_TYPE ));
 }
@@ -127,7 +129,7 @@ void AudioBuffer::applyMonoSource()
 {
     if ( amountOfChannels == 1 )
         return;
-
+    Debug::log("applying mono source for %d", this );
     SAMPLE_TYPE* monoBuffer = getBufferForChannel( 0 );
 
     for ( int i = 1; i < amountOfChannels; ++i )
@@ -148,5 +150,7 @@ AudioBuffer* AudioBuffer::clone()
 
         memcpy( targetBuffer, sourceBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
+Debug::log("we just cloned %d into %d", this, output);
+
     return output;
 }
