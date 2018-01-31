@@ -93,8 +93,8 @@ bool SynthInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent 
     // when using JNI, we let SWIG invoke destructors when Java references are finalized
     // otherwise we delete and dispose the events directly from this instrument
 #ifndef USE_JNI
-    delete aEvent;
-    aEvent = 0;
+    delete audioEvent;
+    audioEvent = 0;
 #endif
     return removed;
 }
