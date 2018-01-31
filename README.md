@@ -133,3 +133,4 @@ solving of bugs, etc.) from the following developers :
  * Koert Gaaikema (@koertgaaikema)
  * Matt Logan (@mattlogan)
  * Aran Arunakiri
+ * @rckrdstrgrd

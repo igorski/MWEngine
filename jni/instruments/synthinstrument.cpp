@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -93,8 +93,8 @@ bool SynthInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent 
     // when using JNI, we let SWIG invoke destructors when Java references are finalized
     // otherwise we delete and dispose the events directly from this instrument
 #ifndef USE_JNI
-    delete aEvent;
-    aEvent = 0;
+    delete audioEvent;
+    audioEvent = 0;
 #endif
     return removed;
 }
