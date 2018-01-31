@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -29,8 +29,8 @@ class Observer
         Observer();
         ~Observer();
 
-        void handleNotification( int aNotificationType );
-        void handleNotification( int aNotificationType, int aValue );
+        virtual void handleNotification( int aNotificationType );
+        virtual void handleNotification( int aNotificationType, int aValue );
 };
 
 #endif
