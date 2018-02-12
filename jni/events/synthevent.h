@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -37,10 +37,7 @@
 class SynthEvent : public BaseSynthEvent
 {
     public:
-        // construct as a sequenced event
         SynthEvent( float aFrequency, int aPosition, float aLength, SynthInstrument* aInstrument );
-
-        // construct as live event (for instance: a keyboard noteOn)
         SynthEvent( float aFrequency, SynthInstrument* aInstrument );
         ~SynthEvent();
 };

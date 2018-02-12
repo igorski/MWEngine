@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,9 +45,7 @@ namespace Notifier
                                                                           std::vector<Observer*>() ));
 
         it = _observerMap.find( aNotificationType );
-        std::vector<Observer*> observers = it->second;
-
-        observers.push_back( aObserver );
+        it->second.push_back( aObserver );
     }
 
     void unregisterObserver( int aNotificationType, Observer* aObserver )

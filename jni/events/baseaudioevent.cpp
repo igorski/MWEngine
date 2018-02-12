@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -74,6 +74,30 @@ void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
     }
 }
 
+void BaseAudioEvent::play()
+{
+    if ( _livePlayback )
+        return;
+
+    // move this event to the live events list of the instrument (keep
+    // the current sequenced event - if it was added - as is)
+
+    _instrument->getLiveEvents()->push_back( this );
+    _livePlayback = true;
+}
+
+void BaseAudioEvent::stop()
+{
+    if ( !_livePlayback )
+        return;
+
+    // remove this event from the live events list of the instrument (keep
+    // the current sequenced event - if it was added - as is)
+
+    removeLiveEvent();
+    _livePlayback = false;
+}
+
 void BaseAudioEvent::addToSequencer()
 {
     if ( _addedToSequencer )
@@ -84,7 +108,7 @@ void BaseAudioEvent::addToSequencer()
     if ( isSequenced )
         _instrument->getEvents()->push_back( this );
     else
-        _instrument->getLiveEvents()->push_back( this );
+        play();
 
     _addedToSequencer = true;
 }
@@ -96,11 +120,7 @@ void BaseAudioEvent::removeFromSequencer()
 
     if ( !isSequenced )
     {
-        std::vector<BaseAudioEvent*>* liveEvents = _instrument->getLiveEvents();
-        std::vector<BaseAudioEvent*>::iterator position = std::find( liveEvents->begin(),
-                                                                     liveEvents->end(), this );
-        if ( position != liveEvents->end() )
-            liveEvents->erase( position );
+        stop();
     }
     else
     {
@@ -111,6 +131,15 @@ void BaseAudioEvent::removeFromSequencer()
             events->erase( position );
     }
     _addedToSequencer = false;
+}
+
+void BaseAudioEvent::removeLiveEvent()
+{
+    std::vector<BaseAudioEvent*>* liveEvents = _instrument->getLiveEvents();
+    std::vector<BaseAudioEvent*>::iterator position = std::find( liveEvents->begin(), liveEvents->end(), this );
+
+    if ( position != liveEvents->end() )
+        liveEvents->erase( position );
 }
 
 int BaseAudioEvent::getSampleLength()
@@ -472,6 +501,7 @@ void BaseAudioEvent::construct()
     _endPosition       = 0.f;
     _instrument        = 0;
     _deleteMe          = false;
+    _livePlayback      = false;
     isSequenced        = true;
 }
 

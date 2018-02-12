@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,6 +33,8 @@ class SampleEvent : public BaseAudioEvent
         SampleEvent( BaseInstrument* aInstrument );
         virtual ~SampleEvent();
 
+        void play();
+
         virtual int getBufferRangeStart();
         virtual void setBufferRangeStart( int value );
         virtual int getBufferRangeEnd();
@@ -54,9 +56,6 @@ class SampleEvent : public BaseAudioEvent
 
         int getPlaybackPosition();
 
-        void play(); // enable the event and play it back immediately (for auditioning purposes)
-        void stop(); // immediately stops playing the live-auditioned event
-
     protected:
 
         // total sample range
@@ -73,7 +72,6 @@ class SampleEvent : public BaseAudioEvent
         int _lastPlaybackPosition;
 
         void init( BaseInstrument* aInstrument );
-        void removeLiveEvent();
 };
 
 #endif
