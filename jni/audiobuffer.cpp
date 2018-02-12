@@ -31,13 +31,14 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
     loopeable        = false;
     amountOfChannels = aAmountOfChannels;
     bufferSize       = aBufferSize;
-    _buffers         = new std::vector<SAMPLE_TYPE*>( amountOfChannels );
+    _buffers         = new std::vector<SAMPLE_TYPE*>();
 
     // create silent buffers for each channel
 
     for ( int i = 0; i < amountOfChannels; ++i ) {
-        _buffers->at( i ) = BufferUtility::generateSilentBuffer( bufferSize );
+        _buffers->push_back( BufferUtility::generateSilentBuffer( bufferSize ));
     }
+    _buffers->resize( amountOfChannels );
 }
 
 AudioBuffer::~AudioBuffer()

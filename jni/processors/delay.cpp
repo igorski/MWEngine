@@ -49,14 +49,16 @@ Delay::Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, in
     _feedback     = aFeedback;
     _delayIndices = new int[ amountOfChannels ];
 
-    for ( int i = 0; i < amountOfChannels; ++i )
+    for ( int i = 0; i < amountOfChannels; ++i ) {
         _delayIndices[ i ] = 0;
-
+        Debug::log("integer value for indice %d is %d", i, _delayIndices[i]);
+    }
     _amountOfChannels = amountOfChannels;
 }
 
 Delay::~Delay()
 {
+Debug::log("BOOM");
     delete _delayBuffer;
     delete[] _delayIndices;
 }
@@ -77,6 +79,12 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         SAMPLE_TYPE* delayBuffer   = _delayBuffer->getBufferForChannel( c );
         delayIndex                 = _delayIndices[ c ];
 
+        // QQQ TODO: for some reason this point to a temporary buffer underrun when operating in stereo... WHY!?
+        if ( delayIndex < 0 || delayIndex > _delayBuffer->bufferSize)
+            delayIndex = 0;
+
+        // E.O. QQQ
+
         for ( int i = 0; i < bufferSize; ++i )
         {
             readIndex = delayIndex - _time + 1;
@@ -84,16 +92,16 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             if ( readIndex < 0 ) {
                 readIndex += _time;
             }
-         Debug::log("channel %d read index %d for time %d and delayBuffer size %d delayIndex %d", c, readIndex, _time, _delayBuffer->bufferSize, delayIndex);
-         Debug::log("what is this %d AudioBuffer", _delayBuffer);
-         Debug::log("what is this %d float*", delayBuffer);
+      //   Debug::log("channel %d read index %d for time %d and delayBuffer size %d delayIndex %d", c, readIndex, _time, _delayBuffer->bufferSize, delayIndex);
+       //  Debug::log("what is this %d AudioBuffer", _delayBuffer);
+       //  Debug::log("what is this %d float*", delayBuffer);
             // read the previously delayed samples from the buffer
             // ( for feedback purposes ) and append the current sample to it
 
             delaySample = delayBuffer[ readIndex ];
-            Debug::log("got sample %f", delaySample );
+          //  Debug::log("got sample %f", delaySample );
             delayBuffer[ delayIndex ] = channelBuffer[ i ] + delaySample * _feedback;
-                                                      Debug::log("wrote sample %f", delayBuffer[delayIndex]);
+            //                                          Debug::log("wrote sample %f", delayBuffer[delayIndex]);
             if ( ++delayIndex == _time ) {
                 delayIndex = 0;
             }
