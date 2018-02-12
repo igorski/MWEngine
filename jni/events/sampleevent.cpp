@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,6 +45,12 @@ SampleEvent::~SampleEvent()
 }
 
 /* public methods */
+
+void SampleEvent::play()
+{
+    _lastPlaybackPosition = _bufferRangeStart;
+    BaseAudioEvent::play();
+}
 
 int SampleEvent::getBufferRangeStart()
 {
@@ -93,26 +99,6 @@ void SampleEvent::setBufferRangeEnd( int value )
 int SampleEvent::getBufferRangeLength()
 {
     return _bufferRangeLength;
-}
-
-void SampleEvent::play()
-{
-    _lastPlaybackPosition = _bufferRangeStart;
-
-    // remove this event to the live events list of the instrument (keep
-    // the current sequenced event - if it was added - as is
-
-    _instrument->getLiveEvents()->push_back( this );
-    setEnabled( true );
-}
-
-void SampleEvent::stop()
-{
-    // remove this event from the live events list of the instrument (keep
-    // the current sequenced event - if it was added - as is
-
-    removeLiveEvent();
-    setEnabled( false );
 }
 
 /**
@@ -281,18 +267,4 @@ void SampleEvent::init( BaseInstrument* instrument )
     _useBufferRange        = false;
     _instrument            = instrument;
     _liveBuffer            = 0;
-}
-
-void SampleEvent::removeLiveEvent()
-{
-    std::vector<BaseAudioEvent*>* liveAudioEvents = _instrument->getLiveEvents();
-
-    for ( int i = 0; i < liveAudioEvents->size(); i++ )
-    {
-        if ( liveAudioEvents->at( i ) == this )
-        {
-            liveAudioEvents->erase( liveAudioEvents->begin() + i );
-            break;
-        }
-    }
 }

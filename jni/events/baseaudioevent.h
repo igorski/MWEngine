@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,6 +33,9 @@ class BaseAudioEvent
         BaseAudioEvent( BaseInstrument* instrument );
         BaseAudioEvent();
         virtual ~BaseAudioEvent();
+
+        virtual float getVolume();
+        virtual void  setVolume( float value );
 
         /**
          * used by the AudioEngine to mix in parts of this
@@ -74,6 +77,11 @@ class BaseAudioEvent
 
         virtual BaseInstrument* getInstrument(); // retrieve reference to the instrument this event belongs to
         virtual void setInstrument( BaseInstrument* aInstrument ); // set / swap instrument this event belongs to
+
+        virtual void play(); // enable the event and play it back immediately (e.g. "noteOn" for instant playback)
+        virtual void stop(); // immediately stops playing the live-auditioned event (e.g. "noteOff")
+
+        /* event sequencing */
 
         virtual void addToSequencer();      // add / remove event from Instruments events list
         virtual void removeFromSequencer(); // adding it makes event eligible for playback via the sequencer
@@ -120,10 +128,14 @@ class BaseAudioEvent
         // ( 1, 32, 4 ) positions audioEvent at 4 / 32 = 1/8th note in the second measure
         virtual void positionEvent( int startMeasure, int subdivisions, int offset );
 
-        virtual int getReadPointer();
+        /* looping (e.g. for samples) */
 
         virtual bool isLoopeable();
         virtual void setLoopeable( bool value );
+
+        /* internally used properties */
+
+        virtual int getReadPointer();
 
         virtual bool isDeletable();   // query whether this event is queued for deletion
         virtual void setDeletable( bool value );
@@ -135,12 +147,11 @@ class BaseAudioEvent
         virtual void unlock();      // unlock
         virtual bool isLocked();
 
-        virtual float getVolume();
-        virtual void  setVolume( float value );
-
     protected:
 
         void construct();   // basic initialization which can be shared across overloaded constructors
+
+        float _volume;
 
         // buffer regions
         int _sampleStart;
@@ -150,10 +161,12 @@ class BaseAudioEvent
         float _startPosition;
         float _endPosition;
 
+        void removeLiveEvent();
+
         // properties
         bool _enabled;
         bool _loopeable;
-        float _volume;
+        bool _livePlayback;
 
         bool _addedToSequencer;      // whether this event exists in the instruments event list (and is eligible for playback)
         BaseInstrument* _instrument; // the BaseInstrument this event belongs to

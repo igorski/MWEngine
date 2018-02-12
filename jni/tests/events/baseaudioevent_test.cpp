@@ -20,6 +20,94 @@ TEST( BaseAudioEvent, GettersSettersVolume )
     deleteAudioEvent( audioEvent );
 }
 
+TEST( BaseAudioEvent, PlayStop )
+{
+    BaseInstrument* instrument = new BaseInstrument();
+    BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
+
+    // expect AudioEvent not be in any of the event queues of the instrument after construction
+
+    bool found = false;
+    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
+    {
+        if ( instrument->getEvents()->at( i ) == audioEvent )
+            found = true;
+    }
+
+    ASSERT_FALSE( found )
+        << "expected event not to be present in the event list after construction";
+
+    found = false;
+    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
+    {
+        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
+            found = true;
+    }
+
+    ASSERT_FALSE( found )
+        << "expected event not to be present in the live event list after construction";
+
+    // 1. activate play-state
+
+    audioEvent->play();
+
+    // expect event to be present in live events list
+
+    found = false;
+    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
+    {
+        if ( instrument->getEvents()->at( i ) == audioEvent )
+            found = true;
+    }
+
+    ASSERT_FALSE( found )
+        << "expected event not to be present in the sequenced event list after invocation of play()";
+
+    found = false;
+    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
+    {
+        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
+            found = true;
+    }
+
+    ASSERT_TRUE( found )
+        << "expected event to be present in the live event list after invocation of play()";
+
+    ASSERT_TRUE( audioEvent->isEnabled() )
+        << "expected SampleEvent to be enabled after invocation of play()";
+
+    // 2. deactivate play-state
+
+    audioEvent->stop();
+
+    // expect event not be in the event lists anymore
+
+    found = false;
+    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
+    {
+        if ( instrument->getEvents()->at( i ) == audioEvent )
+            found = true;
+    }
+
+    ASSERT_FALSE( found )
+        << "expected event not to be present in the event list after invocation of stop()";
+
+    found = false;
+    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
+    {
+        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
+            found = true;
+    }
+
+    ASSERT_FALSE( found )
+        << "expected event not to be present in the live event list after invocation of stop()";
+
+    ASSERT_FALSE( audioEvent->isEnabled() )
+        << "expected SampleEvent not to be enabled after invocation of stop()";
+
+    deleteAudioEvent( audioEvent );
+}
+
 TEST( BaseAudioEvent, EnabledState )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();

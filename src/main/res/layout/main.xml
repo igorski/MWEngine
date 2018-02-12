@@ -17,6 +17,13 @@
             android:layout_marginBottom="5dip"
             android:text="@string/play_btn" />
 
+    <Button
+            android:id="@+id/LiveNoteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dip"
+            android:text="@string/live_btn" />
+
     <SeekBar android:id="@+id/FilterCutoffSlider"
              android:progress="50"
              android:layout_marginLeft="5dip"
