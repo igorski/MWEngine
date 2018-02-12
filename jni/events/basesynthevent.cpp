@@ -33,7 +33,7 @@ unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
 
 BaseSynthEvent::BaseSynthEvent()
 {
-    construct();
+
 }
 
 /**
