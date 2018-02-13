@@ -22,7 +22,6 @@
  */
 #include "audiobuffer.h"
 #include <utilities/bufferutility.h>
-#include <utilities/debug.h>
 #include <algorithm>
 #include <string.h>
 
@@ -39,7 +38,6 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 
 AudioBuffer::~AudioBuffer()
 {
-Debug::log("deleting %d", this);
     while ( !_buffers->empty()) {
         delete[] _buffers->back(), _buffers->pop_back();
     }
@@ -125,7 +123,7 @@ void AudioBuffer::applyMonoSource()
 {
     if ( amountOfChannels == 1 )
         return;
-    Debug::log("applying mono source for %d", this );
+
     SAMPLE_TYPE* monoBuffer = getBufferForChannel( 0 );
 
     for ( int i = 1; i < amountOfChannels; ++i )
@@ -146,7 +144,5 @@ AudioBuffer* AudioBuffer::clone()
 
         memcpy( targetBuffer, sourceBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
-Debug::log("we just cloned %d into %d", this, output);
-
     return output;
 }

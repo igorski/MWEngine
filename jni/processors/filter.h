@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -60,6 +60,7 @@ class Filter : public BaseProcessor
 
         // used internally
 
+        int amountOfChannels;
         SAMPLE_TYPE a1;
         SAMPLE_TYPE a2;
         SAMPLE_TYPE a3;
