@@ -179,18 +179,13 @@ int BufferUtility::calculateBufferLength( int milliSeconds )
 
 std::vector<SAMPLE_TYPE*>* BufferUtility::createSampleBuffers( int amountOfChannels, int bufferSize )
 {
-    // TODO: this is kind of silly (invoking resize() at the end)
-    // we're running into a buffer overflow and not solving the root case
-    // generate the vector directly at the size specified by amountOfChannels
-    std::vector<SAMPLE_TYPE*>* buffers = new std::vector<SAMPLE_TYPE*>();
+    std::vector<SAMPLE_TYPE*>* buffers = new std::vector<SAMPLE_TYPE*>( amountOfChannels );
 
     // fill buffers with silence
 
     for ( int i = 0; i < amountOfChannels; ++i ) {
-        buffers->push_back( BufferUtility::generateSilentBuffer( bufferSize ));
+        buffers->at( i ) = BufferUtility::generateSilentBuffer( bufferSize );
     }
-    buffers->resize( amountOfChannels );
-
     return buffers;
 }
 
