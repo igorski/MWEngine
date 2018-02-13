@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -40,14 +40,14 @@ Delay::Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, in
     _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aDelayTime );
     _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aMaxDelayTime );
 
-    _delayBuffer = new AudioBuffer( amountOfChannels, _maxTime );
-    _mix         = aMix;
-    _feedback    = aFeedback;
+    _delayBuffer  = new AudioBuffer( amountOfChannels, _maxTime );
+    _mix          = aMix;
+    _feedback     = aFeedback;
     _delayIndices = new int[ amountOfChannels ];
 
-    for ( int i = 0; i < amountOfChannels; ++i )
+    for ( int i = 0; i < amountOfChannels; ++i ) {
         _delayIndices[ i ] = 0;
-
+    }
     _amountOfChannels = amountOfChannels;
 }
 

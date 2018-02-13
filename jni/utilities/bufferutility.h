@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #define __BUFFER_UTILITY_H_INCLUDED__
 
 #include "global.h"
+#include <vector>
 
 /**
  * BufferUtility provides several functions
@@ -33,6 +34,8 @@
 class BufferUtility
 {
     public:
+
+        /* time related math */
 
         static double getBPMbyLength( double length, int amountOfBars );
         static double getBPMbySamples( int length, int amountOfBars, int sampleRate );
@@ -44,8 +47,15 @@ class BufferUtility
         static int calculateSamplesPerBeatDivision( int sampleRate, double tempo, int subdivision );
         static int getSamplesPerBeat( int sampleRate, double tempo );
         static int getSamplesPerBar( int sampleRate, double tempo, int beatAmount, int beatUnit );
+
+        /* duration related math */
+
         static int calculateBufferLength( SAMPLE_TYPE aMinRate );
         static int calculateBufferLength( int milliSeconds );
+
+        /* buffer generation */
+
+        static std::vector<SAMPLE_TYPE*>* createSampleBuffers( int amountOfChannels, int bufferSize );
         static SAMPLE_TYPE* generateSilentBuffer( int aBufferSize );
         static void bufferToFile( const char* aFileName, SAMPLE_TYPE* aBuffer, int aBufferLength );
 };

@@ -53,7 +53,7 @@ Phaser::Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, floa
 
 Phaser::~Phaser()
 {
-    for ( int i = 0; i < _channels; ++i ) {
+    for ( int i = 0; i < _amountOfChannels; ++i ) {
         for ( int j = 0; j < STAGES; ++j )
             delete _alps->at( i ).at( j );
 
@@ -112,7 +112,7 @@ void Phaser::setDepth( float depth )
 void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize = sampleBuffer->bufferSize;
-    int amountOfChannels = std::min( _channels, sampleBuffer->amountOfChannels );
+    int amountOfChannels = std::min( _amountOfChannels, sampleBuffer->amountOfChannels );
 
     for ( int c = 0; c < amountOfChannels; ++c )
     {
@@ -157,9 +157,9 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
 void Phaser::init( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels )
 {
-    _lfoPhase = 0.0;
-    _zm1      = 0.0;
-    _channels = amountOfChannels;
+    _lfoPhase         = 0.0;
+    _zm1              = 0.0;
+    _amountOfChannels = amountOfChannels;
 
     setRange( aMinFreq, aMaxFreq );
     setRate( aRate );
@@ -169,7 +169,7 @@ void Phaser::init( float aRate, float aFeedback, float aDepth, float aMinFreq, f
 
     _alps = new std::vector<std::vector<AllPassDelay*>>( amountOfChannels );
 
-    for ( int i = 0; i < _channels; ++i ) {
+    for ( int i = 0; i < _amountOfChannels; ++i ) {
         _alps->at( i ) = std::vector<AllPassDelay*>( STAGES );
 
         for ( int j = 0; j < STAGES; ++j )

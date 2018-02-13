@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -48,6 +48,8 @@ Filter::Filter( float aCutoffFrequency, float aResonance,
     maxFreq    = aMaxFreq;
     lfoRange   = ( maxFreq / 2 ) - minFreq;
 
+    amountOfChannels = numChannels;
+
     in1  = new SAMPLE_TYPE[ numChannels ];
     in2  = new SAMPLE_TYPE[ numChannels ];
     out1 = new SAMPLE_TYPE[ numChannels ];
@@ -80,6 +82,9 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     int bufferSize       = sampleBuffer->bufferSize;
     int initialLFOOffset = _hasLFO ? _lfo->getTable()->getAccumulator() : 0;
     float orgCutoff      = _tempCutoff;
+
+    if ( amountOfChannels < sampleBuffer->amountOfChannels )
+        isMonoSource = true;
 
     for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
     {
@@ -134,6 +139,8 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
 bool Filter::isCacheable()
 {
+    // filters shouldn't be cached if they are
+    // modulated by an oscillator
     return !hasLFO();
 }
 

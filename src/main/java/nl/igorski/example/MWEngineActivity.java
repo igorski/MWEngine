@@ -49,7 +49,7 @@ public final class MWEngineActivity extends Activity
 
     private int SAMPLE_RATE;
     private int BUFFER_SIZE;
-    private int OUTPUT_CHANNELS = 1; // 1 = mono, 2 = stereo
+    private int OUTPUT_CHANNELS = 2; // 1 = mono, 2 = stereo
 
     private static int STEPS_PER_MEASURE = 16; // amount of subdivisions within a single measure
     private static String LOG_TAG = "MWENGINE"; // logcat identifier
@@ -121,7 +121,10 @@ public final class MWEngineActivity extends Activity
         // add a filter to synth 1
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
 
-        _filter = new Filter( maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ), minFilterCutoff, maxFilterCutoff, 0f, 1 );
+        _filter = new Filter(
+            maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
+            minFilterCutoff, maxFilterCutoff, 0f, OUTPUT_CHANNELS
+        );
         _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
 
         // add a phaser to synth 1
@@ -132,7 +135,7 @@ public final class MWEngineActivity extends Activity
         _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
-        // prepare synthesizer volumes
+        // adjust synthesizer volumes
         _synth2.getAudioChannel().setVolume( .7f );
 
         // STEP 3 : load some samples from the packaged assets folder into the SampleManager
