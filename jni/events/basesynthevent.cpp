@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,7 +33,7 @@ unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
 
 BaseSynthEvent::BaseSynthEvent()
 {
-    construct();
+
 }
 
 /**
@@ -351,5 +351,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     setFrequency( aFrequency );
 
     calculateBuffers();
-    addToSequencer();
+
+    if ( isSequenced )
+        addToSequencer();
 }

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -38,6 +39,7 @@ public final class MWEngineActivity extends Activity
     private Vector<SynthEvent>  _synth1Events;
     private Vector<SynthEvent>  _synth2Events;
     private Vector<SampleEvent> _drumEvents;
+    private SynthEvent          _liveEvent;
 
     private boolean _sequencerPlaying = false;
     private boolean _inited           = false;
@@ -188,10 +190,17 @@ public final class MWEngineActivity extends Activity
         createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
         createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
+        // a C note to be synthesized live when holding down the corresponding button
+
+        _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
+
         // STEP 5 : attach event handlers to the UI elements (see main.xml layout)
 
         final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
         playPauseButton.setOnClickListener( new PlayClickHandler() );
+
+        final Button liveNoteButton = ( Button ) findViewById( R.id.LiveNoteButton );
+        liveNoteButton.setOnTouchListener( new LiveNoteHandler() );
 
         final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
         filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
@@ -248,6 +257,26 @@ public final class MWEngineActivity extends Activity
 
             _sequencerPlaying = !_sequencerPlaying;
             _engine.getSequencerController().setPlaying( _sequencerPlaying );
+        }
+    }
+
+    /**
+     * invoked when user holds / release the live play button
+     */
+    private class LiveNoteHandler implements View.OnTouchListener
+    {
+        @Override
+        public boolean onTouch( View v, MotionEvent event ) {
+            switch( event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    _liveEvent.play();
+                    return true;
+
+                case MotionEvent.ACTION_UP:
+                    _liveEvent.stop();
+                    return true;
+            }
+            return false;
         }
     }
 
