@@ -80,8 +80,8 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         delayIndex                 = _delayIndices[ c ];
 
         // QQQ TODO: for some reason this point to a temporary buffer underrun when operating in stereo... WHY!?
-        if ( delayIndex < 0 || delayIndex > _delayBuffer->bufferSize)
-            delayIndex = 0;
+//        if ( delayIndex < 0 || delayIndex > _delayBuffer->bufferSize)
+  //          delayIndex = 0;
 
         // E.O. QQQ
 
@@ -92,9 +92,9 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             if ( readIndex < 0 ) {
                 readIndex += _time;
             }
-      //   Debug::log("channel %d read index %d for time %d and delayBuffer size %d delayIndex %d", c, readIndex, _time, _delayBuffer->bufferSize, delayIndex);
-       //  Debug::log("what is this %d AudioBuffer", _delayBuffer);
-       //  Debug::log("what is this %d float*", delayBuffer);
+         Debug::log("channel %d read index %d for time %d and delayBuffer size %d delayIndex %d", c, readIndex, _time, _delayBuffer->bufferSize, delayIndex);
+         Debug::log("what is this %d AudioBuffer", _delayBuffer);
+         Debug::log("what is this %d float*", delayBuffer);
             // read the previously delayed samples from the buffer
             // ( for feedback purposes ) and append the current sample to it
 

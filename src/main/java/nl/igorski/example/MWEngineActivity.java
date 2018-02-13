@@ -121,8 +121,8 @@ public final class MWEngineActivity extends Activity
         // add a filter to synth 1
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
 
-        _filter = new Filter( maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ), minFilterCutoff, maxFilterCutoff, 0f, 1 );
-        _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
+     //   _filter = new Filter( maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ), minFilterCutoff, maxFilterCutoff, 0f, 1 );
+    //    _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
 
         // add a phaser to synth 1
         _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );

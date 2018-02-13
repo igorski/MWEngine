@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -175,6 +175,23 @@ int BufferUtility::calculateBufferLength( SAMPLE_TYPE aMinRate )
 int BufferUtility::calculateBufferLength( int milliSeconds )
 {
     return milliSeconds * ( AudioEngineProps::SAMPLE_RATE / 1000 );
+}
+
+std::vector<SAMPLE_TYPE*>* BufferUtility::createSampleBuffers( int amountOfChannels, int bufferSize )
+{
+    // TODO: this is kind of silly (invoking resize() at the end)
+    // we're running into a buffer overflow and not solving the root case
+    // generate the vector directly at the size specified by amountOfChannels
+    std::vector<SAMPLE_TYPE*>* buffers = new std::vector<SAMPLE_TYPE*>();
+
+    // fill buffers with silence
+
+    for ( int i = 0; i < amountOfChannels; ++i ) {
+        buffers->push_back( BufferUtility::generateSilentBuffer( bufferSize ));
+    }
+    buffers->resize( amountOfChannels );
+
+    return buffers;
 }
 
 /**

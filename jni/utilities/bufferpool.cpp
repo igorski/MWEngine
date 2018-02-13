@@ -33,17 +33,17 @@ namespace BufferPool
         // retrieve buffer from map if existed
 
         std::map<unsigned int, SAMPLE_TYPE*>::iterator it = _silentBufferMap.find( aBufferSize );
-        SAMPLE_TYPE* silentBuffer;
 
         if ( it != _silentBufferMap.end()) {
-            silentBuffer = it->second;
+            return it->second;
         }
         else
         {
-            silentBuffer = BufferUtility::generateSilentBuffer( aBufferSize );
+            SAMPLE_TYPE* silentBuffer = BufferUtility::generateSilentBuffer( aBufferSize );
             _silentBufferMap.insert( std::pair<unsigned int, SAMPLE_TYPE*>( aBufferSize, silentBuffer ));
+
+            return silentBuffer;
         }
-        return silentBuffer;
     }
 
     RingBuffer* getRingBufferForEvent( BaseSynthEvent* aEvent, float aFrequency )

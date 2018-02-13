@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -31,14 +31,10 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
     loopeable        = false;
     amountOfChannels = aAmountOfChannels;
     bufferSize       = aBufferSize;
-    _buffers         = new std::vector<SAMPLE_TYPE*>();
 
     // create silent buffers for each channel
 
-    for ( int i = 0; i < amountOfChannels; ++i ) {
-        _buffers->push_back( BufferUtility::generateSilentBuffer( bufferSize ));
-    }
-    _buffers->resize( amountOfChannels );
+    _buffers = BufferUtility::createSampleBuffers( aAmountOfChannels, aBufferSize );
 }
 
 AudioBuffer::~AudioBuffer()
@@ -59,7 +55,6 @@ SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
 
 int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume )
 {
- Debug::log("merge %d with %d", aBuffer, this );
     if ( aBuffer == 0 || aWriteOffset >= bufferSize ) return 0;
 
     int sourceLength     = aBuffer->bufferSize;
