@@ -24,7 +24,6 @@
 #define __DELAY_H_INCLUDED__
 
 #include "baseprocessor.h"
-#include <vector>
 
 class Delay : public BaseProcessor
 {
