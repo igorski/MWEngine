@@ -37,7 +37,7 @@ class Glitcher : public BaseProcessor
         void setPlayback ( bool value ); // whether to play back from the recorded buffer
         void setPlaybackRange( int bufferStartPos, int bufferEndPos ); // the buffer range to play back
 
-        int getEventLength();
+        int getSampleLength();
 
         // when recording, this will record the unmodified input signal into the buffer
         // if playback is true, the input signal is replaced by the pre-recorded buffer

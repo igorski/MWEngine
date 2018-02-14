@@ -47,7 +47,7 @@ class SampleManager
         static void setSample( std::string aKey, AudioBuffer* aBuffer );
 
         static AudioBuffer* getSample( std::string aIdentifier );
-        static int getEventLength( std::string aIdentifier );
+        static int getSampleLength( std::string aIdentifier );
 
         static bool hasSample( std::string aIdentifier );
         static void removeSample( std::string aIdentifier );

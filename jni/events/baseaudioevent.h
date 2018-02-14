@@ -173,11 +173,12 @@ class BaseAudioEvent
         void construct();   // basic initialization which can be shared across overloaded constructors
 
         float _volume;
-
-        // buffer regions
         int _eventStart;
         int _eventEnd;
         int _eventLength;
+
+        // buffer regions
+
         int _readPointer;  // when loopeable, used to internally keep track of last read buffer offset
         float _startPosition;
         float _endPosition;
