@@ -102,8 +102,6 @@ TEST( BaseAudioEvent, PlayStop )
     ASSERT_FALSE( found )
         << "expected event not to be present in the live event list after invocation of stop()";
 
-    ASSERT_FALSE( audioEvent->isEnabled() )
-        << "expected SampleEvent not to be enabled after invocation of stop()";
 
     deleteAudioEvent( audioEvent );
 }
