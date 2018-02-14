@@ -134,7 +134,7 @@ TEST( AudioEngine, Output )
 
     event->setBuffer( buffer, false );
     event->setLoopeable( true );
-    event->setSampleLength( AudioEngine::samples_per_bar );
+    event->setEventLength( AudioEngine::samples_per_bar );
     event->positionEvent( 0, 16, 0 );
     event->addToSequencer();
 
@@ -198,8 +198,8 @@ TEST( AudioEngine, OutputAtLoopStart )
 
     // fill event 1 and event 2 with values (are validated in mock_opensl_io)
 
-    AudioBuffer* buffer1 = new AudioBuffer( 1, audioEvent1->getSampleLength() );
-    AudioBuffer* buffer2 = new AudioBuffer( 1, audioEvent2->getSampleLength() );
+    AudioBuffer* buffer1 = new AudioBuffer( 1, audioEvent1->getEventLength() );
+    AudioBuffer* buffer2 = new AudioBuffer( 1, audioEvent2->getEventLength() );
 
     for ( int i = 0; i < buffer1->bufferSize; ++i )
         buffer1->getBufferForChannel( 0 )[ i ] = ( SAMPLE_TYPE ) -0.25;

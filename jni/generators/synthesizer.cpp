@@ -72,7 +72,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     SAMPLE_TYPE volume = aEvent->getVolume() / ( SAMPLE_TYPE ) _instrument->getOscillatorAmount();
 
     int renderStartOffset = 0;
-    int maxSampleIndex    = aEvent->getSampleLength() - 1;    // max index possible for the events length
+    int maxSampleIndex    = aEvent->getEventLength() - 1;    // max index possible for the events length
     int renderEndOffset   = renderStartOffset + bufferLength; // max buffer index to be written to in this cycle
 
     // keep in bounds of event duration
@@ -104,7 +104,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 
     // envelopes
 
-    _instrument->adsr->setBufferLength( aEvent->getSampleLength() );
+    _instrument->adsr->setBufferLength( aEvent->getEventLength() );
 
     // Karplus-Strong specific
 
@@ -313,7 +313,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     if ( !hasParent )
     {
         _instrument->adsr->setLastEnvelope( aEvent->cachedProps.ADSRenvelope );
-        _instrument->adsr->setBufferLength( aEvent->getSampleLength() );
+        _instrument->adsr->setBufferLength( aEvent->getEventLength() );
 
         aEvent->cachedProps.ADSRenvelope     = _instrument->adsr->apply( aOutputBuffer, bufferWriteIndex );
         aEvent->cachedProps.arpeggioPosition = arpeggiator->getBufferPosition();

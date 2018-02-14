@@ -43,7 +43,7 @@ AudioBuffer* SampleManager::getSample( std::string aIdentifier )
     return it->second.sampleBuffer; // key stored in first, value stored in second
 }
 
-int SampleManager::getSampleLength( std::string aIdentifier )
+int SampleManager::getEventLength( std::string aIdentifier )
 {
     std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
     return it->second.sampleLength; // key stored in first, value stored in second

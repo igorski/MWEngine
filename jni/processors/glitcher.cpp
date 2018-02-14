@@ -62,20 +62,20 @@ void Glitcher::setPlayback( bool value )
 
 void Glitcher::setPlaybackRange( int bufferStartPos, int bufferEndPos )
 {
-    int maxBufferPosition = getSampleLength() - 1;
+    int maxBufferPosition = getEventLength() - 1;
 
     _sample->setBufferRangeStart( std::min( bufferStartPos, maxBufferPosition ));
     _sample->setBufferRangeEnd  ( std::min( bufferEndPos,   maxBufferPosition ));
 }
 
-int Glitcher::getSampleLength()
+int Glitcher::getEventLength()
 {
-    return _sample->getSampleLength();
+    return _sample->getEventLength();
 }
 
 void Glitcher::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int sampleLength = getSampleLength();
+    int sampleLength = getEventLength();
 
     if ( _recording )
     {

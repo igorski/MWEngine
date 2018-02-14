@@ -189,7 +189,7 @@ TEST( Sequencer, GetAudioEventsAtBoundaries )
     // test 1 : collect audio event that will only sound for 1 sample in length at requested range
     // e.g. requested range start = 22049 while sample end is 22049
 
-    int startOffset = audioEvent->getSampleEnd();
+    int startOffset = audioEvent->getEventEnd();
     Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
 
     EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
@@ -198,7 +198,7 @@ TEST( Sequencer, GetAudioEventsAtBoundaries )
     // test 2 : ensure no events are collected when the requested range starts beyond the sample end offset
     // e.g. requested range start = 22050 whereas sample end is 22049
 
-    startOffset = audioEvent->getSampleEnd() + 1;
+    startOffset = audioEvent->getEventEnd() + 1;
     Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
 
     EXPECT_EQ( 0, channels->at( 0 )->audioEvents.size() )
@@ -345,7 +345,7 @@ TEST( Sequencer, GetEventsFlushChannel )
     // test 1 : retrieve events with flushing of channel contents
 
     Sequencer::playing = true;
-    Sequencer::getAudioEvents( channels, audioEvent2->getSampleStart(), bufferSize, true, true );
+    Sequencer::getAudioEvents( channels, audioEvent2->getEventStart(), bufferSize, true, true );
 
     EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
         << "expected to have collected 1 event for AudioChannel 1";
@@ -365,7 +365,7 @@ TEST( Sequencer, GetEventsFlushChannel )
     // first ensure channels have been flushed of previous test contents
     channels->at( 0 )->reset();
 
-    Sequencer::getAudioEvents( channels, audioEvent2->getSampleStart(), bufferSize, true, false );
+    Sequencer::getAudioEvents( channels, audioEvent2->getEventStart(), bufferSize, true, false );
 
     EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
         << "expected to have collected 1 event for AudioChannel 1";
@@ -512,7 +512,7 @@ TEST( Sequencer, GetCacheableEvents )
 
     delete events;
     BaseAudioEvent* audioEvent2 = new BaseCacheableAudioEvent( instrument2 );
-    audioEvent2->setSampleLength( bufferSize );
+    audioEvent2->setEventLength( bufferSize );
     audioEvent2->positionEvent( 0, 16, 0 );
     audioEvent2->addToSequencer();
 
@@ -553,7 +553,7 @@ TEST( Sequencer, IgnoreEventsForMutedChannels )
 
     // collect events
 
-    Sequencer::getAudioEvents( channels, 0, audioEvent1->getSampleLength(), true, true );
+    Sequencer::getAudioEvents( channels, 0, audioEvent1->getEventLength(), true, true );
 
     EXPECT_EQ( 2, channels->size() )
         << "expected to have collected events for 2 AudioChannels";
@@ -567,7 +567,7 @@ TEST( Sequencer, IgnoreEventsForMutedChannels )
     // mute instrument 2 channel
 
     instrument2->audioChannel->muted = true;
-    Sequencer::getAudioEvents( channels, 0, audioEvent1->getSampleLength(), true, true );
+    Sequencer::getAudioEvents( channels, 0, audioEvent1->getEventLength(), true, true );
 
     EXPECT_EQ( 1, channels->size() )
         << "expected to have collected events for only 1 AudioChannel (other was muted)";
@@ -578,7 +578,7 @@ TEST( Sequencer, IgnoreEventsForMutedChannels )
     // mute instrument 1 channel too
 
     instrument1->audioChannel->muted = true;
-    Sequencer::getAudioEvents( channels, 0, audioEvent1->getSampleLength(), true, true );
+    Sequencer::getAudioEvents( channels, 0, audioEvent1->getEventLength(), true, true );
 
     EXPECT_EQ( 0, channels->size() )
         << "expected to have collected no events as all AudioChannels are muted";

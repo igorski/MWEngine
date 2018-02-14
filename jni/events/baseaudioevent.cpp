@@ -142,14 +142,14 @@ void BaseAudioEvent::removeLiveEvent()
         liveEvents->erase( position );
 }
 
-int BaseAudioEvent::getSampleLength()
+int BaseAudioEvent::getEventLength()
 {
-    return _sampleLength;
+    return _eventLength;
 }
 
-void BaseAudioEvent::setSampleLength( int value )
+void BaseAudioEvent::setEventLength( int value )
 {
-    _sampleLength = value;
+    _eventLength = value;
 
     // for non loopeable-events the existing sample end must not
     // be smaller than or equal to the sample start nor
@@ -157,56 +157,56 @@ void BaseAudioEvent::setSampleLength( int value )
 
     if ( !_loopeable )
     {
-        if ( _sampleEnd <= _sampleStart ||
-             _sampleEnd >= ( _sampleStart + _sampleLength )) {
-            _sampleEnd = _sampleStart + ( _sampleLength - 1 );
+        if ( _eventEnd <= _eventStart ||
+             _eventEnd >= ( _eventStart + _eventLength )) {
+            _eventEnd = _eventStart + ( _eventLength - 1 );
         }
     }
     // update end position in seconds
-    _endPosition = BufferUtility::bufferToSeconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE );
+    _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
 }
 
-int BaseAudioEvent::getSampleStart()
+int BaseAudioEvent::getEventStart()
 {
-    return _sampleStart;
+    return _eventStart;
 }
 
-void BaseAudioEvent::setSampleStart( int value )
+void BaseAudioEvent::setEventStart( int value )
 {
-    _sampleStart = value;
+    _eventStart = value;
 
-    if ( _sampleEnd <= _sampleStart )
+    if ( _eventEnd <= _eventStart )
     {
-        if ( !_loopeable && _sampleLength > 0 )
-            _sampleEnd = _sampleStart + ( _sampleLength - 1 );
+        if ( !_loopeable && _eventLength > 0 )
+            _eventEnd = _eventStart + ( _eventLength - 1 );
         else
-            _sampleEnd = _sampleStart;
+            _eventEnd = _eventStart;
 
         // update end position in seconds
-        _endPosition = BufferUtility::bufferToSeconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE );
+        _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
     }
     // update start position in seconds
-    _startPosition = BufferUtility::bufferToSeconds( _sampleStart, AudioEngineProps::SAMPLE_RATE );
+    _startPosition = BufferUtility::bufferToSeconds( _eventStart, AudioEngineProps::SAMPLE_RATE );
 }
 
-int BaseAudioEvent::getSampleEnd()
+int BaseAudioEvent::getEventEnd()
 {
-    return _sampleEnd;
+    return _eventEnd;
 }
 
-void BaseAudioEvent::setSampleEnd( int value )
+void BaseAudioEvent::setEventEnd( int value )
 {
     // for non loopeable-events the sample end cannot exceed
     // beyond the start and the total sample length (it can
     // be smaller though for a cut-off playback)
 
-    if ( !_loopeable && value >= ( _sampleStart + _sampleLength ))
-        _sampleEnd = _sampleStart + ( _sampleLength - 1 );
+    if ( !_loopeable && value >= ( _eventStart + _eventLength ))
+        _eventEnd = _eventStart + ( _eventLength - 1 );
     else
-        _sampleEnd = value;
+        _eventEnd = value;
 
     // update end position in seconds
-    _endPosition = BufferUtility::bufferToSeconds( _sampleEnd, AudioEngineProps::SAMPLE_RATE );
+    _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
 }
 
 int BaseAudioEvent::getReadPointer()
@@ -221,8 +221,8 @@ void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offs
     int startOffset = samplesPerBar * startMeasure;
     startOffset    += offset * samplesPerBar / subdivisions;
 
-    setSampleStart( startOffset );
-    setSampleEnd  (( startOffset + _sampleLength ) - 1 );
+    setEventStart( startOffset );
+    setEventEnd  (( startOffset + _eventLength ) - 1 );
 }
 
 void BaseAudioEvent::setStartPosition( float value )
@@ -235,8 +235,8 @@ void BaseAudioEvent::setStartPosition( float value )
     }
 
     // update position in buffer samples
-    _sampleStart  = BufferUtility::secondsToBuffer( _startPosition, AudioEngineProps::SAMPLE_RATE );
-    _sampleLength = std::max( 0, ( _sampleEnd - 1 ) - _sampleStart );
+    _eventStart  = BufferUtility::secondsToBuffer( _startPosition, AudioEngineProps::SAMPLE_RATE );
+    _eventLength = std::max( 0, ( _eventEnd - 1 ) - _eventStart );
 }
 
 void BaseAudioEvent::setEndPosition( float value )
@@ -248,8 +248,8 @@ void BaseAudioEvent::setEndPosition( float value )
     }
 
     // update position in buffer samples
-    _sampleEnd    = BufferUtility::secondsToBuffer( _endPosition, AudioEngineProps::SAMPLE_RATE );
-    _sampleLength = std::max( 0, ( _sampleEnd - 1 ) - _sampleStart );
+    _eventEnd    = BufferUtility::secondsToBuffer( _endPosition, AudioEngineProps::SAMPLE_RATE );
+    _eventLength = std::max( 0, ( _eventEnd - 1 ) - _eventStart );
 }
 
 void BaseAudioEvent::setDuration( float value )
@@ -374,11 +374,11 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     break;
             }
 
-            if ( readPointer >= _sampleStart && readPointer <= _sampleEnd )
+            if ( readPointer >= _eventStart && readPointer <= _eventEnd )
             {
                 // mind the offset ! ( cached buffer starts at 0 while
-                // the _sampleStart defines where the event is positioned in the sequencer )
-                readPointer -= _sampleStart;
+                // the _eventStart defines where the event is positioned in the sequencer )
+                readPointer -= _eventStart;
 
                 for ( c = 0; c < outputChannels; ++c )
                 {
@@ -392,9 +392,9 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
             {
                 readPointer = minBufferPosition + ( i - loopOffset );
 
-                if ( readPointer >= _sampleStart && readPointer <= _sampleEnd )
+                if ( readPointer >= _eventStart && readPointer <= _eventEnd )
                 {
-                    readPointer -= _sampleStart;
+                    readPointer -= _eventStart;
 
                     for ( c = 0; c < outputChannels; ++c )
                     {
@@ -421,7 +421,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
             readPointer = i + bufferPosition;
 
             // read sample when the read pointer is within sample start and end points
-            if ( readPointer >= _sampleStart && readPointer <= _sampleEnd )
+            if ( readPointer >= _eventStart && readPointer <= _eventEnd )
             {
                 // use range pointers to read within the specific sample ranges
                 for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
@@ -493,9 +493,9 @@ void BaseAudioEvent::construct()
     _locked            = false;
     _addedToSequencer  = false;
     _volume            = MAX_PHASE;
-    _sampleStart       = 0;
-    _sampleEnd         = 0;
-    _sampleLength      = 0;
+    _eventStart       = 0;
+    _eventEnd         = 0;
+    _eventLength      = 0;
     _readPointer       = 0;
     _startPosition     = 0.f;
     _endPosition       = 0.f;
@@ -513,3 +513,31 @@ void BaseAudioEvent::destroyBuffer()
         _buffer = 0;
     }
 }
+
+/* TO BE DEPRECATED */
+
+void BaseAudioEvent::setSampleLength( int value ) {
+    setEventLength( value );
+}
+
+void BaseAudioEvent::setSampleStart( int value ) {
+    setEventStart( value );
+}
+
+void BaseAudioEvent::setSampleEnd( int value ) {
+    setEventEnd( value );
+}
+
+int BaseAudioEvent::getSampleLength() {
+    return getEventLength();
+}
+
+int BaseAudioEvent::getSampleStart() {
+    return getEventStart();
+}
+
+int BaseAudioEvent::getSampleEnd() {
+    return getEventEnd();
+}
+
+/* E.O. DEPRECATION */

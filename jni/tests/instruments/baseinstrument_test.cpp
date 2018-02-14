@@ -225,9 +225,9 @@ TEST( BaseInstrument, UpdateEvents )
     int sampleLength = 500;
     int sampleEnd    = sampleStart + sampleLength;
 
-    event->setSampleStart ( sampleStart );
-    event->setSampleEnd   ( sampleEnd );
-    event->setSampleLength( sampleLength );
+    event->setEventStart ( sampleStart );
+    event->setEventEnd   ( sampleEnd );
+    event->setEventLength( sampleLength );
     event->addToSequencer();
 
     // increase tempo by given factor
@@ -240,13 +240,13 @@ TEST( BaseInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ(( int )( sampleStart / factor ), event->getSampleStart() )
+    EXPECT_EQ(( int )( sampleStart / factor ), event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( int )(( sampleEnd - 1 ) / factor ), event->getSampleEnd() )
+    EXPECT_EQ(( int )(( sampleEnd - 1 ) / factor ), event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( int )( sampleLength / factor ), event->getSampleLength() )
+    EXPECT_EQ(( int )( sampleLength / factor ), event->getEventLength() )
         << "expected event length to have updated after tempo change and invocation of updateEvents()";
 
     // decrease tempo again by given factor
@@ -256,13 +256,13 @@ TEST( BaseInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ( sampleStart, event->getSampleStart() )
+    EXPECT_EQ( sampleStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( sampleEnd - 1 ), event->getSampleEnd() )
+    EXPECT_EQ(( sampleEnd - 1 ), event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ( sampleLength, event->getSampleLength() )
+    EXPECT_EQ( sampleLength, event->getEventLength() )
         << "expected event length to have updated after tempo change and invocation of updateEvents()";
 
     delete event;

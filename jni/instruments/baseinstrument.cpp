@@ -80,13 +80,13 @@ void BaseInstrument::updateEvents()
         {
             BaseAudioEvent* event = _audioEvents->at( i );
 
-            float orgStart  = ( float ) event->getSampleStart();
-            float orgEnd    = ( float ) event->getSampleEnd();
-            float orgLength = ( float ) event->getSampleLength();
+            float orgStart  = ( float ) event->getEventStart();
+            float orgEnd    = ( float ) event->getEventEnd();
+            float orgLength = ( float ) event->getEventLength();
 
-            event->setSampleStart ( orgStart  * ratio );
-            event->setSampleLength( orgLength * ratio );
-            event->setSampleEnd   (( orgEnd + 1 ) * ratio ); // add 1 to correct for rounding of float
+            event->setEventStart ( orgStart  * ratio );
+            event->setEventLength( orgLength * ratio );
+            event->setEventEnd   (( orgEnd + 1 ) * ratio ); // add 1 to correct for rounding of float
         }
         _oldTempo = AudioEngine::tempo;
     }

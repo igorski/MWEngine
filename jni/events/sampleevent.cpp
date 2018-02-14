@@ -73,7 +73,7 @@ void SampleEvent::setBufferRangeStart( int value )
         setBufferRangeEnd( _buffer->bufferSize - 1 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
-    setRangeBasedPlayback( _bufferRangeLength != _sampleLength );
+    setRangeBasedPlayback( _bufferRangeLength != _eventLength );
 }
 
 int SampleEvent::getBufferRangeEnd()
@@ -93,7 +93,7 @@ void SampleEvent::setBufferRangeEnd( int value )
         _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
-    setRangeBasedPlayback( _bufferRangeLength != _sampleLength );
+    setRangeBasedPlayback( _bufferRangeLength != _eventLength );
 }
 
 int SampleEvent::getBufferRangeLength()
@@ -154,7 +154,7 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
     int sampleLength = sampleBuffer->bufferSize;
 
     // delete previous contents
-    if ( _sampleLength != sampleLength || _buffer == 0 )
+    if ( _eventLength != sampleLength || _buffer == 0 )
         destroyBuffer();
 
     // is this events buffer destroyable ? then clone
@@ -167,13 +167,13 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
         _buffer = sampleBuffer;
 
     _buffer->loopeable = _loopeable;
-    setSampleLength( sampleLength );
-    setSampleEnd   ( _sampleStart + ( _sampleLength - 1 ));
+    setEventLength( sampleLength );
+    setEventEnd   ( _eventStart + ( _eventLength - 1 ));
 
     // when switching samples, existing buffer ranges are reset
 
     _bufferRangeStart  = 0;
-    setBufferRangeEnd( _bufferRangeStart + ( _sampleLength - 1 )); // also updates range length
+    setBufferRangeEnd( _bufferRangeStart + ( _eventLength - 1 )); // also updates range length
     setRangeBasedPlayback( false );
 
     _updateAfterUnlock = false; // unnecessary
@@ -222,7 +222,7 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
     for ( int i = 0; i < bufferSize; ++i )
     {
         // read sample when the read pointer is within sample start and end points
-        if ( readPos >= _sampleStart && readPos <= _sampleEnd )
+        if ( readPos >= _eventStart && readPos <= _eventEnd )
         {
             // use range pointers to read within the specific sample ranges
             for ( int c = 0; c < amountOfChannels; ++c )
@@ -246,8 +246,8 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
         // if this is a loopeable sample (thus using internal read pointer)
         // set the read pointer to the sample start so it keeps playing indefinitely
 
-        if ( ++readPos > _sampleEnd && _loopeable )
-            readPos = _sampleStart;
+        if ( ++readPos > _eventEnd && _loopeable )
+            readPos = _eventStart;
     }
 
     if ( useInternalPointer )

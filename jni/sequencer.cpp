@@ -150,8 +150,8 @@ namespace Sequencer
 
             if ( audioEvent->isEnabled() )
             {
-                int sampleStart = audioEvent->getSampleStart();
-                int sampleEnd   = audioEvent->getSampleEnd();
+                int sampleStart = audioEvent->getEventStart();
+                int sampleEnd   = audioEvent->getEventEnd();
 
                 if ( audioEvent->isLoopeable() ||
                    ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
@@ -230,8 +230,8 @@ namespace Sequencer
                 // if event is an instance of BaseCacheableAudioEvent add it to the list
                 if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != NULL )
                 {
-                    int sampleStart = audioEvent->getSampleStart();
-                    int sampleEnd   = audioEvent->getSampleEnd();
+                    int sampleStart = audioEvent->getEventStart();
+                    int sampleEnd   = audioEvent->getEventEnd();
 
                     if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
                         ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
