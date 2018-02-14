@@ -17,9 +17,9 @@ TEST( SampledInstrument, UpdateEvents )
     int sampleLength = 500;
     int sampleEnd    = sampleStart + sampleLength;
 
-    event->setSampleStart ( sampleStart );
-    event->setSampleEnd   ( sampleEnd );
-    event->setSampleLength( sampleLength );
+    event->setEventStart ( sampleStart );
+    event->setEventEnd   ( sampleEnd );
+    event->setEventLength( sampleLength );
     event->addToSequencer();
 
     // increase tempo by given factor
@@ -34,13 +34,13 @@ TEST( SampledInstrument, UpdateEvents )
 
     int expectedStart = ( int )( sampleStart / factor );
 
-    EXPECT_EQ( expectedStart, event->getSampleStart() )
+    EXPECT_EQ( expectedStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ( expectedStart + ( sampleLength - 1 ), event->getSampleEnd() )
+    EXPECT_EQ( expectedStart + ( sampleLength - 1 ), event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ( sampleLength, event->getSampleLength() )
+    EXPECT_EQ( sampleLength, event->getEventLength() )
         << "expected event length not to have updated after tempo change and invocation of updateEvents()";
 
     // decrease tempo again by given factor
@@ -50,13 +50,13 @@ TEST( SampledInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ( sampleStart, event->getSampleStart() )
+    EXPECT_EQ( sampleStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( sampleEnd - 1 ), event->getSampleEnd() )
+    EXPECT_EQ(( sampleEnd - 1 ), event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ( sampleLength, event->getSampleLength() )
+    EXPECT_EQ( sampleLength, event->getEventLength() )
         << "expected event length not to have updated after tempo change and invocation of updateEvents()";
 
     delete event;

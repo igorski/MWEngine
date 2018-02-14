@@ -43,7 +43,7 @@ DrumEvent::DrumEvent( int aPosition, int aDrumType, int aDrumTimbre, BaseInstrum
     init( aInstrument );
 
     position     = aPosition;
-    _sampleStart = position * ( int ) AudioEngine::samples_per_step;
+    _eventStart = position * ( int ) AudioEngine::samples_per_step;
 
     setType  ( aDrumType );
     setTimbre( aDrumTimbre );

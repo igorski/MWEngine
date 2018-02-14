@@ -148,11 +148,11 @@ TEST( BaseSynthEvent, MixBuffer )
     BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, instrument );
 
     int sampleLength = randomInt( 8, 24 );
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventLength( sampleLength );
     audioEvent->positionEvent( randomInt( 0, 1 ), 16, randomInt( 0, 16 ));
-    int sampleStart = audioEvent->getSampleStart();
+    int sampleStart = audioEvent->getEventStart();
 
-    int sampleEnd = audioEvent->getSampleEnd();
+    int sampleEnd = audioEvent->getEventEnd();
 
     float volume = randomFloat();
     audioEvent->setVolume( volume );

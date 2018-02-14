@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -150,12 +150,12 @@ namespace Sequencer
 
             if ( audioEvent->isEnabled() )
             {
-                int sampleStart = audioEvent->getSampleStart();
-                int sampleEnd   = audioEvent->getSampleEnd();
+                int eventStart = audioEvent->getEventStart();
+                int eventEnd   = audioEvent->getEventEnd();
 
                 if ( audioEvent->isLoopeable() ||
-                   ( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                   ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
+                   ( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
+                   ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
                 {
                     if ( !audioEvent->isDeletable())
                         channel->addEvent( audioEvent );
@@ -230,11 +230,11 @@ namespace Sequencer
                 // if event is an instance of BaseCacheableAudioEvent add it to the list
                 if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != NULL )
                 {
-                    int sampleStart = audioEvent->getSampleStart();
-                    int sampleEnd   = audioEvent->getSampleEnd();
+                    int eventStart = audioEvent->getEventStart();
+                    int eventEnd   = audioEvent->getEventEnd();
 
-                    if (( sampleStart >= bufferPosition && sampleStart <= bufferEnd ) ||
-                        ( sampleStart <  bufferPosition && sampleEnd >= bufferPosition ))
+                    if (( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
+                        ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
                     {
                         if ( !audioEvent->isDeletable())
                             events->push_back(( BaseCacheableAudioEvent* ) audioEvent );

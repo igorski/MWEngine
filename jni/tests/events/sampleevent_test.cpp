@@ -44,7 +44,7 @@ TEST( SampleEvent, BufferRangeStartSanitizing )
 
     int sampleLength = randomInt( 1024, 2048 );
 
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventLength( sampleLength );
 
     int rangeStart = randomInt( 0, 256 );
     int rangeEnd   = randomInt( 256, sampleLength / 2 );
@@ -104,9 +104,9 @@ TEST( SampleEvent, RangeBasedPlayback )
     int sampleLength = 1000;
     int sampleEnd    = sampleStart + sampleLength;
 
-    event->setSampleStart ( sampleStart );
-    event->setSampleEnd   ( sampleEnd );
-    event->setSampleLength( sampleLength );
+    event->setEventStart ( sampleStart );
+    event->setEventEnd   ( sampleEnd );
+    event->setEventLength( sampleLength );
 
     int rangeStart   = 200;
     int rangeLength  = sampleLength - rangeStart;
@@ -127,9 +127,9 @@ TEST( SampleEvent, RangeBasedPlayback )
     delete event;
     event = new SampleEvent();
 
-    event->setSampleStart ( sampleStart );
-    event->setSampleEnd   ( sampleEnd );
-    event->setSampleLength( sampleLength );
+    event->setEventStart ( sampleStart );
+    event->setEventEnd   ( sampleEnd );
+    event->setEventLength( sampleLength );
 
     event->setBufferRangeEnd( rangeEnd - 10 );
 
@@ -145,28 +145,28 @@ TEST( SampleEvent, SetSample )
     SampleEvent* audioEvent = new SampleEvent( instrument );
     int bufferLength = randomInt( 24, 512 );
 
-    EXPECT_EQ( 0, audioEvent->getSampleStart() )
+    EXPECT_EQ( 0, audioEvent->getEventStart() )
         << "expected 0 sample start index after construction";
 
-    EXPECT_EQ( 0, audioEvent->getSampleEnd() )
+    EXPECT_EQ( 0, audioEvent->getEventEnd() )
         << "expected 0 sample end index after construction";
 
-    EXPECT_EQ( 0, audioEvent->getSampleLength() )
+    EXPECT_EQ( 0, audioEvent->getEventLength() )
         << "expected 0 sample length index after construction";
 
     int sampleStart  = bufferLength / 4;
     int sampleLength = bufferLength / 2;
 
-    audioEvent->setSampleStart ( sampleStart );
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventStart ( sampleStart );
+    audioEvent->setEventLength( sampleLength );
 
-    EXPECT_EQ( sampleStart, audioEvent->getSampleStart() )
+    EXPECT_EQ( sampleStart, audioEvent->getEventStart() )
         << "expected sample start to have been updated after setter method";
 
-    EXPECT_EQ( sampleStart + ( sampleLength - 1 ), audioEvent->getSampleEnd() )
+    EXPECT_EQ( sampleStart + ( sampleLength - 1 ), audioEvent->getEventEnd() )
         << "expected sample length to have been updated after setter method";
 
-    EXPECT_EQ( sampleLength, audioEvent->getSampleLength() )
+    EXPECT_EQ( sampleLength, audioEvent->getEventLength() )
         << "expected sample length to have been updated after setter method";
 
     int bufferRangeStart = randomInt( 0, sampleStart );
@@ -202,10 +202,10 @@ TEST( SampleEvent, GetBufferForRange )
     int sampleLength = randomInt( 8, 24 );
     int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
 
-    audioEvent->setSampleStart ( sampleStart );
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventStart ( sampleStart );
+    audioEvent->setEventLength( sampleLength );
 
-    int sampleEnd = audioEvent->getSampleEnd();
+    int sampleEnd = audioEvent->getEventEnd();
 
     int bufferRangeStart = randomInt( 0, ( int )( sampleLength / 2 ));
     int bufferRangeEnd   = randomInt( bufferRangeStart + 1, bufferRangeStart + sampleLength );
@@ -282,10 +282,10 @@ TEST( SampleEvent, MixBuffer )
     int sampleLength = randomInt( 8, 24 );
     int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
 
-    audioEvent->setSampleStart ( sampleStart );
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventStart ( sampleStart );
+    audioEvent->setEventLength( sampleLength );
 
-    int sampleEnd = audioEvent->getSampleEnd();
+    int sampleEnd = audioEvent->getEventEnd();
 
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
     audioEvent->setSample( buffer );

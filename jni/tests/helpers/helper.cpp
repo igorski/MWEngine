@@ -197,7 +197,7 @@ BaseAudioEvent* enqueuedAudioEvent( BaseInstrument* instrument, int sampleLength
                                     int subdivision, int offset )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventLength( sampleLength );
     audioEvent->positionEvent  ( measureNum, subdivision, offset );
     audioEvent->addToSequencer();
 
@@ -218,6 +218,6 @@ void prepareSampleManager() {
 
 void dumpEventProperties( BaseAudioEvent* audioEvent )
 {
-    std::cout << "\n AudioEvent start: " << audioEvent->getSampleStart() <<
-        " end: " << audioEvent->getSampleEnd() << " (length: " << audioEvent->getSampleLength() << ")";
+    std::cout << "\n AudioEvent start: " << audioEvent->getEventStart() <<
+        " end: " << audioEvent->getEventEnd() << " (length: " << audioEvent->getEventLength() << ")";
 }

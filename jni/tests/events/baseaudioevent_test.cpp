@@ -102,8 +102,6 @@ TEST( BaseAudioEvent, PlayStop )
     ASSERT_FALSE( found )
         << "expected event not to be present in the live event list after invocation of stop()";
 
-    ASSERT_FALSE( audioEvent->isEnabled() )
-        << "expected SampleEvent not to be enabled after invocation of stop()";
 
     deleteAudioEvent( audioEvent );
 }
@@ -313,21 +311,21 @@ TEST( BaseAudioEvent, PositionInSamples )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
 
-    int sampleLength = randomInt( 512, 8192 );
-    int sampleStart  = randomInt( 0, sampleLength / 2 );
-    int expectedEnd  = sampleStart + ( sampleLength - 1 );
+    int eventLength = randomInt( 512, 8192 );
+    int eventStart  = randomInt( 0, eventLength / 2 );
+    int expectedEnd = eventStart + ( eventLength - 1 );
 
-    audioEvent->setSampleStart ( sampleStart );
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventStart ( eventStart );
+    audioEvent->setEventLength( eventLength );
 
-    EXPECT_EQ( sampleStart,  audioEvent->getSampleStart() );
-    EXPECT_EQ( expectedEnd,  audioEvent->getSampleEnd() );
-    EXPECT_EQ( sampleLength, audioEvent->getSampleLength() );
+    EXPECT_EQ( eventStart,  audioEvent->getEventStart() );
+    EXPECT_EQ( expectedEnd,  audioEvent->getEventEnd() );
+    EXPECT_EQ( eventLength, audioEvent->getEventLength() );
 
     // test whether values in seconds have updated accordingly
 
     int SAMPLE_RATE = 44100;
-    float expectedStartPosition = BufferUtility::bufferToSeconds( sampleStart, SAMPLE_RATE );
+    float expectedStartPosition = BufferUtility::bufferToSeconds( eventStart, SAMPLE_RATE );
     float expectedEndPosition   = BufferUtility::bufferToSeconds( expectedEnd, SAMPLE_RATE );
     float expectedDuration      = expectedEndPosition - expectedStartPosition;
 
@@ -337,32 +335,32 @@ TEST( BaseAudioEvent, PositionInSamples )
 
     // test auto sanitation of properties
 
-    audioEvent->setSampleEnd( expectedEnd * 2 );
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end not to exceed the range set by the sample start and length properties";
+    audioEvent->setEventEnd( expectedEnd * 2 );
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
+        << "expected event end not to exceed the range set by the event start and length properties";
 
-    sampleLength /= 2;
-    audioEvent->setSampleLength( sampleLength );
-    expectedEnd = sampleStart + ( sampleLength - 1 );
+    eventLength /= 2;
+    audioEvent->setEventLength( eventLength );
+    expectedEnd = eventStart + ( eventLength - 1 );
 
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end not to exceed the range set by the sample start and updated length properties";
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
+        << "expected event end not to exceed the range set by the event start and updated length properties";
 
     // test non sanitation of properties for loopeable events
 
     audioEvent->setLoopeable( true );
 
     expectedEnd *= 2;
-    audioEvent->setSampleEnd( expectedEnd );
+    audioEvent->setEventEnd( expectedEnd );
 
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end to exceed the range set by the sample start and length properties for loopeable event";
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
+        << "expected event end to exceed the range set by the event start and length properties for loopeable event";
 
-    sampleLength /= 2;
-    audioEvent->setSampleLength( sampleLength );
+    eventLength /= 2;
+    audioEvent->setEventLength( eventLength );
 
-    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
-        << "expected sample end to exceed the range set by the sample start and updated length properties for loopeable event";
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
+        << "expected event end to exceed the range set by the event start and updated length properties for loopeable event";
 
     deleteAudioEvent( audioEvent );
 }
@@ -376,10 +374,10 @@ TEST( BaseAudioEvent, PositionInSeconds )
 
     int SAMPLE_RATE = 44100;
 
-    float expectedDuration   = endPosition - startPosition;
-    int expectedSampleStart  = BufferUtility::secondsToBuffer( startPosition, SAMPLE_RATE );
-    int expectedSampleEnd    = BufferUtility::secondsToBuffer( endPosition, SAMPLE_RATE );
-    int expectedSampleLength = ( expectedSampleEnd - expectedSampleStart ) - 1;
+    float expectedDuration  = endPosition - startPosition;
+    int expectedEventStart  = BufferUtility::secondsToBuffer( startPosition, SAMPLE_RATE );
+    int expectedEventEnd    = BufferUtility::secondsToBuffer( endPosition, SAMPLE_RATE );
+    int expectedEventLength = ( expectedEventEnd - expectedEventStart ) - 1;
     audioEvent->setStartPosition( startPosition );
 
     EXPECT_FLOAT_EQ( startPosition, audioEvent->getStartPosition() );
@@ -387,20 +385,20 @@ TEST( BaseAudioEvent, PositionInSeconds )
         << "expected end position to equal start position (hasn't been explicitly set yet)";
     EXPECT_FLOAT_EQ( 0, audioEvent->getDuration())
         << "expected zero duration (duration nor end haven't been explicitly set yet)";
-    EXPECT_EQ( 0, audioEvent->getSampleLength())
-        << "expected zero sample length (duration nor end haven't been explicitly set yet)";
-    EXPECT_EQ( expectedSampleStart, audioEvent->getSampleStart() )
-        << "expected sample start to have been updated after setting start position";
+    EXPECT_EQ( 0, audioEvent->getEventLength())
+        << "expected zero event length (duration nor end haven't been explicitly set yet)";
+    EXPECT_EQ( expectedEventStart, audioEvent->getEventStart() )
+        << "expected event start to have been updated after setting start position";
 
     audioEvent->setEndPosition( endPosition );
 
     EXPECT_FLOAT_EQ( startPosition, audioEvent->getStartPosition() );
     EXPECT_FLOAT_EQ( endPosition, audioEvent->getEndPosition() );
     EXPECT_FLOAT_EQ( expectedDuration, audioEvent->getDuration() );
-    EXPECT_EQ( expectedSampleEnd, audioEvent->getSampleEnd())
-        << "expected sample end to have been updated after setting end position";
-    EXPECT_EQ( expectedSampleLength, audioEvent->getSampleLength())
-        << "expected sample length to have been updated after setting end position";
+    EXPECT_EQ( expectedEventEnd, audioEvent->getEventEnd())
+        << "expected event end to have been updated after setting end position";
+    EXPECT_EQ( expectedEventLength, audioEvent->getEventLength())
+        << "expected event length to have been updated after setting end position";
 
     expectedDuration /= 2;
     float expectedEndPosition = startPosition + expectedDuration;
@@ -418,8 +416,8 @@ TEST( BaseAudioEvent, PositionEvent )
     BaseAudioEvent* audioEvent   = new BaseAudioEvent();
     AudioEngine::samples_per_bar = randomInt( 11025, 88200 );
 
-    int sampleLength = randomInt( 24, 8192 );
-    audioEvent->setSampleLength( sampleLength );
+    int eventLength = randomInt( 24, 8192 );
+    audioEvent->setEventLength( eventLength );
 
     int startMeasure = randomInt( 0, 15 );
     int subdivisions = randomInt( 4, 128 );
@@ -429,10 +427,10 @@ TEST( BaseAudioEvent, PositionEvent )
 
     int expectedSampleStart = ( startMeasure * AudioEngine::samples_per_bar ) +
                               ( offset * AudioEngine::samples_per_bar / subdivisions );
-    int expectedSampleEnd   = expectedSampleStart + sampleLength - 1;
+    int expectedSampleEnd   = expectedSampleStart + eventLength - 1;
 
-    EXPECT_EQ( expectedSampleStart, audioEvent->getSampleStart() );
-    EXPECT_EQ( expectedSampleEnd,   audioEvent->getSampleEnd() );
+    EXPECT_EQ( expectedSampleStart, audioEvent->getEventStart() );
+    EXPECT_EQ( expectedSampleEnd,   audioEvent->getEventEnd() );
 
     deleteAudioEvent( audioEvent );
 }
@@ -461,21 +459,21 @@ TEST( BaseAudioEvent, MixBuffer )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
 
-    int sampleLength = randomInt( 8, 24 );
-    int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
+    int eventLength = randomInt( 8, 24 );
+    int eventStart  = randomInt( 0, ( int )( eventLength / 2 ));
 
-    audioEvent->setSampleStart ( sampleStart );
-    audioEvent->setSampleLength( sampleLength );
+    audioEvent->setEventStart ( eventStart );
+    audioEvent->setEventLength( eventLength );
 
-    int sampleEnd = audioEvent->getSampleEnd();
+    int eventEnd = audioEvent->getEventEnd();
 
-    AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
+    AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), eventLength ));
     audioEvent->setBuffer( buffer, true );
 
     float volume = randomFloat();
     audioEvent->setVolume( volume );
 
-    //std::cout << " ss: " << sampleStart << " se: " << sampleEnd << " sl: " << sampleLength << " ch: " << buffer->amountOfChannels;
+    //std::cout << " ss: " << eventStart << " se: " << eventEnd << " sl: " << eventLength << " ch: " << buffer->amountOfChannels;
 
     // create a temporary buffer to write output in, ensure it is smaller than the event buffer
     AudioBuffer* targetBuffer = new AudioBuffer( buffer->amountOfChannels, randomInt( 2, 4 ));
@@ -486,16 +484,16 @@ TEST( BaseAudioEvent, MixBuffer )
 
     // test 1. mix without loopable range
 
-    int maxBufferPos = sampleLength * 2; // use a "loop range" larger than the size of the events length
+    int maxBufferPos = eventLength * 2; // use a "loop range" larger than the size of the events length
     int minBufferPos = randomInt( 0, maxBufferPos / 2 );
     int bufferPos    = randomInt( minBufferPos, maxBufferPos - 1 );
     bool loopStarted = false;
     int loopOffset   = 0;
 
-    // if the random bufferPosition wasn't within the events sampleStart and sampleEnd range, we expect no content
+    // if the random bufferPosition wasn't within the events eventStart and eventEnd range, we expect no content
 
-    bool expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
-                         (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd );
+    bool expectContent = ( bufferPos >= eventStart && bufferPos <= eventEnd ) ||
+                         (( bufferPos + buffersToWrite ) >= eventStart && ( bufferPos + buffersToWrite ) <= eventEnd );
 
     //std::cout << " expected content: " << expectContent << " for buffer size: " << buffersToWrite;
     //std::cout << " min: " << minBufferPos << " max: " << maxBufferPos << " cur: " << bufferPos;
@@ -519,18 +517,18 @@ TEST( BaseAudioEvent, MixBuffer )
                 if ( r >= maxBufferPos && !loopStarted )
                     r -= ( maxBufferPos - minBufferPos );
 
-                if ( r >= sampleStart && r <= sampleEnd )
+                if ( r >= eventStart && r <= eventEnd )
                 {
-                    r -= sampleStart; // substract audioEvent start position
+                    r -= eventStart; // substract audioEvent start position
                     expectedSample = sourceBuffer[ r ] * volume;
                 }
                 else {
                     expectedSample = 0.0;
                 }
-                SAMPLE_TYPE sample = buffer[ i ];
+                SAMPLE_TYPE event = buffer[ i ];
 
-                EXPECT_EQ( expectedSample, sample )
-                    << "expected mixed sample at " << i << " to be equal to the calculated expected sample at read offset " << r;
+                EXPECT_EQ( expectedSample, event )
+                    << "expected mixed event at " << i << " to be equal to the calculated expected event at read offset " << r;
             }
         }
 
@@ -554,9 +552,9 @@ TEST( BaseAudioEvent, MixBuffer )
     // pre calculate at which buffer iterator the looping will commence
     // loopStartIteratorPosition describes at which sequencer position the loop starts
     // loopStartWritePointer describes at which position in the targetBuffer the loop is written to
-    // amountOfLoopedWrites is the amount of samples written in the loop
-    // loopStartReadPointer describes at which position the samples from the source audioEvent will be read when loop starts
-    // loopStartReadPointerEnd describes the last position the samples from the source audioEvent will be read for the amount of loop writes
+    // amountOfLoopedWrites is the amount of events written in the loop
+    // loopStartReadPointer describes at which position the events from the source audioEvent will be read when loop starts
+    // loopStartReadPointerEnd describes the last position the events from the source audioEvent will be read for the amount of loop writes
 
     int loopStartIteratorPosition = maxBufferPos + 1;
     int loopStartWritePointer     = loopOffset;
@@ -564,11 +562,11 @@ TEST( BaseAudioEvent, MixBuffer )
     int amountOfLoopedWrites      = ( bufferPos + buffersToWrite ) - loopStartIteratorPosition;
     int loopStartReadPointerEnd   = ( loopStartReadPointer + amountOfLoopedWrites ) - 1;
 
-    expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
-                    (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd ) ||
+    expectContent = ( bufferPos >= eventStart && bufferPos <= eventEnd ) ||
+                    (( bufferPos + buffersToWrite ) >= eventStart && ( bufferPos + buffersToWrite ) <= eventEnd ) ||
                     ( loopStartIteratorPosition > maxBufferPos && (
-                        ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
-                        ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
+                        ( loopStartReadPointer >= eventStart && loopStartReadPointer <= eventEnd ) ||
+                        ( loopStartReadPointerEnd >= eventStart && loopStartReadPointerEnd <= eventEnd )));
 
     audioEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
 
@@ -591,15 +589,15 @@ TEST( BaseAudioEvent, MixBuffer )
                 if ( i >= loopOffset )
                     r = minBufferPos + ( i - loopOffset );
 
-                if ( r >= sampleStart && r <= sampleEnd )
+                if ( r >= eventStart && r <= eventEnd )
                 {
-                    r -= sampleStart; // substract audioEvent start position
+                    r -= eventStart; // substract audioEvent start position
                     expectedSample = sourceBuffer[ r ] * volume;
                 }
-                SAMPLE_TYPE sample = buffer[ i ];
+                SAMPLE_TYPE event = buffer[ i ];
 
-                EXPECT_EQ( expectedSample, sample )
-                    << "expected mixed sample at " << i << " to be equal to the calculated expected sample at read "
+                EXPECT_EQ( expectedSample, event )
+                    << "expected mixed event at " << i << " to be equal to the calculated expected event at read "
                     << "offset " << r << " ( sanitized from " << ( i + bufferPos ) << " )";
             }
         }
@@ -624,7 +622,7 @@ TEST( BaseAudioEvent, MixBufferLoopeableEvent )
 
     audioEvent->setBuffer( sourceBuffer, false );
     audioEvent->setLoopeable( true );
-    audioEvent->setSampleLength( 16 * 4 ); // thus will loop 4 times
+    audioEvent->setEventLength( 16 * 4 ); // thus will loop 4 times
     audioEvent->positionEvent ( 0, 16, 0 );
 
     // create an output buffer at a size smaller than the source buffer length
@@ -632,9 +630,9 @@ TEST( BaseAudioEvent, MixBufferLoopeableEvent )
     int outputSize = ( int )(( double ) sourceSize * .4 );
     AudioBuffer* targetBuffer = new AudioBuffer( sourceBuffer->amountOfChannels, outputSize );
 
-    int minBufferPos = audioEvent->getSampleStart();
+    int minBufferPos = audioEvent->getEventStart();
     int bufferPos    = minBufferPos;
-    int maxBufferPos = audioEvent->getSampleEnd();
+    int maxBufferPos = audioEvent->getEventEnd();
 
     // test the seamless mixing over multiple iterations
 

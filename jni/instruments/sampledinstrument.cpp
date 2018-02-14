@@ -87,8 +87,8 @@ void SampledInstrument::updateEvents()
         for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
         {
             BaseAudioEvent* event = _audioEvents->at( i );
-            event->setSampleStart(( float ) event->getSampleStart()  * ratio );
-            event->setSampleEnd( event->getSampleStart() + event->getSampleLength() );
+            event->setEventStart(( float ) event->getEventStart()  * ratio );
+            event->setEventEnd( event->getEventStart() + event->getEventLength() );
         }
         _oldTempo = AudioEngine::tempo;
     }

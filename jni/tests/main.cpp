@@ -14,9 +14,6 @@
 #include "sequencer_test.cpp"
 #include "sequencercontroller_test.cpp"
 #include "wavetable_test.cpp"
-#include "benchmarks/buffer_test.cpp"
-//#include "benchmarks/inline_test.cpp"
-#include "benchmarks/table_test.cpp"
 #include "events/baseaudioevent_test.cpp"
 #include "events/basesynthevent_test.cpp"
 #include "events/drumevent_test.cpp"
@@ -29,6 +26,12 @@
 #include "processors/tremolo_test.cpp"
 #include "utilities/fastmath_test.cpp"
 #include "utilities/tablepool_test.cpp"
+#include "deprecation_test.cpp"
+
+// these aren't stability tests, but benchmarks to test certain performance assumptions
+//#include "benchmarks/buffer_test.cpp"
+//#include "benchmarks/inline_test.cpp"
+//#include "benchmarks/table_test.cpp"
 
 int main( int argc, char *argv[] )
 {

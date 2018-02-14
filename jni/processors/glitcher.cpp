@@ -70,7 +70,7 @@ void Glitcher::setPlaybackRange( int bufferStartPos, int bufferEndPos )
 
 int Glitcher::getSampleLength()
 {
-    return _sample->getSampleLength();
+    return _sample->getEventLength();
 }
 
 void Glitcher::process( AudioBuffer* sampleBuffer, bool isMonoSource )

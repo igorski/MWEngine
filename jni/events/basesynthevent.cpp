@@ -144,14 +144,14 @@ void BaseSynthEvent::calculateBuffers()
 
     if ( isSequenced )
     {
-        oldLength = _sampleLength;
-        setSampleStart( position * ( int ) AudioEngine::samples_per_step );
-        setSampleLength(( int )( length * AudioEngine::samples_per_step ));
-        setSampleEnd( _sampleStart + _sampleLength );
+        oldLength = _eventLength;
+        setEventStart( position * ( int ) AudioEngine::samples_per_step );
+        setEventLength(( int )( length * AudioEngine::samples_per_step ));
+        setEventEnd( _eventStart + _eventLength );
     }
     else {
         // quick releases of a noteOn-instruction should ring for at least a 64th note
-        setSampleLength( AudioEngine::samples_per_bar );     // important for amplitude swell in
+        setEventLength( AudioEngine::samples_per_bar );     // important for amplitude swell in
         _minLength    = AudioEngine::samples_per_bar / 64;
         oldLength     = AudioEngineProps::BUFFER_SIZE;  // buffer is as long as the engine's buffer size
         _hasMinLength = false;                          // keeping track if the min length has been rendered
@@ -188,11 +188,11 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
     int bufferEndPos = bufferPos + AudioEngineProps::BUFFER_SIZE;
 
-    if (( bufferPos >= _sampleStart || bufferEndPos > _sampleStart ) &&
-          bufferPos < _sampleEnd )
+    if (( bufferPos >= _eventStart || bufferEndPos > _eventStart ) &&
+          bufferPos < _eventEnd )
     {
-        lastWriteIndex  = _sampleStart > bufferPos ? 0 : bufferPos - _sampleStart;
-        int writeOffset = _sampleStart > bufferPos ? _sampleStart - bufferPos : 0;
+        lastWriteIndex  = _eventStart > bufferPos ? 0 : bufferPos - _eventStart;
+        int writeOffset = _eventStart > bufferPos ? _eventStart - bufferPos : 0;
 
         // render the snippet
         _synthInstrument->synthesizer->render( _buffer, this );
@@ -201,7 +201,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         outputBuffer->mergeBuffers( _buffer, 0, writeOffset, MAX_PHASE );
 
         // reset of event properties at end of write
-        if ( lastWriteIndex >= _sampleLength )
+        if ( lastWriteIndex >= _eventLength )
             calculateBuffers();
     }
 
@@ -209,7 +209,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
     {
         bufferPos = minBufferPosition + loopOffset;
 
-        if ( bufferPos >= _sampleStart && bufferPos <= _sampleEnd )
+        if ( bufferPos >= _eventStart && bufferPos <= _eventEnd )
         {
             lastWriteIndex = 0; // render the snippet from the start
 
@@ -221,7 +221,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
             outputBuffer->mergeBuffers( _buffer, 0, loopOffset, MAX_PHASE );
 
             // reset of event properties at end of write
-            if ( lastWriteIndex >= _sampleLength )
+            if ( lastWriteIndex >= _eventLength )
                 calculateBuffers();
         }
     }
@@ -345,7 +345,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     _queuedForDeletion = false;
     _deleteMe          = false;
     _hasMinLength      = isSequenced; // a sequenced event has no early cancel
-    _sampleLength      = 0;
+    _eventLength      = 0;
     lastWriteIndex     = 0;
 
     setFrequency( aFrequency );

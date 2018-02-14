@@ -93,17 +93,17 @@ class BaseAudioEvent
         // this allows for high precision positioning, see positionEvent() for a
         // positioning example using musical concepts
 
-        virtual void setSampleLength( int value );
-        virtual void setSampleStart( int value );
-        virtual void setSampleEnd( int value );
+        virtual void setEventLength( int value );
+        virtual void setEventStart( int value );
+        virtual void setEventEnd( int value );
 
-        virtual int getSampleLength();
-        virtual int getSampleStart();
-        virtual int getSampleEnd();
+        virtual int getEventLength();
+        virtual int getEventStart();
+        virtual int getEventEnd();
 
         // position the AudioEvent within the Sequencer by specifying seconds relative
         // from the sequence start. internally, MWEngine will update the range pointers
-        // (setSampleStart(), setSampleEnd(), setSampleLength()) for querying by the Sequencer
+        // (setEventStart(), setEventEnd(), setEventLength()) for querying by the Sequencer
         // this method is for convenience
 
         virtual void setStartPosition( float value );
@@ -115,8 +115,8 @@ class BaseAudioEvent
         virtual float getDuration();
 
         // position the AudioEvent within the Sequencer using musical timing concepts
-        // NOTE : this results in strict "on the grid" timing, using buffer samples instead (see setSampleStart() and
-        // setSampleEnd() ) or seconds (see setStartPosition() and setEndPosition() ) allows for more accurate positioning
+        // NOTE : this results in strict "on the grid" timing, using buffer samples instead (see setEventStart() and
+        // setEventEnd() ) or seconds (see setStartPosition() and setEndPosition() ) allows for more accurate positioning
         // for drifting / swing / early / late events
         //
         // startMeasure describes which measure the event belongs to (NOTE : first measure starts at 0)
@@ -147,16 +147,38 @@ class BaseAudioEvent
         virtual void unlock();      // unlock
         virtual bool isLocked();
 
+        /* TO BE DEPRECATED */
+
+        // for backwards compatibility we provide these methods
+        // use setEventLength(), setEventStart()... getEventEnd() instead.
+        // deprecation keyword is sadly C++14 extension
+
+        //[[deprecated("use setEventLength instead")]]
+        void setSampleLength( int value );
+        //[[deprecated("use setEventStart instead")]]
+        void setSampleStart( int value );
+        //[[deprecated("use setEventEnd instead")]]
+        void setSampleEnd( int value );
+        //[[deprecated("use getEventLength instead")]]
+        int getSampleLength();
+        //[[deprecated("use getEventStart instead")]]
+        int getSampleStart();
+        //[[deprecated("use getEventEnd instead")]]
+        int getSampleEnd();
+
+        /* E.O. DEPRECATION */
+
     protected:
 
         void construct();   // basic initialization which can be shared across overloaded constructors
 
         float _volume;
+        int _eventStart;
+        int _eventEnd;
+        int _eventLength;
 
         // buffer regions
-        int _sampleStart;
-        int _sampleEnd;
-        int _sampleLength;
+
         int _readPointer;  // when loopeable, used to internally keep track of last read buffer offset
         float _startPosition;
         float _endPosition;
