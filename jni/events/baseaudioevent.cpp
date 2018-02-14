@@ -151,9 +151,9 @@ void BaseAudioEvent::setEventLength( int value )
 {
     _eventLength = value;
 
-    // for non loopeable-events the existing sample end must not
-    // be smaller than or equal to the sample start nor
-    // exceed the range set by the sample start and sample length
+    // for non loopeable-events the existing event end must not
+    // be smaller than or equal to the event start nor
+    // exceed the range set by the event start and event length
 
     if ( !_loopeable )
     {
@@ -196,8 +196,8 @@ int BaseAudioEvent::getEventEnd()
 
 void BaseAudioEvent::setEventEnd( int value )
 {
-    // for non loopeable-events the sample end cannot exceed
-    // beyond the start and the total sample length (it can
+    // for non loopeable-events the event end cannot exceed
+    // beyond the start and the total event length (it can
     // be smaller though for a cut-off playback)
 
     if ( !_loopeable && value >= ( _eventStart + _eventLength ))
@@ -420,10 +420,10 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
         {
             readPointer = i + bufferPosition;
 
-            // read sample when the read pointer is within sample start and end points
+            // read sample when the read pointer is within event start and end points
             if ( readPointer >= _eventStart && readPointer <= _eventEnd )
             {
-                // use range pointers to read within the specific sample ranges
+                // use range pointers to read within the specific buffer ranges
                 for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
                 {
                     // this sample might have less channels than the output buffer
@@ -435,8 +435,8 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     tgtBuffer                  = outputBuffer->getBufferForChannel( c );
                     tgtBuffer[ writePointer ] += ( srcBuffer[ _readPointer ] * _volume );
                 }
-                // this is a loopeable sample (thus using internal read pointer)
-                // set the internal read pointer to the sample start so it keeps playing indefinitely
+                // this is a loopeable event (thus using internal read pointer)
+                // set the internal read pointer to the event start so it keeps playing indefinitely
 
                 if ( ++_readPointer > maxBufPos )
                     _readPointer = 0;
