@@ -404,9 +404,17 @@ TEST( BaseAudioEvent, PositionInSeconds )
     float expectedEndPosition = startPosition + expectedDuration;
     audioEvent->setDuration( expectedDuration );
 
-    EXPECT_FLOAT_EQ( expectedDuration, audioEvent->getDuration() );
-    EXPECT_FLOAT_EQ( expectedEndPosition, audioEvent->getEndPosition())
-        << "expected end position to have corrected after updating of duration";
+    // there may be a tiny loss in floating point precision so we round the resolution
+
+    EXPECT_FLOAT_EQ(
+        floatRounding( expectedDuration, 5 ),
+        floatRounding( audioEvent->getDuration(), 5 )
+    );
+
+    EXPECT_FLOAT_EQ(
+        floatRounding( expectedEndPosition, 5 ),
+        floatRounding( audioEvent->getEndPosition(), 5 )
+    ) << "expected end position to have corrected after updating of duration";
 
     deleteAudioEvent( audioEvent );
 }
