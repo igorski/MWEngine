@@ -5,10 +5,9 @@
 #include <cstdlib>
 #include "helpers/helper.cpp"
 
+#include "audioengine_test.cpp"
 #include "audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
-// audioengine_test.cpp has trouble with new DriverAdapter...
-//#include "audioengine_test.cpp"
 #include "processingchain_test.cpp"
 #include "ringbuffer_test.cpp"
 #include "sequencer_test.cpp"

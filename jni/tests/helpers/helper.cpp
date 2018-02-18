@@ -46,6 +46,24 @@ float randomFloat( float min, float max )
     return ( min + f * ( max - min ));
 }
 
+// round the precision of a floating point value
+// e.g. src of 7.1234 with precision of 2 becomes 7.12
+
+float floatRounding( float src, int precision ) {
+    long long des;
+    double tmp;
+    tmp = ( double ) src * pow( 10, precision );
+
+    if ( tmp < 0 ) {
+        //negative double
+        des = ( long long ) (tmp - 0.5 );
+    }
+    else {
+        des = ( long long )( tmp + 0.5 );
+    }
+    return ( float )(( float ) des * pow( 10, -precision ));
+}
+
 // return a random sample value between given min - max range
 
 SAMPLE_TYPE randomSample( double min, double max )

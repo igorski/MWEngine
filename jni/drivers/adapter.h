@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2017-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -58,14 +58,23 @@ namespace DriverAdapter {
 
 #if DRIVER == 0
 
-// OpenSL (note if mocking was requested - unit testing - mock_opensl_io.h has been included)
+// OpenSL
 
+#ifdef MOCK_ENGINE
+// mocking requested, e.g. unit test mode
+#include "../tests/helpers/mock_opensl_io.h"
+
+#else
+// production build for OpenSL
 #include "opensl_io.h"
+
+#endif
+
 extern OPENSL_STREAM* driver_openSL;
 
 #elif DRIVER == 1
 
-// AAudio
+// production build for AAudio
 #include "aaudio_io.h"
 extern AAudio_IO* driver_aAudio;
 

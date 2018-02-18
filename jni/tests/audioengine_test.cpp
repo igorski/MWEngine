@@ -1,5 +1,5 @@
-#include "../audiobuffer.h"
 #include "../audioengine.h"
+#include "../audiobuffer.h"
 #include "../sequencer.h"
 #include "../sequencercontroller.h"
 #include "../events/baseaudioevent.h"
@@ -11,7 +11,12 @@ TEST( AudioEngine, Start )
 
     // prepare engine environment
     SequencerController* controller = new SequencerController();
-    controller->prepare( 240, 48000, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 240 samples
+
+    // 240 BPM in 4/4 time
+    controller->prepare( 240, 4, 4 );
+
+    // mono output with 48 kHz sample rate and buffer size of 240 samples
+    AudioEngine::setup( 240, 48000, 1 );
 
     AudioEngine::engine_started = false;
 
@@ -36,7 +41,13 @@ TEST( AudioEngine, TempoUpdate )
     float newTempo = randomFloat( 120.0f, 300.0f );
 
     SequencerController* controller = new SequencerController();
-    controller->prepare( 240, 48000, oldTempo, 4, 4 );
+
+    // 240 BPM in 4/4 time
+    controller->prepare( 240, 4, 4 );
+
+    // mono output with 48 kHz sample rate and buffer size of 240 samples
+    AudioEngine::setup( 240, 48000, 1 );
+
     controller->setTempoNow( oldTempo, 4, 4 ); // ensure tempo is applied immediately
     controller->rewind();
 
@@ -101,7 +112,13 @@ TEST( AudioEngine, Output )
     // prepare engine environment
 
     SequencerController* controller = new SequencerController();
-    controller->prepare( 16, 48000, 130.0f, 4, 4 ); // 130 BPM in 4/4 time at 48 kHz sample rate w/buffer size of 16 samples
+
+    // 130 BPM in 4/4 time
+    controller->prepare( 1340, 4, 4 );
+
+    // mono output with 48 kHz sample rate and buffer size of 16 samples
+    AudioEngine::setup( 16, 48000, 1 );
+
     controller->setTempoNow( 130.0f, 4, 4 );
     controller->rewind();
 
@@ -176,7 +193,13 @@ TEST( AudioEngine, OutputAtLoopStart )
     // prepare engine environment
 
     SequencerController* controller = new SequencerController();
-    controller->prepare( 11025, 44100, 120.0f, 4, 4 ); // 44.1 kHz, 4/4 time at 120 BPM w/ buffer size of 11025 samples
+
+    // 1240 BPM in 4/4 time
+    controller->prepare( 120, 4, 4 );
+
+    // mono output with 44.1 kHz sample rate and buffer size of 11025 samples
+    AudioEngine::setup( 11025, 44100, 1 );
+
     controller->setTempoNow( 120.0f, 4, 4 );
     controller->rewind();
 
