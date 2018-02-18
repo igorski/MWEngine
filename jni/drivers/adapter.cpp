@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2017-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,6 +22,7 @@
  */
 #include "adapter.h"
 #include "../audioengine.h"
+#include <utilities/debug.h>
 
 #if DRIVER == 0
 OPENSL_STREAM* driver_openSL = NULL; // OpenSL
@@ -35,6 +36,8 @@ namespace DriverAdapter {
 
 #if DRIVER == 0
 
+        Debug::log( "DriverAdapter::initializing OpenSL driver");
+
         // OpenSL
         driver_openSL = android_OpenAudioDevice(
             AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS,
@@ -43,6 +46,8 @@ namespace DriverAdapter {
         return ( driver_openSL != NULL );
 
 #elif DRIVER == 1
+
+        Debug::log( "DriverAdapter::initializing AAudio driver");
 
         // AAudio
         driver_aAudio = new AAudio_IO(
