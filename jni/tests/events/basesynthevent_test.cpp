@@ -55,6 +55,15 @@ TEST( BaseSynthEvent, GettersSetters )
     deleteAudioEvent( audioEvent );
 }
 
+TEST( BaseSynthEvent, ReleaseEnvelope )
+{
+    float frequency             = randomFloat() * 4000.f;
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent = new BaseSynthEvent( frequency, instrument );
+
+    deleteAudioEvent( audioEvent );
+}
+
 TEST( BaseSynthEvent, OscillatorPhases )
 {
     float frequency             = randomFloat() * 4000.f;

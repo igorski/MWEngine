@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -34,27 +34,28 @@
  * Decay time is the time taken for the subsequent run down from the attack level to the designated sustain level.
  * Sustain level is the level during the main sequence of the sound's duration, until the key is released.
  * Release time is the time taken for the level to decay from the sustain level to zero after the key is released.
+ * All these values are in seconds
  *
- * TODO :
- *
- * this is VERY rudimentary and actually unfinished as sustain and release
- * envelopes aren't applied yet (release needs some logic elsewhere as it
- * implies a new/large AudioBuffer to extend the sound tail)
- *
+ * TODO:
  * it might be nice to have non-linear envelope functions too !
  */
 class ADSR
 {
     static const int DEFAULT_FADE_DURATION = 8; // in samples
+    static const SAMPLE_TYPE HALF_PHASE    = MAX_PHASE / 2;
   
     public:
     
         ADSR();
+        ADSR( float attack, float decay, float sustain, float release );
         ~ADSR();
 
         ADSR* clone();
         void cloneEnvelopes( ADSR* source );
 
+        // buffer length of the input to process (this can be larger
+        // than the AudioBuffer supplied to the apply-function) as
+        // it should describe the total duration of the event
         void setBufferLength( int bufferLength );
         int getBufferLength();
         
@@ -73,24 +74,26 @@ class ADSR
 
         /**
          * applies all envelopes onto given AudioBuffer* inputBuffer
+         *
          * in case the given buffer represents a smaller range of
-         * a larger buffer (of an AudioEvent for instance), int eventOffset
-         * describes at what offset of the total buffer/event the given
-         * buffer starts
+         * a larger buffer (of an AudioEvent for instance), int eventDuration
+         * describes the total duration (in samples) of the event whose
+         * buffer is processed, while int eventOffset describes at what offset
+         * of the total buffer/event the given buffer starts in relation to the whole event
          *
          * returns last envelope value
          */
         SAMPLE_TYPE apply( AudioBuffer* inputBuffer );
-        SAMPLE_TYPE apply( AudioBuffer* inputBuffer, int eventOffset );
+        SAMPLE_TYPE apply( AudioBuffer* inputBuffer, int eventDuration, int eventOffset );
 
     protected:
 
         int _bufferLength;
     
-        SAMPLE_TYPE _attack;
-        SAMPLE_TYPE _decay;
-        SAMPLE_TYPE _sustain;
-        SAMPLE_TYPE _release;
+        float _attack;
+        float _decay;
+        float _sustain;
+        float _release;
         SAMPLE_TYPE _lastEnvelope; // last used amp envelope value
 
         // cached variables for incrementing the envelope
@@ -105,7 +108,6 @@ class ADSR
         SAMPLE_TYPE _lastDecayEnvelope;
         int _decayDuration;
 
-        SAMPLE_TYPE _sustainIncrement;
         int _sustainDuration;
 
         SAMPLE_TYPE _releaseIncrement;
@@ -113,6 +115,7 @@ class ADSR
 
         // attack starts at the beginning of the sound (thus at start
         // AudioBuffer, DSR envelopes have variable start offsets...)
+        // these are in buffer samples relative to the events buffer duration
 
         int _decayStart;
         int _sustainStart;
@@ -121,6 +124,7 @@ class ADSR
         // recalculates the increment values for all envelopes
         void invalidateEnvelopes();
         void setEnvelopesInternal( float attack, float decay, float sustain, float release );
+        void construct();
 };
 
 #endif
