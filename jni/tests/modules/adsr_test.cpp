@@ -51,7 +51,8 @@ TEST( ADSR, Apply ) {
 
     // assert results to expected envelope increments for buffer range
 
-    float HALF_PHASE = MAX_PHASE / 2;
+    float HALF_PHASE    = MAX_PHASE / 2;
+    float QUARTER_PHASE = MAX_PHASE / 4;
 
     // attack phase
     EXPECT_FLOAT_EQ( buffer[ 0 ], 0 );
@@ -66,7 +67,7 @@ TEST( ADSR, Apply ) {
     EXPECT_FLOAT_EQ( buffer[ 5 ], HALF_PHASE );
 
     // release phase
-    EXPECT_FLOAT_EQ( buffer[ 6 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 6 ], QUARTER_PHASE );
     EXPECT_FLOAT_EQ( buffer[ 7 ], 0.0 );
 
     delete adsr;
