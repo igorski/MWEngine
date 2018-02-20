@@ -31,26 +31,26 @@ TEST( ADSR, ConstructorWithArguments ) {
 }
 
 TEST( ADSR, Apply ) {
+    ADSR* adsr = new ADSR();
+
     // create a short buffer where each envelope stage will
     // last for a fourth of the total buffer length
     int bufferLength = 8;
-    float attack     = BufferUtility::bufferToMilliseconds( 2, AudioEngineProps::SAMPLE_RATE ) / 1000;
-    float decay      = BufferUtility::bufferToMilliseconds( 2, AudioEngineProps::SAMPLE_RATE ) / 1000;
-    float sustain    = BufferUtility::bufferToMilliseconds( 2, AudioEngineProps::SAMPLE_RATE ) / 1000;
-    float release    = BufferUtility::bufferToMilliseconds( 2, AudioEngineProps::SAMPLE_RATE ) / 1000;
-    std::cout << "kut " << attack;
-    ADSR* adsr               = new ADSR( attack, decay, sustain, release );
+    adsr->setDurations( 2, 2, 2, 2, 8 );
+
     AudioBuffer* inputBuffer = new AudioBuffer( 1, bufferLength );
     SAMPLE_TYPE* buffer      = inputBuffer->getBufferForChannel( 0 );
 
-    for ( int i = 0, l = inputBuffer->bufferSize; i < l; ++i )
-        buffer[ i ] = 1;
+    // fill buffer with maximum volume samples
+    for ( int i = 0; i < inputBuffer->bufferSize; ++i )
+        buffer[ i ] = MAX_PHASE;
 
     // apply ADSR envelopes
     adsr->apply( inputBuffer );
-    dumpBufferContents(inputBuffer);
-   /*
+
     // assert results to expected envelope increments for buffer range
+    // for buffer [ 1, 1, 1, 1, 1, 1, 1, 1 ]
+    // we expect [ 0, 0.5, 1, 0.75, 0.5, 0.5, 0.5, 0.25 ]
 
     float HALF_PHASE    = MAX_PHASE / 2;
     float QUARTER_PHASE = MAX_PHASE / 4;
@@ -61,16 +61,16 @@ TEST( ADSR, Apply ) {
 
     // decay phase
     EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
-    EXPECT_FLOAT_EQ( buffer[ 3 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], HALF_PHASE + QUARTER_PHASE );
 
     // sustain phase
     EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
     EXPECT_FLOAT_EQ( buffer[ 5 ], HALF_PHASE );
 
     // release phase
-    EXPECT_FLOAT_EQ( buffer[ 6 ], QUARTER_PHASE );
-    EXPECT_FLOAT_EQ( buffer[ 7 ], 0.0 );
-                            */
+    EXPECT_FLOAT_EQ( buffer[ 6 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 7 ], QUARTER_PHASE);
+
     delete adsr;
     delete buffer;
 }

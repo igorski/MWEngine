@@ -79,6 +79,10 @@ class ADSR
         SAMPLE_TYPE apply( AudioBuffer* inputBuffer );
         SAMPLE_TYPE apply( AudioBuffer* inputBuffer, int eventDuration, int eventOffset );
 
+        // set envelope durations (in buffer samples) directly
+        // this is more useful for unit testing rather than direct use
+        void setDurations( int attackDuration, int decayDuration, int sustainDuration, int releaseDuration, int bufferLength );
+
     protected:
 
         int _bufferLength;
