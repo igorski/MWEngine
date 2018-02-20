@@ -102,10 +102,6 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         aEvent->setFrequency( frequency, false );
     }
 
-    // envelopes
-
-    _instrument->adsr->setBufferLength( aEvent->getEventLength() );
-
     // Karplus-Strong specific
 
     RingBuffer* ringBuffer = ( type == WaveForms::KARPLUS_STRONG ) ? getRingBuffer( aEvent, frequency ) : 0;
@@ -313,9 +309,8 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     if ( !hasParent )
     {
         _instrument->adsr->setLastEnvelope( aEvent->cachedProps.ADSRenvelope );
-        _instrument->adsr->setBufferLength( aEvent->getEventLength() );
 
-        aEvent->cachedProps.ADSRenvelope     = _instrument->adsr->apply( aOutputBuffer, bufferWriteIndex );
+        aEvent->cachedProps.ADSRenvelope     = _instrument->adsr->apply( aOutputBuffer, aEvent->getEventLength(), bufferWriteIndex );
         aEvent->cachedProps.arpeggioPosition = arpeggiator->getBufferPosition();
         aEvent->cachedProps.arpeggioStep     = arpeggiator->getStep();
 

@@ -41,8 +41,7 @@
  */
 class ADSR
 {
-    static const int DEFAULT_FADE_DURATION = 8; // in samples
-    static const SAMPLE_TYPE HALF_PHASE    = MAX_PHASE / 2;
+    static constexpr SAMPLE_TYPE HALF_PHASE = MAX_PHASE / 2;
   
     public:
     
@@ -52,12 +51,6 @@ class ADSR
 
         ADSR* clone();
         void cloneEnvelopes( ADSR* source );
-
-        // buffer length of the input to process (this can be larger
-        // than the AudioBuffer supplied to the apply-function) as
-        // it should describe the total duration of the event
-        void setBufferLength( int bufferLength );
-        int getBufferLength();
         
         float getAttack();
         float getDecay();

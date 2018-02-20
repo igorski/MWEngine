@@ -107,7 +107,7 @@ SAMPLE_TYPE ADSR::apply( AudioBuffer* inputBuffer, int eventDuration, int eventO
         return _lastEnvelope;
 
     // cache envelopes for given event duration
-    if ( eventDuration !== _bufferLength ) {
+    if ( eventDuration != _bufferLength ) {
         invalidateEnvelopes();
         _bufferLength = eventDuration;
     }
@@ -144,11 +144,11 @@ SAMPLE_TYPE ADSR::apply( AudioBuffer* inputBuffer, int eventDuration, int eventO
                 _lastEnvelope = ( SAMPLE_TYPE ) readOffset * _attackIncrement;
 
             // decay envelope
-            else if ( applyDecay && readOffset >= _decayStart && readOffset < decayEndOffset )
+            else if ( applyDecay && readOffset >= _decayStart && readOffset < _sustainStart )
                 _lastEnvelope = MAX_PHASE - ( SAMPLE_TYPE ) ( readOffset - _decayStart ) * _decayIncrement;
 
             // sustain envelope (takes volume from last amplitude envelope and thus requires no action)
-            else if ( applySustain && readOffset >= _sustainStart && readOffset < releaseStart )
+            else if ( applySustain && readOffset >= _sustainStart && readOffset < _releaseStart )
                 _lastEnvelope = HALF_PHASE;
 
             else if ( applyRelease && readOffset >= _releaseStart )
@@ -185,11 +185,12 @@ void ADSR::setEnvelopesInternal( float attack, float decay, float sustain, float
 {
     // 1. ATTACK
     // note that the minimum allowed value is DEFAULT_FADE_DURATION to prevent popping during sound start
+    int DEFAULT_FADE_DURATION = 8;
 
     _attack         = attack;
     _attackDuration = std::max(
         DEFAULT_FADE_DURATION,
-        BufferUtility::millisecondsToBuffer( _attack * 1000, AudioEngineProps::SAMPLE_RATE
+        BufferUtility::millisecondsToBuffer( _attack * 1000, AudioEngineProps::SAMPLE_RATE )
     );
     _attackIncrement = MAX_PHASE / ( SAMPLE_TYPE ) _attackDuration;
 

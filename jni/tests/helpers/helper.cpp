@@ -164,7 +164,7 @@ void dumpBufferContents( SAMPLE_TYPE* buffer, int bufferSize )
 
 void dumpBufferContents( AudioBuffer* audioBuffer )
 {
-    std::cout << "\ndumping AudioBuffer with " << audioBuffer->amountOfChannels << " channels of "
+    std::cout << "\ndumping AudioBuffer with " << audioBuffer->amountOfChannels << " channel(s) of "
         << audioBuffer->bufferSize << " samples in size\n";
 
     for ( int c = 0; c < audioBuffer->amountOfChannels; ++c )
