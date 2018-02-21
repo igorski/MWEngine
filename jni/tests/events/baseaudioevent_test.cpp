@@ -17,7 +17,7 @@ TEST( BaseAudioEvent, GettersSettersVolume )
     EXPECT_EQ( audioEvent->getVolume(), volume )
         << "expected volume to be equal to the set value";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, PlayStop )
@@ -102,8 +102,8 @@ TEST( BaseAudioEvent, PlayStop )
     ASSERT_FALSE( found )
         << "expected event not to be present in the live event list after invocation of stop()";
 
-
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseAudioEvent, EnabledState )
@@ -123,7 +123,7 @@ TEST( BaseAudioEvent, EnabledState )
     ASSERT_TRUE( audioEvent->isEnabled() )
         << "expected audio event to be enabled after enabling";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, LoopeableState )
@@ -143,7 +143,7 @@ TEST( BaseAudioEvent, LoopeableState )
     ASSERT_FALSE( audioEvent->isLoopeable() )
         << "expected audio event not to be loopeable after disabling loop";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, LockedState )
@@ -163,7 +163,7 @@ TEST( BaseAudioEvent, LockedState )
     ASSERT_FALSE( audioEvent->isLocked() )
         << "expected audio event to be unlocked after unlocking";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, DeletableState )
@@ -178,7 +178,7 @@ TEST( BaseAudioEvent, DeletableState )
     ASSERT_TRUE( audioEvent->isDeletable() )
         << "expected audio event to be deletable after flagging it as such";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, AddRemoveSequencer )
@@ -362,7 +362,7 @@ TEST( BaseAudioEvent, PositionInSamples )
     EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
         << "expected event end to exceed the range set by the event start and updated length properties for loopeable event";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, PositionInSeconds )
@@ -416,7 +416,7 @@ TEST( BaseAudioEvent, PositionInSeconds )
         floatRounding( audioEvent->getEndPosition(), 5 )
     ) << "expected end position to have corrected after updating of duration";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, PositionEvent )
@@ -440,7 +440,7 @@ TEST( BaseAudioEvent, PositionEvent )
     EXPECT_EQ( expectedSampleStart, audioEvent->getEventStart() );
     EXPECT_EQ( expectedSampleEnd,   audioEvent->getEventEnd() );
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, Buffers )
@@ -460,7 +460,7 @@ TEST( BaseAudioEvent, Buffers )
     ASSERT_TRUE( buffer == audioEvent->getBuffer() )
         << "expected AudioEvent to return set buffer";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, MixBuffer )

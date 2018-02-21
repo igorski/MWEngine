@@ -198,14 +198,13 @@ BaseAudioEvent* randomAudioEvent()
 
 void deleteAudioEvent( BaseAudioEvent* audioEvent )
 {
-    // instrument was created by helper, BaseAudioEvent destructors don't
-    // dispose Instruments (as they shouldn't!), do it here
     BaseInstrument* instrument = audioEvent->getInstrument();
     delete audioEvent;
 
     if ( instrument != 0 )
         instrument->unregisterFromSequencer();
-//    delete instrument; // triggers segmentation fault??
+
+    delete instrument;
 }
 
 // create a BaseAudioEvent that is enqueued into the sequencer, you'll

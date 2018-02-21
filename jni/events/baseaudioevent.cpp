@@ -122,13 +122,16 @@ void BaseAudioEvent::removeFromSequencer()
     {
         stop();
     }
-    else
+    else if ( _instrument != 0 )
     {
         std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
-        std::vector<BaseAudioEvent*>::iterator position = std::find( events->begin(),
-                                                                     events->end(), this );
-        if ( position != events->end() )
-            events->erase( position );
+
+        if ( events != 0 ) {
+            std::vector<BaseAudioEvent*>::iterator position = std::find( events->begin(),
+                                                                         events->end(), this );
+            if ( position != events->end() )
+                events->erase( position );
+        }
     }
     _addedToSequencer = false;
 }

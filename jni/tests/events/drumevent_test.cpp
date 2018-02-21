@@ -26,7 +26,9 @@ TEST( DrumEvent, Constructor )
         << "expected timbre to equal the value given in constructor";
 
     SampleManager::flushSamples();
-    deleteAudioEvent( audioEvent );
+
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( DrumEvent, GettersSetters )
@@ -56,7 +58,9 @@ TEST( DrumEvent, GettersSetters )
         << "expected timbre to equal the value given in the setter";
 
     SampleManager::flushSamples();
-    deleteAudioEvent( audioEvent );
+
+    delete audioEvent;
+    delete instrument;
 }
 
 // test overridden lock method
@@ -88,5 +92,7 @@ TEST( DrumEvent, LockedState )
         << "expected audio event to be unlocked after unlocking";
 
     SampleManager::flushSamples();
-    deleteAudioEvent( audioEvent );
+
+    delete audioEvent;
+    delete instrument;
 }

@@ -25,45 +25,41 @@
 
 #include "audiobuffer.h"
 #include "global.h"
+#include <events/basesynthevent.h>
 
 /**
  * ADSR (Attack, Decay, Sustain and Release) provides amplitude
- * envelopes to a given AudioBuffer signal
- * 
+ * envelopes to a BaseSynthEvents signal
+ *
  * Attack time is the time taken for initial run-up of level from nil to peak, beginning when the key is first pressed.
  * Decay time is the time taken for the subsequent run down from the attack level to the designated sustain level.
  * Sustain level is the level during the main sequence of the sound's duration, until the key is released.
  * Release time is the time taken for the level to decay from the sustain level to zero after the key is released.
- * All these values are in seconds
+ * All time values are in seconds, sustain level is in 0 - 1 range
  *
  * TODO:
  * it might be nice to have non-linear envelope functions too !
  */
 class ADSR
 {
-    static constexpr SAMPLE_TYPE HALF_PHASE = MAX_PHASE / 2;
-  
     public:
     
         ADSR();
-        ADSR( float attack, float decay, float sustain, float release );
+        ADSR( float attackTime, float decayTime, float sustainLevel, float releaseTime );
         ~ADSR();
 
         ADSR* clone();
         void cloneEnvelopes( ADSR* source );
         
-        float getAttack();
-        float getDecay();
-        float getSustain();
-        float getRelease();
+        float getAttackTime();
+        float getDecayTime();
+        float getSustainLevel();
+        float getReleaseTime();
 
-        void setAttack ( float aValue );
-        void setDecay  ( float aValue );
-        void setSustain( float aValue );
-        void setRelease( float aValue );
-
-        SAMPLE_TYPE getLastEnvelope();
-        void setLastEnvelope( SAMPLE_TYPE lastEnvelope );
+        void setAttackTime  ( float aValue );
+        void setDecayTime   ( float aValue );
+        void setSustainLevel( float aValue );
+        void setReleaseTime ( float aValue );
 
         /**
          * applies all envelopes onto given AudioBuffer* inputBuffer
@@ -74,10 +70,9 @@ class ADSR
          * buffer is processed, while int eventOffset describes at what offset
          * of the total buffer/event the given buffer starts in relation to the whole event
          *
-         * returns last envelope value
+         * returns last envelope value which can be stored and
          */
-        SAMPLE_TYPE apply( AudioBuffer* inputBuffer );
-        SAMPLE_TYPE apply( AudioBuffer* inputBuffer, int eventDuration, int eventOffset );
+        void apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int eventOffset );
 
         // set envelope durations (in buffer samples) directly
         // this is more useful for unit testing rather than direct use
@@ -85,13 +80,10 @@ class ADSR
 
     protected:
 
-        int _bufferLength;
-    
-        float _attack;
-        float _decay;
-        float _sustain;
-        float _release;
-        SAMPLE_TYPE _lastEnvelope; // last used amp envelope value
+        float _attackTime;
+        float _decayTime;
+        float _sustainLevel;
+        float _releaseTime;
 
         // cached variables for incrementing the envelope
         // durations describe the envelope duration in samples
@@ -118,9 +110,14 @@ class ADSR
         int _sustainStart;
         int _releaseStart;
 
+        // used by apply method and are derived from the processed BaseSynthEvent
+
+        int _bufferLength;
+
         // recalculates the increment values for all envelopes
+
         void invalidateEnvelopes();
-        void setEnvelopesInternal( float attack, float decay, float sustain, float release );
+        void setEnvelopesInternal( float attackTime, float decayTime, float sustainLevel, float releaseTime );
         void construct();
 };
 

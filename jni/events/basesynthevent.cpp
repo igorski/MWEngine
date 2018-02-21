@@ -33,7 +33,7 @@ unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
 
 BaseSynthEvent::BaseSynthEvent()
 {
-
+    _synthInstrument = 0;
 }
 
 /**
@@ -163,7 +163,7 @@ void BaseSynthEvent::calculateBuffers()
     if ( _buffer == 0 )
         _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 
-    if ( isSequenced )
+    if ( isSequenced && _synthInstrument != 0 )
          _synthInstrument->synthesizer->initializeEventProperties( this, true );
 }
 
@@ -246,16 +246,16 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
 
     // when an event has no fixed length and the decay is short
     // we deactivate the decay envelope completely (for now)
-    float decay    = _synthInstrument->adsr->getDecay();
+    float decay    = _synthInstrument->adsr->getDecayTime();
     bool undoDecay = decay < .75;
 
     if ( undoDecay )
-        _synthInstrument->adsr->setDecay( 0 );
+        _synthInstrument->adsr->setDecayTime( 0 );
 
     _synthInstrument->synthesizer->render( _buffer, this );
 
     if ( undoDecay )
-        _synthInstrument->adsr->setDecay( decay );
+        _synthInstrument->adsr->setDecayTime( decay );
 
     // keep track of the rendered samples, in case of a key up event
     // we still want to have the sound ring for the minimum period
@@ -345,7 +345,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     _queuedForDeletion = false;
     _deleteMe          = false;
     _hasMinLength      = isSequenced; // a sequenced event has no early cancel
-    _eventLength      = 0;
+    _eventLength       = 0;
     lastWriteIndex     = 0;
 
     setFrequency( aFrequency );

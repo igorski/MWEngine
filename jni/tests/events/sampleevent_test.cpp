@@ -9,7 +9,8 @@ TEST( SampleEvent, Constructor )
     ASSERT_TRUE( instrument == audioEvent->getInstrument() )
         << "expected instrument to equal the value given in constructor";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( SampleEvent, GettersSetters )
@@ -32,7 +33,8 @@ TEST( SampleEvent, GettersSetters )
     EXPECT_EQ(( rangeEnd - rangeStart ) + 1, audioEvent->getBufferRangeLength() )
         << "expected buffer range length to be " << (( rangeEnd - rangeStart ) + 1 );
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( SampleEvent, BufferRangeStartSanitizing )
@@ -67,7 +69,8 @@ TEST( SampleEvent, BufferRangeStartSanitizing )
     EXPECT_EQ( 2, audioEvent->getBufferRangeLength() )
         << "expected range length to be 2";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( SampleEvent, BufferRangeEndSanitizing )
@@ -90,7 +93,8 @@ TEST( SampleEvent, BufferRangeEndSanitizing )
     EXPECT_EQ( sampleLength - 1, audioEvent->getBufferRangeEnd() )
         << "expected buffer range to not exceed the source sample buffer length";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
     delete buffer;
 }
 
@@ -190,7 +194,8 @@ TEST( SampleEvent, SetSample )
     EXPECT_EQ( bufferLength, audioEvent->getBufferRangeLength() )
         << "expected " << bufferLength << " buffer range length after updating of sample";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
     delete buffer;
 }
 
@@ -269,7 +274,8 @@ TEST( SampleEvent, GetBufferForRange )
             r = sampleStart;
     }
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
     delete targetBuffer;
     delete buffer;
 }
@@ -277,7 +283,8 @@ TEST( SampleEvent, GetBufferForRange )
 // test overridden mix buffer method
 TEST( SampleEvent, MixBuffer )
 {
-    SampleEvent* audioEvent = new SampleEvent( new SampledInstrument() );
+    SampledInstrument* instrument = new SampledInstrument();
+    SampleEvent* audioEvent = new SampleEvent( instrument );
 
     int sampleLength = randomInt( 8, 24 );
     int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
@@ -426,7 +433,9 @@ TEST( SampleEvent, MixBuffer )
         ASSERT_FALSE( bufferHasContent( targetBuffer ))
             << "expected output buffer to contain no content after mixing for an out-of-range buffer position";
     }
-    deleteAudioEvent( audioEvent );
+
+    delete audioEvent;
+    delete instrument;
     delete targetBuffer;
     delete buffer;
 }

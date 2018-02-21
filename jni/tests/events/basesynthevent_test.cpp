@@ -21,17 +21,19 @@ TEST( BaseSynthEvent, InstanceId )
 
     // 3. delete events (should decrement instance ids)
 
-    deleteAudioEvent( audioEvent );
-    deleteAudioEvent( audioEvent2 );
+    delete audioEvent;
+    delete audioEvent2;
 
     // 4. create third event
-    // TODO: destructor doesn't seem to do anything ??
-//    audioEvent = new BaseSynthEvent( frequency, instrument );
-//
-//    EXPECT_EQ( firstInstanceId, audioEvent->instanceId )
-//        << "expected old instance id to be equal to the new BaseAudioEvents id as the old events have been disposed";
-//
-//    deleteAudioEvent( audioEvent );
+
+    BaseSynthEvent* audioEvent3 = new BaseSynthEvent( frequency, instrument );
+
+    EXPECT_EQ( firstInstanceId, audioEvent3->instanceId )
+        << "expected old instance id to be equal to the new BaseAudioEvents id as the old events have been disposed";
+
+    delete audioEvent3;
+// TODO: deleting this leads to occassional segmentation fault!?
+//    delete instrument;
 }
 
 TEST( BaseSynthEvent, GettersSetters )
@@ -52,7 +54,8 @@ TEST( BaseSynthEvent, GettersSetters )
     EXPECT_EQ( frequency, audioEvent->getBaseFrequency() )
         << "expected base frequency to be equal to the value passed in the setter method";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, ReleaseEnvelope )
@@ -61,7 +64,8 @@ TEST( BaseSynthEvent, ReleaseEnvelope )
     SynthInstrument* instrument = new SynthInstrument();
     BaseSynthEvent* audioEvent = new BaseSynthEvent( frequency, instrument );
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, OscillatorPhases )
@@ -84,7 +88,8 @@ TEST( BaseSynthEvent, OscillatorPhases )
         EXPECT_EQ( phase, audioEvent->getPhaseForOscillator( i ))
             << "expected oscillator phase to equal the value passed in the setter method";
     }
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, SequencedEvent )
@@ -104,7 +109,8 @@ TEST( BaseSynthEvent, SequencedEvent )
     EXPECT_EQ( length, audioEvent->length )
         << "expected length to equal the value passed in the constructor";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, PropertyInvalidation )
@@ -133,7 +139,8 @@ TEST( BaseSynthEvent, PropertyInvalidation )
     ASSERT_TRUE( newInstrument == audioEvent->getInstrument() )
        << "expected the newly set instrument to have been returned";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, LiveEvent )
@@ -145,7 +152,8 @@ TEST( BaseSynthEvent, LiveEvent )
     ASSERT_FALSE( audioEvent->isSequenced )
         << "expected BaseSynthEvent not be sequenced for this constructor";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 // test overridden mix buffer method
@@ -310,7 +318,8 @@ TEST( BaseSynthEvent, MixBuffer )
         ASSERT_FALSE( bufferHasContent( targetBuffer ))
             << "expected output buffer to contain no content after mixing for an out-of-range buffer position";
     }
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
     delete targetBuffer;
     delete buffer;
 }

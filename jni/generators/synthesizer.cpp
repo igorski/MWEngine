@@ -308,9 +308,8 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 
     if ( !hasParent )
     {
-        _instrument->adsr->setLastEnvelope( aEvent->cachedProps.ADSRenvelope );
+        _instrument->adsr->apply( aOutputBuffer, aEvent, bufferWriteIndex );
 
-        aEvent->cachedProps.ADSRenvelope     = _instrument->adsr->apply( aOutputBuffer, aEvent->getEventLength(), bufferWriteIndex );
         aEvent->cachedProps.arpeggioPosition = arpeggiator->getBufferPosition();
         aEvent->cachedProps.arpeggioStep     = arpeggiator->getStep();
 
