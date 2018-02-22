@@ -65,12 +65,8 @@ class ADSR
          * applies all envelopes onto given AudioBuffer* inputBuffer
          *
          * in case the given buffer represents a smaller range of
-         * a larger buffer (of an AudioEvent for instance), int eventDuration
-         * describes the total duration (in samples) of the event whose
-         * buffer is processed, while int eventOffset describes at what offset
-         * of the total buffer/event the given buffer starts in relation to the whole event
-         *
-         * returns last envelope value which can be stored and
+         * a larger buffer (the full AudioEvent length for instance), int eventOffset
+         * describes the current offset (in samples) relative to to the events duration
          */
         void apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int eventOffset );
 
