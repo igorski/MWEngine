@@ -24,6 +24,21 @@ TEST( SampleManager, SetSample )
     // buffer deleted by SampleManager.removeSample()
 }
 
+TEST( SampleManager, GetSample )
+{
+    std::string id = "foo";
+    AudioBuffer* buffer = new AudioBuffer( 1, 10 );
+
+    SampleManager::setSample( id, buffer );
+
+    ASSERT_TRUE( SampleManager::getSample( id ) == buffer)
+        << "expected registered AudioBuffer to have been returned";
+
+    SampleManager::removeSample( id );
+
+    // buffer deleted by SampleManager.removeSample()
+}
+
 TEST( SampleManager, RemoveSample )
 {
     std::string id = "foo";
