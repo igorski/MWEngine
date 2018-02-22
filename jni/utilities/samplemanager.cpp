@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -29,24 +29,34 @@ namespace SampleManagerSamples
 
 /* public methods */
 
-void SampleManager::setSample( std::string aKey, AudioBuffer* aBuffer )
+void SampleManager::setSample( std::string aIdentifier, AudioBuffer* aBuffer )
 {
     cachedSample sample = { aBuffer->bufferSize, aBuffer };
 
     // Assignment using member function insert() and STL pair
-    SampleManagerSamples::_sampleMap.insert( std::pair<std::string, cachedSample>( aKey, sample ));
+    SampleManagerSamples::_sampleMap.insert( std::pair<std::string, cachedSample>( aIdentifier, sample ));
 }
 
 AudioBuffer* SampleManager::getSample( std::string aIdentifier )
 {
+    if ( !hasSample( aIdentifier ))
+        return 0;
+
     std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
-    return it->second.sampleBuffer; // key stored in first, value stored in second
+
+    // key stored in first, value stored in second
+    return it->second.sampleBuffer;
 }
 
 int SampleManager::getSampleLength( std::string aIdentifier )
 {
+    if ( !hasSample( aIdentifier ))
+        return 0;
+
     std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
-    return it->second.sampleLength; // key stored in first, value stored in second
+
+    // key stored in first, value stored in second
+    return it->second.sampleLength;
 }
 
 bool SampleManager::hasSample( std::string aIdentifier )
@@ -60,7 +70,9 @@ void SampleManager::removeSample( std::string aIdentifier )
     if ( hasSample( aIdentifier ))
     {
         std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
-        delete it->second.sampleBuffer;  // clear the buffer pointers to release memory
+        delete it->second.sampleBuffer;
+
+        // clear the buffer pointers to release memory
         SampleManagerSamples::_sampleMap.erase( SampleManagerSamples::_sampleMap.find( aIdentifier ));
     }
 }
@@ -71,7 +83,8 @@ void SampleManager::flushSamples()
 
     std::map<std::string, cachedSample>::iterator it;
 
-    for ( it = SampleManagerSamples::_sampleMap.begin(); it != SampleManagerSamples::_sampleMap.end(); ++it )
+    for ( it  = SampleManagerSamples::_sampleMap.begin();
+          it != SampleManagerSamples::_sampleMap.end(); ++it )
     {
         delete it->second.sampleBuffer;
     }

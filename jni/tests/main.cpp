@@ -26,6 +26,7 @@
 #include "processors/tremolo_test.cpp"
 #include "utilities/fastmath_test.cpp"
 #include "utilities/tablepool_test.cpp"
+#include "utilities/samplemanager_test.cpp"
 #include "deprecation_test.cpp"
 
 // these aren't stability tests, but benchmarks to test certain performance assumptions

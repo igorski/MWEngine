@@ -115,14 +115,14 @@ void BaseAudioEvent::addToSequencer()
 
 void BaseAudioEvent::removeFromSequencer()
 {
-    if ( !_addedToSequencer )
+    if ( !_addedToSequencer || _instrument == 0 )
         return;
 
     if ( !isSequenced )
     {
         stop();
     }
-    else if ( _instrument != 0 )
+    else
     {
         std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
 

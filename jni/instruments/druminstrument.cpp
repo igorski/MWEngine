@@ -38,7 +38,7 @@ DrumInstrument::DrumInstrument()
 DrumInstrument::~DrumInstrument()
 {
     delete rOsc;
-    delete[] drumPatterns;
+    delete drumPatterns;
 }
 
 /* public methods */
