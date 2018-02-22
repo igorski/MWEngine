@@ -118,7 +118,7 @@ TEST( ADSR, LastEnvelope )
     // apply ADSR envelopes
     adsr->apply( inputBuffer, synthEvent, 0 );
 
-    EXPECT_FLOAT_EQ( 1.0, synthEvent->cachedProps.ADSRenvelope )
+    EXPECT_FLOAT_EQ( 0.875, synthEvent->cachedProps.ADSRenvelope )
         << "expected cached envelope to be 1 at end of application";
 
     delete adsr;

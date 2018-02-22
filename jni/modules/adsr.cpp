@@ -97,7 +97,10 @@ ADSR* ADSR::clone()
 
 void ADSR::cloneEnvelopes( ADSR* source )
 {
-    setEnvelopesInternal( source->getAttackTime(), source->getDecayTime(), source->getSustainLevel(), source->getReleaseTime() );
+    setEnvelopesInternal(
+        source->getAttackTime(), source->getDecayTime(),
+        source->getSustainLevel(), source->getReleaseTime()
+    );
 }
 
 void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int eventOffset )
