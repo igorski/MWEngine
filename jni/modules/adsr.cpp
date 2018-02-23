@@ -125,6 +125,14 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
     bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart   && eventOffset < _sustainStart;
     bool applyRelease = _releaseDuration > 0 && writeEndOffset >= _releaseStart && eventOffset < _bufferLength;
 
+    // early release can be forced if event has received noteOff (e.g. key up)
+
+    if ( synthEvent->released ) {
+        applyAttack  =
+        applyDecay   = false;
+        applyRelease = true;
+    }
+
     // no envelope update operations ? mix in at last envelope amplitude and return
     // (this could for instance be the sustain phase)
     if ( !applyAttack  &&
