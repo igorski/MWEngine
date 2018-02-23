@@ -32,6 +32,24 @@ TEST( ADSR, ConstructorWithArguments ) {
     delete adsr;
 }
 
+TEST( ADSR, ReleaseDuration )
+{
+    ADSR* adsr = new ADSR();
+
+    EXPECT_EQ( 0, adsr->getReleaseDuration() ) << "expected 0 release duration on non-specified release time";
+
+    float releaseTime = randomFloat();
+    adsr->setReleaseTime( releaseTime );
+
+    // calculate release duration in bufer samples
+    int expectedReleaseDuration = BufferUtility::millisecondsToBuffer( releaseTime * 1000, AudioEngineProps::SAMPLE_RATE );
+
+    EXPECT_EQ( expectedReleaseDuration, adsr->getReleaseDuration() )
+        << "expected release duration in samples to match the expectation";
+
+    delete adsr;
+}
+
 TEST( ADSR, Apply ) {
     float HALF_PHASE    = MAX_PHASE / 2;
     float QUARTER_PHASE = MAX_PHASE / 4;

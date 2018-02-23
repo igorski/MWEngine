@@ -61,6 +61,10 @@ class ADSR
         void setSustainLevel( float aValue );
         void setReleaseTime ( float aValue );
 
+        // get durations in buffer samples
+
+        int getReleaseDuration();
+
         /**
          * applies all envelopes onto given AudioBuffer* inputBuffer
          *

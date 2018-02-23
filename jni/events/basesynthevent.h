@@ -34,6 +34,7 @@ typedef struct
 {
     SAMPLE_TYPE ADSRenvelope;
     SAMPLE_TYPE phaseIncr;
+    int envelopeOffset;
     int arpeggioPosition;
     int arpeggioStep;
 
@@ -66,10 +67,11 @@ class BaseSynthEvent : public BaseAudioEvent
         void play();
         void stop();
 
+        int getEventEnd();
+
         // synthesis properties
 
         float getFrequency();     // return current event frequency (frequency can be modulated by pitch modules, legato, etc.)
-
         float getBaseFrequency(); // return "root" frequency
 
         void setFrequency( float aFrequency );

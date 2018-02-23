@@ -85,6 +85,11 @@ void ADSR::setReleaseTime( float aValue )
     setEnvelopesInternal( getAttackTime(), getDecayTime(), getSustainLevel(), aValue );
 }
 
+int ADSR::getReleaseDuration()
+{
+    return _releaseDuration;
+}
+
 ADSR* ADSR::clone()
 {
     ADSR* out = new ADSR();
@@ -131,6 +136,8 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
         applyAttack  =
         applyDecay   = false;
         applyRelease = true;
+
+        eventOffset = synthEvent->cachedProps.envelopeOffset;
     }
 
     // no envelope update operations ? mix in at last envelope amplitude and return
@@ -145,10 +152,11 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
         return;
     }
 
+    int readOffset;
     for ( int cn = 0, ca = inputBuffer->amountOfChannels; cn < ca; ++cn )
     {
         SAMPLE_TYPE* targetBuffer = inputBuffer->getBufferForChannel( cn );
-        int readOffset = eventOffset;
+        readOffset = eventOffset;
 
         for ( int i = 0; i < bufferSize; ++i, ++readOffset )
         {
@@ -176,6 +184,9 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
 
     // store the current envelope into the events cached properties
     synthEvent->cachedProps.ADSRenvelope = lastEnvelope;
+
+    if ( synthEvent->released )
+        synthEvent->cachedProps.envelopeOffset = readOffset;
 }
 
 void ADSR::setDurations( int attackDuration, int decayDuration, int sustainDuration, int releaseDuration, int bufferLength )

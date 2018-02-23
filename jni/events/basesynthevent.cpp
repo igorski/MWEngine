@@ -73,13 +73,21 @@ BaseSynthEvent::~BaseSynthEvent()
 void BaseSynthEvent::play()
 {
     released = false;
+    cachedProps.envelopeOffset = 0;
     BaseAudioEvent::play();
 }
 
 void BaseSynthEvent::stop()
 {
     released = true;
+    cachedProps.envelopeOffset = 0;
     BaseAudioEvent::stop();
+}
+
+int BaseSynthEvent::getEventEnd()
+{
+    // SynthEvents might have a longer duration if they have a positive release envelope
+    return BaseAudioEvent::getEventEnd() + _synthInstrument->adsr->getReleaseDuration();
 }
 
 float BaseSynthEvent::getFrequency()
@@ -345,6 +353,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     released           = false;
 
     cachedProps.ADSRenvelope     = 0.0;
+    cachedProps.envelopeOffset   = 0;
     cachedProps.arpeggioPosition = 0;
     cachedProps.arpeggioStep     = 0;
 

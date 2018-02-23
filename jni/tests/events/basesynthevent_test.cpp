@@ -356,11 +356,15 @@ TEST( BaseSynthEvent, Stop )
         << "expected synth event not be released after construction";
 
     audioEvent->released = true;
+    audioEvent->cachedProps.envelopeOffset = 1000;
 
     audioEvent->play();
 
     ASSERT_FALSE( audioEvent->released )
         << "expected synth event not be released after invocation of play";
+
+    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
+        << "expected synth events cached envelope offset to have been reset";
 
     delete audioEvent;
 }
@@ -373,9 +377,47 @@ TEST( BaseSynthEvent, Play )
         << "expected synth event not be released after construction";
 
     audioEvent->stop();
+    audioEvent->cachedProps.envelopeOffset = 1000;
 
     ASSERT_TRUE( audioEvent->released )
         << "expected synth event to be released after invocation of stop";
 
+    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
+        << "expected synth events cached envelope offset to have been reset";
+
     delete audioEvent;
+}
+
+// test overridden event duration state
+
+TEST( BaseSynthEvent, GetEventEnd )
+{
+    float frequency             = randomFloat() * 4000.f;
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent();
+
+    // set a non-existing release envelope
+    instrument->adsr->setReleaseTime( 0 );
+
+    int eventStart    = 0;
+    int eventDuration = 88200;
+    int expectedEnd   = eventStart + eventDuration;
+
+    audioEvent->setEventStart( eventStart );
+    audioEvent->setDuration( eventDuration );
+
+    EXPECT_EQ( audioEvent->getEventEnd(), expectedEnd )
+        << "expected event end to equal the expectation of its total duration without a release envelope";
+
+    // set a positive release envelope
+    instrument->adsr->setReleaseTime( 0.5 );
+
+    // add release duration (in samples) to expected end
+    expectedEnd += instrument->adsr->getReleaseDuration();
+
+    EXPECT_EQ( audioEvent->getEventEnd(), expectedEnd )
+        << "expected event end to include the positive release duration";
+
+    delete audioEvent;
+    delete instrument;
 }
