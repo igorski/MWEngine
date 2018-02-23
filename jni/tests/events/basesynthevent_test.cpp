@@ -345,3 +345,37 @@ TEST( BaseSynthEvent, LockedState )
 
     delete audioEvent;
 }
+
+// test overridden play/stop states
+
+TEST( BaseSynthEvent, Stop )
+{
+    BaseSynthEvent* audioEvent = new BaseSynthEvent();
+
+    ASSERT_FALSE( audioEvent->released )
+        << "expected synth event not be released after construction";
+
+    audioEvent->released = true;
+
+    audioEvent->play();
+
+    ASSERT_FALSE( audioEvent->released )
+        << "expected synth event not be released after invocation of play";
+
+    delete audioEvent;
+}
+
+TEST( BaseSynthEvent, Play )
+{
+    BaseSynthEvent* audioEvent = new BaseSynthEvent();
+
+    ASSERT_FALSE( audioEvent->released )
+        << "expected synth event not be released after construction";
+
+    audioEvent->stop();
+
+    ASSERT_TRUE( audioEvent->released )
+        << "expected synth event to be released after invocation of stop";
+
+    delete audioEvent;
+}

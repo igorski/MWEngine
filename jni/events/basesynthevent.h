@@ -61,6 +61,10 @@ class BaseSynthEvent : public BaseAudioEvent
         // sequencer related properties
         int position;
         float length;
+        bool released;
+
+        void play();
+        void stop();
 
         // synthesis properties
 

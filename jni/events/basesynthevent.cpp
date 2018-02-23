@@ -70,6 +70,18 @@ BaseSynthEvent::~BaseSynthEvent()
 
 /* public methods */
 
+void BaseSynthEvent::play()
+{
+    released = false;
+    BaseAudioEvent::play();
+}
+
+void BaseSynthEvent::stop()
+{
+    released = true;
+    BaseAudioEvent::stop();
+}
+
 float BaseSynthEvent::getFrequency()
 {
     return _frequency;
@@ -330,6 +342,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
 
     position           = aPosition;
     length             = aLength;
+    released           = false;
 
     cachedProps.ADSRenvelope     = 0.0;
     cachedProps.arpeggioPosition = 0;
