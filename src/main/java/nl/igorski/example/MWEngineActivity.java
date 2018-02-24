@@ -117,7 +117,7 @@ public final class MWEngineActivity extends Activity
 
         // a high decay for synth 1 (bubblier effect)
         _synth1.getAdsr().setDecayTime( .9f );
-        _synth2.getAdsr().setReleaseTime( 1f );
+        _synth2.getAdsr().setReleaseTime( 5f );
 
         // add a filter to synth 1
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;

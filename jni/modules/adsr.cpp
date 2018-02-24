@@ -208,7 +208,7 @@ void ADSR::setDurations( int attackDuration, int decayDuration, int sustainDurat
     // update start offsets for DSR stages
     _decayStart     = _attackDuration;
     _sustainStart   = _decayStart + _decayDuration;
-    _releaseStart   = ( _releaseDuration > 0 ) ? bufferLength - _sustainDuration : bufferLength;
+    _releaseStart   = ( _releaseDuration > 0 ) ? _sustainStart + _sustainDuration : bufferLength;
 
     // update increments for the envelope stages
     _attackIncrement  = MAX_PHASE     / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );

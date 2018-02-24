@@ -79,6 +79,8 @@ void BaseAudioEvent::play()
     if ( _livePlayback )
         return;
 
+    setDeletable( false );
+
     // move this event to the live events list of the instrument (keep
     // the current sequenced event - if it was added - as is)
 
