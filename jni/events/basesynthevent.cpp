@@ -87,6 +87,7 @@ void BaseSynthEvent::stop()
         // live events must play their full release envelope before removal
         _minLength    += _synthInstrument->adsr->getReleaseDuration();
          _hasMinLength = false;
+
         setDeletable( true );
     }
 }
@@ -271,18 +272,7 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
     }
     lock();
 
-    // when an event has no fixed length and the decay is short
-    // we deactivate the decay envelope completely (for now)
-    float decay    = _synthInstrument->adsr->getDecayTime();
-    bool undoDecay = decay < .75;
-
-    if ( undoDecay )
-        _synthInstrument->adsr->setDecayTime( 0 );
-
     _synthInstrument->synthesizer->render( _buffer, this );
-
-    if ( undoDecay )
-        _synthInstrument->adsr->setDecayTime( decay );
 
     // keep track of the rendered samples, in case of a key up event
     // we still want to have the sound ring for the minimum period
@@ -332,7 +322,7 @@ void BaseSynthEvent::updateProperties()
 
 void BaseSynthEvent::setDeletable( bool value )
 {
-    // sequenced event or synthesized min length ? schedule for immediate deletion
+    // sequenced event or synthesized event has min length ? schedule for immediate deletion
 
     if ( isSequenced || _hasMinLength )
         _deleteMe = value;
