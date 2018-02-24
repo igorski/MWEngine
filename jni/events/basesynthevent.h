@@ -32,9 +32,11 @@ class SynthInstrument;  // forward declaration, see <instruments/synthinstrument
 
 typedef struct
 {
-    SAMPLE_TYPE ADSRenvelope;
+    SAMPLE_TYPE envelope;     // the level of the last applied ADSR envelope
+    SAMPLE_TYPE releaseLevel; // the level from which the release envelope will operate (when event is released)
+    int envelopeOffset;       // the offset at which the release envelope is (when event is released)
+
     SAMPLE_TYPE phaseIncr;
-    int envelopeOffset;
     int arpeggioPosition;
     int arpeggioStep;
 

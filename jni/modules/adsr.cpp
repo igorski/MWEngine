@@ -116,7 +116,7 @@ void ADSR::cloneEnvelopes( ADSR* source )
 void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int eventOffset )
 {
     int eventDuration        = synthEvent->getEventLength();
-    SAMPLE_TYPE lastEnvelope = synthEvent->cachedProps.ADSRenvelope;
+    SAMPLE_TYPE lastEnvelope = synthEvent->cachedProps.envelope;
 
     // nothing to do
     if ( eventOffset > eventDuration && lastEnvelope == MAX_PHASE )
@@ -130,6 +130,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
 
     int bufferSize     = inputBuffer->bufferSize;
     int writeEndOffset = eventOffset + bufferSize; // for the current cycle
+    int sustainLevel   = _sustainLevel;
     
     bool applyAttack  = _attackDuration  > 0 && eventOffset < _decayStart;
     bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart   && eventOffset < _sustainStart;
@@ -143,7 +144,8 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
         applyDecay   = false;
         applyRelease = true;
 
-        eventOffset = synthEvent->cachedProps.envelopeOffset;
+        eventOffset  = synthEvent->cachedProps.envelopeOffset;
+        sustainLevel = synthEvent->cachedProps.releaseLevel;
     }
 
     // no envelope update operations ? mix in at last envelope amplitude and return
@@ -180,7 +182,10 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
             // release envelope
 
             else if ( applyRelease && readOffset >= _releaseStart )
-                lastEnvelope = _sustainLevel - ( SAMPLE_TYPE ) ( readOffset - _releaseStart ) * _releaseIncrement;
+                lastEnvelope = std::max(
+                    sustainLevel - ( SAMPLE_TYPE ) ( readOffset - _releaseStart ) * _releaseIncrement,
+                    0.0
+                );
 
             // apply the calculated amplitude envelope onto the sample
 
@@ -189,7 +194,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
     }
 
     // store the current envelope into the events cached properties
-    synthEvent->cachedProps.ADSRenvelope = lastEnvelope;
+    synthEvent->cachedProps.envelope = lastEnvelope;
 
     // when rendering the released envelope we must cache
     // the offset within the release phase so event

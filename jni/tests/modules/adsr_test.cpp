@@ -130,13 +130,13 @@ TEST( ADSR, LastEnvelope )
     for ( int i = 0; i < inputBuffer->bufferSize; ++i )
         buffer[ i ] = MAX_PHASE;
 
-    EXPECT_FLOAT_EQ( 0.0, synthEvent->cachedProps.ADSRenvelope )
+    EXPECT_FLOAT_EQ( 0.0, synthEvent->cachedProps.envelope )
         << "expected cached envelope to be 0 at start of application";
 
     // apply ADSR envelopes
     adsr->apply( inputBuffer, synthEvent, 0 );
 
-    EXPECT_FLOAT_EQ( 0.875, synthEvent->cachedProps.ADSRenvelope )
+    EXPECT_FLOAT_EQ( 0.875, synthEvent->cachedProps.envelope )
         << "expected cached envelope to be 1 at end of application";
 
     delete adsr;

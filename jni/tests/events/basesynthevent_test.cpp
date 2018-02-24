@@ -58,11 +58,30 @@ TEST( BaseSynthEvent, GettersSetters )
     delete instrument;
 }
 
-TEST( BaseSynthEvent, ReleaseEnvelope )
+TEST( BaseSynthEvent, Envelopes )
 {
     float frequency             = randomFloat() * 4000.f;
     SynthInstrument* instrument = new SynthInstrument();
-    BaseSynthEvent* audioEvent = new BaseSynthEvent( frequency, instrument );
+
+    instrument->adsr->setAttackTime( 0.0 );
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, instrument );
+
+    EXPECT_FLOAT_EQ( audioEvent->cachedProps.releaseLevel, instrument->adsr->getSustainLevel() )
+        << "expected events release level by default to equal the ADSR sustain level";
+
+    EXPECT_FLOAT_EQ( audioEvent->cachedProps.envelope, MAX_PHASE )
+        << "expected events envelope to be MAX_PHASE after construction for a 0 attack ADSR";
+
+    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
+        << "expected events envelope offset to be 0 after construction";
+
+    delete audioEvent;
+
+    instrument->adsr->setAttackTime( 1.0f );
+    audioEvent = new BaseSynthEvent( frequency, instrument );
+
+    EXPECT_FLOAT_EQ( audioEvent->cachedProps.envelope, 0.0 )
+        << "expected events envelope to be 0.0 after construction for a positive attack ADSR";
 
     delete audioEvent;
     delete instrument;
@@ -356,19 +375,27 @@ TEST( BaseSynthEvent, Play )
         << "expected synth event not be released after construction";
 
     audioEvent->released = true;
-    audioEvent->cachedProps.ADSRenvelope   = MAX_PHASE;
+    audioEvent->setDeletable( true );
+    audioEvent->cachedProps.envelope       = MAX_PHASE;
     audioEvent->cachedProps.envelopeOffset = 1000;
+    audioEvent->cachedProps.lastWriteIndex = 1000;
 
     audioEvent->play();
 
     ASSERT_FALSE( audioEvent->released )
         << "expected synth event not be released after invocation of play";
 
+    ASSERT_FALSE( audioEvent->isDeletable() )
+        << "expected synth event to have unset its deletable flag after invocation of play";
+
     EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
         << "expected synth events cached envelope offset to have been reset";
 
-    EXPECT_EQ( audioEvent->cachedProps.ADSRenvelope, 0.0 )
+    EXPECT_EQ( audioEvent->cachedProps.envelope, 0.0 )
         << "expected synth events cached envelope offset to have been reset";
+
+    EXPECT_EQ( audioEvent->lastWriteIndex, 0 )
+        << "expected synth events last write index to have been reset";
 
     delete audioEvent;
 }
@@ -420,10 +447,15 @@ TEST( BaseSynthEvent, StopLiveEvent )
     int expectedOffset = instrument->adsr->getReleaseStartOffset();
 
     audioEvent->cachedProps.envelopeOffset = 0;
+    audioEvent->cachedProps.envelope       = 0.5;
+
     audioEvent->stop();
 
     EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, expectedOffset )
         << "expected synth event envelope offset to be at the start of the release envelopes offset";
+
+   EXPECT_EQ( audioEvent->cachedProps.releaseLevel, audioEvent->cachedProps.envelope )
+        << "expected events release level to equal the last envelope level";
 
     delete audioEvent;
     delete instrument;

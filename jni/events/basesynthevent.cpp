@@ -73,23 +73,40 @@ BaseSynthEvent::~BaseSynthEvent()
 void BaseSynthEvent::play()
 {
     released = false;
-    cachedProps.envelopeOffset = 0;
-    cachedProps.ADSRenvelope   = MAX_PHASE;
+
+    setDeletable( false );
     _hasMinLength = false;
+    _queuedForDeletion = false;
+
+    lastWriteIndex             = 0;
+    cachedProps.envelopeOffset = 0;
+    cachedProps.envelope       = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : MAX_PHASE;
+
     BaseAudioEvent::play();
 }
 
 void BaseSynthEvent::stop()
 {
+    if ( !_livePlayback )
+        return;
+
     released = true;
-    BaseAudioEvent::stop();
 
     if ( !isSequenced ) {
         // live events must play their full release envelope before removal
-        _minLength    += _synthInstrument->adsr->getReleaseDuration();
+        // if there is no positive release envelope, apply a short decay
+        // so we know events are audible for at least a 64th
+        _minLength = std::max(
+            _synthInstrument->adsr->getReleaseDuration(),
+            AudioEngine::samples_per_bar / 64
+        );
         _hasMinLength = false;
 
+        // it is possible the ADSR module was going through its attack or decay
+        // phases, let the release envelope operate from the current level
+        cachedProps.releaseLevel   = cachedProps.envelope;
         cachedProps.envelopeOffset = _synthInstrument->adsr->getReleaseStartOffset();
+
         setDeletable( true );
     }
 }
@@ -198,7 +215,7 @@ void BaseSynthEvent::calculateBuffers()
 }
 
 /**
- * will only occur for a sequenced BaseSynthEvent
+ * sequenced BaseSynthEvent
  */
 void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
                                 int minBufferPosition, int maxBufferPosition,
@@ -280,28 +297,32 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
     // we still want to have the sound ring for the minimum period
     // defined in the constructor instead of cut off immediately
 
-    if ( _queuedForDeletion && _minLength > 0 )
+    if ( _queuedForDeletion )
+    {
         _minLength -= aBufferLength;
 
-    if ( _minLength <= 0 )
-    {
-        _hasMinLength = true;
-        setDeletable( _queuedForDeletion );
-
-        // this event is about to be deleted, apply a tiny fadeout
-        if ( _queuedForDeletion )
+        if ( _minLength <= 0 )
         {
-            int amt = ceil( aBufferLength / 4 );
+            _hasMinLength = true;
+            // we can now remove this event from the Sequencer
+            setDeletable( _queuedForDeletion );
+            BaseAudioEvent::stop();
 
-            SAMPLE_TYPE envIncr = MAX_PHASE / amt;
-            SAMPLE_TYPE amp     = MAX_PHASE;
-
-            for ( int i = aBufferLength - amt; i < aBufferLength; ++i )
+            // this event is about to be deleted, apply a tiny fadeout
+            if ( _queuedForDeletion )
             {
-                for ( int c = 0, nc = _buffer->amountOfChannels; c < nc; ++c )
-                    _buffer->getBufferForChannel( c )[ i ] *= amp;
+                int amt = ceil( aBufferLength / 4 );
 
-                amp -= envIncr;
+                SAMPLE_TYPE envIncr = MAX_PHASE / amt;
+                SAMPLE_TYPE amp     = MAX_PHASE;
+
+                for ( int i = aBufferLength - amt; i < aBufferLength; ++i )
+                {
+                    for ( int c = 0, nc = _buffer->amountOfChannels; c < nc; ++c )
+                        _buffer->getBufferForChannel( c )[ i ] *= amp;
+
+                    amp -= envIncr;
+                }
             }
         }
     }
@@ -319,6 +340,10 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
  */
 void BaseSynthEvent::updateProperties()
 {
+    // sync ADSR envelope values
+    cachedProps.envelope     = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : MAX_PHASE;
+    cachedProps.releaseLevel = _synthInstrument->adsr->getSustainLevel();
+
     calculateBuffers();
 }
 
@@ -351,7 +376,6 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     length             = aLength;
     released           = false;
 
-    cachedProps.ADSRenvelope     = 0.0;
     cachedProps.envelopeOffset   = 0;
     cachedProps.arpeggioPosition = 0;
     cachedProps.arpeggioStep     = 0;
@@ -371,7 +395,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
 
     setFrequency( aFrequency );
 
-    calculateBuffers();
+    updateProperties();
 
     if ( isSequenced )
         addToSequencer();
