@@ -348,7 +348,7 @@ TEST( BaseSynthEvent, LockedState )
 
 // test overridden play/stop states
 
-TEST( BaseSynthEvent, Stop )
+TEST( BaseSynthEvent, Play )
 {
     BaseSynthEvent* audioEvent = new BaseSynthEvent();
 
@@ -356,6 +356,7 @@ TEST( BaseSynthEvent, Stop )
         << "expected synth event not be released after construction";
 
     audioEvent->released = true;
+    audioEvent->cachedProps.ADSRenvelope   = MAX_PHASE;
     audioEvent->cachedProps.envelopeOffset = 1000;
 
     audioEvent->play();
@@ -364,6 +365,9 @@ TEST( BaseSynthEvent, Stop )
         << "expected synth event not be released after invocation of play";
 
     EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
+        << "expected synth events cached envelope offset to have been reset";
+
+    EXPECT_EQ( audioEvent->cachedProps.ADSRenvelope, 0.0 )
         << "expected synth events cached envelope offset to have been reset";
 
     delete audioEvent;
@@ -390,7 +394,7 @@ TEST( BaseSynthEvent, StopAndDelete )
     delete instrument;
 }
 
-TEST( BaseSynthEvent, Play )
+TEST( BaseSynthEvent, Stop )
 {
     BaseSynthEvent* audioEvent = new BaseSynthEvent();
 
@@ -398,15 +402,31 @@ TEST( BaseSynthEvent, Play )
         << "expected synth event not be released after construction";
 
     audioEvent->stop();
-    audioEvent->cachedProps.envelopeOffset = 1000;
 
     ASSERT_TRUE( audioEvent->released )
         << "expected synth event to be released after invocation of stop";
 
-    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
-        << "expected synth events cached envelope offset to have been reset";
+    delete audioEvent;
+}
+
+TEST( BaseSynthEvent, StopLiveEvent )
+{
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( 440f, instrument );
+    audioEvent->isSequenced     = false;
+
+    instrument->adsr->setAttackTime( 1.0f );
+    instrument->adsr->setDecayTime ( 2.0f );
+    int expectedOffset = instrument->adsr->getReleaseStartOffset();
+
+    audioEvent->cachedProps.envelopeOffset = 0;
+    audioEvent->stop();
+
+    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, expectedOffset )
+        << "expected synth event envelope offset to be at the start of the release envelopes offset";
 
     delete audioEvent;
+    delete instrument;
 }
 
 // test overridden event duration state

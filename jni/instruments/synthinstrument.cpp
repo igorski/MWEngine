@@ -107,7 +107,12 @@ OscillatorProperties* SynthInstrument::getOscillatorProperties( int aOscillatorN
 void SynthInstrument::init()
 {
     adsr = new ADSR();
-    adsr->setAttackTime( 0.01 );
+
+    // note we set very short attack and release to prevent pops
+
+    adsr->setAttackTime  ( 0.01 );
+    adsr->setDecayTime   ( 0.0 );
+    adsr->setSustainLevel( MAX_PHASE );
     adsr->setReleaseTime ( 0.01 );
 
     // default values

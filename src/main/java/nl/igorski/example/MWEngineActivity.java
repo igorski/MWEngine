@@ -116,7 +116,8 @@ public final class MWEngineActivity extends Activity
         _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
 
         // a high decay for synth 1 (bubblier effect)
-        _synth1.getAdsr().setDecay( .9f );
+        _synth1.getAdsr().setDecayTime( .9f );
+        _synth2.getAdsr().setReleaseTime( 1f );
 
         // add a filter to synth 1
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
@@ -301,7 +302,7 @@ public final class MWEngineActivity extends Activity
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
         {
-            _synth1.getAdsr().setDecay( progress / 100f );
+            _synth1.getAdsr().setDecayTime( progress / 100f );
             _synth1.updateEvents(); // update all synth events to match new ADSR properties
         }
 

@@ -74,13 +74,13 @@ void BaseSynthEvent::play()
 {
     released = false;
     cachedProps.envelopeOffset = 0;
+    cachedProps.ADSRenvelope   = 0.0;
     BaseAudioEvent::play();
 }
 
 void BaseSynthEvent::stop()
 {
     released = true;
-    cachedProps.envelopeOffset = 0;
     BaseAudioEvent::stop();
 
     if ( !isSequenced ) {
@@ -88,6 +88,7 @@ void BaseSynthEvent::stop()
         _minLength    += _synthInstrument->adsr->getReleaseDuration();
          _hasMinLength = false;
 
+        cachedProps.envelopeOffset = _synthInstrument->adsr->getReleaseStartOffset();
         setDeletable( true );
     }
 }

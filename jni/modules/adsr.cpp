@@ -85,6 +85,11 @@ void ADSR::setReleaseTime( float aValue )
     setEnvelopesInternal( getAttackTime(), getDecayTime(), getSustainLevel(), aValue );
 }
 
+int ADSR::getReleaseStartOffset()
+{
+    return _releaseStart;
+}
+
 int ADSR::getReleaseDuration()
 {
     return _releaseDuration;
@@ -128,7 +133,8 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
     
     bool applyAttack  = _attackDuration  > 0 && eventOffset < _decayStart;
     bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart   && eventOffset < _sustainStart;
-    bool applyRelease = _releaseDuration > 0 && writeEndOffset >= _releaseStart && eventOffset < _bufferLength;
+    bool applyRelease = synthEvent->isSequenced && _releaseDuration > 0 &&
+                        writeEndOffset >= _releaseStart && eventOffset < _bufferLength;
 
     // early release can be forced if event has received noteOff (e.g. key up)
 
@@ -185,6 +191,9 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
     // store the current envelope into the events cached properties
     synthEvent->cachedProps.ADSRenvelope = lastEnvelope;
 
+    // when rendering the released envelope we must cache
+    // the offset within the release phase so event
+    // can calculate when it actually stops playing
     if ( synthEvent->released )
         synthEvent->cachedProps.envelopeOffset = readOffset;
 }

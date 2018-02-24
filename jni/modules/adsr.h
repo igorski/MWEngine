@@ -61,8 +61,9 @@ class ADSR
         void setSustainLevel( float aValue );
         void setReleaseTime ( float aValue );
 
-        // get durations in buffer samples
+        // get release offset and duration in buffer samples
 
+        int getReleaseStartOffset();
         int getReleaseDuration();
 
         /**
