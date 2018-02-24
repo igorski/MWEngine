@@ -369,6 +369,27 @@ TEST( BaseSynthEvent, Stop )
     delete audioEvent;
 }
 
+TEST( BaseSynthEvent, StopAndDelete )
+{
+    float frequency                = randomFloat() * 4000.f;
+    SynthInstrument* instrument    = new SynthInstrument();
+    BaseSynthEvent* liveEvent      = new BaseSynthEvent( frequency, instrument );
+    BaseSynthEvent* sequencedEvent = new BaseSynthEvent( frequency, 0, 512, instrument );
+
+    ASSERT_FALSE( liveEvent->isDeletable() ) << "expected event not be deletable upon construction";
+    ASSERT_FALSE( sequencedEvent->isDeletable() ) << "expected sequenced event not be deletable upon construction";
+
+    liveEvent->stop();
+    sequencedEvent->stop();
+
+    ASSERT_TRUE( liveEvent->isDeletable() ) << "expected live event to be deletable upon invocation of stop()";
+    ASSERT_FALSE( sequencedEvent->isDeletable() ) << "expected sequenced event not be deletable upon invocation of stop()";
+
+    delete liveEvent;
+    delete sequencedEvent;
+    delete instrument;
+}
+
 TEST( BaseSynthEvent, Play )
 {
     BaseSynthEvent* audioEvent = new BaseSynthEvent();
@@ -394,7 +415,7 @@ TEST( BaseSynthEvent, GetEventEnd )
 {
     float frequency             = randomFloat() * 4000.f;
     SynthInstrument* instrument = new SynthInstrument();
-    BaseSynthEvent* audioEvent  = new BaseSynthEvent();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, instrument );
 
     // set a non-existing release envelope
     instrument->adsr->setReleaseTime( 0 );

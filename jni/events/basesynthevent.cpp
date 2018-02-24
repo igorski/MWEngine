@@ -82,6 +82,13 @@ void BaseSynthEvent::stop()
     released = true;
     cachedProps.envelopeOffset = 0;
     BaseAudioEvent::stop();
+
+    if ( !isSequenced ) {
+        // live events must play their full release envelope before removal
+        _minLength    += _synthInstrument->adsr->getReleaseDuration();
+         _hasMinLength = false;
+        setDeletable( true );
+    }
 }
 
 int BaseSynthEvent::getEventEnd()
