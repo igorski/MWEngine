@@ -29,7 +29,7 @@
 ADSR::ADSR()
 {
     construct();
-    setEnvelopesInternal( 0, 0, MAX_PHASE, 0 );
+    setEnvelopesInternal( getAttackTime(), getDecayTime(), getSustainLevel(), getReleaseTime() );
 }
 
 ADSR::ADSR( float attackTime, float decayTime, float sustainLevel, float releaseTime )
@@ -130,7 +130,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
 
     int bufferSize     = inputBuffer->bufferSize;
     int writeEndOffset = eventOffset + bufferSize; // for the current cycle
-    int sustainLevel   = _sustainLevel;
+    float sustainLevel = _sustainLevel;
     
     bool applyAttack  = _attackDuration  > 0 && eventOffset < _decayStart;
     bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart   && eventOffset < _sustainStart;
@@ -199,21 +199,23 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
     // when rendering the released envelope we must cache
     // the offset within the release phase so event
     // can calculate when it actually stops playing
-    if ( synthEvent->released )
+    if ( synthEvent->released ) {
         synthEvent->cachedProps.envelopeOffset = readOffset;
+    }
 }
 
-void ADSR::setDurations( int attackDuration, int decayDuration, int sustainDuration, int releaseDuration, int bufferLength )
+void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDuration, int bufferLength )
 {
     _attackDuration  = attackDuration;
     _decayDuration   = decayDuration;
-    _sustainDuration = sustainDuration;
     _releaseDuration = releaseDuration;
+
+    int sustainDuration = std::max( 0, bufferLength - ( attackDuration + decayDuration ));
 
     // update start offsets for DSR stages
     _decayStart     = _attackDuration;
     _sustainStart   = _decayStart + _decayDuration;
-    _releaseStart   = ( _releaseDuration > 0 ) ? _sustainStart + _sustainDuration : bufferLength;
+    _releaseStart   = ( _releaseDuration > 0 ) ? _sustainStart + sustainDuration : bufferLength;
 
     // update increments for the envelope stages
     _attackIncrement  = MAX_PHASE     / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );
@@ -245,7 +247,6 @@ void ADSR::setEnvelopesInternal( float attackTime, float decayTime, float sustai
     // 3. SUSTAIN level should be between 0 - 1
 
     _sustainLevel = std::max(( SAMPLE_TYPE ) 0, std::min(( SAMPLE_TYPE ) sustainLevel, MAX_PHASE ));
-    int sustainDuration = BufferUtility::millisecondsToBuffer( _sustainLevel * 1000, AudioEngineProps::SAMPLE_RATE );
 
     // 4. RELEASE
 
@@ -254,7 +255,7 @@ void ADSR::setEnvelopesInternal( float attackTime, float decayTime, float sustai
 
     // commit changes
 
-    setDurations( attackDuration, decayDuration, sustainDuration, releaseDuration, _bufferLength );
+    setDurations( attackDuration, decayDuration, releaseDuration, _bufferLength );
 }
 
 void ADSR::invalidateEnvelopes()
@@ -270,6 +271,6 @@ void ADSR::construct()
     _releaseStart    = 0;
     _attackDuration  = 0;
     _decayDuration   = 0;
-    _sustainDuration = 0;
     _releaseDuration = 0;
+    _sustainLevel    = ( float ) MAX_PHASE;
 }

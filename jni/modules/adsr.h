@@ -77,7 +77,7 @@ class ADSR
 
         // set envelope durations (in buffer samples) directly
         // this is more useful for unit testing rather than direct use
-        void setDurations( int attackDuration, int decayDuration, int sustainDuration, int releaseDuration, int bufferLength );
+        void setDurations( int attackDuration, int decayDuration, int releaseDuration, int bufferLength );
 
     protected:
 
@@ -97,8 +97,6 @@ class ADSR
         SAMPLE_TYPE _decayIncrement;
         SAMPLE_TYPE _lastDecayEnvelope;
         int _decayDuration;
-
-        int _sustainDuration;
 
         SAMPLE_TYPE _releaseIncrement;
         int _releaseDuration;

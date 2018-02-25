@@ -342,7 +342,7 @@ void BaseSynthEvent::updateProperties()
 {
     // sync ADSR envelope values
     cachedProps.envelope     = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : MAX_PHASE;
-    cachedProps.releaseLevel = _synthInstrument->adsr->getSustainLevel();
+    cachedProps.releaseLevel = ( SAMPLE_TYPE ) _synthInstrument->adsr->getSustainLevel();
 
     calculateBuffers();
 }

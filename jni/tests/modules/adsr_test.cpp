@@ -66,7 +66,7 @@ TEST( ADSR, Apply ) {
 
     // create a short buffer where each envelope stage will
     // last for a fourth of the total buffer length
-    adsr->setDurations( 2, 2, 2, 2, 8 );
+    adsr->setDurations( 2, 2, 2, 8 );
 
     AudioBuffer* inputBuffer = new AudioBuffer( 1, bufferLength );
     SAMPLE_TYPE* buffer      = inputBuffer->getBufferForChannel( 0 );
@@ -121,7 +121,7 @@ TEST( ADSR, LastEnvelope )
 
     // create a short buffer where the attack stage will
     // last for the entirety of the total buffer length
-    adsr->setDurations( bufferLength, 0, 0, 0, bufferLength );
+    adsr->setDurations( bufferLength, 0, 0, bufferLength );
 
     AudioBuffer* inputBuffer = new AudioBuffer( 1, bufferLength );
     SAMPLE_TYPE* buffer      = inputBuffer->getBufferForChannel( 0 );
