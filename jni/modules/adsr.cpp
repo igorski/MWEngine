@@ -22,7 +22,6 @@
  */
 #include <modules/adsr.h>
 #include <utilities/bufferutility.h>
-#include <utilities/debug.h>
 #include <algorithm>
 
 /* constructors / destructor */
@@ -114,13 +113,16 @@ void ADSR::cloneEnvelopes( ADSR* source )
     );
 }
 
-void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int eventOffset )
+void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writeOffset )
 {
-    int eventDuration        = synthEvent->getEventLength();
     SAMPLE_TYPE lastEnvelope = synthEvent->cachedProps.envelope;
+    int eventDuration        = synthEvent->getEventLength();
+
+    // the events lifetime is actually extended by the release phase of this ADSR envelope
+    int eventDurationWithRelease = eventDuration + _releaseDuration;
 
     // nothing to do
-    if ( eventOffset > eventDuration && lastEnvelope == MAX_PHASE )
+    if ( writeOffset > eventDurationWithRelease && lastEnvelope == MAX_PHASE )
         return;
 
     // cache envelopes for given event duration
@@ -130,22 +132,24 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
     }
 
     int bufferSize     = inputBuffer->bufferSize;
-    int writeEndOffset = eventOffset + bufferSize; // for the current cycle
+    int writeEndOffset = writeOffset + bufferSize; // for the current cycle
     float sustainLevel = _sustainLevel;
     
-    bool applyAttack  = _attackDuration  > 0 && eventOffset < _decayStart;
-    bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart   && eventOffset < _sustainStart;
+    bool applyAttack  = _attackDuration  > 0 && writeOffset < _decayStart;
+    bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart && writeOffset < _sustainStart;
     bool applyRelease = synthEvent->isSequenced && _releaseDuration > 0 &&
-                        writeEndOffset >= _releaseStart && eventOffset < _bufferLength;
+                        writeEndOffset >= _releaseStart && writeOffset < eventDurationWithRelease;
 
     // early release can be forced if event has received noteOff (e.g. key up)
+     // this is necessary because resulting event duration might be shorter than
+     // the attack or decay phases
 
     if ( synthEvent->released ) {
         applyAttack  =
         applyDecay   = false;
         applyRelease = true;
 
-        eventOffset  = synthEvent->cachedProps.envelopeOffset;
+        writeOffset  = synthEvent->cachedProps.envelopeOffset;
         sustainLevel = synthEvent->cachedProps.releaseLevel;
     }
 
@@ -165,7 +169,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int even
     for ( int cn = 0, ca = inputBuffer->amountOfChannels; cn < ca; ++cn )
     {
         SAMPLE_TYPE* targetBuffer = inputBuffer->getBufferForChannel( cn );
-        readOffset = eventOffset;
+        readOffset = writeOffset;
 
         for ( int i = 0; i < bufferSize; ++i, ++readOffset )
         {
@@ -212,24 +216,17 @@ void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDurat
     _releaseDuration = releaseDuration;
 
     int sustainDuration = std::max( 0, bufferLength - ( attackDuration + decayDuration ));
-    if ( releaseDuration > 0 ) {
-        sustainDuration -= releaseDuration;
-    }
 
     // update start offsets for DSR stages
     _decayStart     = _attackDuration;
     _sustainStart   = _decayStart + _decayDuration;
-    _releaseStart   = ( _releaseDuration > 0 ) ? _sustainStart + sustainDuration : bufferLength;
+    _releaseStart   = bufferLength;
 
     // update increments for the envelope stages
     _attackIncrement  = MAX_PHASE     / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );
     _decayIncrement   = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _decayDuration );   // move to sustain phase amplitude
     _releaseIncrement = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _releaseDuration ); // release from sustain phase amp
-if ( attackDuration == 2 ) {
-Debug::log("durations A %d D %d S %d R %d BUF LEN %d", attackDuration, decayDuration, sustainDuration, releaseDuration, bufferLength);
-Debug::log("starts D %d S %d R %d", _decayStart, _sustainStart, _releaseStart);
-Debug::log("increments A %f D %f R %f", _attackIncrement, _decayIncrement, _releaseIncrement );
-}
+
     _bufferLength = bufferLength;
 }
 

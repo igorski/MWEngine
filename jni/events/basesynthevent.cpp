@@ -87,7 +87,7 @@ void BaseSynthEvent::play()
 
 void BaseSynthEvent::stop()
 {
-    released = true;
+    triggerRelease();
 
     if ( !isSequenced ) {
         // live events must play their full release envelope before removal
@@ -98,11 +98,6 @@ void BaseSynthEvent::stop()
             AudioEngine::samples_per_bar / 64
         );
         _hasMinLength = false;
-
-        // it is possible the ADSR module was going through its attack or decay
-        // phases, let the release envelope operate from the current level
-        cachedProps.releaseLevel   = cachedProps.envelope;
-        cachedProps.envelopeOffset = _synthInstrument->adsr->getReleaseStartOffset();
 
         setDeletable( true );
     }
@@ -237,11 +232,26 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
     int bufferEndPos = bufferPos + AudioEngineProps::BUFFER_SIZE;
 
+    // we use the overridden getter method as the event length can be
+    // extended by a positive release time on the instruments ADSR envelope
+    int eventEnd = getEventEnd();
+
     if (( bufferPos >= _eventStart || bufferEndPos > _eventStart ) &&
-          bufferPos < _eventEnd )
+          bufferPos < eventEnd )
     {
         lastWriteIndex  = _eventStart > bufferPos ? 0 : bufferPos - _eventStart;
         int writeOffset = _eventStart > bufferPos ? _eventStart - bufferPos : 0;
+
+        // if we're mixing into the ADSR release tail, make sure released is triggered
+        // TODO unset this!
+        if ( bufferPos > _eventEnd ) {
+            if ( !released ) {
+                triggerRelease();
+            }
+        }
+        else {
+            released = false;
+        }
 
         // render the snippet
         _synthInstrument->synthesizer->render( _buffer, this );
@@ -258,7 +268,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
     {
         bufferPos = minBufferPosition + loopOffset;
 
-        if ( bufferPos >= _eventStart && bufferPos <= _eventEnd )
+        if ( bufferPos >= _eventStart && bufferPos <= eventEnd )
         {
             lastWriteIndex = 0; // render the snippet from the start
 
@@ -357,6 +367,16 @@ void BaseSynthEvent::setDeletable( bool value )
         _deleteMe = value;
     else
         _queuedForDeletion = value;
+}
+
+void BaseSynthEvent::triggerRelease()
+{
+    released = true;
+
+    // it is possible the ADSR module was going through its attack or decay
+    // phases, let the release envelope operate from the current level
+    cachedProps.releaseLevel   = cachedProps.envelope;
+    cachedProps.envelopeOffset = _synthInstrument->adsr->getReleaseStartOffset();
 }
 
 /**

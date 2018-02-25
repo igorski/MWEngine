@@ -122,6 +122,7 @@ class BaseSynthEvent : public BaseAudioEvent
 
         // render related
         virtual void updateProperties();
+        virtual void triggerRelease();
 };
 
 #endif

@@ -70,10 +70,12 @@ class ADSR
          * applies all envelopes onto given AudioBuffer* inputBuffer
          *
          * in case the given buffer represents a smaller range of
-         * a larger buffer (the full AudioEvent length for instance), int eventOffset
+         * a larger buffer (the full AudioEvent length for instance), int writeOffset
          * describes the current offset (in samples) relative to to the events duration
+         * at which the effect should start its application, the application lasts for
+         * the bufferSize of given inputBuffer in length
          */
-        void apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int eventOffset );
+        void apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writeOffset );
 
         // set envelope durations (in buffer samples) directly
         // this is more useful for unit testing rather than direct use

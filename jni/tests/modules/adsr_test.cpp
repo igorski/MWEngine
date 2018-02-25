@@ -83,7 +83,7 @@ TEST( ADSR, Apply ) {
 
     // for buffer [ 1, 1, 1, 1, 1, 1, 1, 1 ]
     // we expect [ 0, 0.5, 1, 0.75, 0.5, 0.5, 0.5, 0.25 ]
-
+dumpBufferContents(inputBuffer);
     // attack phase
     EXPECT_FLOAT_EQ( buffer[ 0 ], 0 );
     EXPECT_FLOAT_EQ( buffer[ 1 ], HALF_PHASE );
@@ -142,7 +142,7 @@ TEST( ADSR, ApplyOnLiveEvent ) {
     // for buffer [ 1, 1, 1, 1, 1, 1, 1, 1 ]
     // we expect [ 0, 0.5, 1, 0.75, 0.5, 0.5, 0.5, 0.5 ]
     // as the release envelope is only applied when synthEvent->stop() is invoked (sets its release state)
-
+ dumpBufferContents(inputBuffer);
     // attack phase
     EXPECT_FLOAT_EQ( buffer[ 0 ], 0 );
     EXPECT_FLOAT_EQ( buffer[ 1 ], HALF_PHASE );

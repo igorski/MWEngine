@@ -117,7 +117,8 @@ public final class MWEngineActivity extends Activity
 
         // a high decay for synth 1 (bubblier effect)
         _synth1.getAdsr().setDecayTime( .9f );
-        _synth2.getAdsr().setReleaseTime( 1.0f ); // long release for synth 2 (fades out on release)
+        // a short release for synth 2 (smooth fade out)
+        _synth2.getAdsr().setReleaseTime( 0.25f );
 
         // add a filter to synth 1
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
@@ -133,8 +134,8 @@ public final class MWEngineActivity extends Activity
         _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
 
         // add some funky delay to synth 2
-       // _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
-       // _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
+        _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
+        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
         // adjust synthesizer volumes
         _synth2.getAudioChannel().setVolume( .7f );
@@ -154,45 +155,45 @@ public final class MWEngineActivity extends Activity
 
         // STEP 4.1 : Sample events to play back a drum beat
 
-      //  createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
-      //  createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
-      //  createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-      //  createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
-      //  createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
-      //  createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
+        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
+        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
+        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
 
         // STEP 4.2 : Real-time synthesis events
 
         // bubbly sixteenth note bass line for synth 1
 
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
-     //   createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
-     //   createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
-     //   createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
-     //   createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
-     //   createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
+        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
 
         // off-beat minor seventh chord stabs for synth 2
 
         createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
-      //  createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
-      //  createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
-      //  createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
-//
-      //  createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
-      //  createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
-      //  createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
-      //  createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
+        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
+
+        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
         // a C note to be synthesized live when holding down the corresponding button
 
