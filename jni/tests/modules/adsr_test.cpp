@@ -56,7 +56,7 @@ TEST( ADSR, Apply ) {
 
     int bufferLength = 8;
     SynthInstrument* instrument = new SynthInstrument();
-    BaseSynthEvent* synthEvent  = new BaseSynthEvent( 440.0f, instrument);
+    BaseSynthEvent* synthEvent  = new BaseSynthEvent( 440.0f, 0, bufferLength, instrument);
     synthEvent->setEventLength( bufferLength );
 
     ADSR* adsr = new ADSR();
@@ -66,6 +66,7 @@ TEST( ADSR, Apply ) {
 
     // create a short buffer where each envelope stage will
     // last for a fourth of the total buffer length
+    // and the release for the full buffer length
     adsr->setDurations( 2, 2, 2, 8 );
 
     AudioBuffer* inputBuffer = new AudioBuffer( 1, bufferLength );
@@ -79,6 +80,7 @@ TEST( ADSR, Apply ) {
     adsr->apply( inputBuffer, synthEvent, 0 );
 
     // assert results to expected envelope increments for buffer range
+
     // for buffer [ 1, 1, 1, 1, 1, 1, 1, 1 ]
     // we expect [ 0, 0.5, 1, 0.75, 0.5, 0.5, 0.5, 0.25 ]
 
@@ -97,6 +99,91 @@ TEST( ADSR, Apply ) {
     // release phase
     EXPECT_FLOAT_EQ( buffer[ 6 ], HALF_PHASE );
     EXPECT_FLOAT_EQ( buffer[ 7 ], QUARTER_PHASE);
+
+    delete adsr;
+    delete inputBuffer;
+    delete synthEvent;
+    delete instrument;
+}
+
+TEST( ADSR, ApplyOnLiveEvent ) {
+    float HALF_PHASE    = MAX_PHASE / 2;
+    float QUARTER_PHASE = MAX_PHASE / 4;
+
+    int bufferLength = 8;
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* synthEvent  = new BaseSynthEvent( 440.0f, instrument);
+    synthEvent->setEventLength( bufferLength );
+
+    ADSR* adsr = new ADSR();
+
+    // sustain level is at half volume
+    adsr->setSustainLevel( HALF_PHASE );
+    // release envelope that lasts for the full buffer length
+
+    // create a short buffer where each envelope stage will
+    // last for a fourth of the total buffer length
+    // and the release for the full buffer length
+    adsr->setDurations( 2, 2, BufferUtility::bufferToSeconds( bufferLength, AudioEngineProps::BUFFER_SIZE ), 8 );
+
+    AudioBuffer* inputBuffer = new AudioBuffer( 1, bufferLength );
+    SAMPLE_TYPE* buffer      = inputBuffer->getBufferForChannel( 0 );
+
+    // TEST 1. sustained live event
+
+    // fill buffer with maximum volume samples
+    for ( int i = 0; i < inputBuffer->bufferSize; ++i )
+        buffer[ i ] = MAX_PHASE;
+
+    // apply ADSR envelopes
+    adsr->apply( inputBuffer, synthEvent, 0 );
+
+    // assert results to expected envelope increments for buffer range
+    // for buffer [ 1, 1, 1, 1, 1, 1, 1, 1 ]
+    // we expect [ 0, 0.5, 1, 0.75, 0.5, 0.5, 0.5, 0.5 ]
+    // as the release envelope is only applied when synthEvent->stop() is invoked (sets its release state)
+
+    // attack phase
+    EXPECT_FLOAT_EQ( buffer[ 0 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 1 ], HALF_PHASE );
+
+    // decay phase
+    EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], HALF_PHASE + QUARTER_PHASE );
+
+    // sustain phase (longer as the release phase is only initiated when synthEvent is released
+    EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 5 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 6 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 7 ], HALF_PHASE);
+
+    // TEST 2. released event
+    // fill buffer with maximum volume samples again
+    for ( int i = 0; i < inputBuffer->bufferSize; ++i )
+        buffer[ i ] = MAX_PHASE;
+
+    // release event (by instantly stopping)
+    synthEvent->stop();
+
+    // apply ADSR envelopes
+    adsr->apply( inputBuffer, synthEvent, 0 );
+
+    // assert results to expected envelope increments for buffer range
+    // for buffer [ 1, 1, 1, 1, 1, 1, 1, 1 ]
+    // we expect [ 0.5, 0.4375, 0.375, 0.3124, 0.25, 0.1875, 0.125, 0.0625 ]
+
+    // release phase
+    EXPECT_FLOAT_EQ( buffer[ 0 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 1 ], 0.4375 );
+
+    // unprocessed buffer
+    EXPECT_FLOAT_EQ( buffer[ 2 ], 0.375 );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], 0.3125 );
+    EXPECT_FLOAT_EQ( buffer[ 4 ], QUARTER_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 5 ], 0.1875 );
+    EXPECT_FLOAT_EQ( buffer[ 6 ], 0.125 );
+    EXPECT_FLOAT_EQ( buffer[ 7 ], 0.0625 );
+
 
     delete adsr;
     delete inputBuffer;

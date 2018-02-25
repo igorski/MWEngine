@@ -319,7 +319,7 @@ TEST( BaseAudioEvent, PositionInSamples )
     audioEvent->setEventLength( eventLength );
 
     EXPECT_EQ( eventStart,  audioEvent->getEventStart() );
-    EXPECT_EQ( expectedEnd,  audioEvent->getEventEnd() );
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() );
     EXPECT_EQ( eventLength, audioEvent->getEventLength() );
 
     // test whether values in seconds have updated accordingly

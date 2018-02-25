@@ -70,6 +70,7 @@ class BaseSynthEvent : public BaseAudioEvent
         void stop();
 
         int getEventEnd();
+        bool isQueuedForDeletion();
 
         // synthesis properties
 
@@ -99,6 +100,8 @@ class BaseSynthEvent : public BaseAudioEvent
 
         void unlock();
 
+        virtual void setDeletable( bool value );
+
     protected:
 
         static unsigned int INSTANCE_COUNT;
@@ -116,8 +119,6 @@ class BaseSynthEvent : public BaseAudioEvent
         // setup related
 
         void init( SynthInstrument* aInstrument, float aFrequency, int aPosition, float aLength, bool aIsSequenced );
-
-        virtual void setDeletable( bool value );
 
         // render related
         virtual void updateProperties();

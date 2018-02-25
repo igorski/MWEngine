@@ -87,9 +87,6 @@ void BaseSynthEvent::play()
 
 void BaseSynthEvent::stop()
 {
-    if ( !_livePlayback )
-        return;
-
     released = true;
 
     if ( !isSequenced ) {
@@ -115,6 +112,11 @@ int BaseSynthEvent::getEventEnd()
 {
     // SynthEvents might have a longer duration if they have a positive release envelope
     return BaseAudioEvent::getEventEnd() + _synthInstrument->adsr->getReleaseDuration();
+}
+
+bool BaseSynthEvent::isQueuedForDeletion()
+{
+    return _queuedForDeletion;
 }
 
 float BaseSynthEvent::getFrequency()

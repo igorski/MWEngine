@@ -22,6 +22,7 @@
  */
 #include <modules/adsr.h>
 #include <utilities/bufferutility.h>
+#include <utilities/debug.h>
 #include <algorithm>
 
 /* constructors / destructor */
@@ -211,6 +212,9 @@ void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDurat
     _releaseDuration = releaseDuration;
 
     int sustainDuration = std::max( 0, bufferLength - ( attackDuration + decayDuration ));
+    if ( releaseDuration > 0 ) {
+        sustainDuration -= releaseDuration;
+    }
 
     // update start offsets for DSR stages
     _decayStart     = _attackDuration;
@@ -221,7 +225,11 @@ void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDurat
     _attackIncrement  = MAX_PHASE     / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );
     _decayIncrement   = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _decayDuration );   // move to sustain phase amplitude
     _releaseIncrement = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _releaseDuration ); // release from sustain phase amp
-
+if ( attackDuration == 2 ) {
+Debug::log("durations A %d D %d S %d R %d BUF LEN %d", attackDuration, decayDuration, sustainDuration, releaseDuration, bufferLength);
+Debug::log("starts D %d S %d R %d", _decayStart, _sustainStart, _releaseStart);
+Debug::log("increments A %f D %f R %f", _attackIncrement, _decayIncrement, _releaseIncrement );
+}
     _bufferLength = bufferLength;
 }
 
@@ -266,11 +274,14 @@ void ADSR::invalidateEnvelopes()
 void ADSR::construct()
 {
     _bufferLength    = 0;
+    _attackTime      = 0;
+    _decayTime       = 0;
+    _sustainLevel    = ( float ) MAX_PHASE;
+    _releaseTime     = 0;
     _decayStart      = 0;
     _sustainStart    = 0;
     _releaseStart    = 0;
     _attackDuration  = 0;
     _decayDuration   = 0;
     _releaseDuration = 0;
-    _sustainLevel    = ( float ) MAX_PHASE;
 }

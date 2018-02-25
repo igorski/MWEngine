@@ -157,13 +157,16 @@ void BaseAudioEvent::setEventLength( int value )
     _eventLength = value;
 
     // for non loopeable-events the existing event end must not
-    // be smaller than or equal to the event start nor
+    // be smaller than (or equal to) the event start nor
+    // be smaller than the event length or
     // exceed the range set by the event start and event length
 
     if ( !_loopeable )
     {
         if ( _eventEnd <= _eventStart ||
-             _eventEnd >= ( _eventStart + _eventLength )) {
+             _eventEnd <  ( _eventStart + _eventLength ) ||
+             _eventEnd >= ( _eventStart + _eventLength ))
+        {
             _eventEnd = _eventStart + ( _eventLength - 1 );
         }
     }
