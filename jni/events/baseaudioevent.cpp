@@ -501,9 +501,9 @@ void BaseAudioEvent::construct()
     _locked            = false;
     _addedToSequencer  = false;
     _volume            = MAX_PHASE;
-    _eventStart       = 0;
-    _eventEnd         = 0;
-    _eventLength      = 0;
+    _eventStart        = 0;
+    _eventEnd          = 0;
+    _eventLength       = 0;
     _readPointer       = 0;
     _startPosition     = 0.f;
     _endPosition       = 0.f;
