@@ -96,11 +96,13 @@ class ADSR
         SAMPLE_TYPE _attackIncrement;
         int _attackDuration;
 
-        SAMPLE_TYPE _decayIncrement;
+        SAMPLE_TYPE _decayDecrement;
         SAMPLE_TYPE _lastDecayEnvelope;
         int _decayDuration;
 
-        SAMPLE_TYPE _releaseIncrement;
+        int _sustainDuration;
+
+        SAMPLE_TYPE _releaseDecrement;
         int _releaseDuration;
 
         // attack starts at the beginning of the sound (thus at start

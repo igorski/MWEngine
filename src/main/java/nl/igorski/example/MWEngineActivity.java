@@ -115,8 +115,9 @@ public final class MWEngineActivity extends Activity
         _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
         _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
 
-        // a short decay for synth 1 (provides a bubbly effect)
+        // a short decay for synth 1 with a 0 sustain level (provides a bubbly effect)
         _synth1.getAdsr().setDecayTime( .1f );
+        _synth1.getAdsr().setSustainLevel( 0.0f );
         // a short release for synth 2 (smooth fade out)
         _synth2.getAdsr().setReleaseTime( 0.15f );
 

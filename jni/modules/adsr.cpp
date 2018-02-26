@@ -136,7 +136,8 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
     float sustainLevel = _sustainLevel;
     
     bool applyAttack  = _attackDuration  > 0 && writeOffset < _decayStart;
-    bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart && writeOffset < _sustainStart;
+    bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart   && writeOffset < _sustainStart;
+    bool applySustain = _sustainDuration > 0 && writeEndOffset >= _sustainStart && writeOffset < _releaseStart;
     bool applyRelease = synthEvent->isSequenced && _releaseDuration > 0 &&
                         writeEndOffset >= _releaseStart && writeOffset < eventDurationWithRelease;
 
@@ -146,7 +147,8 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
 
     if ( synthEvent->released ) {
         applyAttack  =
-        applyDecay   = false;
+        applyDecay   =
+        applySustain = false;
         applyRelease = true;
 
         writeOffset  = synthEvent->cachedProps.envelopeOffset;
@@ -179,16 +181,18 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
 
             // decay envelope
             else if ( applyDecay && readOffset >= _decayStart && readOffset <= _sustainStart )
-                lastEnvelope = MAX_PHASE - ( SAMPLE_TYPE ) ( readOffset - _decayStart ) * _decayIncrement;
+                lastEnvelope = MAX_PHASE - ( SAMPLE_TYPE ) ( readOffset - _decayStart ) * _decayDecrement;
 
             // sustain envelope (keeps at last envelope value which is the last decay phase value)
-            // nothing to do here then, just mix at lastEnvelope value
+
+            else if ( applySustain && readOffset >= _sustainStart && readOffset <= _releaseStart )
+                lastEnvelope = _sustainLevel;
 
             // release envelope
 
             else if ( applyRelease && readOffset >= _releaseStart )
                 lastEnvelope = std::max(
-                    sustainLevel - ( SAMPLE_TYPE ) ( readOffset - _releaseStart ) * _releaseIncrement,
+                    sustainLevel - ( SAMPLE_TYPE ) ( readOffset - _releaseStart ) * _releaseDecrement,
                     0.0
                 );
 
@@ -213,9 +217,8 @@ void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDurat
 {
     _attackDuration  = attackDuration;
     _decayDuration   = decayDuration;
+    _sustainDuration = std::max( 0, bufferLength - ( attackDuration + decayDuration ));
     _releaseDuration = releaseDuration;
-
-    int sustainDuration = std::max( 0, bufferLength - ( attackDuration + decayDuration ));
 
     // update start offsets for DSR stages
     _decayStart     = _attackDuration;
@@ -224,8 +227,8 @@ void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDurat
 
     // update increments for the envelope stages
     _attackIncrement  = MAX_PHASE     / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );
-    _decayIncrement   = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _decayDuration );   // move to sustain phase amplitude
-    _releaseIncrement = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _releaseDuration ); // release from sustain phase amp
+    _decayDecrement   = ( MAX_PHASE - _sustainLevel ) / _decayDuration;                  // move to sustain phase amplitude
+    _releaseDecrement = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _releaseDuration ); // release from sustain phase amp
 
     _bufferLength = bufferLength;
 }

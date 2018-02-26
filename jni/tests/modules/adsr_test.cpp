@@ -50,7 +50,7 @@ TEST( ADSR, ReleaseDuration )
     delete adsr;
 }
 
-TEST( ADSR, Apply ) {
+TEST( ADSR, ApplyPositiveSustain ) {
     float HALF_PHASE    = MAX_PHASE / 2;
     float QUARTER_PHASE = MAX_PHASE / 4;
 
@@ -68,7 +68,7 @@ TEST( ADSR, Apply ) {
     // last for a fourth of the total buffer length (implying that the
     // Sustain stage stays for half the buffer length)
     // additionally we request a release equal to the full buffer length
-    adsr->setDurations( 2, 2, 8, 8 );
+    adsr->setDurations( 2, 2, bufferLength, bufferLength );
 
     // note we request the full event length plus the release duration
     // as a positive release time will extend the lifetime of the events playback
@@ -93,7 +93,7 @@ TEST( ADSR, Apply ) {
 
     // decay phase
     EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
-    EXPECT_FLOAT_EQ( buffer[ 3 ], HALF_PHASE + QUARTER_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], MAX_PHASE - QUARTER_PHASE );
 
     // sustain phase
     EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
@@ -110,6 +110,72 @@ TEST( ADSR, Apply ) {
     EXPECT_FLOAT_EQ( buffer[ 13 ], 0.1875 );
     EXPECT_FLOAT_EQ( buffer[ 14 ], 0.125 );
     EXPECT_FLOAT_EQ( buffer[ 15 ], 0.0625 );
+
+    delete adsr;
+    delete inputBuffer;
+    delete synthEvent;
+    delete instrument;
+}
+
+TEST( ADSR, ApplyZeroSustain ) {
+    float HALF_PHASE    = MAX_PHASE / 2;
+    float QUARTER_PHASE = MAX_PHASE / 4;
+
+    int bufferLength = 16;
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* synthEvent  = new BaseSynthEvent( 440.0f, 0, 0, instrument);
+    synthEvent->setEventLength( bufferLength );
+
+    ADSR* adsr = new ADSR();
+
+    // sustain level is at zero volume
+    adsr->setSustainLevel( 0.0 );
+
+    // create a short buffer where the Attack stage lasts for an eight of the total
+    // buffer length while the Decay stage will last for a fourth of the total buffer
+    // length, additionally we request a release equal to half the buffer length
+    adsr->setDurations( 2, 4, 8, bufferLength );
+
+    // note we request the full event length plus the release duration
+    // as a positive release time will extend the lifetime of the events playback
+    AudioBuffer* inputBuffer = new AudioBuffer( 1, bufferLength + adsr->getReleaseDuration() );
+    SAMPLE_TYPE* buffer      = inputBuffer->getBufferForChannel( 0 );
+
+    // fill buffer with maximum volume samples
+    for ( int i = 0; i < inputBuffer->bufferSize; ++i )
+        buffer[ i ] = MAX_PHASE;
+
+    // apply ADSR envelopes
+    adsr->apply( inputBuffer, synthEvent, 0 );
+
+    // assert results to expected envelope increments for buffer range
+
+    // for buffer [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ]
+    // we expect [ 0, 0.5, 1, 0.75, 0.5, 0.25, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0 ]
+
+    // attack phase
+    EXPECT_FLOAT_EQ( buffer[ 0 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 1 ], HALF_PHASE );
+
+    // decay phase
+    EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], MAX_PHASE - QUARTER_PHASE );
+
+    // sustain phase
+    EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 5 ], QUARTER_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 6 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 7 ], 0 );
+
+    // release phase
+    EXPECT_FLOAT_EQ( buffer[ 8 ],  0 );
+    EXPECT_FLOAT_EQ( buffer[ 9 ],  0 );
+    EXPECT_FLOAT_EQ( buffer[ 10 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 11 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 12 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 13 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 14 ], 0 );
+    EXPECT_FLOAT_EQ( buffer[ 15 ], 0 );
 
     delete adsr;
     delete inputBuffer;
@@ -162,7 +228,7 @@ TEST( ADSR, ApplyOnLiveEvent ) {
 
     // decay phase
     EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
-    EXPECT_FLOAT_EQ( buffer[ 3 ], HALF_PHASE + QUARTER_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], MAX_PHASE - QUARTER_PHASE );
 
     // sustain phase (longer as the release phase is only initiated when synthEvent is released
     EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
