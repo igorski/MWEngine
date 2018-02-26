@@ -115,8 +115,11 @@ public final class MWEngineActivity extends Activity
         _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
         _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
 
-        // a high decay for synth 1 (bubblier effect)
-        _synth1.getAdsr().setDecay( .9f );
+        // a short decay for synth 1 with a 0 sustain level (provides a bubbly effect)
+        _synth1.getAdsr().setDecayTime( .1f );
+        _synth1.getAdsr().setSustainLevel( 0.0f );
+        // a short release for synth 2 (smooth fade out)
+        _synth2.getAdsr().setReleaseTime( 0.15f );
 
         // add a filter to synth 1
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
@@ -288,23 +291,19 @@ public final class MWEngineActivity extends Activity
      */
     private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
-        {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
         }
-
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
     private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
-        {
-            _synth1.getAdsr().setDecay( progress / 100f );
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
+            _synth1.getAdsr().setDecayTime( progress / 100f );
             _synth1.updateEvents(); // update all synth events to match new ADSR properties
         }
-
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
@@ -314,11 +313,9 @@ public final class MWEngineActivity extends Activity
      */
     private class DelayMixChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
-        {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _delay.setFeedback( progress / 100f );
         }
-
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
@@ -328,16 +325,12 @@ public final class MWEngineActivity extends Activity
      */
     private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
-        {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
             final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
-
-            final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
-
+           final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
             _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
         }
-
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }

@@ -20,11 +20,13 @@
 #include "generators/envelopegenerator_test.cpp"
 #include "instruments/baseinstrument_test.cpp"
 #include "instruments/sampledinstrument_test.cpp"
+#include "modules/adsr_test.cpp"
 #include "processors/delay_test.cpp"
 #include "processors/flanger_test.cpp"
 #include "processors/tremolo_test.cpp"
 #include "utilities/fastmath_test.cpp"
 #include "utilities/tablepool_test.cpp"
+#include "utilities/samplemanager_test.cpp"
 #include "deprecation_test.cpp"
 
 // these aren't stability tests, but benchmarks to test certain performance assumptions

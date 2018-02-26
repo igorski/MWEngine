@@ -79,6 +79,8 @@ void BaseAudioEvent::play()
     if ( _livePlayback )
         return;
 
+    setDeletable( false );
+
     // move this event to the live events list of the instrument (keep
     // the current sequenced event - if it was added - as is)
 
@@ -115,7 +117,7 @@ void BaseAudioEvent::addToSequencer()
 
 void BaseAudioEvent::removeFromSequencer()
 {
-    if ( !_addedToSequencer )
+    if ( !_addedToSequencer || _instrument == 0 )
         return;
 
     if ( !isSequenced )
@@ -125,10 +127,13 @@ void BaseAudioEvent::removeFromSequencer()
     else
     {
         std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
-        std::vector<BaseAudioEvent*>::iterator position = std::find( events->begin(),
-                                                                     events->end(), this );
-        if ( position != events->end() )
-            events->erase( position );
+
+        if ( events != 0 ) {
+            std::vector<BaseAudioEvent*>::iterator position = std::find( events->begin(),
+                                                                         events->end(), this );
+            if ( position != events->end() )
+                events->erase( position );
+        }
     }
     _addedToSequencer = false;
 }
@@ -152,13 +157,16 @@ void BaseAudioEvent::setEventLength( int value )
     _eventLength = value;
 
     // for non loopeable-events the existing event end must not
-    // be smaller than or equal to the event start nor
+    // be smaller than (or equal to) the event start nor
+    // be smaller than the event length or
     // exceed the range set by the event start and event length
 
     if ( !_loopeable )
     {
         if ( _eventEnd <= _eventStart ||
-             _eventEnd >= ( _eventStart + _eventLength )) {
+             _eventEnd <  ( _eventStart + _eventLength ) ||
+             _eventEnd >= ( _eventStart + _eventLength ))
+        {
             _eventEnd = _eventStart + ( _eventLength - 1 );
         }
     }
@@ -493,9 +501,9 @@ void BaseAudioEvent::construct()
     _locked            = false;
     _addedToSequencer  = false;
     _volume            = MAX_PHASE;
-    _eventStart       = 0;
-    _eventEnd         = 0;
-    _eventLength      = 0;
+    _eventStart        = 0;
+    _eventEnd          = 0;
+    _eventLength       = 0;
     _readPointer       = 0;
     _startPosition     = 0.f;
     _endPosition       = 0.f;

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,7 +32,7 @@
 
 SampledInstrument::SampledInstrument()
 {
-    construct();
+    // construct() called by BaseInstrument constructor
 }
 
 SampledInstrument::~SampledInstrument()
@@ -57,21 +57,6 @@ SampledInstrument::~SampledInstrument()
 }
 
 /* public methods */
-
-bool SampledInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
-{
-    bool removed = false;
-
-    if ( audioEvent != 0 )
-    {
-        removed = BaseInstrument::removeEvent( audioEvent, isLiveEvent );
-#ifndef USE_JNI
-        delete audioEvent;
-        audioEvent = 0;
-#endif
-    }
-    return removed;
-}
 
 void SampledInstrument::updateEvents()
 {

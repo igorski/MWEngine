@@ -32,7 +32,7 @@
 
 SynthInstrument::SynthInstrument()
 {
-    construct();
+    // construct() called by BaseInstrument constructor
     init();
 }
 
@@ -43,26 +43,7 @@ SynthInstrument::~SynthInstrument()
     delete arpeggiator;
     delete synthesizer;
 
-    // when using JNI, we let SWIG invoke destructors when Java references are finalized
-    // otherwise we delete and dispose the events directly from this instrument
-#ifndef USE_JNI
-
-    while ( !_audioEvents->empty() )
-    {
-        delete _audioEvents->back();
-        _audioEvents->pop_back();
-    }
-
-    while ( !_liveAudioEvents->empty() )
-    {
-        delete _liveAudioEvents->back();
-        _liveAudioEvents->pop_back();
-    }
-
-#endif
-
-    while ( oscillators.size() > 0 )
-        delete oscillators.back();
+    reserveOscillators( 0 );
 }
 
 /* public methods */
@@ -84,19 +65,6 @@ void SynthInstrument::updateEvents()
         event->invalidateProperties( event->position, event->length, this );
     }
     synthesizer->updateProperties();
-}
-
-bool SynthInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
-{
-    bool removed = BaseInstrument::removeEvent( audioEvent, isLiveEvent );
-
-    // when using JNI, we let SWIG invoke destructors when Java references are finalized
-    // otherwise we delete and dispose the events directly from this instrument
-#ifndef USE_JNI
-    delete audioEvent;
-    audioEvent = 0;
-#endif
-    return removed;
 }
 
 int SynthInstrument::getOscillatorAmount()
@@ -139,8 +107,13 @@ OscillatorProperties* SynthInstrument::getOscillatorProperties( int aOscillatorN
 void SynthInstrument::init()
 {
     adsr = new ADSR();
-    adsr->setAttack( 0.01 );
-    adsr->setDecay ( 0.01 );
+
+    // note we set very short attack and release to prevent pops
+
+    adsr->setAttackTime  ( 0.01 );
+    adsr->setDecayTime   ( 0.0 );
+    adsr->setSustainLevel( MAX_PHASE );
+    adsr->setReleaseTime ( 0.01 );
 
     // default values
     octave          = 4;

@@ -21,17 +21,19 @@ TEST( BaseSynthEvent, InstanceId )
 
     // 3. delete events (should decrement instance ids)
 
-    deleteAudioEvent( audioEvent );
-    deleteAudioEvent( audioEvent2 );
+    delete audioEvent;
+    delete audioEvent2;
 
     // 4. create third event
-    // TODO: destructor doesn't seem to do anything ??
-//    audioEvent = new BaseSynthEvent( frequency, instrument );
-//
-//    EXPECT_EQ( firstInstanceId, audioEvent->instanceId )
-//        << "expected old instance id to be equal to the new BaseAudioEvents id as the old events have been disposed";
-//
-//    deleteAudioEvent( audioEvent );
+
+    BaseSynthEvent* audioEvent3 = new BaseSynthEvent( frequency, instrument );
+
+    EXPECT_EQ( firstInstanceId, audioEvent3->instanceId )
+        << "expected old instance id to be equal to the new BaseAudioEvents id as the old events have been disposed";
+
+    delete audioEvent3;
+// TODO: deleting this leads to occassional segmentation fault!?
+//    delete instrument;
 }
 
 TEST( BaseSynthEvent, GettersSetters )
@@ -52,7 +54,37 @@ TEST( BaseSynthEvent, GettersSetters )
     EXPECT_EQ( frequency, audioEvent->getBaseFrequency() )
         << "expected base frequency to be equal to the value passed in the setter method";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
+}
+
+TEST( BaseSynthEvent, Envelopes )
+{
+    float frequency             = randomFloat() * 4000.f;
+    SynthInstrument* instrument = new SynthInstrument();
+
+    instrument->adsr->setAttackTime( 0.0 );
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, instrument );
+
+    EXPECT_FLOAT_EQ( audioEvent->cachedProps.releaseLevel, instrument->adsr->getSustainLevel() )
+        << "expected events release level by default to equal the ADSR sustain level";
+
+    EXPECT_FLOAT_EQ( audioEvent->cachedProps.envelope, MAX_PHASE )
+        << "expected events envelope to be MAX_PHASE after construction for a 0 attack ADSR";
+
+    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
+        << "expected events envelope offset to be 0 after construction";
+
+    delete audioEvent;
+
+    instrument->adsr->setAttackTime( 1.0f );
+    audioEvent = new BaseSynthEvent( frequency, instrument );
+
+    EXPECT_FLOAT_EQ( audioEvent->cachedProps.envelope, 0.0 )
+        << "expected events envelope to be 0.0 after construction for a positive attack ADSR";
+
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, OscillatorPhases )
@@ -75,7 +107,8 @@ TEST( BaseSynthEvent, OscillatorPhases )
         EXPECT_EQ( phase, audioEvent->getPhaseForOscillator( i ))
             << "expected oscillator phase to equal the value passed in the setter method";
     }
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, SequencedEvent )
@@ -95,7 +128,8 @@ TEST( BaseSynthEvent, SequencedEvent )
     EXPECT_EQ( length, audioEvent->length )
         << "expected length to equal the value passed in the constructor";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, PropertyInvalidation )
@@ -124,7 +158,8 @@ TEST( BaseSynthEvent, PropertyInvalidation )
     ASSERT_TRUE( newInstrument == audioEvent->getInstrument() )
        << "expected the newly set instrument to have been returned";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, LiveEvent )
@@ -136,7 +171,8 @@ TEST( BaseSynthEvent, LiveEvent )
     ASSERT_FALSE( audioEvent->isSequenced )
         << "expected BaseSynthEvent not be sequenced for this constructor";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
 }
 
 // test overridden mix buffer method
@@ -301,7 +337,8 @@ TEST( BaseSynthEvent, MixBuffer )
         ASSERT_FALSE( bufferHasContent( targetBuffer ))
             << "expected output buffer to contain no content after mixing for an out-of-range buffer position";
     }
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
+    delete instrument;
     delete targetBuffer;
     delete buffer;
 }
@@ -326,4 +363,156 @@ TEST( BaseSynthEvent, LockedState )
         << "expected audio event to be unlocked after unlocking";
 
     delete audioEvent;
+}
+
+// test overridden play/stop states
+
+TEST( BaseSynthEvent, Play )
+{
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( 440.0f, instrument );
+
+    ASSERT_FALSE( audioEvent->released )
+        << "expected synth event not be released after construction";
+
+    audioEvent->released = true;
+    audioEvent->setDeletable( true );
+    audioEvent->cachedProps.envelope       = MAX_PHASE;
+    audioEvent->cachedProps.envelopeOffset = 1000;
+
+    audioEvent->play();
+
+    ASSERT_FALSE( audioEvent->released )
+        << "expected synth event not be released after invocation of play";
+
+    ASSERT_FALSE( audioEvent->isDeletable() )
+        << "expected synth event to have unset its deletable flag after invocation of play";
+
+    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
+        << "expected synth events cached envelope offset to have been reset";
+
+    EXPECT_EQ( audioEvent->cachedProps.envelope, 0.0 )
+        << "expected synth events cached envelope offset to have been reset";
+
+    EXPECT_EQ( audioEvent->lastWriteIndex, 0 )
+        << "expected synth events last write index to have been reset";
+
+    delete audioEvent;
+    delete instrument;
+}
+
+TEST( BaseSynthEvent, StopAndDelete )
+{
+    float frequency                = randomFloat() * 4000.f;
+    SynthInstrument* instrument    = new SynthInstrument();
+
+    // apply a positive release as we don't want immediate silence/removal of the event
+    instrument->adsr->setReleaseTime( 1.0f );
+
+    BaseSynthEvent* liveEvent      = new BaseSynthEvent( frequency, instrument );
+    BaseSynthEvent* sequencedEvent = new BaseSynthEvent( frequency, 0, 512, instrument );
+
+    ASSERT_FALSE( liveEvent->isDeletable() ) << "expected event not be deletable upon construction";
+    ASSERT_FALSE( sequencedEvent->isDeletable() ) << "expected sequenced event not be deletable upon construction";
+
+    // start playing events
+    liveEvent->play();
+    sequencedEvent->play();
+
+    // and stop them directly
+    liveEvent->stop();
+    sequencedEvent->stop();
+
+    ASSERT_TRUE( liveEvent->isQueuedForDeletion() )
+        << "expected live event to be scheduled for deletion upon invocation of stop()";
+    ASSERT_FALSE( liveEvent->isDeletable() )
+        << "expected live even not to be immediately deletable due to positive release phase";
+    ASSERT_FALSE( sequencedEvent->isDeletable() )
+        << "expected sequenced event not be immediately deletable upon invocation of stop()";
+
+    delete liveEvent;
+    delete sequencedEvent;
+    delete instrument;
+}
+
+TEST( BaseSynthEvent, Stop )
+{
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( 440.0f, instrument );
+
+    ASSERT_FALSE( audioEvent->released )
+        << "expected synth event not be released after construction";
+
+    audioEvent->play();
+    audioEvent->stop();
+
+    ASSERT_TRUE( audioEvent->released )
+        << "expected synth event to be released after invocation of stop";
+
+    delete audioEvent;
+    delete instrument;
+}
+
+TEST( BaseSynthEvent, StopLiveEvent )
+{
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( 440.0f, instrument );
+    audioEvent->isSequenced     = false;
+
+    instrument->adsr->setAttackTime( 1.0f );
+    instrument->adsr->setDecayTime ( 2.0f );
+    int expectedOffset = instrument->adsr->getReleaseStartOffset();
+
+    audioEvent->cachedProps.envelopeOffset = 0;
+    audioEvent->cachedProps.envelope       = 0.5;
+
+    // start the event
+    audioEvent->play();
+    // and stop it
+    audioEvent->stop();
+
+    EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, expectedOffset )
+        << "expected synth event envelope offset to be at the start of the release envelopes offset";
+
+    EXPECT_EQ( audioEvent->cachedProps.releaseLevel, audioEvent->cachedProps.envelope )
+        << "expected events release level to equal the last envelope level";
+
+    delete audioEvent;
+    delete instrument;
+}
+
+// test overridden event duration state
+
+TEST( BaseSynthEvent, GetEventEnd )
+{
+    float frequency             = randomFloat() * 4000.f;
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, instrument );
+
+    instrument->adsr->setReleaseTime( 0.0 );
+
+    // set a non-existing release envelope
+    instrument->adsr->setReleaseTime( 0 );
+
+    int eventStart  = 0;
+    int eventLength = 88200;
+    int expectedEnd = eventStart + ( eventLength - 1 );
+
+    audioEvent->setEventStart ( eventStart );
+    audioEvent->setEventLength( eventLength );
+
+    EXPECT_EQ( audioEvent->getEventEnd(), expectedEnd )
+        << "expected event end to equal the expectation of its total duration without a release envelope";
+
+    // set a positive release envelope
+    instrument->adsr->setReleaseTime( 0.5 );
+
+    // add release duration (in samples) to expected end
+    expectedEnd += instrument->adsr->getReleaseDuration();
+
+    EXPECT_EQ( audioEvent->getEventEnd(), expectedEnd )
+        << "expected event end to include the positive release duration";
+
+    delete audioEvent;
+    delete instrument;
 }

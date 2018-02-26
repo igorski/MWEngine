@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,21 +21,21 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <modules/adsr.h>
-#include <utilities/utils.h>
+#include <utilities/bufferutility.h>
+#include <algorithm>
 
 /* constructors / destructor */
 
 ADSR::ADSR()
 {
-    _bufferLength    = 0;
-    _decayStart      = 0;
-    _sustainStart    = 0;
-    _releaseStart    = 0;
-    _attackDuration  = 0;
-    _decayDuration   = 0;
-    _sustainDuration = 0;
-    _releaseDuration = 0;
-    _lastEnvelope    = MAX_PHASE;
+    construct();
+    setEnvelopesInternal( getAttackTime(), getDecayTime(), getSustainLevel(), getReleaseTime() );
+}
+
+ADSR::ADSR( float attackTime, float decayTime, float sustainLevel, float releaseTime )
+{
+    construct();
+    setEnvelopesInternal( attackTime, decayTime, sustainLevel, releaseTime );
 }
 
 ADSR::~ADSR()
@@ -45,230 +45,243 @@ ADSR::~ADSR()
 
 /* public methods */
 
-void ADSR::setBufferLength( int aBufferLength )
+float ADSR::getAttackTime()
 {
-    if ( aBufferLength != _bufferLength )
-    {
-        _bufferLength = aBufferLength;
-        invalidateEnvelopes();
-    }
+    return _attackTime;
 }
 
-int ADSR::getBufferLength()
+void ADSR::setAttackTime( float aValue )
 {
-    return _bufferLength;
+    setEnvelopesInternal( aValue, getDecayTime(), getSustainLevel(), getReleaseTime() );
 }
 
-float ADSR::getAttack()
+float ADSR::getDecayTime()
 {
-    return _attack;
+    return _decayTime;
 }
 
-void ADSR::setAttack( float aValue )
+void ADSR::setDecayTime( float aValue )
 {
-    setEnvelopesInternal( aValue, getDecay(), getSustain(), getRelease() );
+    setEnvelopesInternal( getAttackTime(), aValue, getSustainLevel(), getReleaseTime() );
 }
 
-float ADSR::getDecay()
+float ADSR::getSustainLevel()
 {
-    return _decay;
+    return _sustainLevel;
 }
 
-void ADSR::setDecay( float aValue )
+void ADSR::setSustainLevel( float aValue )
 {
-    setEnvelopesInternal( getAttack(), aValue, getSustain(), getRelease() );
+    setEnvelopesInternal( getAttackTime(), getDecayTime(), aValue, getReleaseTime() );
 }
 
-float ADSR::getSustain()
+float ADSR::getReleaseTime()
 {
-    return _sustain;
+    return _releaseTime;
 }
 
-void ADSR::setSustain( float aValue )
+void ADSR::setReleaseTime( float aValue )
 {
-    setEnvelopesInternal( getAttack(), getDecay(), aValue, getRelease() );
+    setEnvelopesInternal( getAttackTime(), getDecayTime(), getSustainLevel(), aValue );
 }
 
-float ADSR::getRelease()
+int ADSR::getReleaseStartOffset()
 {
-    return _release;
+    return _releaseStart;
 }
 
-void ADSR::setRelease( float aValue )
+int ADSR::getReleaseDuration()
 {
-    setEnvelopesInternal( getAttack(), getDecay(), getSustain(), aValue );
-}
-
-SAMPLE_TYPE ADSR::getLastEnvelope()
-{
-    return _lastEnvelope;
-}
-
-void ADSR::setLastEnvelope( SAMPLE_TYPE aEnvelope )
-{
-    _lastEnvelope = aEnvelope;
-}
-
-SAMPLE_TYPE ADSR::apply( AudioBuffer* inputBuffer )
-{
-    return apply( inputBuffer, 0 );
-}
-
-SAMPLE_TYPE ADSR::apply( AudioBuffer* inputBuffer, int eventOffset )
-{
-    // nothing to do
-    if ( eventOffset > _bufferLength && _lastEnvelope == MAX_PHASE )
-        return _lastEnvelope;
-
-    int bufferSize     = inputBuffer->bufferSize;
-    int eventEndOffset = eventOffset + bufferSize;
-    
-    // check which envelopes have something to do for the given eventOffset
-    int decayEndOffset = _decayStart + _decayDuration;
-
-    bool applyAttack  = _attack > 0  && eventOffset < _attackDuration;
-    bool applyDecay   = _decay  > 0  && eventOffset < decayEndOffset && eventEndOffset >= _decayStart;
-    bool applySustain = _sustain > 0 && eventOffset < ( _sustainStart + _sustainDuration ) && eventEndOffset >= _sustainStart;
-    bool applyRelease = _release > 0 && eventOffset < ( _releaseStart + _releaseDuration ) && eventEndOffset >= _releaseStart;
-
-    // no envelope update operations ? mix in at last envelope amplitude and return
-    if ( !applyAttack  &&
-         !applyDecay   &&
-         !applySustain &&
-         !applyRelease )
-    {
-        if ( _lastEnvelope < MAX_PHASE )
-            inputBuffer->adjustBufferVolumes( _lastEnvelope );
-
-        return _lastEnvelope;
-    }
-
-    for ( int cn = 0, ca = inputBuffer->amountOfChannels; cn < ca; ++cn )
-    {
-        SAMPLE_TYPE* targetBuffer = inputBuffer->getBufferForChannel( cn );
-        int readOffset = eventOffset;
-
-        for ( int i = 0; i < bufferSize; ++i, ++readOffset )
-        {
-            // attack envelope
-            if ( applyAttack && readOffset < _attackDuration )
-                _lastEnvelope = ( SAMPLE_TYPE ) readOffset * _attackIncrement;
-
-            // decay envelope
-            else if ( applyDecay && readOffset >= _decayStart && readOffset < decayEndOffset )
-                _lastEnvelope = MAX_PHASE - ( SAMPLE_TYPE ) readOffset * _decayIncrement;
-
-            // sustain envelope (takes volume from last amplitude envelope and thus requires no action)
-
-            // TODO : release (requires "noteOff" to be part of the given AudioBuffer)...
-            //else if ( applyRelease && readOffset >= _releaseStart )
-
-            // apply the calculated amplitude envelope onto the sample
-
-            if ( _lastEnvelope < 0.0 )
-                _lastEnvelope = 0.0;
-
-            targetBuffer[ i ] *= _lastEnvelope;
-        }
-    }
-    return _lastEnvelope;
+    return _releaseDuration;
 }
 
 ADSR* ADSR::clone()
 {
     ADSR* out = new ADSR();
 
-    out->setBufferLength( getBufferLength() );
-    out->setEnvelopesInternal( getAttack(), getDecay(), getSustain(), getRelease() );
+    out->_bufferLength = _bufferLength;
+    out->setEnvelopesInternal( getAttackTime(), getDecayTime(), getSustainLevel(), getReleaseTime() );
 
     return out;
 }
 
 void ADSR::cloneEnvelopes( ADSR* source )
 {
-    setEnvelopesInternal( source->getAttack(), source->getDecay(), source->getSustain(), source->getRelease() );
+    setEnvelopesInternal(
+        source->getAttackTime(), source->getDecayTime(),
+        source->getSustainLevel(), source->getReleaseTime()
+    );
+}
 
-    _lastEnvelope = MAX_PHASE;
+void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writeOffset )
+{
+    SAMPLE_TYPE lastEnvelope = synthEvent->cachedProps.envelope;
+    int eventDuration        = synthEvent->getEventLength();
+
+    // the events lifetime is actually extended by the release phase of this ADSR envelope
+    int eventDurationWithRelease = eventDuration + _releaseDuration;
+
+    // nothing to do
+    if ( writeOffset > eventDurationWithRelease && lastEnvelope == MAX_PHASE )
+        return;
+
+    // cache envelopes for given event duration
+    if ( eventDuration != _bufferLength ) {
+        _bufferLength = eventDuration;
+        invalidateEnvelopes();
+    }
+
+    int bufferSize     = inputBuffer->bufferSize;
+    int writeEndOffset = writeOffset + bufferSize; // for the current cycle
+    float sustainLevel = _sustainLevel;
+    
+    bool applyAttack  = _attackDuration  > 0 && writeOffset < _decayStart;
+    bool applyDecay   = _decayDuration   > 0 && writeEndOffset >= _decayStart   && writeOffset < _sustainStart;
+    bool applySustain = _sustainDuration > 0 && writeEndOffset >= _sustainStart && writeOffset < _releaseStart;
+    bool applyRelease = synthEvent->isSequenced && _releaseDuration > 0 &&
+                        writeEndOffset >= _releaseStart && writeOffset < eventDurationWithRelease;
+
+    // early release can be forced if event has received noteOff (e.g. key up)
+     // this is necessary because resulting event duration might be shorter than
+     // the attack or decay phases
+
+    if ( synthEvent->released ) {
+        applyAttack  =
+        applyDecay   =
+        applySustain = false;
+        applyRelease = true;
+
+        writeOffset  = synthEvent->cachedProps.envelopeOffset;
+        sustainLevel = synthEvent->cachedProps.releaseLevel;
+    }
+
+    // no envelope update operations ? mix in at last envelope amplitude and return
+    // (this could for instance be the sustain phase)
+    if ( !applyAttack  &&
+         !applyDecay   &&
+         !applyRelease )
+    {
+        if ( lastEnvelope < MAX_PHASE )
+            inputBuffer->adjustBufferVolumes( lastEnvelope );
+
+        return;
+    }
+
+    int readOffset;
+    for ( int cn = 0, ca = inputBuffer->amountOfChannels; cn < ca; ++cn )
+    {
+        SAMPLE_TYPE* targetBuffer = inputBuffer->getBufferForChannel( cn );
+        readOffset = writeOffset;
+
+        for ( int i = 0; i < bufferSize; ++i, ++readOffset )
+        {
+            // attack envelope
+            if ( applyAttack && readOffset < _attackDuration )
+                lastEnvelope = ( SAMPLE_TYPE ) readOffset * _attackIncrement;
+
+            // decay envelope
+            else if ( applyDecay && readOffset >= _decayStart && readOffset <= _sustainStart )
+                lastEnvelope = MAX_PHASE - ( SAMPLE_TYPE ) ( readOffset - _decayStart ) * _decayDecrement;
+
+            // sustain envelope (keeps at last envelope value which is the last decay phase value)
+
+            else if ( applySustain && readOffset >= _sustainStart && readOffset <= _releaseStart )
+                lastEnvelope = _sustainLevel;
+
+            // release envelope
+
+            else if ( applyRelease && readOffset >= _releaseStart )
+                lastEnvelope = std::max(
+                    sustainLevel - ( SAMPLE_TYPE ) ( readOffset - _releaseStart ) * _releaseDecrement,
+                    0.0
+                );
+
+            // apply the calculated amplitude envelope onto the sample
+
+            targetBuffer[ i ] *= lastEnvelope;
+        }
+    }
+
+    // store the current envelope into the events cached properties
+    synthEvent->cachedProps.envelope = lastEnvelope;
+
+    // when rendering the released envelope we must cache
+    // the offset within the release phase so event
+    // can calculate when it actually stops playing
+    if ( synthEvent->released ) {
+        synthEvent->cachedProps.envelopeOffset = readOffset;
+    }
+}
+
+void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDuration, int bufferLength )
+{
+    _attackDuration  = attackDuration;
+    _decayDuration   = decayDuration;
+    _sustainDuration = std::max( 0, bufferLength - ( attackDuration + decayDuration ));
+    _releaseDuration = releaseDuration;
+
+    // update start offsets for DSR stages
+    _decayStart     = _attackDuration;
+    _sustainStart   = _decayStart + _decayDuration;
+    _releaseStart   = bufferLength;
+
+    // update increments for the envelope stages
+    _attackIncrement  = MAX_PHASE     / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );
+    _decayDecrement   = ( MAX_PHASE - _sustainLevel ) / _decayDuration;                  // move to sustain phase amplitude
+    _releaseDecrement = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _releaseDuration ); // release from sustain phase amp
+
+    _bufferLength = bufferLength;
 }
 
 /* protected methods */
 
-void ADSR::setEnvelopesInternal( float attack, float decay, float sustain, float release )
+void ADSR::setEnvelopesInternal( float attackTime, float decayTime, float sustainLevel, float releaseTime )
 {
     // 1. ATTACK
+    // note that the minimum allowed value is DEFAULT_FADE_DURATION to prevent popping during sound start
+    int DEFAULT_FADE_DURATION = 8;
 
-    _attack = attack;
+    _attackTime = attackTime;
+    int attackDuration = std::max(
+        DEFAULT_FADE_DURATION,
+        BufferUtility::millisecondsToBuffer( _attackTime * 1000, AudioEngineProps::SAMPLE_RATE )
+    );
 
-    if ( _attack > MAX_PHASE )
-        _attack = MAX_PHASE;
+    // 2. DECAY takes its start offset relative from the attack...
 
-    // no attack set ? WRONG! let's open a very minimal
-    // one to prevent popping during sound start ;)
+    _decayTime = decayTime;
+    int decayDuration  = BufferUtility::millisecondsToBuffer( _decayTime * 1000, AudioEngineProps::SAMPLE_RATE );
 
-    else if ( _attack == 0 && _bufferLength > 0 )
-        _attack = ( DEFAULT_FADE_DURATION / _bufferLength );
+    // 3. SUSTAIN level should be between 0 - 1
 
-    _attackDuration  = ( int ) ( _bufferLength * _attack );
-    _attackIncrement = MAX_PHASE / ( SAMPLE_TYPE ) _attackDuration;
+    _sustainLevel = std::max(( SAMPLE_TYPE ) 0, std::min(( SAMPLE_TYPE ) sustainLevel, MAX_PHASE ));
 
-    // 2. DECAY which can now be calculated as it takes its start
-    // offset relative from the attack...
+    // 4. RELEASE
 
-    _decay = decay;
+    _releaseTime = releaseTime;
+    int releaseDuration  = BufferUtility::millisecondsToBuffer( _releaseTime * 1000, AudioEngineProps::SAMPLE_RATE );
 
-    if ( _decay > MAX_PHASE )
-    {
-        _decay = MAX_PHASE;
-    }
-    // no decay and release set ? WRONG! we create a very minimal
-    // decay to prevent "popping" during sound end by making sure all sound fades out
-    /* // actually no, this mutes live synthesized notes we might want to let ring forever!
-    else if ( _decay <= 0 && _release == 0 )
-    {
-        _decay      = ( SAMPLE_TYPE ) DEFAULT_FADE_DURATION / ( SAMPLE_TYPE ) _bufferLength;
-        _decayStart = _bufferLength;
-    }
-    */
-    _decayDuration = ( int ) ( _bufferLength * _decay );
-    _decayStart    = _bufferLength - _decayDuration; // TODO: use attack end?
+    // commit changes
 
-    int delta = _bufferLength - _decayStart;
-
-    if ( delta > 0 )
-        _decayIncrement = MAX_PHASE / ( SAMPLE_TYPE ) delta;
-    else
-        _decayIncrement = 0.0;
-
-    // 3. SUSTAIN which can now be calculated as it takes its start
-    // offset relative from the decay...
-
-    _sustain = sustain;
-
-    if ( _sustain > MAX_PHASE )
-        _sustain = MAX_PHASE;
-
-    bool hasDecay = _decay > 0;
-    _sustainStart = hasDecay ? ( _decayStart + _decayDuration ) : _attackDuration;
-
-    // TODO: here we start the sustain as soon as the decay (or attack if no decay was set) has ended
-    // while we should alter the decay time to the sustain (to not "fade out" completely)
-    // we disregard the release as it is part of a "noteOff" and we need to overthink this ;)
-    _sustainDuration  = _bufferLength - _sustainStart;
-    _sustainIncrement = MAX_PHASE / ( SAMPLE_TYPE ) _sustainDuration;
-
-    // 4. RELEASE TODO : do we update the release envelope relative to the sustain ?
-    _release = release;
-
-    if ( _release > MAX_PHASE )
-        _release = MAX_PHASE;
-
-    // TODO : finish this implementation
+    setDurations( attackDuration, decayDuration, releaseDuration, _bufferLength );
 }
 
 void ADSR::invalidateEnvelopes()
 {
-    // resetting the attack will recursively update the remaining envelopes internally
-    setAttack( getAttack() );
+    setEnvelopesInternal( getAttackTime(), getDecayTime(), getSustainLevel(), getReleaseTime() );
+}
 
-    _lastEnvelope = MAX_PHASE;
+void ADSR::construct()
+{
+    _bufferLength    = 0;
+    _attackTime      = 0;
+    _decayTime       = 0;
+    _sustainLevel    = ( float ) MAX_PHASE;
+    _releaseTime     = 0;
+    _decayStart      = 0;
+    _sustainStart    = 0;
+    _releaseStart    = 0;
+    _attackDuration  = 0;
+    _decayDuration   = 0;
+    _releaseDuration = 0;
 }

@@ -33,7 +33,7 @@
              android:layout_height="wrap_content" />
 
     <SeekBar android:id="@+id/SynthDecaySlider"
-             android:progress="90"
+             android:progress="10"
              android:layout_marginLeft="5dip"
              android:layout_marginRight="5dip"
              android:layout_marginBottom="5dip"

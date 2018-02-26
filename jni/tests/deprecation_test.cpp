@@ -60,7 +60,7 @@ TEST( BaseAudioEventDeprecation, PositionInSamples )
     EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
         << "expected sample end to exceed the range set by the sample start and updated length properties for loopeable event";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }
 
 TEST( BaseAudioEventDeprecation, PositionInSamplesMethodStub )
@@ -83,5 +83,5 @@ TEST( BaseAudioEventDeprecation, PositionInSamplesMethodStub )
     EXPECT_EQ( audioEvent->getSampleEnd(), audioEvent->getEventEnd() )
         << "expected equal response as these getSampleEnd stubs getEventEnd";
 
-    deleteAudioEvent( audioEvent );
+    delete audioEvent;
 }

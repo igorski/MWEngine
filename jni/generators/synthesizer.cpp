@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -101,10 +101,6 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
                                                   !hasParent ? baseFrequency : frequency );
         aEvent->setFrequency( frequency, false );
     }
-
-    // envelopes
-
-    _instrument->adsr->setBufferLength( aEvent->getEventLength() );
 
     // Karplus-Strong specific
 
@@ -312,10 +308,8 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 
     if ( !hasParent )
     {
-        _instrument->adsr->setLastEnvelope( aEvent->cachedProps.ADSRenvelope );
-        _instrument->adsr->setBufferLength( aEvent->getEventLength() );
+        _instrument->adsr->apply( aOutputBuffer, aEvent, bufferWriteIndex );
 
-        aEvent->cachedProps.ADSRenvelope     = _instrument->adsr->apply( aOutputBuffer, bufferWriteIndex );
         aEvent->cachedProps.arpeggioPosition = arpeggiator->getBufferPosition();
         aEvent->cachedProps.arpeggioStep     = arpeggiator->getStep();
 

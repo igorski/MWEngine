@@ -164,7 +164,7 @@ void dumpBufferContents( SAMPLE_TYPE* buffer, int bufferSize )
 
 void dumpBufferContents( AudioBuffer* audioBuffer )
 {
-    std::cout << "\ndumping AudioBuffer with " << audioBuffer->amountOfChannels << " channels of "
+    std::cout << "\ndumping AudioBuffer with " << audioBuffer->amountOfChannels << " channel(s) of "
         << audioBuffer->bufferSize << " samples in size\n";
 
     for ( int c = 0; c < audioBuffer->amountOfChannels; ++c )
@@ -198,14 +198,13 @@ BaseAudioEvent* randomAudioEvent()
 
 void deleteAudioEvent( BaseAudioEvent* audioEvent )
 {
-    // instrument was created by helper, BaseAudioEvent destructors don't
-    // dispose Instruments (as they shouldn't!), do it here
     BaseInstrument* instrument = audioEvent->getInstrument();
     delete audioEvent;
 
     if ( instrument != 0 )
         instrument->unregisterFromSequencer();
-//    delete instrument; // triggers segmentation fault??
+
+    delete instrument;
 }
 
 // create a BaseAudioEvent that is enqueued into the sequencer, you'll

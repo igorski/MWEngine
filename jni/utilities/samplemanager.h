@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -35,20 +35,27 @@ typedef struct
 } cachedSample;
 
 /**
- * SampleManager is a static class that
- * holds a map of Sampled audio, it can be
- * used to pool samples that are to be used
- * repeatedly or simultaneously, etc...
+ * SampleManager is a static class that holds a map of Sampled audio, it can be
+ * used to pool samples (AudioBuffers) that are to be used repeatedly or simultaneously, etc...
+ * SampleManager will also manage the memory, when samples can be removed you can do
+ * so via SampleManager which will in turn release the memory allocated by the AudioBuffers
  */
 class SampleManager
 {
     public:
 
-        static void setSample( std::string aKey, AudioBuffer* aBuffer );
+        // store given AudioBuffer under given identifier name in this SampleManager
+        static void setSample( std::string aIdentifier, AudioBuffer* aBuffer );
 
+        // retrieve AudioBuffer registered under given identifier from this SampleManager
+        // returns 0 if no associated AudioBuffer is found
         static AudioBuffer* getSample( std::string aIdentifier );
+
+        // retrieve the length (in samples) of the AudioBuffer registered under given
+        // identifier, returns 0 if no associated AudioBuffer is found
         static int getSampleLength( std::string aIdentifier );
 
+        // queries whether the SampleManager has an AudioBuffer registered under given identifier
         static bool hasSample( std::string aIdentifier );
         static void removeSample( std::string aIdentifier );
         static void flushSamples();
