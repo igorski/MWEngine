@@ -243,7 +243,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         int writeOffset = _eventStart > bufferPos ? _eventStart - bufferPos : 0;
 
         // if we're mixing into the ADSR release tail, make sure released is triggered
-        // TODO unset this!
+
         if ( bufferPos > _eventEnd ) {
             if ( !released ) {
                 triggerRelease();
