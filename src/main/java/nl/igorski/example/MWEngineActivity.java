@@ -34,6 +34,7 @@ public final class MWEngineActivity extends Activity
     private Filter              _filter;
     private Phaser              _phaser;
     private Delay               _delay;
+    private Reverb              _reverb;
     private MWEngine            _engine;
     private SequencerController _sequencerController;
     private Vector<SynthEvent>  _synth1Events;
@@ -138,7 +139,10 @@ public final class MWEngineActivity extends Activity
         _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
-        // adjust synthesizer volumes
+        _reverb = new Reverb();
+        _sampler.getAudioChannel().getProcessingChain().addProcessor( _reverb );
+
+        // adjust volumes
         _synth2.getAudioChannel().setVolume( .7f );
 
         // STEP 3 : load some samples from the packaged assets folder into the SampleManager
@@ -167,34 +171,34 @@ public final class MWEngineActivity extends Activity
 
         // bubbly sixteenth note bass line for synth 1
 
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
-        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
+    //    createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
+    //    createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
+    //    createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
+    //    createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
+    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
 
         // off-beat minor seventh chord stabs for synth 2
 
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
-        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
-
-        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+    //    createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
+    //    createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
+    //    createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
+    //    createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
+//
+    //    createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+    //    createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+    //    createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+    //    createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
         // a C note to be synthesized live when holding down the corresponding button
 

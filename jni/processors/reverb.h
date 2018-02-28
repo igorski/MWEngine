@@ -19,7 +19,9 @@
  * along with this MVerb.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "baseprocessor.h"
+#include "../global.h"
 #include <cstring>
+#include <iostream>
 
 #ifndef __REVERB_H_INCLUDED__
 #define __REVERB_H_INCLUDED__
@@ -37,12 +39,12 @@ class Allpass
             Feedback = 0.5;
         }
 
-        SAMPLE_TYPE operator()(SAMPLE_TYPE input)
+        T operator()(T input)
         {
-            SAMPLE_TYPE output;
-            SAMPLE_TYPE bufout;
+            T output;
+            T bufout;
             bufout = buffer[index];
-            SAMPLE_TYPE temp = input * -Feedback;
+            T temp = input * -Feedback;
             output = bufout + temp;
             buffer[index] = input + ((bufout+temp)*Feedback);
             if(++index>=Length) index = 0;
@@ -60,7 +62,7 @@ class Allpass
             this->Length = Length;
         }
 
-        void SetFeedback(SAMPLE_TYPE feedback)
+        void SetFeedback(T feedback)
         {
             Feedback = feedback;
         }
@@ -77,20 +79,20 @@ class Allpass
         }
 
     private:
-        SAMPLE_TYPE buffer[maxLength];
+        T buffer[maxLength];
         int index;
         int Length;
-        SAMPLE_TYPE Feedback;
+        T Feedback;
 };
 
 template<typename T, int maxLength>
 class StaticAllpassFourTap
 {
     private:
-        SAMPLE_TYPE buffer[maxLength];
+        T buffer[maxLength];
         int index1, index2, index3, index4;
         int Length;
-        SAMPLE_TYPE Feedback;
+        T Feedback;
 
     public:
         StaticAllpassFourTap()
@@ -100,13 +102,13 @@ class StaticAllpassFourTap
             Feedback = 0.5;
         }
 
-        SAMPLE_TYPE operator()(SAMPLE_TYPE input)
+        T operator()(T input)
         {
-            SAMPLE_TYPE output;
-            SAMPLE_TYPE bufout;
+            T output;
+            T bufout;
 
             bufout = buffer[index1];
-            SAMPLE_TYPE temp = input * -Feedback;
+            T temp = input * -Feedback;
             output = bufout + temp;
             buffer[index1] = input + ((bufout+temp)*Feedback);
 
@@ -131,7 +133,7 @@ class StaticAllpassFourTap
             index4 = Index4;
         }
 
-        SAMPLE_TYPE GetIndex (int Index)
+        T GetIndex (int Index)
         {
             switch (Index)
             {
@@ -170,7 +172,7 @@ class StaticAllpassFourTap
             index1 = index2  = index3 = index4 = 0;
         }
 
-        void SetFeedback(SAMPLE_TYPE feedback)
+        void SetFeedback(T feedback)
         {
             Feedback = feedback;
         }
@@ -192,9 +194,9 @@ class StaticDelayLine
             Clear();
         }
 
-        SAMPLE_TYPE operator()(SAMPLE_TYPE input)
+        T operator()(T input)
         {
-            SAMPLE_TYPE output = buffer[index];
+            T output = buffer[index];
             buffer[index++] = input;
             if(index >= Length)
                 index = 0;
@@ -224,10 +226,10 @@ class StaticDelayLine
         }
 
     private:
-        SAMPLE_TYPE buffer[maxLength];
+        T buffer[maxLength];
         int index;
         int Length;
-        SAMPLE_TYPE Feedback;
+        T Feedback;
 };
 
 template<typename T, int maxLength>
@@ -241,9 +243,9 @@ class StaticDelayLineFourTap
         }
 
         //get ouput and iterate
-        SAMPLE_TYPE operator()(SAMPLE_TYPE input)
+        T operator()(T input)
         {
-            SAMPLE_TYPE output = buffer[index1];
+            T output = buffer[index1];
             buffer[index1++] = input;
             if(index1 >= Length)
                 index1 = 0;
@@ -266,7 +268,7 @@ class StaticDelayLineFourTap
         }
 
 
-        SAMPLE_TYPE GetIndex (int Index)
+        T GetIndex (int Index)
         {
             switch (Index)
             {
@@ -313,10 +315,10 @@ class StaticDelayLineFourTap
         }
 
     private:
-        SAMPLE_TYPE buffer[maxLength];
+        T buffer[maxLength];
         int index1, index2, index3, index4;
         int Length;
-        SAMPLE_TYPE Feedback;
+        T Feedback;
 };
 
 template<typename T, int maxLength>
@@ -330,9 +332,9 @@ class StaticDelayLineEightTap
         }
 
         //get ouput and iterate
-        SAMPLE_TYPE operator()(SAMPLE_TYPE input)
+        T operator()(T input)
         {
-            SAMPLE_TYPE output = buffer[index1];
+            T output = buffer[index1];
             buffer[index1++] = input;
             if(index1 >= Length)
                 index1 = 0;
@@ -367,7 +369,7 @@ class StaticDelayLineEightTap
         }
 
 
-        SAMPLE_TYPE GetIndex (int Index)
+        T GetIndex (int Index)
         {
             switch (Index)
             {
@@ -426,15 +428,15 @@ class StaticDelayLineEightTap
         }
 
     private:
-        SAMPLE_TYPE buffer[maxLength];
+        T buffer[maxLength];
         int index1, index2, index3, index4, index5, index6, index7, index8;
         int Length;
-        SAMPLE_TYPE Feedback;
+        T Feedback;
 };
 
 template<typename T, int OverSampleCount>
-    class StateVariable
-    {
+class StateVariable
+{
     public:
 
         enum FilterType
@@ -463,21 +465,21 @@ template<typename T, int OverSampleCount>
     public:
         StateVariable()
         {
-            SetSampleRate(44100.);
-            Frequency(1000.);
-            Resonance(0);
-            Type(LOWPASS);
+            SetSampleRate(( T ) AudioEngineProps::SAMPLE_RATE );
+            Frequency( 1000. );
+            Resonance( 0 );
+            Type( LOWPASS );
             Reset();
         }
 
-        T operator()(T input)
+        T operator()( T input )
         {
-            for(unsigned int i = 0; i < OverSampleCount; i++)
+            for ( unsigned int i = 0; i < OverSampleCount; i++ )
             {
-                low += f * band + 1e-25;
-                high = input - low - q * band;
-                band += f * high;
-                notch = low + high;
+                low   += f * band + 1e-25;
+                high   = input - low - q * band;
+                band  += f * high;
+                notch  = low + high;
             }
             return *out;
         }
@@ -487,55 +489,55 @@ template<typename T, int OverSampleCount>
             low = high = band = notch = 0;
         }
 
-        void SetSampleRate(T sampleRate)
+        void SetSampleRate( T sampleRate )
         {
-            this->sampleRate = sampleRate * OverSampleCount;
+            this->sampleRate = sampleRate * ( T ) OverSampleCount;
             UpdateCoefficient();
         }
 
-        void Frequency(T frequency)
+        void Frequency( T frequency )
         {
             this->frequency = frequency;
             UpdateCoefficient();
         }
 
-        void Resonance(T resonance)
+        void Resonance( T resonance )
         {
             this->q = 2 - 2 * resonance;
         }
 
-        void Type(int type)
+        void Type( int type )
         {
-            switch(type)
+            switch( type )
             {
-            case LOWPASS:
-                out = &low;
-                break;
+                case LOWPASS:
+                    out = &low;
+                    break;
 
-            case HIGHPASS:
-                out = &high;
-                break;
+                case HIGHPASS:
+                    out = &high;
+                    break;
 
-            case BANDPASS:
-                out = &band;
-                break;
+                case BANDPASS:
+                    out = &band;
+                    break;
 
-            case NOTCH:
-                out = &notch;
-                break;
+                case NOTCH:
+                    out = &notch;
+                    break;
 
-            default:
-                out = &low;
-                break;
+                default:
+                    out = &low;
+                    break;
             }
         }
 
     private:
         void UpdateCoefficient()
         {
-            f = 2. * sinf(3.141592654 * frequency / sampleRate);
+            f = 2. * sinf( 3.14159265358979323846 * frequency / sampleRate );
         }
-    };
+};
 
 
 class Reverb : public BaseProcessor
@@ -555,7 +557,7 @@ class Reverb : public BaseProcessor
 
     public:
         enum {
-            DAMPINGFREQ=0,
+            DAMPINGFREQ = 0,
             DENSITY,
             BANDWIDTHFREQ,
             DECAY,
@@ -570,7 +572,7 @@ class Reverb : public BaseProcessor
         Reverb() {
             DampingFreq = 18000.;
             BandwidthFreq = 18000.;
-            SampleRate = 44100.;
+            SampleRate = ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE;
             Decay = 0.5;
             Gain = 1.;
             Mix = 1.;
@@ -580,7 +582,7 @@ class Reverb : public BaseProcessor
             PreviousRightTank = 0.;
             PreDelayTime = 100 * (SampleRate / 1000);
             MixSmooth = EarlyLateSmooth = BandwidthSmooth = DampingSmooth = PredelaySmooth = SizeSmooth = DecaySmooth = DensitySmooth = 0.;
-            ControlRate = SampleRate / 1000;
+            ControlRate = ( int ) SampleRate / 1000;
             ControlRateCounter = 0;
             reset();
         }
@@ -589,47 +591,68 @@ class Reverb : public BaseProcessor
             //nowt to do here
         }
 
-        void process( SAMPLE_TYPE **inputs, SAMPLE_TYPE **outputs, int sampleFrames ) {
-            SAMPLE_TYPE OneOverSampleFrames = 1. / sampleFrames;
-            SAMPLE_TYPE MixDelta	= (Mix - MixSmooth) * OneOverSampleFrames;
-            SAMPLE_TYPE EarlyLateDelta = (EarlyMix - EarlyLateSmooth) * OneOverSampleFrames;
-            SAMPLE_TYPE BandwidthDelta = (((BandwidthFreq * 18400.) + 100.) - BandwidthSmooth) * OneOverSampleFrames;
-            SAMPLE_TYPE DampingDelta = (((DampingFreq * 18400.) + 100.) - DampingSmooth) * OneOverSampleFrames;
-            SAMPLE_TYPE PredelayDelta = ((PreDelayTime * 200 * (SampleRate / 1000)) - PredelaySmooth) * OneOverSampleFrames;
-            SAMPLE_TYPE SizeDelta	= (Size - SizeSmooth) * OneOverSampleFrames;
-            SAMPLE_TYPE DecayDelta = (((0.7995f * Decay) + 0.005) - DecaySmooth) * OneOverSampleFrames;
-            SAMPLE_TYPE DensityDelta = (((0.7995f * Density1) + 0.005) - DensitySmooth) * OneOverSampleFrames;
-            for(int i=0;i<sampleFrames;++i){
-                SAMPLE_TYPE left = inputs[0][i];
-                SAMPLE_TYPE right = inputs[1][i];
-                MixSmooth += MixDelta;
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource ) {
+
+            int sampleFrames = sampleBuffer->bufferSize;
+            SAMPLE_TYPE* leftBuffer = sampleBuffer->getBufferForChannel( 0 );
+            SAMPLE_TYPE* rightBuffer;
+
+            if ( sampleBuffer->amountOfChannels == 1 )
+                isMonoSource = true;
+
+            if ( !isMonoSource )
+                rightBuffer = sampleBuffer->getBufferForChannel( 1 );
+
+            SAMPLE_TYPE OneOverSampleFrames = ( SAMPLE_TYPE ) 1. / ( SAMPLE_TYPE ) sampleFrames;
+            SAMPLE_TYPE MixDelta	        = (Mix - MixSmooth) * OneOverSampleFrames;
+            SAMPLE_TYPE EarlyLateDelta      = (EarlyMix - EarlyLateSmooth) * OneOverSampleFrames;
+            SAMPLE_TYPE BandwidthDelta      = (((BandwidthFreq * 18400.) + 100.) - BandwidthSmooth) * OneOverSampleFrames;
+            SAMPLE_TYPE DampingDelta        = (((DampingFreq * 18400.) + 100.) - DampingSmooth) * OneOverSampleFrames;
+            SAMPLE_TYPE PredelayDelta       = ((PreDelayTime * 200 * (SampleRate / 1000)) - PredelaySmooth) * OneOverSampleFrames;
+            SAMPLE_TYPE SizeDelta	        = (Size - SizeSmooth) * OneOverSampleFrames;
+            SAMPLE_TYPE DecayDelta          = (((0.7995f * Decay) + 0.005) - DecaySmooth) * OneOverSampleFrames;
+            SAMPLE_TYPE DensityDelta        = (((0.7995f * Density1) + 0.005) - DensitySmooth) * OneOverSampleFrames;
+
+            for( int i = 0; i < sampleFrames; ++i ) {
+
+                SAMPLE_TYPE left  = leftBuffer[ i ];
+                SAMPLE_TYPE right = ( !isMonoSource ) ? rightBuffer[ i ] : left;
+
+                MixSmooth       += MixDelta;
                 EarlyLateSmooth += EarlyLateDelta;
                 BandwidthSmooth += BandwidthDelta;
-                DampingSmooth += DampingDelta;
-                PredelaySmooth += PredelayDelta;
-                SizeSmooth += SizeDelta;
-                DecaySmooth += DecayDelta;
-                DensitySmooth += DensityDelta;
-                if (ControlRateCounter >= ControlRate){
+                DampingSmooth   += DampingDelta;
+                PredelaySmooth  += PredelayDelta;
+                SizeSmooth      += SizeDelta;
+                DecaySmooth     += DecayDelta;
+                DensitySmooth   += DensityDelta;
+
+                if ( ControlRateCounter >= ControlRate ) {
                     ControlRateCounter = 0;
-                    bandwidthFilter[0].Frequency(BandwidthSmooth);
-                    bandwidthFilter[1].Frequency(BandwidthSmooth);
+                    bandwidthFilter[0].Frequency( BandwidthSmooth );
+                    bandwidthFilter[1].Frequency( BandwidthSmooth );
                     damping[0].Frequency(DampingSmooth);
                     damping[1].Frequency(DampingSmooth);
                 }
+std::cout << " bandwidth smooth " << BandwidthSmooth << "\n";
                 ++ControlRateCounter;
-                predelay.SetLength(PredelaySmooth);
+                predelay.SetLength( PredelaySmooth );
                 Density2 = DecaySmooth + 0.15;
+
                 if (Density2 > 0.5)
                     Density2 = 0.5;
+
                 if (Density2 < 0.25)
                     Density2 = 0.25;
+
                 allpassFourTap[1].SetFeedback(Density2);
                 allpassFourTap[3].SetFeedback(Density2);
                 allpassFourTap[0].SetFeedback(Density1);
                 allpassFourTap[2].SetFeedback(Density1);
-                SAMPLE_TYPE bandwidthLeft = bandwidthFilter[0](left) ;
-                SAMPLE_TYPE bandwidthRight = bandwidthFilter[1](right) ;
+
+                SAMPLE_TYPE bandwidthLeft  = bandwidthFilter[0](left);
+                SAMPLE_TYPE bandwidthRight = bandwidthFilter[1](right);
+//std::cout << " bandwidth left " << bandwidthLeft << "\n";
                 SAMPLE_TYPE earlyReflectionsL = earlyReflectionsDelayLine[0] ( bandwidthLeft * 0.5 + bandwidthRight * 0.3 )
                                     + earlyReflectionsDelayLine[0].GetIndex(2) * 0.6
                                     + earlyReflectionsDelayLine[0].GetIndex(3) * 0.4
@@ -638,6 +661,7 @@ class Reverb : public BaseProcessor
                                     + earlyReflectionsDelayLine[0].GetIndex(6) * 0.1
                                     + earlyReflectionsDelayLine[0].GetIndex(7) * 0.1
                                     + ( bandwidthLeft * 0.4 + bandwidthRight * 0.2 ) * 0.5 ;
+
                 SAMPLE_TYPE earlyReflectionsR = earlyReflectionsDelayLine[1] ( bandwidthLeft * 0.3 + bandwidthRight * 0.5 )
                                     + earlyReflectionsDelayLine[1].GetIndex(2) * 0.6
                                     + earlyReflectionsDelayLine[1].GetIndex(3) * 0.4
@@ -646,53 +670,62 @@ class Reverb : public BaseProcessor
                                     + earlyReflectionsDelayLine[1].GetIndex(6) * 0.1
                                     + earlyReflectionsDelayLine[1].GetIndex(7) * 0.1
                                     + ( bandwidthLeft * 0.2 + bandwidthRight * 0.4 ) * 0.5 ;
+
                 SAMPLE_TYPE predelayMonoInput = predelay(( bandwidthRight + bandwidthLeft ) * 0.5f);
-                SAMPLE_TYPE smearedInput = predelayMonoInput;
-                for(int j=0;j<4;j++)
-                    smearedInput = allpass[j] ( smearedInput );
-                SAMPLE_TYPE leftTank = allpassFourTap[0] ( smearedInput + PreviousRightTank ) ;
-                leftTank = staticDelayLine[0] (leftTank);
-                leftTank = damping[0](leftTank);
-                leftTank = allpassFourTap[1](leftTank);
-                leftTank = staticDelayLine[1](leftTank);
-                SAMPLE_TYPE rightTank = allpassFourTap[2] (smearedInput + PreviousLeftTank) ;
-                rightTank = staticDelayLine[2](rightTank);
-                rightTank = damping[1] (rightTank);
-                rightTank = allpassFourTap[3](rightTank);
-                rightTank = staticDelayLine[3](rightTank);
-                PreviousLeftTank = leftTank * DecaySmooth;
-                PreviousRightTank = rightTank * DecaySmooth;
-                SAMPLE_TYPE accumulatorL = (0.6*staticDelayLine[2].GetIndex(1))
-                                +(0.6*staticDelayLine[2].GetIndex(2))
-                                -(0.6*allpassFourTap[3].GetIndex(1))
-                                +(0.6*staticDelayLine[3].GetIndex(1))
-                                -(0.6*staticDelayLine[0].GetIndex(1))
-                                -(0.6*allpassFourTap[1].GetIndex(1))
-                                -(0.6*staticDelayLine[1].GetIndex(1));
-                SAMPLE_TYPE accumulatorR = (0.6*staticDelayLine[0].GetIndex(2))
-                                +(0.6*staticDelayLine[0].GetIndex(3))
-                                -(0.6*allpassFourTap[1].GetIndex(2))
-                                +(0.6*staticDelayLine[1].GetIndex(2))
-                                -(0.6*staticDelayLine[2].GetIndex(3))
-                                -(0.6*allpassFourTap[3].GetIndex(2))
-                                -(0.6*staticDelayLine[3].GetIndex(2));
-                accumulatorL = ((accumulatorL * EarlyMix) + ((1 - EarlyMix) * earlyReflectionsL));
-                accumulatorR = ((accumulatorR * EarlyMix) + ((1 - EarlyMix) * earlyReflectionsR));
-                left = ( left + MixSmooth * ( accumulatorL - left ) ) * Gain;
+                SAMPLE_TYPE smearedInput      = predelayMonoInput;
+
+                for ( int j = 0; j < 4; j++ )
+                    smearedInput = allpass[ j ] ( smearedInput );
+
+                SAMPLE_TYPE leftTank  = allpassFourTap[0]( smearedInput + PreviousRightTank );
+                leftTank              = staticDelayLine[0] (leftTank);
+                leftTank              = damping[0](leftTank);
+                leftTank              = allpassFourTap[1](leftTank);
+                leftTank              = staticDelayLine[1](leftTank);
+                SAMPLE_TYPE rightTank = allpassFourTap[2]( smearedInput + PreviousLeftTank );
+                rightTank             = staticDelayLine[2](rightTank);
+                rightTank             = damping[1] (rightTank);
+                rightTank             = allpassFourTap[3](rightTank);
+                rightTank             = staticDelayLine[3](rightTank);
+                PreviousLeftTank      = leftTank * DecaySmooth;
+                PreviousRightTank     = rightTank * DecaySmooth;
+
+                SAMPLE_TYPE accumulatorL = ( 0.6 * staticDelayLine[2].GetIndex(1))
+                                + ( 0.6 * staticDelayLine[2].GetIndex(2))
+                                - ( 0.6 * allpassFourTap[3].GetIndex(1))
+                                + ( 0.6 * staticDelayLine[3].GetIndex(1))
+                                - ( 0.6 * staticDelayLine[0].GetIndex(1))
+                                - ( 0.6 * allpassFourTap[1].GetIndex(1))
+                                - ( 0.6 * staticDelayLine[1].GetIndex(1));
+
+                SAMPLE_TYPE accumulatorR = ( 0.6 * staticDelayLine[0].GetIndex(2))
+                                + ( 0.6 * staticDelayLine[0].GetIndex(3))
+                                - ( 0.6 * allpassFourTap[1].GetIndex(2))
+                                + ( 0.6 * staticDelayLine[1].GetIndex(2))
+                                - ( 0.6 * staticDelayLine[2].GetIndex(3))
+                                - ( 0.6 * allpassFourTap[3].GetIndex(2))
+                                - ( 0.6 * staticDelayLine[3].GetIndex(2));
+
+                accumulatorL = (( accumulatorL * EarlyMix ) + (( 1.0 - EarlyMix ) * earlyReflectionsL ));
+                accumulatorR = (( accumulatorR * EarlyMix ) + (( 1.0 - EarlyMix ) * earlyReflectionsR ));
+
+                left  = ( left  + MixSmooth * ( accumulatorL - left ) ) * Gain;
                 right = ( right + MixSmooth * ( accumulatorR - right ) ) * Gain;
-                outputs[0][i] = left;
-                outputs[1][i] = right;
+
+                leftBuffer[i] = left;
+                if ( !isMonoSource )
+                    rightBuffer[i] = right;
             }
         }
 
         void reset() {
             ControlRateCounter = 0;
-            bandwidthFilter[0].SetSampleRate (SampleRate );
-            bandwidthFilter[1].SetSampleRate (SampleRate );
+            bandwidthFilter[0].SetSampleRate( SampleRate );
+            bandwidthFilter[1].SetSampleRate( SampleRate );
             bandwidthFilter[0].Reset();
             bandwidthFilter[1].Reset();
-            damping[0].SetSampleRate (SampleRate );
-            damping[1].SetSampleRate (SampleRate );
+            damping[0].SetSampleRate( SampleRate );
+            damping[1].SetSampleRate( SampleRate );
             damping[0].Reset();
             damping[1].Reset();
             predelay.Clear();
@@ -836,7 +869,7 @@ class Reverb : public BaseProcessor
 
         void setSampleRate( SAMPLE_TYPE sr ) {
             SampleRate = sr;
-            ControlRate = SampleRate / 1000;
+            ControlRate = ( int ) ( SampleRate / 1000 );
             reset();
         }
 };
