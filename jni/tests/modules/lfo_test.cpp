@@ -6,7 +6,7 @@ TEST( LFO, Constructor )
 {
     LFO* lfo = new LFO();
 
-    EXPECT_EQ( lfo->getRate(), .1 ) << "expected default LFO rate to equal its minimum allowed rate";
+    EXPECT_FLOAT_EQ( lfo->getRate(), .1f ) << "expected default LFO rate to equal its minimum allowed rate";
     EXPECT_EQ( lfo->getWave(), WaveForms::SINE ) << "expected default LFO wave to be sine";
 
     delete lfo;
