@@ -33,10 +33,15 @@
 
 LFO::LFO()
 {
+    // by default oscillator doesn't do anything
+    // explicitly set the waveform to use using setWave()
+    // this is because auto-generation of waveforms can
+    // ideally, register custom waveforms in the TablePool
+    // before instantiating LFO or SynthInstrument
+
+    _wave  = WaveForms::SILENCE;
     _rate  = MIN_LFO_RATE();
     _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
-
-    setWave( WaveForms::SINE );
 }
 
 LFO::~LFO()
@@ -79,6 +84,9 @@ void LFO::setWave( int value )
 
 void LFO::generate()
 {
+    if ( _wave == WaveForms::SILENCE )
+        return;
+
     // we register the table by stringifying the waveform enum
 
     WaveTable* table = TablePool::getTable( SSTR( _wave ));
