@@ -57,7 +57,9 @@ class SampleManager
 
         // queries whether the SampleManager has an AudioBuffer registered under given identifier
         static bool hasSample( std::string aIdentifier );
-        static void removeSample( std::string aIdentifier );
+
+        // remove the sample from the SampleManager, if free is true, the sample will also be deleted
+        static void removeSample( std::string aIdentifier, bool free );
         static void flushSamples();
 };
 

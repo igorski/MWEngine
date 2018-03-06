@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #include "../global.h"
 #include "../audioengine.h"
 #include <definitions/waveforms.h>
+#include <generators/wavegenerator.h>
 #include <utilities/utils.h>
 #include <utilities/tablepool.h>
 #include <math.h>
@@ -32,14 +33,18 @@
 
 LFO::LFO()
 {
-    _wave  = WaveForms::SINE;
     _rate  = MIN_LFO_RATE();
     _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+
+    setWave( WaveForms::SINE );
 }
 
 LFO::~LFO()
 {
     delete _table;
+
+    if ( _manageTableAllocation )
+        TablePool::removeTable( SSTR( _wave ), true );
 }
 
 /* public methods */
@@ -62,16 +67,35 @@ int LFO::getWave()
 
 void LFO::setWave( int value )
 {
+    if ( _wave == value )
+        return;
+
+    if ( _manageTableAllocation )
+        TablePool::removeTable( SSTR( _wave ), true );
+
     _wave = value;
     generate();
 }
 
 void LFO::generate()
 {
-    WaveTable* table = TablePool::getTable( _wave );
+    // we register the table by stringifying the waveform enum
 
-    if ( table != 0 )
-        _table->cloneTable( table );
+    WaveTable* table = TablePool::getTable( SSTR( _wave ));
+
+    if ( table == 0 ) {
+        // no table in pool, LFO will generate table inline
+        _manageTableAllocation = true;
+        table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+        WaveGenerator::generate( table, _wave );
+        // store table inside pool
+        TablePool::setTable( table, SSTR( _wave ));
+    }
+    else {
+        // re-use table pre-registered in TablePool
+        _manageTableAllocation = false;
+    }
+    _table->cloneTable( table );
 }
 
 WaveTable* LFO::getTable()

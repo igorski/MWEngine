@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -54,12 +54,23 @@ void OscillatorProperties::setWaveform( int aWaveform )
         delete waveTable;
 
     if ( aWaveform == WaveForms::TABLE ) {
-        WaveTable* tableFromPool = TablePool::getTable( aWaveform );
-
-        if ( tableFromPool != 0 )
-            waveTable = tableFromPool->clone();
-        else
-            aWaveform = WaveForms::SINE;
+        // use setCustomWaveform instead
+        return;
     }
     _waveform = aWaveform;
 }
+
+void OscillatorProperties::setCustomWaveform( std::string waveformId )
+{
+    if ( waveTable != 0 )
+        delete waveTable;
+
+    WaveTable* tableFromPool = TablePool::getTable( waveformId );
+
+    if ( tableFromPool != 0 )
+        waveTable = tableFromPool->clone();
+    else
+        _waveform = WaveForms::SINE;
+
+    _waveform = WaveForms::TABLE;
+};

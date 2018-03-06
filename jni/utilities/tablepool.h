@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #define __TABLEPOOL_H_INCLUDED__
 
 #include "../wavetable.h"
+#include <string>
 #include <map>
 
 class TablePool
@@ -32,26 +33,27 @@ class TablePool
 
         // retrieves the pooled table for given waveformType
 
-        static WaveTable* getTable( int waveformType );
+        static WaveTable* getTable( std::string tableId );
 
         // stores the given WaveTable for the given waveform type inside the pool.
         // if the table was empty and the waveformType exists inside the WaveGenerator,
         // the tables buffer contents are generated on the fly
+        // returns boolean success
 
-        static void setTable( WaveTable* waveTable, int waveformType );
+        static bool setTable( WaveTable* waveTable, std::string tableId );
 
         // query whether the pool has a WaveTable for given waveformType
 
-        static bool hasTable( int waveformType );
+        static bool hasTable( std::string tableId );
 
         // removes the reference to WaveTables of given waveformType
-        // from the pool, the existing WaveTable for the type will be deleted
+        // when free is true the table contents will also be cleared from memory
 
-        static bool removeTable( int waveformType );
+        static bool removeTable( std::string tableId, bool free );
 
     private:
 
-        static std::map<int, WaveTable*> _cachedTables;
+        static std::map<std::string, WaveTable*> _cachedTables;
 };
 
 #endif
