@@ -49,13 +49,11 @@ TEST( LFO, GenerateWaveformOnDemand )
     // is no table registered for given waveform, it will be generated and registered inline
     lfo->setWave( waveform );
 
-    ASSERT_TRUE( TablePool::hasTable( tableId ))
-        << "expected TablePool to contain a table for this id as LFO has generated it";
+    EXPECT_EQ( lfo->getWave(), waveform ) << "expected waveform to have been changed";
+
+    ASSERT_FALSE( TablePool::hasTable( tableId )) << "expected TablePool not to contain a table for this id";
 
     delete lfo;
-
-    ASSERT_FALSE( TablePool::hasTable( tableId ))
-        << "expected TablePool to have removed the table for this id as LFO had generated it";
 }
 
 TEST( LFO, SetRate )
@@ -80,6 +78,20 @@ TEST( LFO, SetWave )
     lfo->setWave( waveform );
 
     EXPECT_EQ( waveform, lfo->getWave() ) << "expected wave to have been updated";
+
+    delete lfo;
+}
+
+TEST( LFO, SetWaveCustom )
+{
+    LFO* lfo = new LFO();
+
+    int waveform = WaveForms::PWM;
+
+    lfo->setWave( waveform );
+    lfo->setWave( WaveForms::SILENCE );
+
+    EXPECT_EQ( waveform, lfo->getWave() ) << "expected wave not to have been updated to silence";
 
     delete lfo;
 }

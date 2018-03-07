@@ -47,9 +47,6 @@ LFO::LFO()
 LFO::~LFO()
 {
     delete _table;
-
-    if ( _manageTableAllocation )
-        TablePool::removeTable( SSTR( _wave ), true );
 }
 
 /* public methods */
@@ -72,13 +69,11 @@ int LFO::getWave()
 
 void LFO::setWave( int value )
 {
-    if ( _wave == value )
+    if ( _wave == value || value == WaveForms::SILENCE )
         return;
 
-    if ( _manageTableAllocation )
-        TablePool::removeTable( SSTR( _wave ), true );
-
     _wave = value;
+
     generate();
 }
 
@@ -93,17 +88,11 @@ void LFO::generate()
 
     if ( table == 0 ) {
         // no table in pool, LFO will generate table inline
-        _manageTableAllocation = true;
-        table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
-        WaveGenerator::generate( table, _wave );
-        // store table inside pool
-        TablePool::setTable( table, SSTR( _wave ));
+        WaveGenerator::generate( _table, _wave );
     }
     else {
-        // re-use table pre-registered in TablePool
-        _manageTableAllocation = false;
+        _table->cloneTable( table );
     }
-    _table->cloneTable( table );
 }
 
 WaveTable* LFO::getTable()

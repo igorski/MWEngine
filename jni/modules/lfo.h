@@ -50,10 +50,6 @@ class LFO
         int _wave;
         WaveTable* _table;
 
-        // LFO can generate wave tables for its waveform on-demand
-        // if it does so, we should also free the memory when the LFO is destroyed
-        bool _manageTableAllocation;
-
         int calculateBufferLength( float aMinRate );
 };
 
