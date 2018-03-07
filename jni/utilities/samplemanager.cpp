@@ -65,14 +65,15 @@ bool SampleManager::hasSample( std::string aIdentifier )
     return ( it != SampleManagerSamples::_sampleMap.end());
 }
 
-void SampleManager::removeSample( std::string aIdentifier )
+void SampleManager::removeSample( std::string aIdentifier, bool free )
 {
     if ( hasSample( aIdentifier ))
     {
         std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
-        delete it->second.sampleBuffer;
 
-        // clear the buffer pointers to release memory
+        if ( free )
+            delete it->second.sampleBuffer;
+
         SampleManagerSamples::_sampleMap.erase( SampleManagerSamples::_sampleMap.find( aIdentifier ));
     }
 }

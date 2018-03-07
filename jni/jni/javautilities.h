@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -53,13 +53,13 @@ class JavaUtilities
 
         // cache given sample buffers in the TablePool for given identifiers and waveform types
 
-        static void cacheTable( jint tableLength, jint waveformType );
-        static void cacheTable( jint tableLength, jint waveformType, jdoubleArray aBuffer );
+        static void cacheTable( jint tableLength, jint waveformType, jstring tableId );
+        static void cacheTable( jint tableLength, jint waveformType, jstring tableId, jdoubleArray aBuffer );
 
         // take the raw contents of a WAV file at given path and
         // convert it to a WaveTable to be stored under given waveformType identifier inside the TablePool
 
-        static bool createTableFromFile( jint waveformType, jstring aWAVFilePath );
+        static bool createTableFromFile( jstring tableId, jstring aWAVFilePath );
 };
 
 #endif
