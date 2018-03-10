@@ -49,8 +49,6 @@ class LFO
 
         int _wave;
         WaveTable* _table;
-
-        int calculateBufferLength( float aMinRate );
 };
 
 #endif

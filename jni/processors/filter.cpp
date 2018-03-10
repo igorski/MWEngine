@@ -79,9 +79,9 @@ Filter::~Filter()
 
 void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    int bufferSize       = sampleBuffer->bufferSize;
-    int initialLFOOffset = _hasLFO ? _lfo->getTable()->getAccumulator() : 0;
-    float orgCutoff      = _tempCutoff;
+    int bufferSize               = sampleBuffer->bufferSize;
+    SAMPLE_TYPE initialLFOOffset = _hasLFO ? _lfo->getTable()->getAccumulator() : 0.0;
+    float orgCutoff              = _tempCutoff;
 
     if ( amountOfChannels < sampleBuffer->amountOfChannels )
         isMonoSource = true;
