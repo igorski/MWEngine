@@ -44,9 +44,8 @@ Filter::Filter( float aCutoffFrequency, float aResonance,
     _lfo       = 0;
     _hasLFO    = false;
 
-    minFreq    = aMinFreq;
-    maxFreq    = aMaxFreq;
-    lfoRange   = ( maxFreq / 2 ) - minFreq;
+    minFreq = aMinFreq;
+    maxFreq = aMaxFreq;
 
     amountOfChannels = numChannels;
 
@@ -109,19 +108,12 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             out1[ i ] = output;
 
             // oscillator attached to Filter ? travel the cutoff values
-            // between the minimum and half way the maximum frequencies, as
-            // defined by lfoRange in the class constructor
+            // between the minimum and maximum frequencies, as
+            // defined by the range in the class constructor
 
             if ( _hasLFO )
             {
-                _tempCutoff = _cutoff + ( lfoRange * _lfo->getTable()->peek() );
-
-                if ( _tempCutoff > maxFreq )
-                    _tempCutoff = maxFreq;
-
-                else if ( _tempCutoff < minFreq )
-                    _tempCutoff = minFreq;
-
+                _tempCutoff = _cutoff - std::abs(( _cutoff - minFreq ) * _lfo->getTable()->peek() );
                 calculateParameters();
             }
             // commit the effect
@@ -146,15 +138,13 @@ bool Filter::isCacheable()
 
 void Filter::setCutoff( float frequency )
 {
-    _cutoff = frequency;
+    // in case LFO is moving, set the current temp cutoff (last LFO value)
+    // to the relative value for the new cutoff frequency)
 
-    if ( _cutoff >= fs * .5 )
-        _cutoff = fs * .5 - 1;
+    float tempRatio = _tempCutoff / _cutoff;
 
-    if ( _cutoff < minFreq )
-        _cutoff = minFreq;
-
-    _tempCutoff = _cutoff;
+    _cutoff     = std::max( minFreq, std::min( frequency, maxFreq ));
+    _tempCutoff = _cutoff * tempRatio;
 
     calculateParameters();
 }
@@ -185,7 +175,7 @@ float Filter::getLFO()
 
 void Filter::setLFO( LFO *lfo )
 {
-    _lfo      = lfo;
+    _lfo = lfo;
 
     // no LFO ? make sure the filter returns to its default parameters
     if ( lfo == 0 )
