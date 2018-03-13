@@ -19,7 +19,7 @@ TEST( SampleManager, SetSample )
     ASSERT_TRUE( SampleManager::hasSample( id ))
         << "expected Sample to be found as it has been registered";
 
-    SampleManager::removeSample( id );
+    SampleManager::removeSample( id, true );
 
     // buffer deleted by SampleManager.removeSample()
 }
@@ -34,7 +34,7 @@ TEST( SampleManager, GetSample )
     ASSERT_TRUE( SampleManager::getSample( id ) == buffer)
         << "expected registered AudioBuffer to have been returned";
 
-    SampleManager::removeSample( id );
+    SampleManager::removeSample( id, true );
 
     // buffer deleted by SampleManager.removeSample()
 }
@@ -49,12 +49,32 @@ TEST( SampleManager, RemoveSample )
     ASSERT_TRUE( SampleManager::hasSample( id ))
         << "expected Sample to be found as it has been registered";
 
-    SampleManager::removeSample( id );
+    SampleManager::removeSample( id, true );
 
     ASSERT_FALSE( SampleManager::hasSample( id ))
         << "expected no Sample to be found as it has been removed";
 
     // buffer deleted by SampleManager.removeSample()
+}
+
+TEST( SampleManager, RemoveSampleWithoutFree )
+{
+    std::string id = "foo";
+    AudioBuffer* buffer = new AudioBuffer( 1, 10 );
+
+    SampleManager::setSample( id, buffer );
+
+    ASSERT_TRUE( SampleManager::hasSample( id ))
+        << "expected Sample to be found as it has been registered";
+
+    SampleManager::removeSample( id, false );
+
+    ASSERT_FALSE( SampleManager::hasSample( id ))
+        << "expected no Sample to be found as it has been removed";
+
+    ASSERT_FALSE( buffer == 0 ) << "expected AudioBuffer not to have been deleted";
+
+    delete buffer;
 }
 
 TEST( SampleManager, GetSampleLength )
@@ -67,7 +87,7 @@ TEST( SampleManager, GetSampleLength )
     EXPECT_EQ( buffer->bufferSize, SampleManager::getSampleLength( id ))
         << "expected SampleManager to return the correct bufferSize for the registered  sample";
 
-    SampleManager::removeSample( id );
+    SampleManager::removeSample( id, true );
 
     // buffer deleted by SampleManager.removeSample()
 }

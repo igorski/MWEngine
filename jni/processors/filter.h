@@ -54,7 +54,6 @@ class Filter : public BaseProcessor
         LFO *_lfo;
         float minFreq;
         float maxFreq;
-        float lfoRange;
 
         float fs;
 

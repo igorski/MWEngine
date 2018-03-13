@@ -21,6 +21,7 @@
 #include "instruments/baseinstrument_test.cpp"
 #include "instruments/sampledinstrument_test.cpp"
 #include "modules/adsr_test.cpp"
+#include "modules/lfo_test.cpp"
 #include "processors/delay_test.cpp"
 #include "processors/flanger_test.cpp"
 #include "processors/reverb_test.cpp"

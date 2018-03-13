@@ -109,7 +109,8 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     // WaveTable specific
 
     WaveTable* waveTable = 0;
-    int tableReadOffset, waveTableAccumulator;
+    int tableReadOffset;
+    SAMPLE_TYPE waveTableAccumulator;
     SAMPLE_TYPE* tableBuffer;
     SAMPLE_TYPE tableDivider;
 

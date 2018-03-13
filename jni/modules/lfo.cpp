@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #include "../global.h"
 #include "../audioengine.h"
 #include <definitions/waveforms.h>
+#include <generators/wavegenerator.h>
 #include <utilities/utils.h>
 #include <utilities/tablepool.h>
 #include <math.h>
@@ -32,7 +33,13 @@
 
 LFO::LFO()
 {
-    _wave  = WaveForms::SINE;
+    // by default oscillator doesn't do anything
+    // explicitly set the waveform to use using setWave()
+    // this is because auto-generation of waveforms can
+    // ideally, register custom waveforms in the TablePool
+    // before instantiating LFO or SynthInstrument
+
+    _wave  = WaveForms::SILENCE;
     _rate  = MIN_LFO_RATE();
     _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
 }
@@ -62,16 +69,30 @@ int LFO::getWave()
 
 void LFO::setWave( int value )
 {
+    if ( _wave == value || value == WaveForms::SILENCE )
+        return;
+
     _wave = value;
+
     generate();
 }
 
 void LFO::generate()
 {
-    WaveTable* table = TablePool::getTable( _wave );
+    if ( _wave == WaveForms::SILENCE )
+        return;
 
-    if ( table != 0 )
+    // we register the table by stringifying the waveform enum
+
+    WaveTable* table = TablePool::getTable( SSTR( _wave ));
+
+    if ( table == 0 ) {
+        // no table in pool, LFO will generate table inline
+        WaveGenerator::generate( _table, _wave );
+    }
+    else {
         _table->cloneTable( table );
+    }
 }
 
 WaveTable* LFO::getTable()
