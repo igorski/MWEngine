@@ -67,7 +67,12 @@ float Reverb::getSize()
 
 void Reverb::setSize( float value )
 {
-    _size = std::max( 0.f, std::min( value, 10.f ));
+    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+
+    if ( _size != value ) {
+        _size = value;
+        recalculate();
+    }
 }
 
 float Reverb::getHFDamp()
@@ -77,7 +82,12 @@ float Reverb::getHFDamp()
 
 void Reverb::setHFDamp( float value )
 {
-    _hfDamp = std::max( 0.f, std::min( value, 100.f ));
+    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+
+    if ( _hfDamp != value ) {
+        _hfDamp = value;
+        recalculate();
+    }
 }
 
 float Reverb::getMix()
@@ -87,7 +97,12 @@ float Reverb::getMix()
 
 void Reverb::setMix( float value )
 {
-    _mix = std::max( 0.f, std::min( value, 100.f ));
+    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+
+    if ( _mix != value ) {
+        _mix = value;
+        recalculate();
+    }
 }
 
 float Reverb::getOutput()
@@ -97,7 +112,12 @@ float Reverb::getOutput()
 
 void Reverb::setOutput( float value )
 {
-    _output = std::max( -20.f, std::min( value, 20.f ));
+    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+
+    if ( _output != value ) {
+        _output = value;
+        recalculate();
+    }
 }
 
 void Reverb::process( AudioBuffer* audioBuffer, bool isMonosource )

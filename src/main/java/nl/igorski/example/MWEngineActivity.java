@@ -212,17 +212,17 @@ public final class MWEngineActivity extends Activity
         final Button liveNoteButton = ( Button ) findViewById( R.id.LiveNoteButton );
         liveNoteButton.setOnTouchListener( new LiveNoteHandler() );
 
-        final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
-        filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
+        final SeekBar sizeSlider = ( SeekBar ) findViewById( R.id.ReverbSizeSlider );
+        sizeSlider.setOnSeekBarChangeListener( new ReverbSizeChangeHandler() );
 
-        final SeekBar decaySlider = ( SeekBar ) findViewById( R.id.SynthDecaySlider );
-        decaySlider.setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
+        final SeekBar dampSlider = ( SeekBar ) findViewById( R.id.ReverbDampSlider );
+        dampSlider.setOnSeekBarChangeListener( new ReverbDampChangeHandler() );
 
-        final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
-        feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
+        final SeekBar mixSlider = ( SeekBar ) findViewById( R.id.ReverbMixSlider );
+        mixSlider.setOnSeekBarChangeListener( new ReverbMixChangeHandler() );
 
-        final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
-        tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
+        final SeekBar outputSlider = ( SeekBar ) findViewById( R.id.ReverbOutputSlider );
+        outputSlider.setOnSeekBarChangeListener( new ReverbOutputChangeHandler() );
 
         _inited = true;
     }
@@ -293,20 +293,19 @@ public final class MWEngineActivity extends Activity
     /**
      *  invoked when user interacts with the filter cutoff slider
      */
-    private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class ReverbSizeChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
+            _reverb.setSize( progress / 100f );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class ReverbDampChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _synth1.getAdsr().setDecayTime( progress / 100f );
-            _synth1.updateEvents(); // update all synth events to match new ADSR properties
+            _reverb.setHFDamp( progress / 100f );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
@@ -315,10 +314,10 @@ public final class MWEngineActivity extends Activity
     /**
      *  invoked when user interacts with the delay mix slider
      */
-    private class DelayMixChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class ReverbMixChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _delay.setFeedback( progress / 100f );
+            _delay.setMix( progress / 100f );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
@@ -327,13 +326,10 @@ public final class MWEngineActivity extends Activity
     /**
      *  invoked when user interacts with the tempo slider
      */
-    private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class ReverbOutputChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
-            final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
-           final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
-            _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
+            _reverb.setOutput( progress / 100f );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}

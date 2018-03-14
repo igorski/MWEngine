@@ -5,7 +5,7 @@ TEST( Reverb, GetSetSize )
     Reverb* reverb = new Reverb();
 
     float min = 0.f;
-    float max = 10.f;
+    float max = MAX_PHASE;
 
     float value = randomFloat( min, max );
 
@@ -26,7 +26,7 @@ TEST( Reverb, GetSetHFDamp )
     Reverb* reverb = new Reverb();
 
     float min = 0.f;
-    float max = 100.f;
+    float max = MAX_PHASE;
 
     float value = randomFloat( min, max );
 
@@ -47,7 +47,7 @@ TEST( Reverb, GetSetMix )
     Reverb* reverb = new Reverb();
 
     float min = 0.f;
-    float max = 100.f;
+    float max = MAX_PHASE;
 
     float value = randomFloat( min, max );
 
@@ -67,8 +67,8 @@ TEST( Reverb, GetSetOutput )
 {
     Reverb* reverb = new Reverb();
 
-    float min = -20.f;
-    float max = 20.f;
+    float min = 0.f;
+    float max = MAX_PHASE;
 
     float value = randomFloat( min, max );
 
