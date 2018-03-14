@@ -26,7 +26,10 @@
 class Reverb : public BaseProcessor {
 
     public:
-        Reverb();
+
+        // all values are in 0-1 range
+
+        Reverb( float size, float hfDamp, float mix, float output );
         ~Reverb();
 
         float getSize();

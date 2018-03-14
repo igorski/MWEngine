@@ -139,7 +139,7 @@ public final class MWEngineActivity extends Activity
         _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
-        _reverb = new Reverb();
+        _reverb = new Reverb( .7f, .7f, .9f, .5f );
         _sampler.getAudioChannel().getProcessingChain().addProcessor( _reverb );
 
         // adjust volumes

@@ -23,12 +23,12 @@
 
 /* constructor / destructor */
 
-Reverb::Reverb()
+Reverb::Reverb( float size, float hfDamp, float mix, float output )
 {
-    _size   = 0.7f;
-    _hfDamp = 0.7f;
-    _mix    = 0.9f;
-    _output = 0.5f;
+    _size   = size;
+    _hfDamp = hfDamp;
+    _mix    = mix;
+    _output = output;
 
     buf1 = new SAMPLE_TYPE[ 1024 ];
     buf2 = new SAMPLE_TYPE[ 1024 ];

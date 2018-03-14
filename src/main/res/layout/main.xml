@@ -25,7 +25,7 @@
             android:text="@string/live_btn" />
 
     <SeekBar android:id="@+id/ReverbSizeSlider"
-             android:progress="50"
+             android:progress="70"
              android:layout_marginLeft="5dip"
              android:layout_marginRight="5dip"
              android:layout_marginBottom="5dip"
@@ -33,7 +33,7 @@
              android:layout_height="wrap_content" />
 
     <SeekBar android:id="@+id/ReverbDampSlider"
-             android:progress="10"
+             android:progress="70"
              android:layout_marginLeft="5dip"
              android:layout_marginRight="5dip"
              android:layout_marginBottom="5dip"
@@ -41,7 +41,7 @@
              android:layout_height="wrap_content" />
 
     <SeekBar android:id="@+id/ReverbMixSlider"
-             android:progress="50"
+             android:progress="90"
              android:layout_marginLeft="5dip"
              android:layout_marginRight="5dip"
              android:layout_marginBottom="5dip"
