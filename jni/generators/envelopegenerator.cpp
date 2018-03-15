@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
  *
  * envelope generation adapted from sources by Christian Schoenebeck
  *
@@ -36,8 +36,8 @@ namespace EnvelopeGenerator
 
         // we can't use a 0.0 value as we would get Infinity values, sanitize to a small, positive number instead
 
-        startAmplitude = std::max( 0.001, startAmplitude );
-        endAmplitude   = std::max( 0.001, endAmplitude );
+        startAmplitude = std::max(( SAMPLE_TYPE ) 0.001, startAmplitude );
+        endAmplitude   = std::max(( SAMPLE_TYPE ) 0.001, endAmplitude );
 
         SAMPLE_TYPE coeff  = MAX_PHASE + ( log( endAmplitude ) - log( startAmplitude )) / tableLength;
         SAMPLE_TYPE sample = startAmplitude;

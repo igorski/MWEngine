@@ -193,7 +193,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
             else if ( applyRelease && readOffset >= _releaseStart )
                 lastEnvelope = std::max(
                     sustainLevel - ( SAMPLE_TYPE ) ( readOffset - _releaseStart ) * _releaseDecrement,
-                    0.0
+                    ( SAMPLE_TYPE ) 0.0
                 );
 
             // apply the calculated amplitude envelope onto the sample
