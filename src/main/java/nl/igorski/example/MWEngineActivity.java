@@ -34,7 +34,6 @@ public final class MWEngineActivity extends Activity
     private Filter              _filter;
     private Phaser              _phaser;
     private Delay               _delay;
-    private Reverb              _reverb;
     private MWEngine            _engine;
     private SequencerController _sequencerController;
     private Vector<SynthEvent>  _synth1Events;
@@ -139,10 +138,7 @@ public final class MWEngineActivity extends Activity
         _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
         _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
 
-        _reverb = new Reverb( .7f, .7f, .9f, .5f );
-        _sampler.getAudioChannel().getProcessingChain().addProcessor( _reverb );
-
-        // adjust volumes
+        // adjust synthesizer volumes
         _synth2.getAudioChannel().setVolume( .7f );
 
         // STEP 3 : load some samples from the packaged assets folder into the SampleManager
@@ -171,34 +167,34 @@ public final class MWEngineActivity extends Activity
 
         // bubbly sixteenth note bass line for synth 1
 
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
-    //    createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
-    //    createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
-    //    createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
-    //    createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
-    //    createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
+        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
 
         // off-beat minor seventh chord stabs for synth 2
 
-    //    createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
-    //    createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
-    //    createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
-    //    createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
-//
-    //    createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
-    //    createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
-    //    createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
-    //    createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
+        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
+
+        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
         // a C note to be synthesized live when holding down the corresponding button
 
@@ -212,17 +208,17 @@ public final class MWEngineActivity extends Activity
         final Button liveNoteButton = ( Button ) findViewById( R.id.LiveNoteButton );
         liveNoteButton.setOnTouchListener( new LiveNoteHandler() );
 
-        final SeekBar sizeSlider = ( SeekBar ) findViewById( R.id.ReverbSizeSlider );
-        sizeSlider.setOnSeekBarChangeListener( new ReverbSizeChangeHandler() );
+        final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
+        filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
 
-        final SeekBar dampSlider = ( SeekBar ) findViewById( R.id.ReverbDampSlider );
-        dampSlider.setOnSeekBarChangeListener( new ReverbDampChangeHandler() );
+        final SeekBar decaySlider = ( SeekBar ) findViewById( R.id.SynthDecaySlider );
+        decaySlider.setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
 
-        final SeekBar mixSlider = ( SeekBar ) findViewById( R.id.ReverbMixSlider );
-        mixSlider.setOnSeekBarChangeListener( new ReverbMixChangeHandler() );
+        final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
+        feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
 
-        final SeekBar outputSlider = ( SeekBar ) findViewById( R.id.ReverbOutputSlider );
-        outputSlider.setOnSeekBarChangeListener( new ReverbOutputChangeHandler() );
+        final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
+        tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
 
         _inited = true;
     }
@@ -293,19 +289,20 @@ public final class MWEngineActivity extends Activity
     /**
      *  invoked when user interacts with the filter cutoff slider
      */
-    private class ReverbSizeChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _reverb.setSize( progress / 100f );
+            _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    private class ReverbDampChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _reverb.setHFDamp( progress / 100f );
+            _synth1.getAdsr().setDecayTime( progress / 100f );
+            _synth1.updateEvents(); // update all synth events to match new ADSR properties
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
@@ -314,10 +311,10 @@ public final class MWEngineActivity extends Activity
     /**
      *  invoked when user interacts with the delay mix slider
      */
-    private class ReverbMixChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class DelayMixChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _delay.setMix( progress / 100f );
+            _delay.setFeedback( progress / 100f );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
@@ -326,10 +323,13 @@ public final class MWEngineActivity extends Activity
     /**
      *  invoked when user interacts with the tempo slider
      */
-    private class ReverbOutputChangeHandler implements SeekBar.OnSeekBarChangeListener
+    private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _reverb.setOutput( progress / 100f );
+            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
+            final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
+           final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
+            _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}

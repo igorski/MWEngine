@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MWEngine example</string>
-    <string name="app_help">Example MW Engine application. Start the sequencer by hitting play! You can alter the drums reverb using the slider. From top to bottom these control: reverb size, HF damp, mix level, output level</string>
+    <string name="app_help">Example MW Engine application. Start the sequencer by hitting play! You can alter the filter cutoff of the bass instrument by using the top slider, the slider below alters the decay of the synth. The third slider alters the delay feedback of the chords while the third slider adjusts the sequencers tempo, all in realtime! Also note how the engine pauses and picks up where it left off when suspending the app, funky huh?</string>
     <string name="play_btn">Play / Pause</string>
     <string name="live_btn">C note (hold to play)</string>
 </resources>
