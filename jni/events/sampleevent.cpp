@@ -121,14 +121,8 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
     else
         _liveBuffer->silenceBuffers();  // clear previous contents
 
-    int mergeLength = _liveBuffer->mergeBuffers( _buffer, _lastPlaybackPosition, 0, 1 );
-
-    // if the SampleEvent is loopeable and the merge is smaller than given aBufferLength
-    // (in other words: the full sample has been renderered, append from the beginning)
-
-    if ( _loopeable && mergeLength < aBufferLength ) {
-        _liveBuffer->mergeBuffers( _buffer, 0, mergeLength, 1 );
-    }
+    // write sample contents into live buffer
+    mixBuffer( _liveBuffer, _lastPlaybackPosition, 0, aBufferLength, false, 0, false );
 
     if (( _lastPlaybackPosition += aBufferLength ) > _bufferRangeEnd )
     {
@@ -185,14 +179,23 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                              bool loopStarted, int loopOffset, bool useChannelRange )
 {
+    if ( !hasBuffer() )
+        return;
+
     // if we have a range length that is unequal to the total sample duration, read from the range
     // otherwise invoke the base mixBuffer method
 
-    if ( _useBufferRange )
+    if ( _useBufferRange ) {
         getBufferForRange( outputBuffer, bufferPos );
-    else
+        return;
+    }
+
+//    if ( _playbackRate == 1.f ) {
+        // use BaseAudioEvent behaviour if no custom playback rate is requested
         BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition,
                                    loopStarted, loopOffset, useChannelRange );
+//        return;
+//    }
 }
 
 bool SampleEvent::getRangeBasedPlayback()
@@ -263,6 +266,7 @@ void SampleEvent::init( BaseInstrument* instrument )
     _bufferRangeLength     = 0;
     _rangePointer          = 0;
     _lastPlaybackPosition  = 0;
+    _playbackRate          = 1.f;
     _destroyableBuffer     = false; // is referenced via SampleManager !
     _useBufferRange        = false;
     _instrument            = instrument;

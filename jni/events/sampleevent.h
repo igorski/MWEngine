@@ -44,6 +44,7 @@ class SampleEvent : public BaseAudioEvent
         virtual AudioBuffer* synthesize( int aBufferLength );
 
         void setSample( AudioBuffer* sampleBuffer );
+        void setPlaybackRate( float value );
 
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
@@ -66,6 +67,7 @@ class SampleEvent : public BaseAudioEvent
         int _bufferRangeStart;
         int _bufferRangeEnd;
         int _bufferRangeLength;
+        float _playbackRate;
         bool _useBufferRange;
 
         AudioBuffer*    _liveBuffer;
