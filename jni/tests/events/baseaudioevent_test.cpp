@@ -318,9 +318,14 @@ TEST( BaseAudioEvent, PositionInSamples )
     audioEvent->setEventStart ( eventStart );
     audioEvent->setEventLength( eventLength );
 
-    EXPECT_EQ( eventStart,  audioEvent->getEventStart() );
-    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() );
-    EXPECT_EQ( eventLength, audioEvent->getEventLength() );
+    EXPECT_EQ( eventStart, audioEvent->getEventStart() )
+        << "expected eventStart to match the set position";
+
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
+        << "expected eventEnd to match the implied end set by start + length";
+
+    EXPECT_EQ( eventLength, audioEvent->getEventLength() )
+        << "expected eventLength to match the set length";
 
     // test whether values in seconds have updated accordingly
 
@@ -437,8 +442,11 @@ TEST( BaseAudioEvent, PositionEvent )
                               ( offset * AudioEngine::samples_per_bar / subdivisions );
     int expectedSampleEnd   = expectedSampleStart + eventLength - 1;
 
-    EXPECT_EQ( expectedSampleStart, audioEvent->getEventStart() );
-    EXPECT_EQ( expectedSampleEnd,   audioEvent->getEventEnd() );
+    EXPECT_EQ( expectedSampleStart, audioEvent->getEventStart() )
+        << "expected sampleStart in buffer samples to match the translated expectation";
+
+    EXPECT_EQ( expectedSampleEnd, audioEvent->getEventEnd() )
+        << "expected sampleEnd in buffer samples to match the translated expectation";
 
     delete audioEvent;
 }

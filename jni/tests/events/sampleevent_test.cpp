@@ -439,3 +439,76 @@ TEST( SampleEvent, MixBuffer )
     delete targetBuffer;
     delete buffer;
 }
+
+TEST( SampleEvent, PlaybackRateDefault )
+{
+    SampleEvent* audioEvent = new SampleEvent();
+
+    EXPECT_EQ( 1.f, audioEvent->getPlaybackRate() )
+        << "expected default playback rate to be 1";
+
+    delete audioEvent;
+}
+
+TEST( SampleEvent, PlaybackRateSetter )
+{
+    SampleEvent* audioEvent = new SampleEvent();
+
+    float expectedRate = randomFloat();
+    audioEvent->setPlaybackRate( expectedRate );
+
+    EXPECT_EQ( expectedRate, audioEvent->getPlaybackRate() )
+        << "expected default playback rate to equal the set value";
+
+    delete audioEvent;
+}
+
+TEST( SampleEvent, PlaybackRate )
+{
+    SampleEvent* audioEvent = new SampleEvent();
+
+    // properties for 1.f playback rate
+    int eventStart  = 1000;
+    int eventLength = 1000;
+    int eventEnd    = eventStart + eventLength - 1;
+
+    audioEvent->setEventStart( eventStart );
+    audioEvent->setEventLength( eventLength );
+
+    EXPECT_EQ( eventStart, audioEvent->getEventStart() )
+        << "expected start to be unchanged for 1.f playback rate";
+
+    EXPECT_EQ( eventLength, audioEvent->getEventLength() )
+        << "expected length to be unchanged for 1.f playback rate";
+
+    EXPECT_EQ( eventEnd, audioEvent->getEventEnd() )
+        << "expected end to be unchanged for 1.f playback rate";
+
+    // adjust playback rate to 2.f (twice the original speed)
+
+    audioEvent->setPlaybackRate( 2.f );
+
+    EXPECT_EQ( eventStart, audioEvent->getEventStart() )
+        << "expected event start at double playback rate to remain unchanged";
+
+    EXPECT_EQ( eventLength / 2, audioEvent->getEventLength() )
+        << "expected event length at double playback rate to be at half the original length";
+
+    EXPECT_EQ( eventStart + ( eventLength / 2 ), audioEvent->getEventEnd() )
+        << "expected event end at double playback rate to be below the original offset";
+
+    // adjust playback rate to .5f (half the original speed)
+
+    audioEvent->setPlaybackRate( .5f );
+
+    EXPECT_EQ( eventStart, audioEvent->getEventStart() )
+        << "expected event start at half playback rate to remain unchanged";
+
+    EXPECT_EQ( eventLength * 2, audioEvent->getEventLength() )
+        << "expected event length at half playback rate to be at twice the original length";
+
+    EXPECT_EQ( eventStart + ( eventLength * 2 ), audioEvent->getEventEnd() )
+        << "expected event end at half playback rate to be above the original offset";
+
+    delete audioEvent;
+}

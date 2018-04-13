@@ -176,7 +176,28 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
         _locked = false;
 }
 
-void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
+float SampleEvent::getPlaybackRate()
+{
+    return _playbackRate;
+}
+
+void SampleEvent::setPlaybackRate( float value )
+{
+    _playbackRate = std::max( 0.0000001f, value );
+}
+
+int SampleEvent::getEventLength()
+{
+    return ( _playbackRate == 1.f ) ? _eventLength : ( int )( _eventLength / _playbackRate );
+}
+
+int SampleEvent::getEventEnd()
+{
+    return ( _playbackRate == 1.f ) ? _eventEnd : _eventStart + getEventLength();
+}
+
+void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
+                             int minBufferPosition, int maxBufferPosition,
                              bool loopStarted, int loopOffset, bool useChannelRange )
 {
     if ( !hasBuffer() )
@@ -186,16 +207,159 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBu
     // otherwise invoke the base mixBuffer method
 
     if ( _useBufferRange ) {
-        getBufferForRange( outputBuffer, bufferPos );
+        getBufferForRange( outputBuffer, bufferPosition );
         return;
     }
 
-//    if ( _playbackRate == 1.f ) {
+    if ( _playbackRate == 1.f ) {
         // use BaseAudioEvent behaviour if no custom playback rate is requested
-        BaseAudioEvent::mixBuffer( outputBuffer, bufferPos, minBufferPosition, maxBufferPosition,
+        BaseAudioEvent::mixBuffer( outputBuffer, bufferPosition, minBufferPosition, maxBufferPosition,
                                    loopStarted, loopOffset, useChannelRange );
-//        return;
-//    }
+        return;
+    }
+
+    // custom playback rate
+
+    int bufferSize = outputBuffer->bufferSize;
+
+    // if the output channel amount differs from this events channel amount, we might
+    // potentially have a bad time (e.g. engine has mono output while this event is stereo)
+    // ideally events should never hold more channels than AudioEngineProps::OUTPUT_CHANNELS
+
+    int outputChannels = std::min( _buffer->amountOfChannels, outputBuffer->amountOfChannels );
+    int i, t, c, ca;
+    float frac;
+    SAMPLE_TYPE* srcBuffer;
+    SAMPLE_TYPE* tgtBuffer;
+    SAMPLE_TYPE s1, s2;
+
+    // at custom playback rate we require floating point precision
+    float eventStart = ( float ) _eventStart;
+    float eventEnd = ( float ) getEventEnd();
+    // iterator that increments by the playback rate
+    float fi = 0.f;
+
+    // take sequencer playhead position and determine what the position
+    // should be relative to this events playback rate
+    float readPointer = ( float )( bufferPosition - _eventStart ) * _playbackRate;
+
+    // non-loopeable event whose playback is tied to the Sequencer
+
+    if ( !_loopeable )
+    {
+        for ( i = 0; i < bufferSize; ++i, fi += _playbackRate )
+        {
+            // read pointer progresses by the playback rate
+            readPointer += fi;
+
+            // over the max position ? read from the start ( implies that sequence has started loop )
+            if ( readPointer > maxBufferPosition )
+            {
+                if ( useChannelRange )
+                    readPointer -= ( float ) maxBufferPosition;
+
+                else if ( !loopStarted )
+                    break;
+            }
+
+            t    = ( int ) readPointer;
+            frac = readPointer - t; // between 0 - 1 range
+
+            if ( readPointer >= eventStart && readPointer <= eventEnd )
+            {
+                // mind the offset ! ( cached buffer starts at 0 while
+                // the _eventStart defines where the event is positioned in the sequencer )
+                readPointer -= eventStart;
+
+                for ( c = 0; c < outputChannels; ++c )
+                {
+                    srcBuffer = _buffer->getBufferForChannel( c );
+                    tgtBuffer = outputBuffer->getBufferForChannel( c );
+
+                    s1 = srcBuffer[ t ];
+                    s2 = srcBuffer[ t + 1 ];
+
+                    tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
+                }
+            }
+            else if ( loopStarted && i >= loopOffset )
+            {
+                readPointer = ( float )( minBufferPosition + ( fi - loopOffset ));
+
+                if ( readPointer >= eventStart && readPointer <= eventEnd )
+                {
+                    readPointer -= eventStart;
+
+                    for ( c = 0; c < outputChannels; ++c )
+                    {
+                        srcBuffer = _buffer->getBufferForChannel( c );
+                        tgtBuffer = outputBuffer->getBufferForChannel( c );
+
+                        s1 = srcBuffer[ t ];
+                        s2 = srcBuffer[ t + 1 ];
+
+                        tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        // loopeable events mix their buffer contents using an internal read pointer
+
+        bool monoCopy    = _buffer->amountOfChannels < outputBuffer->amountOfChannels;
+        int writePointer = 0;
+        float maxBufPos  = ( float ) _buffer->bufferSize - 1.f;
+        readPointer      = _readPointer;   // use internal read pointer when reading loopeable content
+
+        for ( i = 0; i < bufferSize; ++i, ++writePointer, fi += _playbackRate )
+        {
+            readPointer += fi;
+
+            t    = ( int ) _readPointer;
+            frac = _readPointer - t; // between 0 - 1 range
+
+            // read sample when the read pointer is within event start and end points
+            if ( readPointer >= eventStart && readPointer <= eventEnd )
+            {
+                // use range pointers to read within the specific buffer ranges
+                for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
+                {
+                    // this sample might have less channels than the output buffer
+                    if ( !monoCopy )
+                        srcBuffer = _buffer->getBufferForChannel( c );
+                    else
+                        srcBuffer = _buffer->getBufferForChannel( 0 );
+
+                    tgtBuffer = outputBuffer->getBufferForChannel( c );
+
+                    s1 = srcBuffer[ t ];
+                    s2 = srcBuffer[ t + 1 ];
+
+                    tgtBuffer[ writePointer ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
+                }
+                // this is a loopeable event (thus using internal read pointer)
+                // set the internal read pointer to the event start so it keeps playing indefinitely
+
+                if ( _readPointer += fi > maxBufPos )
+                    _readPointer = 0.f;
+
+            }
+            else if ( loopStarted && readPointer > maxBufferPosition )
+            {
+                // in case the Sequencers read offset exceeds the maximum and the
+                // Sequencer is looping, read from start. internal _readPointer takes care of correct offset
+                bufferPosition -= loopOffset;
+
+                // TODO: not entirely sure what will happen here for custom playback rate
+
+                // decrement iterators as no write occurred in this iteration
+                --i;
+                --writePointer;
+            }
+        }
+    }
 }
 
 bool SampleEvent::getRangeBasedPlayback()
@@ -210,6 +374,7 @@ void SampleEvent::setRangeBasedPlayback( bool value )
 
 bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 {
+    // TODO: range based playback as yet unsupported for custom playback rate
     int bufferSize          = buffer->bufferSize;
     int amountOfChannels    = buffer->amountOfChannels;
     bool gotBuffer          = false;
@@ -263,6 +428,8 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 
 void SampleEvent::init( BaseInstrument* instrument )
 {
+    _bufferRangeStart      = 0;
+    _bufferRangeEnd        = 0;
     _bufferRangeLength     = 0;
     _rangePointer          = 0;
     _lastPlaybackPosition  = 0;
