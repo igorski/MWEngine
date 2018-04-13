@@ -463,6 +463,21 @@ TEST( SampleEvent, PlaybackRateSetter )
     delete audioEvent;
 }
 
+TEST( SampleEvent, PlaybackRateLimit )
+{
+    SampleEvent* audioEvent = new SampleEvent();
+
+    audioEvent->setPlaybackRate( 0.f );
+
+    EXPECT_EQ( 0.01f, audioEvent->getPlaybackRate()) << "expected minimum rate of 1% of original speed";
+
+    audioEvent->setPlaybackRate( 1000.f );
+
+    EXPECT_EQ( 100.f, audioEvent->getPlaybackRate()) << "expected maximum rate of 100 x original speed";
+
+    delete audioEvent;
+}
+
 TEST( SampleEvent, PlaybackRate )
 {
     SampleEvent* audioEvent = new SampleEvent();

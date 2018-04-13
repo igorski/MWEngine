@@ -384,8 +384,10 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
             if ( readPointer >= _eventStart && readPointer <= _eventEnd )
             {
-                // mind the offset ! ( cached buffer starts at 0 while
-                // the _eventStart defines where the event is positioned in the sequencer )
+                // mind the offset ! ( source buffer starts at 0 while
+                // the _eventStart defines where the event is positioned
+                // subtract it from current sequencer pointer to get the
+                // offset relative to the source buffer
                 readPointer -= _eventStart;
 
                 for ( c = 0; c < outputChannels; ++c )
