@@ -13,8 +13,8 @@ if [ $BUILD_SUCCESS -eq 0 ]; then
     echo Running MWEngine unit tests
     echo ---------------------------
 
-    adb push libs/armeabi/libmwengine_test.so /data/local/tmp/
-    adb push libs/armeabi/mwengine_unittest /data/local/tmp/
+    adb push libs/x86/libmwengine_test.so /data/local/tmp/
+    adb push libs/x86/mwengine_unittest /data/local/tmp/
     adb shell chmod 775 /data/local/tmp/mwengine_unittest
 
     # if a numerical argument was provided treat it as the amount of test repeats
