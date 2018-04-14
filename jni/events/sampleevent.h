@@ -73,6 +73,7 @@ class SampleEvent : public BaseAudioEvent
         int _bufferRangeEnd;
         int _bufferRangeLength;
         float _playbackRate;
+        float _readPointerF;
         bool _useBufferRange;
 
         AudioBuffer* _liveBuffer;

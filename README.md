@@ -130,6 +130,7 @@ MWEngine has received welcome contributions (either suggestions on improving the
 solving of bugs, etc.) from the following developers :
 
  * Andrey Stavrinov (@hypeastrum)
+ * Toufik Zitouni & Robert Avellar (Tize)
  * Koert Gaaikema (@koertgaaikema)
  * Matt Logan (@mattlogan)
  * Aran Arunakiri
