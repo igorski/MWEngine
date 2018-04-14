@@ -93,7 +93,7 @@ void SampleEvent::setBufferRangeEnd( int value )
         _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
     _bufferRangeLength = ( _bufferRangeEnd - _bufferRangeStart ) + 1;
-    setRangeBasedPlayback( _bufferRangeLength != _eventLength );
+    setRangeBasedPlayback( getBufferRangeLength() != getEventLength() );
 }
 
 int SampleEvent::getBufferRangeLength()
@@ -117,14 +117,18 @@ int SampleEvent::getPlaybackPosition()
 AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 {
     if ( _liveBuffer == 0 )
-        _liveBuffer = new AudioBuffer( _buffer->amountOfChannels, AudioEngineProps::BUFFER_SIZE );
+        _liveBuffer = new AudioBuffer(
+            ( _buffer != 0 ) ? _buffer->amountOfChannels : AudioEngineProps::OUTPUT_CHANNELS,
+            AudioEngineProps::BUFFER_SIZE
+        );
     else
         _liveBuffer->silenceBuffers();  // clear previous contents
 
     // write sample contents into live buffer
-    mixBuffer( _liveBuffer, _lastPlaybackPosition, 0, aBufferLength, false, 0, false );
+    // we specify the maximum buffer position as the full sample playback range
+    mixBuffer( _liveBuffer, _lastPlaybackPosition, 0, getBufferRangeLength(), false, 0, false );
 
-    if (( _lastPlaybackPosition += aBufferLength ) > _bufferRangeEnd )
+    if (( _lastPlaybackPosition += aBufferLength ) >= getBufferRangeEnd() )
     {
         // if this is a one-shot SampleEvent, remove it from the sequencer when we have exceeded
         // the sample length (e.g. played it in its entirety)
@@ -132,7 +136,7 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
         if ( !_loopeable )
             removeLiveEvent();
         else
-            _lastPlaybackPosition -= _bufferRangeLength;
+            _lastPlaybackPosition = std::max( _bufferRangeStart, _lastPlaybackPosition - getBufferRangeLength());
     }
     return _liveBuffer;
 }
@@ -253,7 +257,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     {
         for ( i = 0; i < bufferSize; ++i, fi += _playbackRate )
         {
-            // read pointer progresses by the playback rate
+            // buffer pointer progresses by the playback rate
             bufferPointer = bufferPointerStart + fi;
 
             // over the max position ? read from the start ( implies that sequence has started loop )
@@ -273,7 +277,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 // subtract it from current sequencer pointer to get the
                 // offset relative to the source buffer
 
-                readPointer = bufferPointer - _eventStart;
+                readPointer = bufferPointer - eventStart;
 
                 t    = ( int ) readPointer;
                 frac = readPointer - t; // between 0 - 1 range
@@ -295,10 +299,10 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                 if ( bufferPointer >= eventStart && bufferPointer <= eventEnd )
                 {
-                    bufferPointer -= eventStart;
+                    readPointer = bufferPointer - eventStart;
 
-                    t    = ( int ) bufferPointer;
-                    frac = bufferPointer - t; // between 0 - 1 range
+                    t    = ( int ) readPointer;
+                    frac = readPointer - t; // between 0 - 1 range
 
                     for ( c = 0; c < outputChannels; ++c )
                     {

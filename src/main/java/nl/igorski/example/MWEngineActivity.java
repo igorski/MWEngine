@@ -156,17 +156,17 @@ public final class MWEngineActivity extends Activity
 
         // STEP 4.1 : Sample events to play back a drum beat
 
-       // createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
-       // createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
-      //  createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-      //  createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
-      //  createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
+        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
+        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
+        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
         createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
 
         // STEP 4.2 : Real-time synthesis events
 
         // bubbly sixteenth note bass line for synth 1
-        /*
+
         createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
         createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
         createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
@@ -195,7 +195,7 @@ public final class MWEngineActivity extends Activity
         createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
         createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
         createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
-         */
+
         // a C note to be synthesized live when holding down the corresponding button
 
         _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
@@ -216,6 +216,9 @@ public final class MWEngineActivity extends Activity
 
         final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
         feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
+
+        final SeekBar pitchSlider = ( SeekBar ) findViewById( R.id.PitchSlider );
+        pitchSlider.setOnSeekBarChangeListener( new PitchChangeHandler() );
 
         final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
         tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
@@ -292,9 +295,7 @@ public final class MWEngineActivity extends Activity
     private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            for ( final SampleEvent drumEvent : _drumEvents ) {
-                drumEvent.setPlaybackRate(( progress / 50f ));
-            }
+            _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
@@ -317,6 +318,20 @@ public final class MWEngineActivity extends Activity
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _delay.setFeedback( progress / 100f );
+        }
+        public void onStartTrackingTouch( SeekBar seekBar ) {}
+        public void onStopTrackingTouch ( SeekBar seekBar ) {}
+    }
+
+    /**
+     *  invoked when user interacts with the pitch change slider
+     */
+    private class PitchChangeHandler implements SeekBar.OnSeekBarChangeListener
+    {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
+            for ( final SampleEvent drumEvent : _drumEvents ) {
+                drumEvent.setPlaybackRate(( progress / 50f ));
+            }
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
