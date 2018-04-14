@@ -67,6 +67,7 @@ class SampleEvent : public BaseAudioEvent
         // total sample range
 
         int _rangePointer;
+        float _rangePointerF;
 
         // sample buffer regions (i.e. what is played)
         int _bufferRangeStart;

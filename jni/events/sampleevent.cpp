@@ -61,8 +61,15 @@ void SampleEvent::setBufferRangeStart( int value )
 {
     _bufferRangeStart = ( _bufferRangeEnd > 0 ) ? std::min( value, _bufferRangeEnd - 1 ) : value;
 
+    // integer used for non altered playback rate
+
     if ( _rangePointer < _bufferRangeStart )
         _rangePointer = _bufferRangeStart;
+
+    // floating point used for alternate playback rates
+
+    if ( _rangePointerF < _bufferRangeStart )
+        _rangePointerF = ( float ) _bufferRangeStart;
 
     if ( _bufferRangeEnd <= _bufferRangeStart )
         _bufferRangeEnd = std::max( _bufferRangeStart + ( _bufferRangeLength - 1 ), _bufferRangeStart );
@@ -89,6 +96,9 @@ void SampleEvent::setBufferRangeEnd( int value )
     if ( _rangePointer > _bufferRangeEnd )
         _rangePointer = _bufferRangeEnd;
 
+    if ( _rangePointerF > getBufferRangeEnd() )
+        _rangePointerF = ( float ) getBufferRangeEnd();
+
     if ( _bufferRangeStart >= _bufferRangeEnd )
         _bufferRangeStart = std::max( _bufferRangeEnd - 1, 0 );
 
@@ -98,7 +108,7 @@ void SampleEvent::setBufferRangeEnd( int value )
 
 int SampleEvent::getBufferRangeLength()
 {
-    return ( _playbackRate == 1.f ) ? _bufferRangeLength : ( int )( _bufferRangeLength / _playbackRate );
+    return ( _playbackRate == 1.f ) ? _bufferRangeLength : ( int )(( float ) _bufferRangeLength / _playbackRate );
 }
 
 /**
@@ -193,7 +203,7 @@ void SampleEvent::setPlaybackRate( float value )
 
 int SampleEvent::getEventLength()
 {
-    return ( _playbackRate == 1.f ) ? _eventLength : ( int )( _eventLength / _playbackRate );
+    return ( _playbackRate == 1.f ) ? _eventLength : ( int )(( float ) _eventLength / _playbackRate );
 }
 
 int SampleEvent::getEventEnd()
@@ -385,7 +395,6 @@ void SampleEvent::setRangeBasedPlayback( bool value )
 
 bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 {
-    // TODO: range based playback as yet unsupported for custom playback rate
     int bufferSize          = buffer->bufferSize;
     int amountOfChannels    = buffer->amountOfChannels;
     bool gotBuffer          = false;
@@ -396,37 +405,89 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
     if ( useInternalPointer )
         readPos = _readPointer;
 
+    int eventStart = _eventStart;
+    int eventEnd   = getEventEnd();
+
     SAMPLE_TYPE* srcBuffer;
 
-    for ( int i = 0; i < bufferSize; ++i )
+    if ( _playbackRate == 1.f )
     {
-        // read sample when the read pointer is within sample start and end points
-        if ( readPos >= _eventStart && readPos <= _eventEnd )
+        for ( int i = 0; i < bufferSize; ++i )
         {
-            // use range pointers to read within the specific sample ranges
-            for ( int c = 0; c < amountOfChannels; ++c )
+            // read sample when the read pointer is within sample start and end points
+            if ( readPos >= eventStart && readPos <= eventEnd )
             {
-                // this sample might have less channels than the output buffer
-                if ( !monoCopy )
-                    srcBuffer = _buffer->getBufferForChannel( c );
-                else
-                    srcBuffer = _buffer->getBufferForChannel( 0 );
+                // use range pointers to read within the specific sample ranges
+                for ( int c = 0; c < amountOfChannels; ++c )
+                {
+                    // this sample might have less channels than the output buffer
+                    if ( !monoCopy )
+                        srcBuffer = _buffer->getBufferForChannel( c );
+                    else
+                        srcBuffer = _buffer->getBufferForChannel( 0 );
 
-                SAMPLE_TYPE* targetBuffer = buffer->getBufferForChannel( c );
-                targetBuffer[ i ]        += ( srcBuffer[ _rangePointer ] * _volume );
+                    SAMPLE_TYPE* targetBuffer = buffer->getBufferForChannel( c );
+                    targetBuffer[ i ]        += ( srcBuffer[ _rangePointer ] * _volume );
+                }
+
+                if ( ++_rangePointer > _bufferRangeEnd )
+                    _rangePointer = _bufferRangeStart;
+
+                gotBuffer = true;
             }
 
-            if ( ++_rangePointer > _bufferRangeEnd )
-                _rangePointer = _bufferRangeStart;
+            // if this is a loopeable sample (thus using internal read pointer)
+            // set the read pointer to the sample start so it keeps playing indefinitely
 
-            gotBuffer = true;
+            if ( ++readPos > eventEnd && _loopeable )
+                readPos = eventStart;
         }
+    }
+    else {
 
-        // if this is a loopeable sample (thus using internal read pointer)
-        // set the read pointer to the sample start so it keeps playing indefinitely
+        // custom playback speed
 
-        if ( ++readPos > _eventEnd && _loopeable )
-            readPos = _eventStart;
+        int t;
+        SAMPLE_TYPE s1, s2;
+        float bufferRangeEnd = ( float ) getBufferRangeEnd(),
+              frac;
+
+        for ( int i = 0; i < bufferSize; ++i )
+        {
+            // read sample when the read pointer is within sample start and end points
+            if ( readPos >= eventStart && readPos <= eventEnd )
+            {
+                t    = ( int ) _rangePointerF;
+                frac = _rangePointerF - t; // between 0 - 1 range
+
+                // use range pointers to read within the specific sample ranges
+                for ( int c = 0; c < amountOfChannels; ++c )
+                {
+                    // this sample might have less channels than the output buffer
+                    if ( !monoCopy )
+                        srcBuffer = _buffer->getBufferForChannel( c );
+                    else
+                        srcBuffer = _buffer->getBufferForChannel( 0 );
+
+                    s1 = srcBuffer[ t ];
+                    s2 = srcBuffer[ t + 1 ];
+
+                    SAMPLE_TYPE* targetBuffer = buffer->getBufferForChannel( c );
+                    targetBuffer[ i ]        += (( s1 + ( s2 - s1 ) * frac ) * _volume );
+                }
+
+                if (( _rangePointerF += _playbackRate ) > bufferRangeEnd )
+                    _rangePointerF = ( float ) _bufferRangeStart;
+
+                gotBuffer = true;
+            }
+
+            // if this is a loopeable sample (thus using internal read pointer)
+            // set the read pointer to the sample start so it keeps playing indefinitely
+
+            if ( ++readPos > eventEnd && _loopeable )
+                readPos = eventStart;
+        }
     }
 
     if ( useInternalPointer )
@@ -442,7 +503,8 @@ void SampleEvent::init( BaseInstrument* instrument )
     _bufferRangeStart      = 0;
     _bufferRangeEnd        = 0;
     _bufferRangeLength     = 0;
-    _rangePointer          = 0;
+    _rangePointer          = 0;     // integer for non altered playback rates
+    _rangePointerF         = 0.f;   // floating point for alternate playback rates
     _lastPlaybackPosition  = 0;
     _playbackRate          = 1.f;
     _readPointerF          = 0.f;
