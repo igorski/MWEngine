@@ -217,6 +217,9 @@ public final class MWEngineActivity extends Activity
         final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
         feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
 
+        final SeekBar pitchSlider = ( SeekBar ) findViewById( R.id.PitchSlider );
+        pitchSlider.setOnSeekBarChangeListener( new PitchChangeHandler() );
+
         final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
         tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
 
@@ -315,6 +318,20 @@ public final class MWEngineActivity extends Activity
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _delay.setFeedback( progress / 100f );
+        }
+        public void onStartTrackingTouch( SeekBar seekBar ) {}
+        public void onStopTrackingTouch ( SeekBar seekBar ) {}
+    }
+
+    /**
+     *  invoked when user interacts with the pitch change slider
+     */
+    private class PitchChangeHandler implements SeekBar.OnSeekBarChangeListener
+    {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
+            for ( final SampleEvent drumEvent : _drumEvents ) {
+                drumEvent.setPlaybackRate(( progress / 50f ));
+            }
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}

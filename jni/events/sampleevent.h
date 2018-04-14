@@ -45,6 +45,12 @@ class SampleEvent : public BaseAudioEvent
 
         void setSample( AudioBuffer* sampleBuffer );
 
+        float getPlaybackRate();
+        void setPlaybackRate( float value );
+
+        int getEventLength();
+        int getEventEnd();
+
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
 
@@ -61,14 +67,17 @@ class SampleEvent : public BaseAudioEvent
         // total sample range
 
         int _rangePointer;
+        float _rangePointerF;
 
         // sample buffer regions (i.e. what is played)
         int _bufferRangeStart;
         int _bufferRangeEnd;
         int _bufferRangeLength;
+        float _playbackRate;
+        float _readPointerF;
         bool _useBufferRange;
 
-        AudioBuffer*    _liveBuffer;
+        AudioBuffer* _liveBuffer;
         int _lastPlaybackPosition;
 
         void init( BaseInstrument* aInstrument );

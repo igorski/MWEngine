@@ -77,19 +77,15 @@ class Arpeggiator
             int shift   = _stepShifts[ step ];
             int i       = 0;
 
-            // semitone up   = 1.0594
-            // semitone down = 0.9439
+            // semitone up   = 1.05946
+            // semitone down = 0.94387
 
             if ( shift > 0 )
-            {
-                for ( ; i < shift; ++i )
-                    pitch *= 1.0594;
-            }
+                pitch *= pow( 1.05946f, ( float ) shift );
+
             else if ( shift < 0 )
-            {
-                for ( ; i < std::abs( shift ); ++i )
-                    pitch *= 0.9439;
-            }
+                pitch *= pow( 0.94387f, ( float ) shift );
+
             return pitch;
         }
 

@@ -16,9 +16,14 @@ TEST( BaseAudioEventDeprecation, PositionInSamples )
     audioEvent->setSampleStart ( eventStart );
     audioEvent->setSampleLength( eventLength );
 
-    EXPECT_EQ( eventStart,  audioEvent->getSampleStart() );
-    EXPECT_EQ( expectedEnd,  audioEvent->getSampleEnd() );
-    EXPECT_EQ( eventLength, audioEvent->getSampleLength() );
+    EXPECT_EQ( eventStart, audioEvent->getSampleStart() )
+        << "expected deprecated getSampleStart() to return eventStart";
+
+    EXPECT_EQ( expectedEnd, audioEvent->getSampleEnd() )
+        << "expected deprecated getSampleEnd() to return eventEnd";
+
+    EXPECT_EQ( eventLength, audioEvent->getSampleLength() )
+        << "expected deprecated getSampleLength() to return eventLength";
 
     // test whether values in seconds have updated accordingly
 
