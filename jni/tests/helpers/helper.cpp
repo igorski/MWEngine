@@ -223,14 +223,14 @@ BaseAudioEvent* enqueuedAudioEvent( BaseInstrument* instrument, int sampleLength
 
 void prepareSampleManager() {
     // creates all samples that might be used by DrumEvent
-    SampleManager::setSample( "kd",  randomAudioBuffer() );
-    SampleManager::setSample( "kdg", randomAudioBuffer() );
-    SampleManager::setSample( "st",  randomAudioBuffer() );
-    SampleManager::setSample( "stg", randomAudioBuffer() );
-    SampleManager::setSample( "sn",  randomAudioBuffer() );
-    SampleManager::setSample( "sng", randomAudioBuffer() );
-    SampleManager::setSample( "hh",  randomAudioBuffer() );
-    SampleManager::setSample( "hhg", randomAudioBuffer() );
+    SampleManager::setSample( "kd",  randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
+    SampleManager::setSample( "kdg", randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
+    SampleManager::setSample( "st",  randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
+    SampleManager::setSample( "stg", randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
+    SampleManager::setSample( "sn",  randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
+    SampleManager::setSample( "sng", randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
+    SampleManager::setSample( "hh",  randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
+    SampleManager::setSample( "hhg", randomAudioBuffer(), AudioEngineProps::SAMPLE_RATE );
 }
 
 void dumpEventProperties( BaseAudioEvent* audioEvent )

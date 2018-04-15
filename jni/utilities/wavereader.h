@@ -24,6 +24,12 @@
 #include "../wavetable.h"
 #include <string>
 
+typedef struct
+{
+   unsigned int sampleRate;
+   AudioBuffer* buffer;
+} waveFile;
+
 class WaveReader
 {
     public:
@@ -32,7 +38,7 @@ class WaveReader
         // returns an AudioBuffer representing this file, NOTE : if
         // file doesn't exist / is not a valid WAV file, a null
         // pointer is returned
-        static AudioBuffer* fileToBuffer( std::string inputFile );
+        static waveFile fileToBuffer( std::string inputFile );
 
         // opens the File at the given path, reads its WAV data and
         // returns an WaveTable holding this file's contents
@@ -41,5 +47,5 @@ class WaveReader
 
         static WaveTable* fileToTable( std::string inputFile );
 
-        static AudioBuffer* byteArrayToBuffer( std::vector<char> byteArray );
+        static waveFile byteArrayToBuffer( std::vector<char> byteArray );
 };

@@ -31,6 +31,7 @@
 typedef struct
 {
    int sampleLength;
+   unsigned int sampleRate;
    AudioBuffer* sampleBuffer;
 } cachedSample;
 
@@ -45,7 +46,7 @@ class SampleManager
     public:
 
         // store given AudioBuffer under given identifier name in this SampleManager
-        static void setSample( std::string aIdentifier, AudioBuffer* aBuffer );
+        static void setSample( std::string aIdentifier, AudioBuffer* aBuffer, unsigned int sampleRate );
 
         // retrieve AudioBuffer registered under given identifier from this SampleManager
         // returns 0 if no associated AudioBuffer is found
@@ -54,6 +55,10 @@ class SampleManager
         // retrieve the length (in samples) of the AudioBuffer registered under given
         // identifier, returns 0 if no associated AudioBuffer is found
         static int getSampleLength( std::string aIdentifier );
+
+        // retrieve the sample rate of the AudioBuffer registered under given
+        // identifier, returns audio engine's sample rate if no associated AudioBuffer is found
+        static int getSampleRateForSample( std::string aIdentifier );
 
         // queries whether the SampleManager has an AudioBuffer registered under given identifier
         static bool hasSample( std::string aIdentifier );

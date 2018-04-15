@@ -29,9 +29,9 @@ namespace SampleManagerSamples
 
 /* public methods */
 
-void SampleManager::setSample( std::string aIdentifier, AudioBuffer* aBuffer )
+void SampleManager::setSample( std::string aIdentifier, AudioBuffer* aBuffer, unsigned int sampleRate )
 {
-    cachedSample sample = { aBuffer->bufferSize, aBuffer };
+    cachedSample sample = { aBuffer->bufferSize, sampleRate, aBuffer };
 
     // Assignment using member function insert() and STL pair
     SampleManagerSamples::_sampleMap.insert( std::pair<std::string, cachedSample>( aIdentifier, sample ));
@@ -57,6 +57,17 @@ int SampleManager::getSampleLength( std::string aIdentifier )
 
     // key stored in first, value stored in second
     return it->second.sampleLength;
+}
+
+int SampleManager::getSampleRateForSample( std::string aIdentifier )
+{
+    if ( !hasSample( aIdentifier ))
+        return AudioEngineProps::SAMPLE_RATE;
+
+    std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
+
+    // key stored in first, value stored in second
+    return it->second.sampleRate;
 }
 
 bool SampleManager::hasSample( std::string aIdentifier )

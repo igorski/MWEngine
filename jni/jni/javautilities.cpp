@@ -36,14 +36,14 @@
 bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
 {
     std::string thePath = JavaBridge::getString( aWAVFilePath );
-    AudioBuffer* sampleBuffer = WaveReader::fileToBuffer( thePath );
+    waveFile WAV = WaveReader::fileToBuffer( thePath );
 
     // error during loading of WAV file ?
 
-    if ( sampleBuffer == NULL )
+    if ( WAV.buffer == 0 )
         return false;
 
-    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
+    SampleManager::setSample( JavaBridge::getString( aKey ), WAV.buffer, WAV.sampleRate );
 
     return true;
 }
@@ -103,23 +103,23 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
         }
     }
     AAsset_close( asset );
-    AudioBuffer* sampleBuffer;
+    waveFile WAV;
 
     if ( readUsingTempFile ) {
         fclose( tmp );
-        sampleBuffer = WaveReader::fileToBuffer( tempFile );
+        WAV = WaveReader::fileToBuffer( tempFile );
         remove( tempFile.c_str() );
     }
     else {
-        sampleBuffer = WaveReader::byteArrayToBuffer( buffer );
+        WAV = WaveReader::byteArrayToBuffer( buffer );
     }
 
     // error during loading of WAV file ?
 
-    if ( sampleBuffer == NULL )
+    if ( WAV.buffer == 0 )
         return false;
 
-    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
+    SampleManager::setSample( JavaBridge::getString( aKey ), WAV.buffer, WAV.sampleRate );
 
     return true;
 }
@@ -166,7 +166,9 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
         // release the memory so Java can have it again
         JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aOptRightBuffer, c_array, 0 );
     }
-    SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
+    SampleManager::setSample(
+        JavaBridge::getString( aKey ), sampleBuffer, AudioEngineProps::SAMPLE_RATE
+    );
 }
 
 /* TablePool hooks */

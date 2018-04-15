@@ -27,21 +27,20 @@
 #include <stdlib.h>
 #include <cstring>
 
-AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
+waveFile WaveReader::fileToBuffer( std::string inputFile )
 { 
     FILE* fp;
-    AudioBuffer* out = 0;
+    AudioBuffer* buffer = 0;
+    char id[ 5 ];
+    unsigned int size;
+    short* sound_buffer;
+    short tag, amountOfChannels, blockAlign, bps;
+    unsigned int format, sampleRate, bytesPerSec, dataSize, i;
 
     fp = fopen( inputFile.c_str(), "rb" );
 
     if ( fp )
     {
-        char id[ 5 ];
-        unsigned int size;
-        short* sound_buffer;
-        short tag, amountOfChannels, blockAlign, bps;
-        unsigned int format, sampleRate, bytesPerSec, dataSize, i;
-
         // first we'll check the necessary headers identifying the WAV file
 
         fread( id, sizeof( char ), 4, fp );
@@ -73,7 +72,7 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
                 fread( sound_buffer, sizeof( short ), dataSize / sizeof( short ), fp );
                 unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
-                out = new AudioBuffer( amountOfChannels, bufferSize, sampleRate );
+                buffer = new AudioBuffer( amountOfChannels, bufferSize );
 
                 // convert short values into SAMPLE_TYPE
 
@@ -84,7 +83,7 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
                 for ( i = 0; i < bufferSize; ++i, cb += amountOfChannels )
                 {
                     for ( int c = 0; c < amountOfChannels; ++c ) {
-                        out->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( sound_buffer[ cb + c ]) / MAX_VALUE;
+                        buffer->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( sound_buffer[ cb + c ]) / MAX_VALUE;
                     }
                 }
                 free( sound_buffer );
@@ -100,37 +99,40 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
     else {
         Debug::log( "WaveReader::Error could not open file '%s'", inputFile.c_str() );
     }
+
+    waveFile out = { sampleRate, buffer };
+
     return out;
 }
 
 WaveTable* WaveReader::fileToTable( std::string inputFile )
 {
-    AudioBuffer* tempBuffer = fileToBuffer( inputFile );
+    waveFile WAV = fileToBuffer( inputFile );
 
-    if ( tempBuffer == 0 ) {
+    if ( WAV.buffer == 0 ) {
         Debug::log( "WaveReader::could not convert file '%s' to WaveTable", inputFile.c_str() );
         return 0;
     }
 
-    WaveTable* out = new WaveTable( tempBuffer->bufferSize, 440.0f );
+    WaveTable* out = new WaveTable( WAV.buffer->bufferSize, 440.0f );
 
     // clone the left/mono channel of the temporary buffer and
     // assign the clone to the WaveTable
 
-    SAMPLE_TYPE* targetBuffer = new SAMPLE_TYPE[ tempBuffer->bufferSize ];
-    memcpy( targetBuffer, tempBuffer->getBufferForChannel( 0 ), tempBuffer->bufferSize * sizeof( SAMPLE_TYPE ));
+    SAMPLE_TYPE* targetBuffer = new SAMPLE_TYPE[ WAV.buffer->bufferSize ];
+    memcpy( targetBuffer, WAV.buffer->getBufferForChannel( 0 ), WAV.buffer->bufferSize * sizeof( SAMPLE_TYPE ));
     out->setBuffer( targetBuffer );
 
-    delete tempBuffer; // free memory used by the temporary buffer
+    delete WAV.buffer; // free memory used by the temporary buffer
 
     return out;
 }
 
-AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
+waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
 {
     // TODO: this mostly mirrors the fileToBuffer-method, clean this up!
 
-    AudioBuffer* out = 0;
+    AudioBuffer* buffer = 0;
 
     // first we'll check the necessary headers identifying the WAV file
 
@@ -162,7 +164,8 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
             // in Android NDK 26 reading of byte array is horribly broken...
 
             if ( !( dataSize > 1 )) {
-                Debug::log("WaveReader::Could not parse WAVE file" );
+                Debug::log( "WaveReader::Could not parse WAVE file" );
+                waveFile out = { sampleRate, buffer };
                 return out;
             }
 
@@ -173,7 +176,7 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
 
             unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
-            out = new AudioBuffer( amountOfChannels, bufferSize, sampleRate );
+            buffer = new AudioBuffer( amountOfChannels, bufferSize );
 
             // convert short values into SAMPLE_TYPE
 
@@ -184,7 +187,7 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
             for ( i = 0; i < bufferSize; ++i, cb += amountOfChannels )
             {
                 for ( int c = 0; c < amountOfChannels; ++c )
-                    out->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( sound_buffer[ cb + c ]) / MAX_VALUE;
+                    buffer->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( sound_buffer[ cb + c ]) / MAX_VALUE;
             }
             free( sound_buffer );
         }
@@ -193,6 +196,8 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
     }
     else
         Debug::log( "WaveReader::Error not a valid WAVE file (no RIFF header)" );
+
+    waveFile out = { sampleRate, buffer };
 
     return out;
 }
