@@ -29,11 +29,19 @@
 class AudioBuffer
 {
     public:
+
+        // construct an AudioBuffer for given channel amount and buffer size
+        // the sample rate will default to the sample rate of the engine
         AudioBuffer( int aAmountOfChannels, int aBufferSize );
+
+        // construct an AudioBuffer as above, but with a custom sampleRate
+        // e.g. samples created outside of the engine
+        AudioBuffer( int aAmountOfChannels, int aBufferSize, int sampleRate );
         ~AudioBuffer();
 
         int amountOfChannels;
         int bufferSize;
+        int sampleRate;
         bool loopeable;
 
         SAMPLE_TYPE* getBufferForChannel( int aChannelNum );
@@ -45,6 +53,7 @@ class AudioBuffer
 
     protected:
         std::vector<SAMPLE_TYPE*>* _buffers;
+        void init( int aAmountOfChannels, int aBufferSize, int sampleRate );
 };
 
 #endif

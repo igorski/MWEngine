@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -73,7 +73,7 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
                 fread( sound_buffer, sizeof( short ), dataSize / sizeof( short ), fp );
                 unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
-                out = new AudioBuffer( amountOfChannels, bufferSize );
+                out = new AudioBuffer( amountOfChannels, bufferSize, sampleRate );
 
                 // convert short values into SAMPLE_TYPE
 
@@ -173,7 +173,7 @@ AudioBuffer* WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
 
             unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
-            out = new AudioBuffer( amountOfChannels, bufferSize );
+            out = new AudioBuffer( amountOfChannels, bufferSize, sampleRate );
 
             // convert short values into SAMPLE_TYPE
 

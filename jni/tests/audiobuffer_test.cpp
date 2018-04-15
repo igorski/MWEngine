@@ -15,6 +15,26 @@ TEST( AudioBuffer, Construction )
     delete audioBuffer;
 }
 
+TEST( AudioBuffer, ConstructionSampleRate )
+{
+    int expectedRate = AudioEngineProps::SAMPLE_RATE;
+
+    AudioBuffer* audioBuffer = new AudioBuffer( 1, 64 );
+
+    EXPECT_EQ( audioBuffer->sampleRate, expectedRate )
+        << "expected AudioBuffer sampleRate to equal the engine's sample rate";
+
+    delete audioBuffer;
+
+    int customRate = expectedRate / 2;
+    audioBuffer = new AudioBuffer( 1, 64, customRate );
+
+    EXPECT_EQ( audioBuffer->sampleRate, customRate )
+        << "expected AudioBuffer sampleRate to equal the rate given in the overloaded constructor";
+
+    delete audioBuffer;
+}
+
 TEST( AudioBuffer, Silence )
 {
     AudioBuffer* audioBuffer = fillAudioBuffer( randomAudioBuffer() );
@@ -254,6 +274,9 @@ TEST( AudioBuffer, Clone )
 
     EXPECT_EQ( clone->loopeable, audioBuffer->loopeable )
         << "expected:" << audioBuffer->loopeable << ",  got:" << clone->loopeable << " for loopeable";
+
+    EXPECT_EQ( clone->sampleRate, audioBuffer->sampleRate )
+        << "expected:" << audioBuffer->sampleRate << ",  got:" << clone->sampleRate << " for sampleRate";
 
     // verify all cloned channels have the same values as the source
 

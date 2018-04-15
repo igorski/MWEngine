@@ -27,13 +27,12 @@
 
 AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 {
-    loopeable        = false;
-    amountOfChannels = aAmountOfChannels;
-    bufferSize       = aBufferSize;
+    init( aAmountOfChannels, aBufferSize, AudioEngineProps::SAMPLE_RATE );
+}
 
-    // create silent buffers for each channel
-
-    _buffers = BufferUtility::createSampleBuffers( aAmountOfChannels, aBufferSize );
+AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize, int aSampleRate )
+{
+    init( aAmountOfChannels, aBufferSize, aSampleRate );
 }
 
 AudioBuffer::~AudioBuffer()
@@ -135,7 +134,7 @@ void AudioBuffer::applyMonoSource()
 
 AudioBuffer* AudioBuffer::clone()
 {
-    AudioBuffer* output = new AudioBuffer( amountOfChannels, bufferSize );
+    AudioBuffer* output = new AudioBuffer( amountOfChannels, bufferSize, sampleRate );
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {
@@ -145,4 +144,16 @@ AudioBuffer* AudioBuffer::clone()
         memcpy( targetBuffer, sourceBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
     return output;
+}
+
+void AudioBuffer::init( int aAmountOfChannels, int aBufferSize, int aSampleRate )
+{
+    loopeable        = false;
+    amountOfChannels = aAmountOfChannels;
+    bufferSize       = aBufferSize;
+    sampleRate       = aSampleRate;
+
+    // create silent buffers for each channel
+
+    _buffers = BufferUtility::createSampleBuffers( aAmountOfChannels, aBufferSize );
 }
