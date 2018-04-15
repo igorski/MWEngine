@@ -38,11 +38,22 @@ class SampleUtility
             float rate;
 
             if ( semitones > 0.f )
-                rate = ( float ) pow( 1.05946f, semitones ); // shift up
+                rate = ( float ) pow( 1.05946f, semitones );  // shift up
             else
-                rate = ( float ) pow( 0.94387f, semitones ); // shift down
+                rate = ( float ) pow( 0.94387f, -semitones ); // shift down
 
-            sampleEvent->setPlaybackRate( rate );
+            unsigned int sampleRate = sampleEvent->getSampleRate();
+
+            if ( sampleRate == AudioEngineProps::SAMPLE_RATE ) {
+                sampleEvent->setPlaybackRate( rate );
+            }
+            else {
+
+                // SampleEvent can reference an AudioBuffer that has a sample rate
+                // different to the engine, adjust the rate to make up for this difference as well
+
+                sampleEvent->setPlaybackRate( rate / AudioEngineProps::SAMPLE_RATE * ( float ) sampleRate );
+            }
         }
 };
 

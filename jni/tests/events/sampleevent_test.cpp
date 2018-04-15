@@ -4,96 +4,96 @@
 TEST( SampleEvent, Constructor )
 {
     SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* audioEvent = new SampleEvent( instrument );
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
 
-    ASSERT_TRUE( instrument == audioEvent->getInstrument() )
+    ASSERT_TRUE( instrument == sampleEvent->getInstrument() )
         << "expected instrument to equal the value given in constructor";
 
-    delete audioEvent;
+    delete sampleEvent;
     delete instrument;
 }
 
 TEST( SampleEvent, GettersSetters )
 {
     SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* audioEvent = new SampleEvent( instrument );
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
 
     int rangeStart = randomInt( 0, 512 );
     int rangeEnd   = randomInt( 512, 2014 );
 
-    audioEvent->setBufferRangeStart( rangeStart );
-    audioEvent->setBufferRangeEnd  ( rangeEnd );
+    sampleEvent->setBufferRangeStart( rangeStart );
+    sampleEvent->setBufferRangeEnd  ( rangeEnd );
 
-    EXPECT_EQ( rangeStart, audioEvent->getBufferRangeStart() )
+    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
         << "expected range start to equal the value given in the setter method";
 
-    EXPECT_EQ( rangeEnd, audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( rangeEnd, sampleEvent->getBufferRangeEnd() )
         << "expected range end to equal the value given in the setter method";
 
-    EXPECT_EQ(( rangeEnd - rangeStart ) + 1, audioEvent->getBufferRangeLength() )
+    EXPECT_EQ(( rangeEnd - rangeStart ) + 1, sampleEvent->getBufferRangeLength() )
         << "expected buffer range length to be " << (( rangeEnd - rangeStart ) + 1 );
 
-    delete audioEvent;
+    delete sampleEvent;
     delete instrument;
 }
 
 TEST( SampleEvent, BufferRangeStartSanitizing )
 {
     SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* audioEvent = new SampleEvent( instrument );
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
 
     // set initial sample range/length and buffer range values
 
     int sampleLength = randomInt( 1024, 2048 );
 
-    audioEvent->setEventLength( sampleLength );
+    sampleEvent->setEventLength( sampleLength );
 
     int rangeStart = randomInt( 0, 256 );
     int rangeEnd   = randomInt( 256, sampleLength / 2 );
 
-    audioEvent->setBufferRangeStart( rangeStart );
-    audioEvent->setBufferRangeEnd  ( rangeEnd );
+    sampleEvent->setBufferRangeStart( rangeStart );
+    sampleEvent->setBufferRangeEnd  ( rangeEnd );
 
-    int rangeLength = audioEvent->getBufferRangeLength();
+    int rangeLength = sampleEvent->getBufferRangeLength();
 
     // 1. test updating range start value beyond the full range length
 
-    audioEvent->setBufferRangeStart( rangeEnd + 1 );
+    sampleEvent->setBufferRangeStart( rangeEnd + 1 );
 
-    EXPECT_EQ( rangeEnd - 1, audioEvent->getBufferRangeStart() )
+    EXPECT_EQ( rangeEnd - 1, sampleEvent->getBufferRangeStart() )
         << "expected range start to have been sanitized to maximum range length index minus 1";
 
-    EXPECT_EQ( rangeStart + ( rangeLength - 1 ), audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( rangeStart + ( rangeLength - 1 ), sampleEvent->getBufferRangeEnd() )
         << "expected range end to have been sanitized to range start plus maximum range length index";
 
-    EXPECT_EQ( 2, audioEvent->getBufferRangeLength() )
+    EXPECT_EQ( 2, sampleEvent->getBufferRangeLength() )
         << "expected range length to be 2";
 
-    delete audioEvent;
+    delete sampleEvent;
     delete instrument;
 }
 
 TEST( SampleEvent, BufferRangeEndSanitizing )
 {
     SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* audioEvent = new SampleEvent( instrument );
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
 
     int sampleLength = randomInt( 24, 512 );
     AudioBuffer* buffer = new AudioBuffer( 1, sampleLength );
-    audioEvent->setSample( buffer );
+    sampleEvent->setSample( buffer );
 
     int rangeEnd = sampleLength / 2;
-    audioEvent->setBufferRangeEnd( rangeEnd );
+    sampleEvent->setBufferRangeEnd( rangeEnd );
 
-    EXPECT_EQ( rangeEnd, audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( rangeEnd, sampleEvent->getBufferRangeEnd() )
         << "expected a range end with a value smaller than the allowed max source sample buffer length";
 
-    audioEvent->setBufferRangeEnd( sampleLength * 2 );
+    sampleEvent->setBufferRangeEnd( sampleLength * 2 );
 
-    EXPECT_EQ( sampleLength - 1, audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( sampleLength - 1, sampleEvent->getBufferRangeEnd() )
         << "expected buffer range to not exceed the source sample buffer length";
 
-    delete audioEvent;
+    delete sampleEvent;
     delete instrument;
     delete buffer;
 }
@@ -146,87 +146,124 @@ TEST( SampleEvent, RangeBasedPlayback )
 TEST( SampleEvent, SetSample )
 {
     SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* audioEvent = new SampleEvent( instrument );
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
     int bufferLength = randomInt( 24, 512 );
 
-    EXPECT_EQ( 0, audioEvent->getEventStart() )
+    EXPECT_EQ( 0, sampleEvent->getEventStart() )
         << "expected 0 sample start index after construction";
 
-    EXPECT_EQ( 0, audioEvent->getEventEnd() )
+    EXPECT_EQ( 0, sampleEvent->getEventEnd() )
         << "expected 0 sample end index after construction";
 
-    EXPECT_EQ( 0, audioEvent->getEventLength() )
+    EXPECT_EQ( 0, sampleEvent->getEventLength() )
         << "expected 0 sample length index after construction";
 
     int sampleStart  = bufferLength / 4;
     int sampleLength = bufferLength / 2;
 
-    audioEvent->setEventStart ( sampleStart );
-    audioEvent->setEventLength( sampleLength );
+    sampleEvent->setEventStart ( sampleStart );
+    sampleEvent->setEventLength( sampleLength );
 
-    EXPECT_EQ( sampleStart, audioEvent->getEventStart() )
+    EXPECT_EQ( sampleStart, sampleEvent->getEventStart() )
         << "expected sample start to have been updated after setter method";
 
-    EXPECT_EQ( sampleStart + ( sampleLength - 1 ), audioEvent->getEventEnd() )
+    EXPECT_EQ( sampleStart + ( sampleLength - 1 ), sampleEvent->getEventEnd() )
         << "expected sample length to have been updated after setter method";
 
-    EXPECT_EQ( sampleLength, audioEvent->getEventLength() )
+    EXPECT_EQ( sampleLength, sampleEvent->getEventLength() )
         << "expected sample length to have been updated after setter method";
 
     int bufferRangeStart = randomInt( 0, sampleStart );
     int bufferRangeEnd   = randomInt( bufferRangeStart + 1, bufferRangeStart + bufferLength / 2 );
 
-    audioEvent->setBufferRangeStart( bufferRangeStart );
-    audioEvent->setBufferRangeEnd  ( bufferRangeEnd );
+    sampleEvent->setBufferRangeStart( bufferRangeStart );
+    sampleEvent->setBufferRangeEnd  ( bufferRangeEnd );
 
-    EXPECT_EQ(( bufferRangeEnd - bufferRangeStart ) + 1, audioEvent->getBufferRangeLength() )
+    EXPECT_EQ(( bufferRangeEnd - bufferRangeStart ) + 1, sampleEvent->getBufferRangeLength() )
         << "expected buffer range prior to setSample reset to meet the expectation";
 
     AudioBuffer* buffer = new AudioBuffer( 1, bufferLength );
-    audioEvent->setSample( buffer );
+    sampleEvent->setSample( buffer );
 
-    EXPECT_EQ( 0, audioEvent->getBufferRangeStart() )
+    EXPECT_EQ( 0, sampleEvent->getBufferRangeStart() )
         << "expected 0 buffer range start index after updating of sample";
 
-    EXPECT_EQ( bufferLength - 1, audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( bufferLength - 1, sampleEvent->getBufferRangeEnd() )
         << "expected " << ( bufferLength - 1 ) << " range end index after updating of sample";
 
-    EXPECT_EQ( bufferLength, audioEvent->getBufferRangeLength() )
+    EXPECT_EQ( bufferLength, sampleEvent->getBufferRangeLength() )
         << "expected " << bufferLength << " buffer range length after updating of sample";
 
-    delete audioEvent;
+    delete sampleEvent;
     delete instrument;
+    delete buffer;
+}
+
+TEST( SampleEvent, SetSampleDefaultSampleRate )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    AudioBuffer* buffer      = new AudioBuffer( 1, 24 );
+
+    sampleEvent->setSample( buffer );
+
+    EXPECT_EQ( AudioEngineProps::SAMPLE_RATE, sampleEvent->getSampleRate())
+        << "expected SampleEvents sample rate to equal the engine's sample rate by default";
+
+    EXPECT_EQ( 1.f, sampleEvent->getPlaybackRate())
+        << "expected SampleEvents default playback rate to be at 1 for no altered rate";
+
+    delete sampleEvent;
+    delete buffer;
+}
+
+TEST( SampleEvent, SetSampleCustomSampleRate )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    AudioBuffer* buffer      = new AudioBuffer( 1, 24 );
+
+    // set at a sample rate at half that of the engine
+    int sampleRate = AudioEngineProps::SAMPLE_RATE / 2;
+    sampleEvent->setSample( buffer, sampleRate );
+
+    EXPECT_EQ( sampleRate, sampleEvent->getSampleRate())
+        << "expected SampleEvents sample rate to equal the given sample rate";
+
+    EXPECT_EQ( 0.5f, floatRounding( sampleEvent->getPlaybackRate(), 1 ))
+        << "expected SampleEvents playback rate to be at half speed as its samples "
+        << "sampling rate is at half of the engine's sampling rate";
+
+    delete sampleEvent;
     delete buffer;
 }
 
 TEST( SampleEvent, GetBufferForRange )
 {
     SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* audioEvent = new SampleEvent( instrument );
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
 
     int sampleLength = randomInt( 8, 24 );
     int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
 
-    audioEvent->setEventStart ( sampleStart );
-    audioEvent->setEventLength( sampleLength );
+    sampleEvent->setEventStart ( sampleStart );
+    sampleEvent->setEventLength( sampleLength );
 
-    int sampleEnd = audioEvent->getEventEnd();
+    int sampleEnd = sampleEvent->getEventEnd();
 
     int bufferRangeStart = randomInt( 0, ( int )( sampleLength / 2 ));
     int bufferRangeEnd   = randomInt( bufferRangeStart + 1, bufferRangeStart + sampleLength );
     bool loopeable       = randomBool();
 
-    audioEvent->setBufferRangeStart( bufferRangeStart );
-    audioEvent->setBufferRangeEnd  ( bufferRangeEnd );
-    audioEvent->setLoopeable( loopeable );
+    sampleEvent->setBufferRangeStart( bufferRangeStart );
+    sampleEvent->setBufferRangeEnd  ( bufferRangeEnd );
+    sampleEvent->setLoopeable( loopeable );
 
     // generate random audio content
 
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 1 ), sampleLength ));
-    audioEvent->setSample( buffer );
+    sampleEvent->setSample( buffer );
 
     float volume = randomFloat();
-    audioEvent->setVolume( volume );
+    sampleEvent->setVolume( volume );
 
     // create a temporary buffer to write output in, ensure it is smaller than the event buffer
     AudioBuffer* targetBuffer = new AudioBuffer( buffer->amountOfChannels, randomInt( 2, 4 ));
@@ -235,7 +272,7 @@ TEST( SampleEvent, GetBufferForRange )
     ASSERT_FALSE( bufferHasContent( targetBuffer ))
         << "expected target buffer to be silent after creation, but it has content";
 
-    int readPos        = loopeable ? audioEvent->getReadPointer() : randomInt( 0, sampleEnd );
+    int readPos        = loopeable ? sampleEvent->getReadPointer() : randomInt( 0, sampleEnd );
     int readEnd        = readPos + buffersToWrite - 1;
     bool expectContent = ( readPos >= sampleStart && readPos <= sampleEnd ) ||
                          (( readEnd ) >= sampleStart && ( readEnd ) <= sampleEnd );
@@ -247,7 +284,7 @@ TEST( SampleEvent, GetBufferForRange )
 
     // run the method
 
-    bool gotBuffer = audioEvent->getBufferForRange( targetBuffer, readPos );
+    bool gotBuffer = sampleEvent->getBufferForRange( targetBuffer, readPos );
 
     EXPECT_EQ( expectContent, gotBuffer )
         << "result should match the expectation";
@@ -259,7 +296,7 @@ TEST( SampleEvent, GetBufferForRange )
             for ( int c = 0; c < targetBuffer->amountOfChannels; ++c )
             {
                 SAMPLE_TYPE* buffer       = targetBuffer->getBufferForChannel( c );
-                SAMPLE_TYPE* sourceBuffer = audioEvent->getBuffer()->getBufferForChannel( c );
+                SAMPLE_TYPE* sourceBuffer = sampleEvent->getBuffer()->getBufferForChannel( c );
 
                 SAMPLE_TYPE value          = buffer[ i ];
                 SAMPLE_TYPE expectedSample = sourceBuffer[ rangePointer ] * volume;
@@ -274,7 +311,7 @@ TEST( SampleEvent, GetBufferForRange )
             r = sampleStart;
     }
 
-    delete audioEvent;
+    delete sampleEvent;
     delete instrument;
     delete targetBuffer;
     delete buffer;
@@ -284,21 +321,21 @@ TEST( SampleEvent, GetBufferForRange )
 TEST( SampleEvent, MixBuffer )
 {
     SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* audioEvent = new SampleEvent( instrument );
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
 
     int sampleLength = randomInt( 8, 24 );
     int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
 
-    audioEvent->setEventStart ( sampleStart );
-    audioEvent->setEventLength( sampleLength );
+    sampleEvent->setEventStart ( sampleStart );
+    sampleEvent->setEventLength( sampleLength );
 
-    int sampleEnd = audioEvent->getEventEnd();
+    int sampleEnd = sampleEvent->getEventEnd();
 
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
-    audioEvent->setSample( buffer );
+    sampleEvent->setSample( buffer );
 
     float volume = randomFloat();
-    audioEvent->setVolume( volume );
+    sampleEvent->setVolume( volume );
 
     //std::cout << " ss: " << sampleStart << " se: " << sampleEnd << " sl: " << sampleLength << " ch: " << buffer->amountOfChannels;
 
@@ -325,7 +362,7 @@ TEST( SampleEvent, MixBuffer )
     //std::cout << " expected content: " << expectContent << " for buffer size: " << buffersToWrite;
     //std::cout << " min: " << minBufferPos << " max: " << maxBufferPos << " cur: " << bufferPos;
 
-    audioEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
+    sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
 
     // validate buffer contents after mixing
 
@@ -334,7 +371,7 @@ TEST( SampleEvent, MixBuffer )
         for ( int c = 0, ca = targetBuffer->amountOfChannels; c < ca; ++c )
         {
             SAMPLE_TYPE* buffer       = targetBuffer->getBufferForChannel( c );
-            SAMPLE_TYPE* sourceBuffer = audioEvent->getBuffer()->getBufferForChannel( c );
+            SAMPLE_TYPE* sourceBuffer = sampleEvent->getBuffer()->getBufferForChannel( c );
             SAMPLE_TYPE expectedSample;
 
             for ( int i = 0; i < buffersToWrite; ++i )
@@ -346,7 +383,7 @@ TEST( SampleEvent, MixBuffer )
 
                 if ( r >= sampleStart && r <= sampleEnd )
                 {
-                    r -= sampleStart; // substract audioEvent start position
+                    r -= sampleStart; // substract sampleEvent start position
                     expectedSample = sourceBuffer[ r ] * volume;
                 }
                 else {
@@ -380,8 +417,8 @@ TEST( SampleEvent, MixBuffer )
     // loopStartIteratorPosition describes at which sequencer position the loop starts
     // loopStartWritePointer describes at which position in the targetBuffer the loop is written to
     // amountOfLoopedWrites is the amount of samples written in the loop
-    // loopStartReadPointer describes at which position the samples from the source audioEvent will be read when loop starts
-    // loopStartReadPointerEnd describes the last position the samples from the source audioEvent will be read for the amount of loop writes
+    // loopStartReadPointer describes at which position the samples from the source sampleEvent will be read when loop starts
+    // loopStartReadPointerEnd describes the last position the samples from the source sampleEvent will be read for the amount of loop writes
 
     int loopStartIteratorPosition = maxBufferPos + 1;
     int loopStartWritePointer     = loopOffset;
@@ -395,7 +432,7 @@ TEST( SampleEvent, MixBuffer )
                         ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
                         ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
 
-    audioEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
+    sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
 
     //std::cout << " expected content: " << expectContent << " for buffer size: " << buffersToWrite;
     //std::cout << " min: " << minBufferPos << " max: " << maxBufferPos << " cur: " << bufferPos << " loop offset: " << loopOffset;
@@ -405,7 +442,7 @@ TEST( SampleEvent, MixBuffer )
         for ( int c = 0, ca = targetBuffer->amountOfChannels; c < ca; ++c )
         {
             SAMPLE_TYPE* buffer       = targetBuffer->getBufferForChannel( c );
-            SAMPLE_TYPE* sourceBuffer = audioEvent->getBuffer()->getBufferForChannel( c );
+            SAMPLE_TYPE* sourceBuffer = sampleEvent->getBuffer()->getBufferForChannel( c );
 
             for ( int i = 0; i < buffersToWrite; ++i )
             {
@@ -418,7 +455,7 @@ TEST( SampleEvent, MixBuffer )
 
                 if ( r >= sampleStart && r <= sampleEnd )
                 {
-                    r -= sampleStart; // substract audioEvent start position
+                    r -= sampleStart; // substract sampleEvent start position
                     expectedSample = sourceBuffer[ r ] * volume;
                 }
                 SAMPLE_TYPE sample = buffer[ i ];
@@ -434,7 +471,7 @@ TEST( SampleEvent, MixBuffer )
             << "expected output buffer to contain no content after mixing for an out-of-range buffer position";
     }
 
-    delete audioEvent;
+    delete sampleEvent;
     delete instrument;
     delete targetBuffer;
     delete buffer;
@@ -442,138 +479,138 @@ TEST( SampleEvent, MixBuffer )
 
 TEST( SampleEvent, PlaybackRateDefault )
 {
-    SampleEvent* audioEvent = new SampleEvent();
+    SampleEvent* sampleEvent = new SampleEvent();
 
-    EXPECT_EQ( 1.f, audioEvent->getPlaybackRate() )
+    EXPECT_EQ( 1.f, sampleEvent->getPlaybackRate() )
         << "expected default playback rate to be 1";
 
-    delete audioEvent;
+    delete sampleEvent;
 }
 
 TEST( SampleEvent, PlaybackRateSetter )
 {
-    SampleEvent* audioEvent = new SampleEvent();
+    SampleEvent* sampleEvent = new SampleEvent();
 
     float expectedRate = randomFloat();
-    audioEvent->setPlaybackRate( expectedRate );
+    sampleEvent->setPlaybackRate( expectedRate );
 
-    EXPECT_EQ( expectedRate, audioEvent->getPlaybackRate() )
+    EXPECT_EQ( expectedRate, sampleEvent->getPlaybackRate() )
         << "expected default playback rate to equal the set value";
 
-    delete audioEvent;
+    delete sampleEvent;
 }
 
 TEST( SampleEvent, PlaybackRateLimit )
 {
-    SampleEvent* audioEvent = new SampleEvent();
+    SampleEvent* sampleEvent = new SampleEvent();
 
-    audioEvent->setPlaybackRate( 0.f );
+    sampleEvent->setPlaybackRate( 0.f );
 
-    EXPECT_EQ( 0.01f, audioEvent->getPlaybackRate()) << "expected minimum rate of 1% of original speed";
+    EXPECT_EQ( 0.01f, sampleEvent->getPlaybackRate()) << "expected minimum rate of 1% of original speed";
 
-    audioEvent->setPlaybackRate( 1000.f );
+    sampleEvent->setPlaybackRate( 1000.f );
 
-    EXPECT_EQ( 100.f, audioEvent->getPlaybackRate()) << "expected maximum rate of 100 x original speed";
+    EXPECT_EQ( 100.f, sampleEvent->getPlaybackRate()) << "expected maximum rate of 100 x original speed";
 
-    delete audioEvent;
+    delete sampleEvent;
 }
 
 TEST( SampleEvent, PlaybackRate )
 {
-    SampleEvent* audioEvent = new SampleEvent();
+    SampleEvent* sampleEvent = new SampleEvent();
 
     // properties for 1.f playback rate
     int eventStart  = 1000;
     int eventLength = 1000;
     int eventEnd    = eventStart + eventLength - 1;
 
-    audioEvent->setEventStart( eventStart );
-    audioEvent->setEventLength( eventLength );
+    sampleEvent->setEventStart( eventStart );
+    sampleEvent->setEventLength( eventLength );
 
-    EXPECT_EQ( eventStart, audioEvent->getEventStart() )
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
         << "expected event start to be unchanged for 1.f playback rate";
 
-    EXPECT_EQ( eventLength, audioEvent->getEventLength() )
+    EXPECT_EQ( eventLength, sampleEvent->getEventLength() )
         << "expected event length to be unchanged for 1.f playback rate";
 
-    EXPECT_EQ( eventEnd, audioEvent->getEventEnd() )
+    EXPECT_EQ( eventEnd, sampleEvent->getEventEnd() )
         << "expected event end to be unchanged for 1.f playback rate";
 
     // adjust playback rate to 2.f (twice the original speed)
 
-    audioEvent->setPlaybackRate( 2.f );
+    sampleEvent->setPlaybackRate( 2.f );
 
-    EXPECT_EQ( eventStart, audioEvent->getEventStart() )
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
         << "expected event start at double playback rate to remain unchanged";
 
-    EXPECT_EQ( eventLength / 2, audioEvent->getEventLength() )
+    EXPECT_EQ( eventLength / 2, sampleEvent->getEventLength() )
         << "expected event length at double playback rate to be at half the original length";
 
-    EXPECT_EQ( eventStart + ( eventLength / 2 ), audioEvent->getEventEnd() )
+    EXPECT_EQ( eventStart + ( eventLength / 2 ), sampleEvent->getEventEnd() )
         << "expected event end at double playback rate to be below the original offset";
 
     // adjust playback rate to .5f (half the original speed)
 
-    audioEvent->setPlaybackRate( .5f );
+    sampleEvent->setPlaybackRate( .5f );
 
-    EXPECT_EQ( eventStart, audioEvent->getEventStart() )
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
         << "expected event start at half playback rate to remain unchanged";
 
-    EXPECT_EQ( eventLength * 2, audioEvent->getEventLength() )
+    EXPECT_EQ( eventLength * 2, sampleEvent->getEventLength() )
         << "expected event length at half playback rate to be at twice the original length";
 
-    EXPECT_EQ( eventStart + ( eventLength * 2 ), audioEvent->getEventEnd() )
+    EXPECT_EQ( eventStart + ( eventLength * 2 ), sampleEvent->getEventEnd() )
         << "expected event end at half playback rate to be above the original offset";
 
-    delete audioEvent;
+    delete sampleEvent;
 }
 
 TEST( SampleEvent, PlaybackRateCustomRange )
 {
-    SampleEvent* audioEvent = new SampleEvent();
+    SampleEvent* sampleEvent = new SampleEvent();
 
     // properties for 1.f playback rate
     int rangeStart  = 1000;
     int rangeLength = 1000;
     int rangeEnd    = rangeStart + rangeLength - 1;
 
-    audioEvent->setBufferRangeStart( rangeStart );
-    audioEvent->setBufferRangeEnd( rangeEnd );
+    sampleEvent->setBufferRangeStart( rangeStart );
+    sampleEvent->setBufferRangeEnd( rangeEnd );
 
-    EXPECT_EQ( rangeStart, audioEvent->getBufferRangeStart() )
+    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
         << "expected buffer range start to be unchanged for 1.f playback rate";
 
-    EXPECT_EQ( rangeLength, audioEvent->getBufferRangeLength() )
+    EXPECT_EQ( rangeLength, sampleEvent->getBufferRangeLength() )
         << "expected buffer range length to be unchanged for 1.f playback rate";
 
-    EXPECT_EQ( rangeEnd, audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( rangeEnd, sampleEvent->getBufferRangeEnd() )
         << "expected buffer range end to be unchanged for 1.f playback rate";
 
     // adjust playback rate to 2.f (twice the original speed)
 
-    audioEvent->setPlaybackRate( 2.f );
+    sampleEvent->setPlaybackRate( 2.f );
 
-    EXPECT_EQ( rangeStart, audioEvent->getBufferRangeStart() )
+    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
         << "expected buffer range start at double playback rate to remain unchanged";
 
-    EXPECT_EQ( rangeLength / 2, audioEvent->getBufferRangeLength() )
+    EXPECT_EQ( rangeLength / 2, sampleEvent->getBufferRangeLength() )
         << "expected buffer range length at double playback rate to be at half the original length";
 
-    EXPECT_EQ( rangeStart + ( rangeLength / 2 ), audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( rangeStart + ( rangeLength / 2 ), sampleEvent->getBufferRangeEnd() )
         << "expected buffer range end at double playback rate to be below the original offset";
 
     // adjust playback rate to .5f (half the original speed)
 
-    audioEvent->setPlaybackRate( .5f );
+    sampleEvent->setPlaybackRate( .5f );
 
-    EXPECT_EQ( rangeStart, audioEvent->getBufferRangeStart() )
+    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
         << "expected buffer range start at half playback rate to remain unchanged";
 
-    EXPECT_EQ( rangeLength * 2, audioEvent->getBufferRangeLength() )
+    EXPECT_EQ( rangeLength * 2, sampleEvent->getBufferRangeLength() )
         << "expected buffer range length at half playback rate to be at twice the original length";
 
-    EXPECT_EQ( rangeStart + ( rangeLength * 2 ), audioEvent->getBufferRangeEnd() )
+    EXPECT_EQ( rangeStart + ( rangeLength * 2 ), sampleEvent->getBufferRangeEnd() )
         << "expected buffer range end at half playback rate to be above the original offset";
 
-    delete audioEvent;
+    delete sampleEvent;
 }

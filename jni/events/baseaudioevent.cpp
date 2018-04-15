@@ -76,7 +76,7 @@ void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
 
 void BaseAudioEvent::play()
 {
-    if ( _livePlayback )
+    if ( _livePlayback || _instrument == 0 )
         return;
 
     setDeletable( false );

@@ -43,7 +43,15 @@ class SampleEvent : public BaseAudioEvent
 
         virtual AudioBuffer* synthesize( int aBufferLength );
 
+        // set the sample that this SampleEvent will playback
+        // by default the sample will playback at the sampling rate of the engine
+
         void setSample( AudioBuffer* sampleBuffer );
+
+        // use this method in case your samples are at a different sampling rate
+        // than the engine (for instance read from WAV file created externally)
+
+        void setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate );
 
         float getPlaybackRate();
         void setPlaybackRate( float value );
@@ -62,6 +70,11 @@ class SampleEvent : public BaseAudioEvent
 
         int getPlaybackPosition();
 
+        // sample rate of the AudioBuffer that this sample event references
+        // this can differ from the AudioEngine's sample rate
+
+        unsigned int getSampleRate();
+
     protected:
 
         // total sample range
@@ -69,13 +82,16 @@ class SampleEvent : public BaseAudioEvent
         int _rangePointer;
         float _rangePointerF;
 
-        // sample buffer regions (i.e. what is played)
+        // sample buffer regions (i.e. the sample contents thar are played)
+
         int _bufferRangeStart;
         int _bufferRangeEnd;
         int _bufferRangeLength;
+        bool _useBufferRange;
         float _playbackRate;
         float _readPointerF;
-        bool _useBufferRange;
+
+        unsigned int _sampleRate;
 
         AudioBuffer* _liveBuffer;
         int _lastPlaybackPosition;

@@ -120,6 +120,11 @@ int SampleEvent::getPlaybackPosition()
     return _lastPlaybackPosition;
 }
 
+unsigned int SampleEvent::getSampleRate()
+{
+    return _sampleRate;
+}
+
 /**
  * only invoked for a live event (see sequencer.cpp and audioengine.cpp)
  * or a SampleEvent triggered by play()
@@ -153,8 +158,13 @@ AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 
 void SampleEvent::setSample( AudioBuffer* sampleBuffer )
 {
-    // make sure we lock read/write operations as setting a large sample
-    // while the engine is running is a tad dangerous ;)
+    setSample( sampleBuffer, AudioEngineProps::SAMPLE_RATE );
+}
+
+void SampleEvent::setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate )
+{
+    // make sure we lock read/write operations as setting a sample
+    // while the engine is running (thus reading from the current one) is a tad dangerous ;)
 
     bool wasLocked = _locked;
     _locked        = true;
@@ -177,6 +187,14 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer )
     _buffer->loopeable = _loopeable;
     setEventLength( sampleLength );
     setEventEnd   ( _eventStart + ( _eventLength - 1 ));
+
+    // in case the given event has a sample rate that differs from the engine
+    // adjust the playback rate of the sample accordingly
+
+    _sampleRate = sampleRate;
+    if ( _sampleRate != AudioEngineProps::SAMPLE_RATE ) {
+        setPlaybackRate( _playbackRate / ( float ) AudioEngineProps::SAMPLE_RATE * ( float ) _sampleRate );
+    }
 
     // when switching samples, existing buffer ranges are reset
 
@@ -512,4 +530,5 @@ void SampleEvent::init( BaseInstrument* instrument )
     _useBufferRange        = false;
     _instrument            = instrument;
     _liveBuffer            = 0;
+    _sampleRate            = AudioEngineProps::SAMPLE_RATE;
 }
