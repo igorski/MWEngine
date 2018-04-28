@@ -262,8 +262,9 @@ TEST( SampleEvent, GetBufferForRange )
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 1 ), sampleLength ));
     sampleEvent->setSample( buffer );
 
-    float volume = randomFloat();
-    sampleEvent->setVolume( volume );
+    // mixing happens against logarithmically scaled volume
+    sampleEvent->setVolume( randomFloat() );
+    float volume = sampleEvent->getVolumeLogarithmic();
 
     // create a temporary buffer to write output in, ensure it is smaller than the event buffer
     AudioBuffer* targetBuffer = new AudioBuffer( buffer->amountOfChannels, randomInt( 2, 4 ));
@@ -334,8 +335,9 @@ TEST( SampleEvent, MixBuffer )
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
     sampleEvent->setSample( buffer );
 
-    float volume = randomFloat();
-    sampleEvent->setVolume( volume );
+    // mixing happens against logarithmically scaled volume
+    sampleEvent->setVolume( randomFloat() );
+    float volume = sampleEvent->getVolumeLogarithmic();
 
     //std::cout << " ss: " << sampleStart << " se: " << sampleEnd << " sl: " << sampleLength << " ch: " << buffer->amountOfChannels;
 

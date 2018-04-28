@@ -256,7 +256,7 @@ namespace AudioEngine
             bool mustCache        = AudioEngineProps::CHANNEL_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
             int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
-            SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->volume;
+            SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic();
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
             int amount                               = audioEvents.size();
 

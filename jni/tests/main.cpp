@@ -31,6 +31,7 @@
 #include "utilities/samplemanager_test.cpp"
 #include "utilities/sampleutility_test.cpp"
 #include "utilities/waveutil_test.cpp"
+#include "utilities/volumeutil_test.cpp"
 #include "deprecation_test.cpp"
 
 // these aren't stability tests, but benchmarks to test certain performance assumptions

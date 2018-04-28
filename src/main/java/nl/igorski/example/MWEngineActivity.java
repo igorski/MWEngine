@@ -199,6 +199,7 @@ public final class MWEngineActivity extends Activity
         // a C note to be synthesized live when holding down the corresponding button
 
         _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
+        _liveEvent.setVolume( .75f );
 
         // STEP 5 : attach event handlers to the UI elements (see main.xml layout)
 
@@ -222,6 +223,9 @@ public final class MWEngineActivity extends Activity
 
         final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
         tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
+
+        final SeekBar volumeSlider = ( SeekBar ) findViewById( R.id.VolumeSlider );
+        volumeSlider.setOnSeekBarChangeListener( new VolumeChangeHandler() );
 
         _inited = true;
     }
@@ -347,6 +351,18 @@ public final class MWEngineActivity extends Activity
             final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
            final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
             _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
+        }
+        public void onStartTrackingTouch( SeekBar seekBar ) {}
+        public void onStopTrackingTouch ( SeekBar seekBar ) {}
+    }
+
+    /**
+     *  invoked when user interacts with the volume slider
+     */
+    private class VolumeChangeHandler implements SeekBar.OnSeekBarChangeListener
+    {
+        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
+            _engine.setVolume( progress / 100f );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}

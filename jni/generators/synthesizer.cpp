@@ -69,7 +69,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     bool doAddOSCs = !hasParent && _instrument->getOscillatorAmount() > 1;
 
     // attenuate oscillators
-    SAMPLE_TYPE volume = aEvent->getVolume() / ( SAMPLE_TYPE ) _instrument->getOscillatorAmount();
+    SAMPLE_TYPE volume = aEvent->getVolumeLogarithmic() / ( SAMPLE_TYPE ) _instrument->getOscillatorAmount();
 
     int renderStartOffset = 0;
     int maxSampleIndex    = aEvent->getEventLength() - 1;    // max index possible for the events length

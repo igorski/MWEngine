@@ -34,7 +34,13 @@ class BaseAudioEvent
         BaseAudioEvent();
         virtual ~BaseAudioEvent();
 
+        /**
+         * event volume is in a percentile (0 - 1) range
+         * this will internally be scaled against a logarithmic
+         * scale for more natural sounding results
+         */
         virtual float getVolume();
+        virtual float getVolumeLogarithmic();
         virtual void  setVolume( float value );
 
         /**

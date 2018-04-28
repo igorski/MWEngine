@@ -20,6 +20,24 @@ TEST( BaseAudioEvent, GettersSettersVolume )
     delete audioEvent;
 }
 
+TEST( BaseAudioEvent, Volume )
+{
+    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+
+    float volume    = randomFloat();
+    float logVolume = VolumeUtil::toLog( volume );
+
+    audioEvent->setVolume( volume );
+
+    EXPECT_EQ( audioEvent->getVolume(), volume )
+        << "expected the non-logarithmic volume to equal the input volume";
+
+    EXPECT_EQ( audioEvent->getVolumeLogarithmic(), logVolume )
+        << "expected the logarithmically scaled value to equal the logarithmically scaled volume";
+
+    delete audioEvent;
+}
+
 TEST( BaseAudioEvent, PlayStop )
 {
     BaseInstrument* instrument = new BaseInstrument();
@@ -486,8 +504,9 @@ TEST( BaseAudioEvent, MixBuffer )
     AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), eventLength ));
     audioEvent->setBuffer( buffer, true );
 
-    float volume = randomFloat();
-    audioEvent->setVolume( volume );
+    // mixing happens against logarithmically scaled volume
+    audioEvent->setVolume( randomFloat() );
+    float volume = audioEvent->getVolumeLogarithmic();
 
     //std::cout << " ss: " << eventStart << " se: " << eventEnd << " sl: " << eventLength << " ch: " << buffer->amountOfChannels;
 

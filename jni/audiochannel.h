@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,7 +45,14 @@ class AudioChannel
 
         ProcessingChain *processingChain;
 
-        float volume; // 0-1 range
+        /**
+         * volume is given in a percentile (0 - 1) range
+         * this will internally be scaled against a logarithmic
+         * scale for more natural sounding results
+         */
+        float getVolume();
+        float getVolumeLogarithmic();
+        void setVolume( float value );
 
         bool hasLiveEvents;
         bool isMono;
@@ -137,6 +144,7 @@ class AudioChannel
         float _leftVolume;
         float _rightVolume;
         float _pan;
+        float _volume;
 
         AudioBuffer* _outputBuffer;
         AudioBuffer* _cachedBuffer;

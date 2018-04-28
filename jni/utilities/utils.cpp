@@ -117,20 +117,3 @@ unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool li
            inputBuffer[ startOffset + 1 ] <<  8 ||
            inputBuffer[ startOffset + 0 ];
 }
-
-/* volume util */
-
-namespace VolumeUtil
-{
-    float FACTOR1 = 20.0 / log( 10.0 );
-    float FACTOR2 = 1 / 20.0;
-
-    float lin2log( float dLinear )
-    {
-        return VolumeUtil::FACTOR1 * log( dLinear );
-    }
-    float log2lin( float dLogarithmic )
-    {
-        return pow( 10.0, dLogarithmic * VolumeUtil::FACTOR2 );
-    }
-}

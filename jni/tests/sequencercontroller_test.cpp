@@ -1,4 +1,5 @@
 #include "../sequencercontroller.h"
+#include "../utilities/volumeutil.h"
 
 TEST( SequencerController, StepsConstructor )
 {
@@ -96,12 +97,13 @@ TEST( SequencerController, SetVolume )
     SequencerController* controller = new SequencerController();
 
     float volume        = randomFloat( 0.1f, 1.0f );
+    float scaledVolume  = VolumeUtil::toLog( volume );
     AudioEngine::volume = randomFloat( 0.0f, 0.05f );
 
     controller->setVolume( volume );
 
-    EXPECT_EQ( volume, AudioEngine::volume )
-        << "expected SequencerController to have updated the engine output volume";
+    EXPECT_EQ( scaledVolume, AudioEngine::volume )
+        << "expected SequencerController to have updated the engine output volume against a logarithmic scale";
 
     delete controller;
 }

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,6 +27,7 @@
 #include <messaging/notifier.h>
 #include <utilities/utils.h>
 #include <utilities/diskwriter.h>
+#include <utilities/volumeutil.h>
 
 /* constructor / destructor */
 
@@ -78,7 +79,7 @@ void SequencerController::setTempoNow( float aTempo, int aTimeSigBeatAmount, int
 
 void SequencerController::setVolume( float aVolume )
 {
-    AudioEngine::volume = aVolume;
+    AudioEngine::volume = VolumeUtil::toLog( aVolume );
 }
 
 void SequencerController::setPlaying( bool aIsPlaying )

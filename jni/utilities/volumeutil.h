@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,27 +20,38 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __UTILS_H_INCLUDED__
-#define __UTILS_H_INCLUDED__
+#ifndef __VOLUME_UTIL_H_INCLUDED__
+#define __VOLUME_UTIL_H_INCLUDED__
 
 #include <math.h>
-#include <sstream>
-#include <vector>
-#include "global.h"
 
-/* convenience methods */
+namespace VolumeUtil
+{
+    /**
+     * You can scale the power up to 3f, 4f+ for different curves
+     * see https://ux.stackexchange.com/a/116300
+     */
+    static float CURVE = 2.f;
 
-float scale( float value, float maxValue, float maxCompareValue );
-SAMPLE_TYPE cap( SAMPLE_TYPE value );
-float randomFloat();
-unsigned long long now_ms();
-char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startOffset, int length );
-unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool littleEndian );
+    /**
+     * convenience method to scale a value in the 0 - 1 range
+     * to a logarithmic scale. you can treat the input value
+     * as a percentile while the resulting value can be
+     * fed to actors inside the engine
+     */
+    inline float toLog( float value )
+    {
+        return pow( value, CURVE );
+    }
 
-/* convenience methods */
-
-// numbers to string
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
- ( std::ostringstream() << std::dec << x ) ).str()
+    /**
+     * convenience method to change a value from a
+     * logarithmic scale back to a percentile value in the 0 - 1 range
+     */
+    inline float toLinear( float value )
+    {
+        return pow( value, 1.0f / CURVE );
+    }
+}
 
 #endif

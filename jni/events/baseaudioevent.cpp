@@ -25,6 +25,7 @@
 #include "../audioengine.h"
 #include <instruments/baseinstrument.h>
 #include <utilities/bufferutility.h>
+#include <utilities/volumeutil.h>
 #include <algorithm>
 
 // constructors / destructor
@@ -336,12 +337,17 @@ bool BaseAudioEvent::isLocked()
 
 float BaseAudioEvent::getVolume()
 {
+    return VolumeUtil::toLinear( _volume );
+}
+
+float BaseAudioEvent::getVolumeLogarithmic()
+{
     return _volume;
 }
 
 void BaseAudioEvent::setVolume( float value )
 {
-    _volume = value;
+    _volume = VolumeUtil::toLog( value );
 }
 
 void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
@@ -501,7 +507,7 @@ void BaseAudioEvent::construct()
     _loopeable         = false;
     _locked            = false;
     _addedToSequencer  = false;
-    _volume            = MAX_PHASE;
+    _volume            = VolumeUtil::toLog( MAX_PHASE );
     _eventStart        = 0;
     _eventEnd          = 0;
     _eventLength       = 0;

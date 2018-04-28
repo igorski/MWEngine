@@ -80,9 +80,7 @@ public final class MWEngine extends Thread
     public static int BUFFER_SIZE     = 2048;
     public static int OUTPUT_CHANNELS = 1; // 1 = mono, 2 = stereo
 
-    // we CAN multiply the output the volume to decrease it, preventing rapidly distorting audio ( especially on filters )
-    private static final float VOLUME_MULTIPLIER = .85f;
-    private static float       _volume           = .85f /* assumed default level */ * VOLUME_MULTIPLIER;
+    private static float _volume = 1.0f;
 
     /* recording buffer specific */
 
@@ -153,14 +151,14 @@ public final class MWEngine extends Thread
     }
 
     public float getVolume()
-        {
-            return _volume / VOLUME_MULTIPLIER;
-        }
+    {
+        return _volume;
+    }
 
     public void setVolume( float aValue )
     {
-        _volume = aValue * VOLUME_MULTIPLIER;
-        _sequencerController.setVolume(_volume);
+        _volume = aValue;
+        _sequencerController.setVolume( _volume );
     }
 
     public SequencerController getSequencerController()

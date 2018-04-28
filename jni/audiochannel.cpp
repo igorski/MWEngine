@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "audiochannel.h"
+#include <utilities/volumeutil.h>
 
 unsigned int AudioChannel::INSTANCE_COUNT = 0;
 
@@ -28,18 +29,15 @@ unsigned int AudioChannel::INSTANCE_COUNT = 0;
 
 AudioChannel::AudioChannel( float aVolume )
 {
-    volume            = aVolume;
-    maxBufferPosition = 0;
-
     init();
+    setVolume( aVolume );
 }
 
 AudioChannel::AudioChannel( float aVolume, int aMaxBufferPosition )
 {
-    volume            = aVolume;
-    maxBufferPosition = aMaxBufferPosition;
-
     init();
+    setVolume( aVolume );
+    maxBufferPosition = aMaxBufferPosition;
 }
 
 AudioChannel::~AudioChannel()
@@ -53,6 +51,21 @@ AudioChannel::~AudioChannel()
 }
 
 /* public methods */
+
+float AudioChannel::getVolume()
+{
+    return VolumeUtil::toLinear( _volume );
+}
+
+float AudioChannel::getVolumeLogarithmic()
+{
+    return _volume;
+}
+
+void AudioChannel::setVolume( float value )
+{
+    _volume = VolumeUtil::toLog( value );
+}
 
 void AudioChannel::addEvent( BaseAudioEvent* aEvent )
 {
@@ -225,6 +238,8 @@ void AudioChannel::init()
     _cacheWritePointer = 0;
     _cacheStartOffset  = 0;
     _cacheEndOffset    = 0;
+    _volume            = VolumeUtil::toLog( MAX_PHASE );
+    maxBufferPosition  = 0;
     processingChain    = new ProcessingChain();
 
     setPan( 0 );

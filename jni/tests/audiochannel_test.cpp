@@ -1,13 +1,14 @@
 #include "../audiochannel.h"
 #include "../global.h"
+#include "../utilities/volumeutil.h"
 
 TEST( AudioChannel, Construction )
 {
     float volume = ( float ) randomSample( 0, MAX_PHASE );
     AudioChannel* audioChannel = new AudioChannel( volume );
 
-    EXPECT_EQ( audioChannel->volume, volume )
-        << "expected:" << volume << ", got:" << audioChannel->volume << " for mix volume";
+    EXPECT_EQ( audioChannel->getVolume(), volume )
+        << "expected:" << volume << ", got:" << audioChannel->getVolume() << " for mix volume";
 
     delete audioChannel;
 
@@ -15,11 +16,27 @@ TEST( AudioChannel, Construction )
 
     audioChannel = new AudioChannel( volume, maxBufferPosition );
 
-    EXPECT_EQ( audioChannel->volume, volume )
-            << "expected:" << volume << ", got:" << audioChannel->volume << " for mix volume";
+    EXPECT_EQ( audioChannel->getVolume(), volume )
+            << "expected:" << volume << ", got:" << audioChannel->getVolume() << " for mix volume";
 
     EXPECT_EQ( audioChannel->maxBufferPosition, maxBufferPosition )
             << "expected:" << maxBufferPosition << ", got:" << audioChannel->maxBufferPosition << " for max buffer position";
+
+    delete audioChannel;
+}
+
+TEST( AudioChannel, Volume )
+{
+    float volume    = ( float ) randomSample( 0, MAX_PHASE );
+    float logVolume = VolumeUtil::toLog( volume );
+
+    AudioChannel* audioChannel = new AudioChannel( volume );
+
+    EXPECT_EQ( audioChannel->getVolume(), volume )
+        << "expected the non-logarithmic volume to equal the input volume";
+
+    EXPECT_EQ( audioChannel->getVolumeLogarithmic(), logVolume )
+        << "expected the logarithmically scaled value to equal the logarithmically scaled volume";
 
     delete audioChannel;
 }
