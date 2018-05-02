@@ -99,9 +99,9 @@ public final class MWEngineActivity extends Activity
         sequencer.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
         _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
-        // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
+        // create a lowpass filter to catch all low rumbling and a limiter to prevent clipping of output :)
         _lpfhpf  = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
-        _limiter = new Limiter( 10f, 500f, -0.3f);
+        _limiter = new Limiter( 10f, 500f, 0.6f );
 
         masterBus.addProcessor( _lpfhpf );
         masterBus.addProcessor( _limiter );
@@ -199,7 +199,7 @@ public final class MWEngineActivity extends Activity
         // a C note to be synthesized live when holding down the corresponding button
 
         _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
-        _liveEvent.setVolume( .75f );
+        _liveEvent.setVolume( .5f );
 
         // STEP 5 : attach event handlers to the UI elements (see main.xml layout)
 

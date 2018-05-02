@@ -113,7 +113,7 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             ol  = leftBuffer[ i ];
             or_ = !isMonoSource ? rightBuffer[ i ] : 0;
 
-            lev = ( SAMPLE_TYPE )( 1.0 / ( 1.0 + th * fabs( ol + or_ )));
+            lev = ( SAMPLE_TYPE ) ( 1.0 / ( 1.0 + th * fabs( ol + or_ )));
 
             if ( g > lev ) {
                 g = g - at * ( g - lev );
@@ -135,7 +135,7 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             ol  = leftBuffer[ i ];
             or_ = !isMonoSource ? rightBuffer[ i ] : 0;
 
-            lev = ( SAMPLE_TYPE )( 0.5 * g * fabs( ol + or_ ));
+            lev = ( SAMPLE_TYPE ) ( 0.5 * g * fabs( ol + or_ ));
 
             if ( lev > th ) {
                 g = g - ( at * ( lev - th ));
