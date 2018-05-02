@@ -38,6 +38,7 @@ class AudioBuffer
 
         SAMPLE_TYPE* getBufferForChannel( int aChannelNum );
         int mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume );
+        bool isSilent();
         void silenceBuffers();
         void adjustBufferVolumes( SAMPLE_TYPE amp );
         void applyMonoSource();

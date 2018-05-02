@@ -26,7 +26,7 @@ public final class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer           _finalizer;
+    private Limiter             _limiter;
     private LPFHPFilter         _lpfhpf;
     private SynthInstrument     _synth1;
     private SynthInstrument     _synth2;
@@ -100,11 +100,11 @@ public final class MWEngineActivity extends Activity
         _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
         // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
-        _lpfhpf    = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
-        _finalizer = new Finalizer  ( 2f, 500f, MWEngine.SAMPLE_RATE,     OUTPUT_CHANNELS );
+        _lpfhpf  = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
+        _limiter = new Limiter( 10f, 500f, -0.3f);
 
-        masterBus.addProcessor( _finalizer );
         masterBus.addProcessor( _lpfhpf );
+        masterBus.addProcessor( _limiter );
 
         // STEP 2 : let's create some instruments =D
 

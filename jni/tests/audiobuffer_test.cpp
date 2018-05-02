@@ -15,6 +15,19 @@ TEST( AudioBuffer, Construction )
     delete audioBuffer;
 }
 
+TEST( AudioBuffer, IsSilent )
+{
+    AudioBuffer* audioBuffer = randomAudioBuffer();
+
+    ASSERT_TRUE( audioBuffer->isSilent()) << "expected empty buffer to be recognized as silent";
+
+    // fill buffer with content
+    fillAudioBuffer( audioBuffer );
+    ASSERT_FALSE( audioBuffer->isSilent()) << "expected filled buffer to not be recognized as silent";
+
+    delete audioBuffer;
+}
+
 TEST( AudioBuffer, Silence )
 {
     AudioBuffer* audioBuffer = fillAudioBuffer( randomAudioBuffer() );

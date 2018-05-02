@@ -1,7 +1,10 @@
 /**
- * The MIT License (MIT)
+ * Ported from mdaReverb.h
+ * Created by Arne Scheffler on 6/14/08.
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * mda VST Plug-ins
+ *
+ * Copyright (c) 2008 Paul Kellett
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,58 +30,128 @@
 
 Limiter::Limiter()
 {
-
+    init( 0.15, 0.50, 0.60 );
 }
 
-/**
- * creates a limiter, attack 10 ms works well with decay 500 ms for average use
- *
- * @param attackMs   {float} attack time in milliseconds
- * @param releaseMs  {float} attack decay time in milliseconds
- * @param sampleRate {int} the current samplerate
- * @param amountOfChannels {int} amount of output channels
- */
-Limiter::Limiter( float attackMs, float releaseMs, int sampleRate, int amountOfChannels )
+Limiter::Limiter( float attackMs, float releaseMs, float thresholdDb )
 {
-    init( attackMs, releaseMs, sampleRate, amountOfChannels );
+    init( attackMs, releaseMs, thresholdDb );
 }
 
 Limiter::~Limiter()
 {
-    while ( !_followers->empty())
-    {
-        delete _followers->back(), _followers->pop_back();
-    }
+    // nowt...
 }
 
 /* public methods */
 
+float Limiter::getAttack()
+{
+    return pAttack;
+}
+
+void Limiter::setAttack( float attackMs )
+{
+    pAttack = ( SAMPLE_TYPE ) attackMs;
+    recalculate();
+}
+
+float Limiter::getRelease()
+{
+    return pRelease;
+}
+
+void Limiter::setRelease( float releaseMs )
+{
+    pRelease = ( SAMPLE_TYPE ) releaseMs;
+    recalculate();
+}
+
+float Limiter::getThreshold()
+{
+    return pTresh;
+}
+
+void Limiter::setThreshold( float thresholdDb )
+{
+    pTresh = ( SAMPLE_TYPE ) thresholdDb;
+    recalculate();
+}
+
 float Limiter::getLinearGR()
 {
-    // TODO : currently mono / left signal only
-    return _followers->at( 0 )->envelope > 1. ? 1 / _followers->at( 0 )->envelope : 1.;
+    return gain > MAX_PHASE ? MAX_PHASE / gain : MAX_PHASE;
 }
 
 void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    for ( int i = 0, l = sampleBuffer->amountOfChannels; i < l; ++i )
+    if ( gain > 0.9999f && sampleBuffer->isSilent())
     {
-        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
-        EnvelopeFollower* follower = _followers->at( i );
-        int j                      = sampleBuffer->bufferSize;
+        // don't process if input is silent
+        return;
+    }
 
-        while ( j-- > 0 )
-        {
-            SAMPLE_TYPE dest = channelBuffer[ j ];
+    SAMPLE_TYPE g, at, re, tr, th, lev, ol, or_;
 
-            follower->process( dest );
+    th = thresh;
+    g = gain;
+    at = att;
+    re = rel;
+    tr = trim;
 
-            if ( follower->envelope > maxGain )
-                dest = dest / follower->envelope;
+    int bufferSize = sampleBuffer->bufferSize;
 
-            channelBuffer[ j ] = dest;
+    SAMPLE_TYPE* leftBuffer  = sampleBuffer->getBufferForChannel( 0 );
+    SAMPLE_TYPE* rightBuffer = !isMonoSource ? sampleBuffer->getBufferForChannel( 1 ) : 0;
+        
+    if ( pKnee > 0.5 )
+    {
+        // soft knee
+        
+        for ( int i = 0; i < bufferSize; ++i ) {
+
+            ol  = leftBuffer[ i ];
+            or_ = !isMonoSource ? rightBuffer[ i ] : 0;
+
+            lev = ( SAMPLE_TYPE )( 1.0 / ( 1.0 + th * fabs( ol + or_ )));
+
+            if ( g > lev ) {
+                g = g - at * ( g - lev );
+            }
+            else {
+                g = g + re * ( lev - g );
+            }
+
+            leftBuffer[ i ] = ( ol * tr * g );
+
+            if ( !isMonoSource )
+                rightBuffer[ i ] = ( or_ * tr * g );
         }
     }
+    else
+    {
+        for ( int i = 0; i < bufferSize; ++i ) {
+
+            ol  = leftBuffer[ i ];
+            or_ = !isMonoSource ? rightBuffer[ i ] : 0;
+
+            lev = ( SAMPLE_TYPE )( 0.5 * g * fabs( ol + or_ ));
+
+            if ( lev > th ) {
+                g = g - ( at * ( lev - th ));
+            }
+            else {
+                // below threshold
+                g = g + ( SAMPLE_TYPE )( re * ( 1.0 - g ));
+            }
+
+            leftBuffer[ i ] = ( ol * tr * g );
+
+            if ( !isMonoSource )
+                rightBuffer[ i ] = ( or_ * tr * g );
+        }
+    }
+    gain = g;
 }
 
 bool Limiter::isCacheable()
@@ -88,11 +161,30 @@ bool Limiter::isCacheable()
 
 /* protected methods */
 
-void Limiter::init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels )
+void Limiter::init( float attackMs, float releaseMs, float thresholdDb )
 {
-    maxGain    = .95;
-    _followers = new std::vector<EnvelopeFollower*>( amountOfChannels );
+    pAttack  = ( SAMPLE_TYPE ) attackMs;
+    pRelease = ( SAMPLE_TYPE ) releaseMs;
+    pTresh   = ( SAMPLE_TYPE ) thresholdDb;
+    pTrim    = ( SAMPLE_TYPE ) 0.60;
+    pKnee    = ( SAMPLE_TYPE ) 0.40;
 
-    for ( int i = 0; i < amountOfChannels; ++i )
-        _followers->at( i ) = new EnvelopeFollower( maxGain, attackMs, releaseMs, sampleRate );
+    gain = MAX_PHASE;
+
+    recalculate();
+}
+
+void Limiter::recalculate()
+{
+    if ( pKnee > 0.5 ) {
+        // soft knee
+        thresh = ( SAMPLE_TYPE ) pow( 10.0, 1.0 - ( 2.0 * pTresh ));
+    }
+    else {
+        // hard knee
+        thresh = ( SAMPLE_TYPE ) pow( 10.0, ( 2.0 * pTresh ) - 2.0 );
+    }
+    trim = ( SAMPLE_TYPE )( pow( 10.0, ( 2.0 * pTrim) - 1.0 ));
+    att  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 * pAttack );
+    rel  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 - ( 3.0 * pRelease ));
 }

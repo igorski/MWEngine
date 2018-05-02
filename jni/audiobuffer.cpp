@@ -53,7 +53,8 @@ SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
 
 int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume )
 {
-    if ( aBuffer == 0 || aWriteOffset >= bufferSize ) return 0;
+    if ( aBuffer == 0 || aWriteOffset >= bufferSize )
+        return 0;
 
     int sourceLength     = aBuffer->bufferSize;
     int maxSourceChannel = aBuffer->amountOfChannels - 1;
@@ -93,13 +94,28 @@ int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWrite
     return ( c == 0 ) ? writtenSamples : writtenSamples / c;
 }
 
+bool AudioBuffer::isSilent()
+{
+    for ( int i = 0; i < amountOfChannels; ++i )
+    {
+        SAMPLE_TYPE* buffer = getBufferForChannel( i );
+
+        for ( int j = 0; j < bufferSize; ++j )
+        {
+            if ( buffer[ j ] != 0.f )
+                return false;
+        }
+    }
+    return true;
+}
+
 /**
  * fills the buffers with silence
  * clearing their previous contents
  */
 void AudioBuffer::silenceBuffers()
 {
-    // use mem set to quickly erase existing buffer contents, zero bits should equal 0.0f
+    // use memset to quickly erase existing buffer contents, zero bits should equal 0.0f
     for ( int i = 0; i < amountOfChannels; ++i )
         memset( getBufferForChannel( i ), 0, bufferSize * sizeof( SAMPLE_TYPE ));
 }

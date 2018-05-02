@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -93,7 +93,7 @@ namespace AudioEngine
 
     /* output related */
 
-    float volume = .85f;
+    float volume = MAX_PHASE;
     ProcessingChain* masterBus = new ProcessingChain();
 
     static int thread;
@@ -256,9 +256,10 @@ namespace AudioEngine
             bool mustCache        = AudioEngineProps::CHANNEL_CACHING && channel->canCache() && !isCached; // whether to cache this channels output
             int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
-            SAMPLE_TYPE channelVolume                = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic();
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
-            int amount                               = audioEvents.size();
+            int amount = audioEvents.size();
+
+            SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic() / ( SAMPLE_TYPE ) channelAmount;
 
             // get channel output buffer and clear previous contents
             AudioBuffer* channelBuffer = channel->getOutputBuffer();
@@ -309,7 +310,7 @@ namespace AudioEngine
                 // is played on the same instrument, but just as a different voice (note the
                 // events can have their own mix level)
 
-                float lAmp = channelVolume > 0.0 ? MAX_PHASE / channelVolume : MAX_PHASE;
+                float lAmp = channelVolume > 0.f ? MAX_PHASE / channelVolume : MAX_PHASE;
 
                 for ( int k = 0; k < lAmount; ++k )
                 {
@@ -362,17 +363,11 @@ namespace AudioEngine
         {
             for ( ci = 0; ci < outputChannels; ci++ )
             {
-                // we apply the master volume here
-                float sample = ( float ) inBuffer->getBufferForChannel( ci )[ i ] * volume;
+                // we apply the master volume to the output samples
+                // and write output interleaved (e.g. a sample per output channel
+                // before continuing writing the next sample for the next channel range)
 
-                // and a fail-safe in extreme limiting (hitting the ceiling?)
-                if ( sample < -MAX_PHASE )
-                    sample = -MAX_PHASE;
-
-                else if ( sample > +MAX_PHASE )
-                    sample = +MAX_PHASE;
-
-                outbuffer[ c + ci ] = sample; // interleaved output
+                outbuffer[ c + ci ] = ( float ) inBuffer->getBufferForChannel( ci )[ i ] * volume;
             }
 
             // update the buffer pointers and sequencer position
