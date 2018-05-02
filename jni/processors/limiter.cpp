@@ -1,5 +1,5 @@
 /**
- * Ported from mdaReverb.h
+ * Ported from mdaLimiterProcessor.cpp
  * Created by Arne Scheffler on 6/14/08.
  *
  * mda VST Plug-ins

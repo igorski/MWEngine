@@ -259,6 +259,7 @@ namespace AudioEngine
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
             int amount = audioEvents.size();
 
+            // divide the channels volume by the amount of channels to provide extra headroom
             SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic() / ( SAMPLE_TYPE ) channelAmount;
 
             // get channel output buffer and clear previous contents
