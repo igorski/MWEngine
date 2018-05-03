@@ -210,6 +210,7 @@ namespace AudioEngine
             return false;
 
         int i, c, ci;
+        float sample;
 
         // erase previous buffer contents
         inBuffer->silenceBuffers();
@@ -364,11 +365,21 @@ namespace AudioEngine
         {
             for ( ci = 0; ci < outputChannels; ci++ )
             {
-                // we apply the master volume to the output samples
-                // and write output interleaved (e.g. a sample per output channel
+                // apply the master volume onto the output
+                sample = ( float ) inBuffer->getBufferForChannel( ci )[ i ] * volume;
+
+                // and perform a fail-safe check in case we're exceeding the headroom ceiling
+
+                if ( sample < -MAX_PHASE )
+                    sample = -MAX_PHASE;
+
+                else if ( sample > +MAX_PHASE )
+                    sample = +MAX_PHASE;
+
+                // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
 
-                outbuffer[ c + ci ] = ( float ) inBuffer->getBufferForChannel( ci )[ i ] * volume;
+                outbuffer[ c + ci ] = sample;
             }
 
             // update the buffer pointers and sequencer position
