@@ -105,6 +105,8 @@ include $(BUILD_SHARED_LIBRARY)
 
 ifeq ($(MW_BUILD_TYPE),test)
     include $(CLEAR_VARS)
+    LOCAL_CFLAGS           := -fPIE
+    LOCAL_LDFLAGS          := -fPIE -pie
     LOCAL_MODULE           := mwengine_unittest
     LOCAL_SRC_FILES        := tests/main.cpp
     LOCAL_SHARED_LIBRARIES := mwengine_test

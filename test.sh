@@ -4,7 +4,19 @@ echo ---------------------------------------
 echo Building MWEngine \(might take a moment\)
 echo ---------------------------------------
 
-( exec "./build.sh" "NDK_APPLICATION_MK=jni/Application_Test.mk" ) > /dev/null
+# custom to your machine : Android NDK library location
+export ANDROID_NDK_ROOT=/Library/AndroidNDK
+
+# the input folders for the C++ sources
+export NDK_PROJECT_PATH=./src/main/cpp
+
+# flush/create output folders
+rm -rf libs
+mkdir libs
+
+# explicitly provide paths to .mk files as default ndk-build expects files in a folder called ./jni
+# additionally, we use a different application.mk when testing
+$ANDROID_NDK_ROOT/ndk-build -C $NDK_PROJECT_PATH APP_BUILD_SCRIPT=Android.mk NDK_APPLICATION_MK=Application_test.mk NDK_LIBS_OUT=../../../libs V=1 $1 > /dev/null
 BUILD_SUCCESS=$?
 
 if [ $BUILD_SUCCESS -eq 0 ]; then
