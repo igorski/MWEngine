@@ -292,7 +292,7 @@ TEST( Sequencer, GetLiveEvents )
         << "expected to have collected no live Events for AudioChannel 1 (none were existent for its instrument)";
 
     EXPECT_EQ( 0, channels->at( 1 )->audioEvents.size() )
-        << "expected to have collected no sequenced Events for AudioChannel 2 (nore were existent for its instrument)";
+        << "expected to have collected no sequenced Events for AudioChannel 2 (none were existent for its instrument)";
 
     EXPECT_EQ( 1, channels->at( 1 )->liveEvents.size() )
         << "expected to have collected 1 live Event for AudioChannel 2";

@@ -374,6 +374,9 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     if ( !_loopeable )
     {
+        // prevent overflowing allocated memory when reading from the source buffer
+        int maxReadPos = _buffer->bufferSize;
+
         for ( i = 0; i < bufferSize; ++i )
         {
             bufferPointer = i + bufferPosition;
@@ -394,7 +397,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 // the _eventStart defines where the event is positioned
                 // subtract it from current sequencer pointer to get the
                 // offset relative to the source buffer
-                
+
                 readPointer = bufferPointer - _eventStart;
 
                 for ( c = 0; c < outputChannels; ++c )
@@ -402,7 +405,8 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     srcBuffer = _buffer->getBufferForChannel( c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
-                    tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
+                    if ( readPointer < maxReadPos )
+                        tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
                 }
             }
             else if ( loopStarted && i >= loopOffset )
@@ -430,7 +434,6 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
         bool monoCopy = _buffer->amountOfChannels < outputBuffer->amountOfChannels;
         int maxBufPos = _buffer->bufferSize - 1;
-        bufferPointer = _readPointer;   // use internal buffer pointer when reading loopeable content
 
         for ( i = 0; i < bufferSize; ++i )
         {

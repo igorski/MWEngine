@@ -118,6 +118,8 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                     // 77175 being audioEvent1 start, -0.25f being audioEvent1 contents, _0.5f being audioEvent2 contents
                     SAMPLE_TYPE expected = ( bufferPosition > 77175 ) ? -0.25f : +0.5f;
                     SAMPLE_TYPE sample   = buffer[ c ];
+                    // divide by amount of channels (volume is corrected for summing purposes)
+                    expected /= 2;
 
                     if ( sample != expected )
                     {

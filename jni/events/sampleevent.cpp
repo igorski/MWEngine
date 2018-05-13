@@ -260,11 +260,17 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     // ideally events should never hold more channels than AudioEngineProps::OUTPUT_CHANNELS
 
     int outputChannels = std::min( _buffer->amountOfChannels, outputBuffer->amountOfChannels );
-    int i, t, c, ca;
+    int i, t, t2, c, ca;
     float frac;
     SAMPLE_TYPE* srcBuffer;
     SAMPLE_TYPE* tgtBuffer;
     SAMPLE_TYPE s1, s2;
+
+    // maximum allowed source buffer read offset
+    // due to rounding of floating point increments, we need
+    // to ensure we remain in range otherwise we will overflow allocated memory ranges
+
+    int maxPos = _buffer->bufferSize - 1;
 
     // at custom playback rate we require floating point precision
     float eventStart = ( float ) _eventStart;
@@ -315,15 +321,20 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     srcBuffer = _buffer->getBufferForChannel( c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
+                    t2 = t + 1;
+
+                    if ( t2 > maxPos )
+                        continue;
+
                     s1 = srcBuffer[ t ];
-                    s2 = srcBuffer[ t + 1 ];
+                    s2 = srcBuffer[ t2 ];
 
                     tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
                 }
             }
             else if ( loopStarted && fi >= lo )
             {
-                bufferPointer = ( float )( minBufferPosition + ( fi - lo ));
+                bufferPointer = minBufferPosition + ( fi - lo );
 
                 if ( bufferPointer >= eventStart && bufferPointer <= eventEnd )
                 {
@@ -337,8 +348,13 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                         srcBuffer = _buffer->getBufferForChannel( c );
                         tgtBuffer = outputBuffer->getBufferForChannel( c );
 
+                        t2 = t + 1;
+
+                        if ( t2 > maxPos )
+                            continue;
+
                         s1 = srcBuffer[ t ];
-                        s2 = srcBuffer[ t + 1 ];
+                        s2 = srcBuffer[ t2 ];
 
                         tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
                     }
@@ -376,8 +392,13 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
+                    t2 = t + 1;
+
+                    if ( t2 > maxPos )
+                        continue;
+
                     s1 = srcBuffer[ t ];
-                    s2 = srcBuffer[ t + 1 ];
+                    s2 = srcBuffer[ t2 ];
 
                     tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
                 }
@@ -530,5 +551,5 @@ void SampleEvent::init( BaseInstrument* instrument )
     _useBufferRange        = false;
     _instrument            = instrument;
     _liveBuffer            = 0;
-    _sampleRate            = AudioEngineProps::SAMPLE_RATE;
+    _sampleRate            = ( unsigned int ) AudioEngineProps::SAMPLE_RATE;
 }
