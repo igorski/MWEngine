@@ -1,11 +1,11 @@
 *.DS_Store
 *.idea
-.gradle
+*.iml
 gradle/
+.gradle
+.externalNativeBuild
 src/main/java/nl/igorski/lib/audio/mwengine/*
-jni/jni/java_interface_wrap.cpp
+src/main/cpp/jni/java_interface_wrap.cpp
 libs/*
 obj
 build
-*.iml
-intelliJ project

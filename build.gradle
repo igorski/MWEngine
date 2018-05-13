@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId "nl.igorski.example"
-        minSdkVersion 14
+        minSdkVersion 16
         versionCode 1
         versionName "1.0.0"
     }
@@ -38,10 +38,22 @@ android {
             }
         }
     }
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/cpp/Android.mk'
+        }
+    }
     sourceSets {
         main {
             java.srcDirs    = [ 'src/main/java' ]
-            jniLibs.srcDirs = [ 'libs' ]
+            jniLibs.srcDirs = []
         }
     }
+}
+
+// Location of where to store the jni wrapped files
+def coreWrapperDir = new File("${projectDir}/src/main/java/nl/igorski/lib/audio/mwengine")
+
+task createCoreWrapperDir {
+    coreWrapperDir.mkdirs()
 }
