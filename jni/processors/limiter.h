@@ -1,7 +1,10 @@
 /**
- * The MIT License (MIT)
+ * Ported from mdaLimiterProcessor.h
+ * Created by Arne Scheffler on 6/14/08.
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * mda VST Plug-ins
+ *
+ * Copyright (c) 2008 Paul Kellett
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,26 +28,38 @@
 
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
-#include <modules/envelopefollower.h>
 #include <vector>
 
 class Limiter : public BaseProcessor
 {
     public:
         Limiter();
-        Limiter( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
+        Limiter( float attackMs, float releaseMs, float thresholdDb );
         ~Limiter();
 
-        float getLinearGR();
+        float getAttack();
+        void setAttack( float attackMs );
+        float getRelease();
+        void setRelease( float releaseMs );
+        float getThreshold();
+        void setThreshold( float thresholdDb );
+
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+
+        float getLinearGR();
         bool isCacheable();
 
     protected:
-        void init( float attackMs, float releaseMs, int sampleRate, int amountOfChannels );
+        void init( float attackMs, float releaseMs, float thresholdDb );
+        void recalculate();
 
-    private:
-        SAMPLE_TYPE maxGain;
-        std::vector<EnvelopeFollower*>* _followers;
+        SAMPLE_TYPE pTresh;   // in dB, -20 - 20
+        SAMPLE_TYPE pTrim;
+        SAMPLE_TYPE pAttack;  // in microseconds
+        SAMPLE_TYPE pRelease; // in ms
+        SAMPLE_TYPE pKnee;
+
+        SAMPLE_TYPE thresh, gain, att, rel, trim;
 };
 
 #endif

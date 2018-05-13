@@ -29,8 +29,8 @@ EnvelopeFollower::EnvelopeFollower( float maxGain, float attackMs, float release
 {
     envelope = 0.0;
 
-    _attack  = pow( 0.01, maxGain / ( attackMs  * sampleRate / 1000 ));
-    _release = pow( 0.01, maxGain / ( releaseMs * sampleRate / 1000 ));
+    _attack  = pow( 0.01, maxGain / ( attackMs  * ( float ) sampleRate / 1000 ));
+    _release = pow( 0.01, maxGain / ( releaseMs * ( float ) sampleRate / 1000 ));
 }
 
 /* public methods */

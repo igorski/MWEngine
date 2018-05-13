@@ -26,7 +26,7 @@ public final class MWEngineActivity extends Activity
      * will invoke the native layer destructors. As such we hold strong
      * references to JNI Objects during the application lifetime
      */
-    private Finalizer           _finalizer;
+    private Limiter             _limiter;
     private LPFHPFilter         _lpfhpf;
     private SynthInstrument     _synth1;
     private SynthInstrument     _synth2;
@@ -99,12 +99,12 @@ public final class MWEngineActivity extends Activity
         sequencer.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
         _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
-        // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
-        _lpfhpf    = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
-        _finalizer = new Finalizer  ( 2f, 500f, MWEngine.SAMPLE_RATE,     OUTPUT_CHANNELS );
+        // create a lowpass filter to catch all low rumbling and a limiter to prevent clipping of output :)
+        _lpfhpf  = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
+        _limiter = new Limiter( 10f, 500f, 0.6f );
 
-        masterBus.addProcessor( _finalizer );
         masterBus.addProcessor( _lpfhpf );
+        masterBus.addProcessor( _limiter );
 
         // STEP 2 : let's create some instruments =D
 
@@ -199,7 +199,7 @@ public final class MWEngineActivity extends Activity
         // a C note to be synthesized live when holding down the corresponding button
 
         _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
-        _liveEvent.setVolume( .75f );
+        _liveEvent.setVolume( .5f );
 
         // STEP 5 : attach event handlers to the UI elements (see main.xml layout)
 

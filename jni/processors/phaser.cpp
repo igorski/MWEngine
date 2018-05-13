@@ -146,6 +146,7 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
             channelBuffer[ i ] += ( y * _depth );
         }
+
         // save CPU cycles when working on a mono source
         if ( isMonoSource )
         {

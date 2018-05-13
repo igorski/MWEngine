@@ -51,7 +51,6 @@ processors/dcoffsetfilter.cpp \
 processors/decimator.cpp \
 processors/delay.cpp \
 processors/filter.cpp \
-processors/finalizer.cpp \
 processors/flanger.cpp \
 processors/fm.cpp \
 processors/formantfilter.cpp \
