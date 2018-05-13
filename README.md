@@ -46,10 +46,12 @@ the average Android development environment. All aforementioned utilities are av
 
 ### Build instructions
 
+#### Using CLI
+
 After making sure you have all the correct tools (see _Environment setup_):
 
-The makefile (_/jni/Android.mk_) will by default compile the library with all available modules. The SWIG interface file
-(_/jni/mwengine.i_) includes all the engine's actors that will be exposed to Java.
+The makefile (_/src/main/cpp/Android.mk_) will by default compile the library with all available modules. The SWIG interface file
+(_/src/main/cpp/mwengine.i_) includes all the engine's actors that will be exposed to Java.
 
 Those of a Unix-bent can run the _build.sh_-file in the root folder of the repository whereas Windows users can run the
 _build.bat_-file that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available
@@ -75,6 +77,12 @@ home folder (_~/.gradle/gradle.properties_) and replace the values accordingly:
 You can now build and sign a releasable APK by running:
 
     gradle build
+
+#### Using Android Studio
+
+If you are using Android Studio, opening the project from the supplied _build.gradle_ file should
+suffice to get you to build both the native and Java code and being able to debug both from the IDE.
+Be aware that _ndk-build_ doesn't like it when paths contain spaces.
 
 ### FAQ / Troubleshooting
 
