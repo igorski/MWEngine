@@ -3,6 +3,7 @@
 *.iml
 gradle/
 .gradle
+gradlew*
 .externalNativeBuild
 src/main/java/nl/igorski/lib/audio/mwengine/*
 src/main/cpp/jni/java_interface_wrap.cpp
