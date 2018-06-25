@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef ___H_INCLUDED__
-#define ___H_INCLUDED__
+#ifndef __LFO_H_INCLUDED__
+#define __LFO_H_INCLUDED__
 
 #include "global.h"
 #include "wavetable.h"

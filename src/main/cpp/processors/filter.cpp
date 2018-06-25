@@ -146,6 +146,9 @@ void Filter::setCutoff( float frequency )
     _tempCutoff = _cutoff * tempRatio;
 
     calculateParameters();
+
+    if ( hasLFO() )
+        _lfo->cacheProperties( _cutoff, _minFreq, _maxFreq );
 }
 
 float Filter::getCutoff()
