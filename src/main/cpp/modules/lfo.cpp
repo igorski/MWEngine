@@ -33,10 +33,9 @@
 
 LFO::LFO()
 {
-    _wave     = WaveForms::SILENCE;
-    _rate     = MIN_RATE();
-    _table    = new WaveTable( WAVE_TABLE_PRECISION, _rate );
-    _bipolar  = false;
+    _wave  = WaveForms::SILENCE;
+    _rate  = MIN_RATE();
+    _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
 
     _depth   = 1.f;
     _min     = 0.f;
@@ -79,8 +78,6 @@ void LFO::setWave( int value )
     _wave = value;
 
     generate();
-
-    _bipolar = WaveUtil::isBipolar( _table->getBuffer(), _table->tableLength );
 }
 
 float LFO::getDepth()
@@ -109,6 +106,12 @@ void LFO::generate()
     }
     else {
         _table->cloneTable( table );
+    }
+
+    // ensure tables are unipolar for easy lookup
+
+    if ( WaveUtil::isBipolar( _table->getBuffer(), _table->tableLength )) {
+        WaveUtil::toUnipolar( _table->getBuffer(), _table->tableLength );
     }
 }
 

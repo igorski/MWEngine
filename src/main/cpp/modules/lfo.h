@@ -31,13 +31,13 @@ class LFO
 {
     public:
 
-        // by default the oscillator doesn't do anything
-        // explicitly set the waveform to use using setWave()
+        // by default the oscillator doesn't do anything until you
+        // explicitly specify the waveform to use using setWave()
         // this is because auto-generation of waveforms can be
         // expensive on the CPU when it happens upon construction
-        // during engine use.
-        // ideally, register custom waveforms in the TablePool
-        // before instantiating an LFO (or SynthInstrument)
+        // during engine use. ideally, register custom waveforms
+        // in the TablePool before instantiating an LFO (or SynthInstrument)
+
         LFO();
         ~LFO();
 
@@ -69,18 +69,13 @@ class LFO
 
         inline float apply()
         {
-            // multiply by .5 and add .5 to make bipolar waveform unipolar
-            float value = ( float )(( _bipolar ) ?
-                            _table->peek() * .5f + .5f : _table->peek());
-
-            return std::min( _max, _min + _range * value );
+            return std::min( _max, _min + _range * ( float ) _table->peek() );
         }
 
 
     protected:
         float _rate;
         int   _wave;
-        bool  _bipolar;
         WaveTable* _table;
 
         float _depth;   // between 0 - 1
