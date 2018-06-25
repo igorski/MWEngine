@@ -27,21 +27,25 @@
 #include <generators/wavegenerator.h>
 #include <utilities/utils.h>
 #include <utilities/tablepool.h>
-#include <math.h>
+#include <utilities/waveutil.h>
 
 // constructor / destructor
 
 LFO::LFO()
 {
-    // by default oscillator doesn't do anything
-    // explicitly set the waveform to use using setWave()
-    // this is because auto-generation of waveforms can
-    // ideally, register custom waveforms in the TablePool
-    // before instantiating LFO or SynthInstrument
+    _wave     = WaveForms::SILENCE;
+    _rate     = MIN_RATE();
+    _table    = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+    _bipolar  = false;
 
-    _wave  = WaveForms::SILENCE;
-    _rate  = MIN_LFO_RATE();
-    _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+    _depth   = 1.f;
+    _min     = 0.f;
+    _max     = 1.f;
+    _range   = _max - _min;
+
+    _cvalue = 1.f;
+    _cmin   = 0.f;
+    _cmax   = _cvalue;
 }
 
 LFO::~LFO()
@@ -58,7 +62,7 @@ float LFO::getRate()
 
 void LFO::setRate( float value )
 {
-    _rate = value;
+    _rate = std::min( MAX_RATE(), std::max( MIN_RATE(), value ));
     _table->setFrequency( _rate );
 }
 
@@ -75,6 +79,19 @@ void LFO::setWave( int value )
     _wave = value;
 
     generate();
+
+    _bipolar = WaveUtil::isBipolar( _table->getBuffer(), _table->tableLength );
+}
+
+float LFO::getDepth()
+{
+    return _depth;
+}
+
+void LFO::setDepth( float value )
+{
+    _depth = value;
+    cacheProperties( _cvalue, _cmin, _cmax );
 }
 
 void LFO::generate()
@@ -98,4 +115,15 @@ void LFO::generate()
 WaveTable* LFO::getTable()
 {
     return _table;
+}
+
+void LFO::cacheProperties( float value, float min, float max )
+{
+    _cvalue = value;
+    _cmin   = min;
+    _cmax   = max;
+
+    _range = value * _depth;
+    _max   = std::min( max, value + _range / 2.f );
+    _min   = std::max( min, value - _range / 2.f );
 }

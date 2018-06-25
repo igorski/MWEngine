@@ -20,35 +20,75 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LFO_H_INCLUDED__
-#define __LFO_H_INCLUDED__
+#ifndef ___H_INCLUDED__
+#define ___H_INCLUDED__
 
 #include "global.h"
 #include "wavetable.h"
+#include <algorithm>
 
 class LFO
 {
     public:
+
+        // by default the oscillator doesn't do anything
+        // explicitly set the waveform to use using setWave()
+        // this is because auto-generation of waveforms can be
+        // expensive on the CPU when it happens upon construction
+        // during engine use.
+        // ideally, register custom waveforms in the TablePool
+        // before instantiating an LFO (or SynthInstrument)
         LFO();
         ~LFO();
 
-        static const double MAX_LFO_RATE() { return 10; }  // the maximum rate of oscillation in Hz
-        static const double MIN_LFO_RATE() { return .1; }  // the minimum rate of oscillation in Hz
+        static const float MAX_RATE() { return 10.f; } // the maximum rate of oscillation in Hz
+        static const float MIN_RATE() { return .1f; }  // the minimum rate of oscillation in Hz
 
         float getRate();
         void setRate( float value );
         int getWave();
         void setWave( int value );
+        float getDepth();
+        void setDepth( float value );
 
         void generate();
         WaveTable* getTable();
 
+        // set the properties the LFO will modulate
+        // value == the value the LFO's sweep is modulating
+        // min == the minimum allowed value the LFO should return
+        // max == the maximum allowed value the LFO should return
+        // minimum and maximum values are capped automatically by
+        // by the LFO's depth. Also see filter.cpp
+
+        void cacheProperties( float value, float min, float max );
+
+        // sweep the LFO by a single sample and return the LFO's value
+        // this is relative to the LFO's depth and the value defined in
+        // cacheProperties. Also see filter.cpp
+
+        inline float apply()
+        {
+            // multiply by .5 and add .5 to make bipolar waveform unipolar
+            float value = ( float )(( _bipolar ) ?
+                            _table->peek() * .5f + .5f : _table->peek());
+
+            return std::min( _max, _min + _range * value );
+        }
+
+
     protected:
-
-        SAMPLE_TYPE _rate;
-
-        int _wave;
+        float _rate;
+        int   _wave;
+        bool  _bipolar;
         WaveTable* _table;
+
+        float _depth;   // between 0 - 1
+        float _range;   // range is determine by the depth of the lfo
+        float _min;     // max frequency expected for filter when modulated by LFO for current depth
+        float _max;     // min frequency expected for filter when modulated by LFO for current depth
+
+        float _cvalue, _cmin, _cmax;
 };
 
 #endif

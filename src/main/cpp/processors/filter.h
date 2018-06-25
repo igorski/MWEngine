@@ -29,7 +29,7 @@
 class Filter : public BaseProcessor
 {
     public:
-        Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float aMaxFreq, float aLfoRate, int numChannels );
+        Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float aMaxFreq, int numChannels );
         ~Filter();
 
         void setCutoff( float frequency );
@@ -37,23 +37,21 @@ class Filter : public BaseProcessor
         void setResonance( float resonance );
         float getResonance();
         bool hasLFO();
-        void hasLFO( bool value );
-        float getLFO();
+        LFO* getLFO();
         void setLFO( LFO *lfo );
-        void setLFORate( float rate );
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         bool isCacheable();
 
     protected:
         float _cutoff;
         float _resonance;
-        float _tempCutoff; // used for reading when automating via LFO
+        float _minFreq;
+        float _maxFreq;
 
         // LFO related
 
-        LFO *_lfo;
-        float minFreq;
-        float maxFreq;
+        LFO* _lfo;
+        float _tempCutoff; // current filter cutoff (is modulated by LFO sweep)
 
         float fs;
 
@@ -74,7 +72,6 @@ class Filter : public BaseProcessor
         SAMPLE_TYPE* out2;
 
     private:
-        bool _hasLFO;
         void calculateParameters();
 };
 

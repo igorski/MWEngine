@@ -29,25 +29,20 @@
  * @param aResonance {float} resonance
  * @param aMinFreq {float} minimum cutoff frequency in Hz, required for LFO automation
  * @param aMaxFreq {float} maximum cutoff frequency in Hz, required for LFO automation
- * @param aLfoRate {float} LFO speed in Hz, 0 for OFF
  * @param numChannels {int} amount of output channels
  */
 Filter::Filter( float aCutoffFrequency, float aResonance,
-                float aMinFreq, float aMaxFreq,
-                float aLfoRate, int numChannels )
+                float aMinFreq, float aMaxFreq, int numChannels )
 {
-    fs            = AudioEngineProps::SAMPLE_RATE;
-    _tempCutoff   = 0;    // used for reading when automating via LFO
+    fs = AudioEngineProps::SAMPLE_RATE;
 
-    _resonance = aResonance;
-    setLFORate( aLfoRate );
-    _lfo       = 0;
-    _hasLFO    = false;
-
-    minFreq = aMinFreq;
-    maxFreq = aMaxFreq;
-
+    _resonance       = aResonance;
+    _minFreq         = aMinFreq;
+    _maxFreq         = aMaxFreq;
     amountOfChannels = numChannels;
+
+    _lfo        = 0;
+    _tempCutoff = 0;
 
     in1  = new SAMPLE_TYPE[ numChannels ];
     in2  = new SAMPLE_TYPE[ numChannels ];
@@ -61,6 +56,8 @@ Filter::Filter( float aCutoffFrequency, float aResonance,
         out1[ i ] = 0.0;
         out2[ i ] = 0.0;
     }
+
+    // using this setter caches appropriate values
     setCutoff( aCutoffFrequency );
 }
 
@@ -79,7 +76,8 @@ Filter::~Filter()
 void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int bufferSize               = sampleBuffer->bufferSize;
-    SAMPLE_TYPE initialLFOOffset = _hasLFO ? _lfo->getTable()->getAccumulator() : 0.0;
+    bool doLFO                   = hasLFO();
+    SAMPLE_TYPE initialLFOOffset = doLFO ? _lfo->getTable()->getAccumulator() : 0.0;
     float orgCutoff              = _tempCutoff;
 
     if ( amountOfChannels < sampleBuffer->amountOfChannels )
@@ -90,7 +88,7 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( i );
 
         // each channel needs the same offset to get the same LFO movement ;)
-        if ( _hasLFO && i > 0 )
+        if ( doLFO && i > 0 )
         {
             _lfo->getTable()->setAccumulator( initialLFOOffset );
             _tempCutoff = orgCutoff;
@@ -111,11 +109,12 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             // between the minimum and maximum frequencies, as
             // defined by the range in the class constructor
 
-            if ( _hasLFO )
+            if ( doLFO )
             {
-                _tempCutoff = _cutoff - std::abs(( _cutoff - minFreq ) * _lfo->getTable()->peek() );
+                _tempCutoff = _lfo->apply();
                 calculateParameters();
             }
+
             // commit the effect
             channelBuffer[ j ] = output;
         }
@@ -143,7 +142,7 @@ void Filter::setCutoff( float frequency )
 
     float tempRatio = _tempCutoff / _cutoff;
 
-    _cutoff     = std::max( minFreq, std::min( frequency, maxFreq ));
+    _cutoff     = std::max( _minFreq, std::min( frequency, _maxFreq ));
     _tempCutoff = _cutoff * tempRatio;
 
     calculateParameters();
@@ -165,12 +164,9 @@ float Filter::getResonance()
     return _resonance;
 }
 
-float Filter::getLFO()
+LFO* Filter::getLFO()
 {
-    if ( _lfo != 0 )
-        return _lfo->getRate();
-
-    return 0;
+    return _lfo;
 }
 
 void Filter::setLFO( LFO *lfo )
@@ -180,45 +176,17 @@ void Filter::setLFO( LFO *lfo )
     // no LFO ? make sure the filter returns to its default parameters
     if ( lfo == 0 )
     {
-        _hasLFO     = false;
         _tempCutoff = _cutoff;
         calculateParameters();
     }
     else {
-        _hasLFO = true;
+        _lfo->cacheProperties( _cutoff, _minFreq, _maxFreq );
     }
 }
 
-// LFO might be a fixed pointer, but we
-// can turn it on/off without deleting pointer for Object pooling
 bool Filter::hasLFO()
 {
-    return _hasLFO;
-}
-
-void Filter::hasLFO( bool value )
-{
-    _hasLFO = value;
-
-    // no LFO ? make sure the filter returns to its default parameters
-    if ( !_hasLFO )
-    {
-        _tempCutoff = _cutoff;
-        calculateParameters();
-    }
-}
-
-void Filter::setLFORate( float rate )
-{
-    if ( rate == 0 )
-    {
-        _hasLFO = false;
-        _tempCutoff = _cutoff;
-        return;
-    }
-
-    if ( hasLFO() )
-        _lfo->setRate( rate );
+    return _lfo != 0;
 }
 
 /* private methods */
