@@ -30,6 +30,7 @@ class Filter : public BaseProcessor
 {
     public:
         Filter( float aCutoffFrequency, float aResonance, float aMinFreq, float aMaxFreq, int numChannels );
+        Filter();
         ~Filter();
 
         void setCutoff( float frequency );
@@ -53,10 +54,9 @@ class Filter : public BaseProcessor
         LFO* _lfo;
         float _tempCutoff; // current filter cutoff (is modulated by LFO sweep)
 
-        float fs;
-
         // used internally
 
+        float SAMPLE_RATE;
         int amountOfChannels;
         SAMPLE_TYPE a1;
         SAMPLE_TYPE a2;
@@ -72,6 +72,7 @@ class Filter : public BaseProcessor
         SAMPLE_TYPE* out2;
 
     private:
+        void init( float cutoff );
         void calculateParameters();
 };
 

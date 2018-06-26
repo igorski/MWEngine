@@ -19,6 +19,20 @@ TEST( Filter, ConstructorArguments )
     delete filter;
 }
 
+TEST( Filter, ConstructorEmpty )
+{
+    Filter* filter = new Filter();
+
+    // max cutoff is at one eight of the engine sample rate
+
+    float maxFreq = AudioEngineProps::SAMPLE_RATE / 8;
+
+    EXPECT_FLOAT_EQ( maxFreq, filter->getCutoff() )
+        << "Expected filter frequency by default to equal the maximum expected";
+
+    delete filter;
+}
+
 TEST( Filter, SetCutOff )
 {
     float minFreq   = randomFloat( 40.f, 440.f );

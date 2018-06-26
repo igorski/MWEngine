@@ -34,31 +34,22 @@
 Filter::Filter( float aCutoffFrequency, float aResonance,
                 float aMinFreq, float aMaxFreq, int numChannels )
 {
-    fs = AudioEngineProps::SAMPLE_RATE;
-
     _resonance       = aResonance;
     _minFreq         = aMinFreq;
     _maxFreq         = aMaxFreq;
     amountOfChannels = numChannels;
 
-    _lfo        = 0;
-    _tempCutoff = 0;
+    init( aCutoffFrequency );
+}
 
-    in1  = new SAMPLE_TYPE[ numChannels ];
-    in2  = new SAMPLE_TYPE[ numChannels ];
-    out1 = new SAMPLE_TYPE[ numChannels ];
-    out2 = new SAMPLE_TYPE[ numChannels ];
+Filter::Filter()
+{
+    _resonance       = ( float ) sqrt( 1 ) / 2;
+    _minFreq         = 40.f;
+    _maxFreq         = AudioEngineProps::SAMPLE_RATE / 8;
+    amountOfChannels = AudioEngineProps::OUTPUT_CHANNELS;
 
-    for ( int i = 0; i < numChannels; ++i )
-    {
-        in1 [ i ] = 0.0;
-        in2 [ i ] = 0.0;
-        out1[ i ] = 0.0;
-        out2[ i ] = 0.0;
-    }
-
-    // using this setter caches appropriate values
-    setCutoff( aCutoffFrequency );
+    init( _maxFreq );
 }
 
 Filter::~Filter()
@@ -111,7 +102,7 @@ void Filter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
             if ( doLFO )
             {
-                _tempCutoff = _lfo->apply();
+                _tempCutoff = _lfo->sweep();
                 calculateParameters();
             }
 
@@ -194,12 +185,37 @@ bool Filter::hasLFO()
 
 /* private methods */
 
+void Filter::init( float cutoff )
+{
+    SAMPLE_RATE = ( float ) AudioEngineProps::SAMPLE_RATE;
+
+    _lfo        = 0;
+    _cutoff     = _maxFreq;
+    _tempCutoff = _cutoff;
+
+    in1  = new SAMPLE_TYPE[ amountOfChannels ];
+    in2  = new SAMPLE_TYPE[ amountOfChannels ];
+    out1 = new SAMPLE_TYPE[ amountOfChannels ];
+    out2 = new SAMPLE_TYPE[ amountOfChannels ];
+
+    for ( int i = 0; i < amountOfChannels; ++i )
+    {
+        in1 [ i ] = 0.0;
+        in2 [ i ] = 0.0;
+        out1[ i ] = 0.0;
+        out2[ i ] = 0.0;
+    }
+
+    // using this setter caches appropriate values
+    setCutoff( cutoff );
+}
+
 void Filter::calculateParameters()
 {
-    c  = 1 / tan( PI * _tempCutoff / fs );
-    a1 = 1.0 / ( 1.0 + _resonance * c + c * c );
-    a2 = 2 * a1;
+    c  = 1.f / tan( PI * _tempCutoff / SAMPLE_RATE );
+    a1 = 1.f / ( 1.f + _resonance * c + c * c );
+    a2 = 2.f * a1;
     a3 = a1;
-    b1 = 2.0 * ( 1.0 - c * c ) * a1;
-    b2 = ( 1.0 - _resonance * c + c * c ) * a1;
+    b1 = 2.f * ( 1.f - c * c ) * a1;
+    b2 = ( 1.f - _resonance * c + c * c ) * a1;
 }

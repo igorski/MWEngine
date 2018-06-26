@@ -24,7 +24,9 @@
 #include "../global.h"
 #include "../audioengine.h"
 #include <definitions/waveforms.h>
+#include <definitions/wavetables.h>
 #include <generators/wavegenerator.h>
+#include <utilities/bufferutility.h>
 #include <utilities/utils.h>
 #include <utilities/tablepool.h>
 #include <utilities/waveutil.h>
@@ -33,18 +35,30 @@
 
 LFO::LFO()
 {
-    _wave  = WaveForms::SILENCE;
     _rate  = MIN_RATE();
-    _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
 
     _depth   = 1.f;
     _min     = 0.f;
     _max     = 1.f;
     _range   = _max - _min;
 
+    // cached properties for the min - max and current values
+    // to be swept by the oscillator
+
     _cvalue = 1.f;
     _cmin   = 0.f;
     _cmax   = _cvalue;
+
+    // by default construct for a sine wave using the predefined table for instant access
+
+    _wave  = WaveForms::SINE;
+    _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+
+    SAMPLE_TYPE* buffer = BufferUtility::generateSilentBuffer( WAVE_TABLE_PRECISION );
+    for ( int i = 0; i < WAVE_TABLE_PRECISION; ++i )
+        buffer[ i ] = WaveTables::SINE_TABLE[ i ];
+
+    _table->setBuffer( buffer );
 }
 
 LFO::~LFO()
@@ -72,7 +86,7 @@ int LFO::getWave()
 
 void LFO::setWave( int value )
 {
-    if ( _wave == value || value == WaveForms::SILENCE )
+    if ( _wave == value )
         return;
 
     _wave = value;
@@ -93,9 +107,6 @@ void LFO::setDepth( float value )
 
 void LFO::generate()
 {
-    if ( _wave == WaveForms::SILENCE )
-        return;
-
     // we register the table by stringifying the waveform enum
 
     WaveTable* table = TablePool::getTable( SSTR( _wave ));

@@ -10,8 +10,8 @@ TEST( LFO, Constructor )
     EXPECT_FLOAT_EQ( lfo->getRate(), .1f )
         << "expected default LFO rate to equal its minimum allowed rate";
 
-    EXPECT_EQ( lfo->getWave(), WaveForms::SILENCE )
-        << "expected default LFO wave to be silent";
+    EXPECT_EQ( lfo->getWave(), WaveForms::SINE )
+        << "expected default LFO wave to be sine wave";
 
     EXPECT_FLOAT_EQ( lfo->getDepth(), 1.f )
         << "expected default LFO depth to be full depth";
@@ -151,21 +151,6 @@ TEST( LFO, SetWave )
 
     EXPECT_EQ( waveform, lfo->getWave() )
         << "expected wave to have been updated";
-
-    delete lfo;
-}
-
-TEST( LFO, SetWaveCustom )
-{
-    LFO* lfo = new LFO();
-
-    int waveform = WaveForms::PWM;
-
-    lfo->setWave( waveform );
-    lfo->setWave( WaveForms::SILENCE );
-
-    EXPECT_EQ( waveform, lfo->getWave() )
-        << "expected wave not to have been updated to silence";
 
     delete lfo;
 }

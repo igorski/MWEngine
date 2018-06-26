@@ -31,18 +31,17 @@ class LFO
 {
     public:
 
-        // by default the oscillator doesn't do anything until you
-        // explicitly specify the waveform to use using setWave()
-        // this is because auto-generation of waveforms can be
+        // Note that auto-generation of waveforms can be
         // expensive on the CPU when it happens upon construction
-        // during engine use. ideally, register custom waveforms
+        // during engine use (though subsequent uses of the generated
+        // table are pooled inside TablePool. Ideally, register custom waveforms
         // in the TablePool before instantiating an LFO (or SynthInstrument)
 
         LFO();
         ~LFO();
 
         static const float MAX_RATE() { return 10.f; } // the maximum rate of oscillation in Hz
-        static const float MIN_RATE() { return .1f; }  // the minimum rate of oscillation in Hz
+        static const float MIN_RATE() { return 0.1f; } // the minimum rate of oscillation in Hz
 
         float getRate();
         void setRate( float value );
@@ -63,11 +62,11 @@ class LFO
 
         void cacheProperties( float value, float min, float max );
 
-        // sweep the LFO by a single sample and return the LFO's value
-        // this is relative to the LFO's depth and the value defined in
-        // cacheProperties. Also see filter.cpp
+        // sweep the LFO by a single sample and return the modulated
+        // value (specified in "cacheProperties"), relative to the LFO
+        // depth. Also see filter.cpp
 
-        inline float apply()
+        inline float sweep()
         {
             return std::min( _max, _min + _range * ( float ) _table->peek() );
         }
@@ -79,9 +78,9 @@ class LFO
         WaveTable* _table;
 
         float _depth;   // between 0 - 1
-        float _range;   // range is determine by the depth of the lfo
-        float _min;     // max frequency expected for filter when modulated by LFO for current depth
-        float _max;     // min frequency expected for filter when modulated by LFO for current depth
+        float _range;   // range is determine by the depth of the LFO sweep
+        float _min;     // max frequency expected for value when modulated at current depth
+        float _max;     // min frequency expected for value when modulated at current depth
 
         float _cvalue, _cmin, _cmax;
 };

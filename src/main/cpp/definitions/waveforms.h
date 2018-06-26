@@ -34,8 +34,7 @@ class WaveForms
             NOISE,
             PWM,
             KARPLUS_STRONG,
-            TABLE,
-            SILENCE
+            TABLE
         };
 };
 
