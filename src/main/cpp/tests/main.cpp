@@ -23,6 +23,7 @@
 #include "modules/adsr_test.cpp"
 #include "modules/lfo_test.cpp"
 #include "processors/delay_test.cpp"
+#include "processors/filter_test.cpp"
 #include "processors/flanger_test.cpp"
 #include "processors/reverb_test.cpp"
 #include "processors/tremolo_test.cpp"

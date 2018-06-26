@@ -24,24 +24,43 @@
 #include "../global.h"
 #include "../audioengine.h"
 #include <definitions/waveforms.h>
+#include <definitions/wavetables.h>
 #include <generators/wavegenerator.h>
+#include <utilities/bufferutility.h>
 #include <utilities/utils.h>
 #include <utilities/tablepool.h>
-#include <math.h>
+#include <utilities/waveutil.h>
 
 // constructor / destructor
 
 LFO::LFO()
 {
-    // by default oscillator doesn't do anything
-    // explicitly set the waveform to use using setWave()
-    // this is because auto-generation of waveforms can
-    // ideally, register custom waveforms in the TablePool
-    // before instantiating LFO or SynthInstrument
+    _rate  = MIN_RATE();
 
-    _wave  = WaveForms::SILENCE;
-    _rate  = MIN_LFO_RATE();
+    _depth   = 1.f;
+    _min     = 0.f;
+    _max     = 1.f;
+    _range   = _max - _min;
+
+    // cached properties for the min - max and current values
+    // to be swept by the oscillator
+
+    _cvalue = 1.f;
+    _cmin   = 0.f;
+    _cmax   = _cvalue;
+
+    // by default construct for a sine wave using the predefined table for instant access
+
+    _wave  = WaveForms::SINE;
     _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
+
+    SAMPLE_TYPE* buffer = BufferUtility::generateSilentBuffer( WAVE_TABLE_PRECISION );
+    for ( int i = 0; i < WAVE_TABLE_PRECISION; ++i ) {
+        buffer[i] = WaveTables::SINE_TABLE[ i ];
+    }
+    WaveUtil::toUnipolar( buffer, WAVE_TABLE_PRECISION );
+
+    _table->setBuffer( buffer );
 }
 
 LFO::~LFO()
@@ -58,7 +77,7 @@ float LFO::getRate()
 
 void LFO::setRate( float value )
 {
-    _rate = value;
+    _rate = std::min( MAX_RATE(), std::max( MIN_RATE(), value ));
     _table->setFrequency( _rate );
 }
 
@@ -69,7 +88,7 @@ int LFO::getWave()
 
 void LFO::setWave( int value )
 {
-    if ( _wave == value || value == WaveForms::SILENCE )
+    if ( _wave == value )
         return;
 
     _wave = value;
@@ -77,11 +96,19 @@ void LFO::setWave( int value )
     generate();
 }
 
+float LFO::getDepth()
+{
+    return _depth;
+}
+
+void LFO::setDepth( float value )
+{
+    _depth = value;
+    cacheProperties( _cvalue, _cmin, _cmax );
+}
+
 void LFO::generate()
 {
-    if ( _wave == WaveForms::SILENCE )
-        return;
-
     // we register the table by stringifying the waveform enum
 
     WaveTable* table = TablePool::getTable( SSTR( _wave ));
@@ -93,9 +120,26 @@ void LFO::generate()
     else {
         _table->cloneTable( table );
     }
+
+    // ensure tables are unipolar for easy lookup
+
+    if ( WaveUtil::isBipolar( _table->getBuffer(), _table->tableLength )) {
+        WaveUtil::toUnipolar( _table->getBuffer(), _table->tableLength );
+    }
 }
 
 WaveTable* LFO::getTable()
 {
     return _table;
+}
+
+void LFO::cacheProperties( float value, float min, float max )
+{
+    _cvalue = value;
+    _cmin   = min;
+    _cmax   = max;
+
+    _range = value * _depth;
+    _max   = std::min( max, value + _range / 2.f );
+    _min   = std::max( min, value - _range / 2.f );
 }

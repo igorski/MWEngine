@@ -25,30 +25,64 @@
 
 #include "global.h"
 #include "wavetable.h"
+#include <algorithm>
 
 class LFO
 {
     public:
+
+        // Note that auto-generation of waveforms can be
+        // expensive on the CPU when it happens upon construction
+        // during engine use (though subsequent uses of the generated
+        // table are pooled inside TablePool. Ideally, register custom waveforms
+        // in the TablePool before instantiating an LFO (or SynthInstrument)
+
         LFO();
         ~LFO();
 
-        static const double MAX_LFO_RATE() { return 10; }  // the maximum rate of oscillation in Hz
-        static const double MIN_LFO_RATE() { return .1; }  // the minimum rate of oscillation in Hz
+        static const float MAX_RATE() { return 10.f; } // the maximum rate of oscillation in Hz
+        static const float MIN_RATE() { return 0.1f; } // the minimum rate of oscillation in Hz
 
         float getRate();
         void setRate( float value );
         int getWave();
         void setWave( int value );
+        float getDepth();
+        void setDepth( float value );
 
         void generate();
         WaveTable* getTable();
 
+        // set the properties the LFO will modulate
+        // value == the value the LFO's sweep is modulating
+        // min == the minimum allowed value the LFO should return
+        // max == the maximum allowed value the LFO should return
+        // minimum and maximum values are capped automatically by
+        // by the LFO's depth. Also see filter.cpp
+
+        void cacheProperties( float value, float min, float max );
+
+        // sweep the LFO by a single sample and return the modulated
+        // value (specified in "cacheProperties"), relative to the LFO
+        // depth. Also see filter.cpp
+
+        inline float sweep()
+        {
+            return std::min( _max, _min + _range * ( float ) _table->peek() );
+        }
+
+
     protected:
-
-        SAMPLE_TYPE _rate;
-
-        int _wave;
+        float _rate;
+        int   _wave;
         WaveTable* _table;
+
+        float _depth;   // between 0 - 1
+        float _range;   // range is determine by the depth of the LFO sweep
+        float _min;     // max frequency expected for value when modulated at current depth
+        float _max;     // min frequency expected for value when modulated at current depth
+
+        float _cvalue, _cmin, _cmax;
 };
 
 #endif

@@ -126,7 +126,7 @@ public final class MWEngineActivity extends Activity
 
         _filter = new Filter(
             maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
-            minFilterCutoff, maxFilterCutoff, 0f, OUTPUT_CHANNELS
+            minFilterCutoff, maxFilterCutoff, OUTPUT_CHANNELS
         );
         _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
 
