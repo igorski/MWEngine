@@ -55,8 +55,10 @@ LFO::LFO()
     _table = new WaveTable( WAVE_TABLE_PRECISION, _rate );
 
     SAMPLE_TYPE* buffer = BufferUtility::generateSilentBuffer( WAVE_TABLE_PRECISION );
-    for ( int i = 0; i < WAVE_TABLE_PRECISION; ++i )
-        buffer[ i ] = WaveTables::SINE_TABLE[ i ];
+    for ( int i = 0; i < WAVE_TABLE_PRECISION; ++i ) {
+        buffer[i] = WaveTables::SINE_TABLE[ i ];
+    }
+    WaveUtil::toUnipolar( buffer, WAVE_TABLE_PRECISION );
 
     _table->setBuffer( buffer );
 }
