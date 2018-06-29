@@ -25,41 +25,30 @@
 #include "../global.h"
 #include <utilities/utils.h>
 #include <utilities/bufferutility.h>
+#include <algorithm>
 
-/* constructor / destructor */
+/* constructors / destructor */
 
-Flanger::Flanger( float rate, float width, float feedback, float delay, float mix ) {
+Flanger::Flanger( float rate, float width, float feedback, float delay, float mix )
+{
+    init( rate, width, feedback, delay, mix );
+}
 
-    FLANGER_BUFFER_SIZE = ( int ) (( SAMPLE_TYPE )AudioEngineProps::SAMPLE_RATE / 5.0f );
-    SAMPLE_MULTIPLIER   = ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE * 0.01f;
-
-    _writePointer    = 0;
-    _feedbackPhase   =
-    _lastSampleLeft  =
-    _sweepSamples    =
-    _lastSampleRight = 0.0f;
-    _mixLeftWet      =
-    _mixRightWet     =
-    _mixLeftDry      =
-    _mixRightDry     = 1.0f;
-
-    _buf1 = BufferUtility::generateSilentBuffer( FLANGER_BUFFER_SIZE );
-    _buf2 = BufferUtility::generateSilentBuffer( FLANGER_BUFFER_SIZE );
-
-    _delayFilter = new LowPassFilter( 20.0f );
-    _mixFilter   = new LowPassFilter( 20.0f );
-
-    setRate( rate );
-    setWidth( width );
-    setFeedback( feedback );
-    setDelay( delay );
-    setMix( mix );
+Flanger::Flanger()
+{
+    init( 0.1f, 0.5f, 0.75f, .1f, 1.f );
 }
 
 Flanger::~Flanger()
 {
-    delete _buf1;
-    delete _buf2;
+    while ( _buffers.size() > 0 ) {
+        delete _buffers.back();
+        _buffers.pop_back();
+    }
+    while ( _caches.size() > 0 ) {
+        delete _caches.back();
+        _caches.pop_back();
+    }
     delete _delayFilter;
     delete _mixFilter;
 }
@@ -131,75 +120,110 @@ void Flanger::setMix( float value )
     _mix = value;
 }
 
+void Flanger::setChannelMix( int channel, float wet )
+{
+    wet       = capParam( wet );
+    float dry = 1.0f - wet;
+
+    _caches.at( channel )->mixWet = wet;
+    _caches.at( channel )->mixDry = dry;
+}
+
 void Flanger::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
     int maxWriteIndex = FLANGER_BUFFER_SIZE - 1;
-    bool isStereo = ( sampleBuffer->amountOfChannels > 1 );
 
-    SAMPLE_TYPE* channel1 = sampleBuffer->getBufferForChannel( 0 );
-    SAMPLE_TYPE* channel2 = ( isStereo ) ? sampleBuffer->getBufferForChannel( 1 ) : 0;
-    SAMPLE_TYPE delay, mix, delaySamples, left, right, w1, w2, ep;
+    SAMPLE_TYPE delay, mix, delaySamples, sample, w1, w2, ep;
     int ep1, ep2;
-    
-    for ( int i = 0, l = sampleBuffer->bufferSize; i < l; i++ )
-    {
-        // filter delay and mix output
 
-        delay = _delayFilter->processSingle( _delay );
-        mix   = _mixFilter->processSingle( _mix );
+    int amountOfChannels = std::min( sampleBuffer->amountOfChannels, ( int ) _buffers.size() );
+    int bufferSize       = sampleBuffer->bufferSize;
 
-        if ( ++_writePointer > maxWriteIndex )
-            _writePointer = 0;
+    // store/restore the processor properties
+    // this ensures that multi channel processing for a
+    // single buffer uses all properties across all channels
+    // store() before processing channel 0, restore() every
+    // channel afterwards
 
-        // delay 0.0-1.0 maps to 0.02ms to 10ms (always have at least 1 sample of delay)
-        delaySamples = ( delay * SAMPLE_MULTIPLIER ) + 1.0;
-        delaySamples += _sweep;
+    int writePointerStored  = _writePointer;
+    SAMPLE_TYPE sweepStored = _sweep;
 
-        // build the two emptying pointers and do linear interpolation
-        ep = ( SAMPLE_TYPE ) _writePointer - delaySamples;
+    _delayFilter->store();
+    _mixFilter->store();
 
-        if ( ep < 0.0 )
-            ep += ( SAMPLE_TYPE ) FLANGER_BUFFER_SIZE;
+    for ( int c = 0; c < amountOfChannels; ++c  ) {
 
-        MODF( ep, ep1, w2 );
-        w1 = 1.0 - w2;
+        SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
+        SAMPLE_TYPE* delayBuffer   = _buffers.at( c );
+        ChannelCache* channelCache = _caches.at( c );
 
-        if ( ++ep1 > maxWriteIndex )
-            ep1 = 0;
+        // when first channel has been processed, restore the stored values
+        // for the next channel iteration
 
-        ep2 = ep1 + 1;
-
-        if ( ep2 > maxWriteIndex )
-            ep2 = 0;
-
-        // process input channels and write output back into the buffer
-
-        left = channel1[ i ];
-        _buf1[ _writePointer ] = left + _feedback * _feedbackPhase * _lastSampleLeft;
-        _lastSampleLeft = _buf1[ ep1 ] * w1 + _buf1[ ep2 ] * w2;
-        channel1[ i ] = cap( _mixLeftDry * left + _mixLeftWet * mix * _lastSampleLeft );
-
-        if ( isStereo ) {
-
-            right = channel2[ i ];
-            _buf2[ _writePointer ] = right + _feedback * _feedbackPhase * _lastSampleRight;
-            _lastSampleRight = _buf2[ ep1 ] * w1 + _buf2[ ep2 ] * w2;
-            channel2[ i ] = cap( _mixRightDry * right + _mixRightWet * mix * _lastSampleRight );
+        if ( c > 0 ) {
+            _writePointer = writePointerStored;
+            _sweep        = sweepStored;
+            _delayFilter->restore();
+            _mixFilter->restore();
         }
 
-        // process sweep
+        for ( int i = 0; i < bufferSize; i++ ) {
 
-        if ( _step != 0.0 )
-        {
-            _sweep += _step;
+            // filter delay and mix output
 
-            if ( _sweep <= 0.0 )
-            {
-                _sweep = 0.0;
-                _step = -_step;
+            delay = _delayFilter->processSingle( _delay );
+            mix   = _mixFilter->processSingle( _mix );
+
+            if ( ++_writePointer > maxWriteIndex )
+                _writePointer = 0;
+
+            // delay 0.0-1.0 maps to 0.02ms to 10ms (always have at least 1 sample of delay)
+            delaySamples = ( delay * SAMPLE_MULTIPLIER ) + 1.f;
+            delaySamples += _sweep;
+
+            // build the two emptying pointers and do linear interpolation
+            ep = ( SAMPLE_TYPE ) _writePointer - delaySamples;
+
+            if ( ep < 0.0 )
+                ep += ( SAMPLE_TYPE ) FLANGER_BUFFER_SIZE;
+
+            MODF( ep, ep1, w2 );
+            w1 = 1.0 - w2;
+
+            if ( ++ep1 > maxWriteIndex )
+                ep1 = 0;
+
+            ep2 = ep1 + 1;
+
+            if ( ep2 > maxWriteIndex )
+                ep2 = 0;
+
+            // process input channels and write caches
+
+            sample = channelBuffer[ i ];
+            delayBuffer[ _writePointer ] =
+                sample + _feedback * _feedbackPhase * channelCache->lastSample;
+
+            channelCache->lastSample = delayBuffer[ ep1 ] * w1 + delayBuffer[ ep2 ] * w2;
+
+            // write effected sample into the output buffer
+
+            channelBuffer[ i ] = capSample(
+                channelCache->mixDry * sample + channelCache->mixWet * mix * channelCache->lastSample
+            );
+
+            // process sweep
+
+            if ( _step != 0.0 ) {
+                _sweep += _step;
+
+                if ( _sweep <= 0.0 ) {
+                    _sweep = 0.0;
+                    _step = -_step;
+                }
+                else if ( _sweep >= _maxSweepSamples )
+                    _step = -_step;
             }
-            else if ( _sweep >= _maxSweepSamples)
-                _step = -_step;
         }
     }
 }
@@ -209,7 +233,33 @@ void Flanger::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 void Flanger::setSweep()
 {
     // translate sweep rate to samples per second
-    _step = ( SAMPLE_TYPE ) ( _sweepSamples * 2.0 * _sweepRate ) / ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE;
+    _step = ( _sweepSamples * 2.0 * _sweepRate ) / ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE;
     _maxSweepSamples = _sweepSamples;
     _sweep = 0.0;
+}
+
+void Flanger::init( float rate, float width, float feedback, float delay, float mix )
+{
+    FLANGER_BUFFER_SIZE = ( int ) (( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE / 5.0f );
+    SAMPLE_MULTIPLIER   = ( SAMPLE_TYPE ) AudioEngineProps::SAMPLE_RATE * 0.01f;
+
+    _writePointer    = 0;
+    _feedbackPhase   = 1.f;
+    _sweepSamples    = 0.f;
+
+    // create sample buffers and caches for each channel
+
+    for ( int i = 0; i < AudioEngineProps::OUTPUT_CHANNELS; ++i ) {
+        _buffers.push_back( BufferUtility::generateSilentBuffer( FLANGER_BUFFER_SIZE ));
+        _caches.push_back( new ChannelCache());
+    }
+
+    _delayFilter = new LowPassFilter( 20.0f );
+    _mixFilter   = new LowPassFilter( 20.0f );
+
+    setRate( rate );
+    setWidth( width );
+    setFeedback( feedback );
+    setDelay( delay );
+    setMix( mix );
 }
