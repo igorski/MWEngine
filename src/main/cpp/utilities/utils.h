@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -26,18 +26,32 @@
 #include <math.h>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include "global.h"
+
+/* math operations on audio samples */
+
+// convenience method to ensure given value is within the 0.f - +1.f range
+
+inline float capParam( float value )
+{
+    return std::min( 1.f, std::max( 0.f, value ));
+}
+
+// convenience method to ensure a sample is in the valid -1.f - +1.f range
+
+inline SAMPLE_TYPE capSample( SAMPLE_TYPE value )
+{
+    return std::min( 1.0, std::max( -1.0, value ));
+}
 
 /* convenience methods */
 
 float scale( float value, float maxValue, float maxCompareValue );
-SAMPLE_TYPE cap( SAMPLE_TYPE value );
 float randomFloat();
 unsigned long long now_ms();
 char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startOffset, int length );
 unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool littleEndian );
-
-/* convenience methods */
 
 // numbers to string
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \

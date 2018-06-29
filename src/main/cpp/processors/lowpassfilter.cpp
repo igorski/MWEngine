@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2016-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -91,14 +91,18 @@ void LowPassFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     }
 }
 
-SAMPLE_TYPE LowPassFilter::processSingle( SAMPLE_TYPE sample )
+void LowPassFilter::store()
 {
-    SAMPLE_TYPE sampleOut = (b0/a0) * sample + (b1/a0) * x1 + (b2/a0) * x2 - (a1/a0) * y1 - (a2/a0) * y2;
+    orgx1 = x1;
+    orgx2 = x2;
+    orgy1 = y1;
+    orgy2 = y2;
+}
 
-    x2 = x1;
-    x1 = sample;
-    y2 = y1;
-    y1 = sampleOut;
-
-    return sampleOut;
+void LowPassFilter::restore()
+{
+    x1 = orgx1;
+    x2 = orgx2;
+    y1 = orgy1;
+    y2 = orgy2;
 }

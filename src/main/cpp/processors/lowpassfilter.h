@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2016-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -38,10 +38,31 @@ class LowPassFilter : public BaseProcessor
         void setCutoff( float value);
 
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
-        SAMPLE_TYPE processSingle( SAMPLE_TYPE sample );
+
+        inline SAMPLE_TYPE processSingle( SAMPLE_TYPE sample )
+        {
+            SAMPLE_TYPE sampleOut = (b0/a0) * sample + (b1/a0) * x1 + (b2/a0) * x2 - (a1/a0) * y1 - (a2/a0) * y2;
+
+            x2 = x1;
+            x1 = sample;
+            y2 = y1;
+            y1 = sampleOut;
+
+            return sampleOut;
+        }
+
+        // store/restore the processor properties
+        // this ensures that multi channel processing for a
+        // single buffer uses all properties across all channels
+        // store() before processing channel 0, restore() every
+        // channel afterwards
+
+        void store();
+        void restore();
 
     protected:
         SAMPLE_TYPE x1, x2, y1, y2;
+        SAMPLE_TYPE orgx1, orgx2, orgy1, orgy2;
         SAMPLE_TYPE a0, a1, a2, b0, b1, b2, w0, alpha;
 
         float _cutoff;

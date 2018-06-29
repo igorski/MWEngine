@@ -30,14 +30,14 @@
 // Adaptation of modf() by Dennis Cronin
 // this macro breaks a double into integer and fractional components i and f respectively.
 //
-// n - input number, a double
+// n - input number, a sample (e.g. float or double)
 // i - integer portion, an integer (the input number integer portion should fit)
-// f - fractional portion, a double
+// f - fractional portion, a sample (e.g. float or double)
 
-#define MODF(n,i,f) ((i) = (int)(n), (f) = (n) - (double)(i))
+#define MODF(n,i,f) ((i) = (int)(n), (f) = (n) - ( SAMPLE_TYPE )(i))
 
 /**
- * a mono/stereo Flanger effect (more channels currently not supported)
+ * a multichannel Flanger effect
  */
 class Flanger : public BaseProcessor
 {
@@ -45,6 +45,7 @@ class Flanger : public BaseProcessor
 
         // all arguments are in the 0 - 1 range
         Flanger( float rate, float width, float feedback, float delay, float mix );
+        Flanger();
         ~Flanger();
 
         float getRate();
@@ -55,8 +56,15 @@ class Flanger : public BaseProcessor
         void setFeedback( float value );
         float getDelay();
         void setDelay( float value );
+
+        // get/set the wet/dry mix of the effect as a whole
+
         float getMix();
         void setMix( float value );
+
+        // set the wet/dry mix of individual output channels
+
+        void setChannelMix( int channel, float wet );
 
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
@@ -73,24 +81,31 @@ class Flanger : public BaseProcessor
         int _writePointer;
         SAMPLE_TYPE _step;
         SAMPLE_TYPE _sweep;
-        SAMPLE_TYPE* _buf1;
-        SAMPLE_TYPE* _buf2;
+        std::vector<SAMPLE_TYPE*> _buffers;
 
         LowPassFilter* _delayFilter;
         LowPassFilter* _mixFilter;
 
-        SAMPLE_TYPE _lastSampleLeft;
-        SAMPLE_TYPE _lastSampleRight;
-        SAMPLE_TYPE _mixLeftWet;
-        SAMPLE_TYPE _mixLeftDry;
-        SAMPLE_TYPE _mixRightWet;
-        SAMPLE_TYPE _mixRightDry;
+        struct ChannelCache {
+            SAMPLE_TYPE lastSample;
+            SAMPLE_TYPE mixDry;
+            SAMPLE_TYPE mixWet;
+
+            ChannelCache() {
+                lastSample = 0.f;
+                mixDry     = 1.f;
+                mixWet     = 1.f;
+            }
+        };
+
+        std::vector<ChannelCache*> _caches;
         SAMPLE_TYPE _sweepRate;
 
         int FLANGER_BUFFER_SIZE;
         SAMPLE_TYPE SAMPLE_MULTIPLIER;
 
         void setSweep();
+        void init( float rate, float width, float feedback, float delay, float mix );
 };
 
 #endif
