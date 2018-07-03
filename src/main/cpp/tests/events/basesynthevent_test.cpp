@@ -69,8 +69,8 @@ TEST( BaseSynthEvent, Envelopes )
     EXPECT_FLOAT_EQ( audioEvent->cachedProps.releaseLevel, instrument->adsr->getSustainLevel() )
         << "expected events release level by default to equal the ADSR sustain level";
 
-    EXPECT_FLOAT_EQ( audioEvent->cachedProps.envelope, MAX_PHASE )
-        << "expected events envelope to be MAX_PHASE after construction for a 0 attack ADSR";
+    EXPECT_FLOAT_EQ( audioEvent->cachedProps.envelope, 1.0 )
+        << "expected events envelope to be 1.0 after construction for a 0 attack ADSR";
 
     EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
         << "expected events envelope offset to be 0 after construction";
@@ -377,7 +377,7 @@ TEST( BaseSynthEvent, Play )
 
     audioEvent->released = true;
     audioEvent->setDeletable( true );
-    audioEvent->cachedProps.envelope       = MAX_PHASE;
+    audioEvent->cachedProps.envelope       = 1.0;
     audioEvent->cachedProps.envelopeOffset = 1000;
 
     audioEvent->play();

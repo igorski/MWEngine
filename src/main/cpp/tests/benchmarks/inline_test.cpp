@@ -53,7 +53,7 @@ TEST( RingBufferBenchmark, EnqueueBenchmark )
     int i, j;
 
     SAMPLE_TYPE value;
-    SAMPLE_TYPE sample = randomSample( -MAX_PHASE, MAX_PHASE );
+    SAMPLE_TYPE sample = randomSample( -1.0, 1.0 );
 
     test1start = getTime();
 

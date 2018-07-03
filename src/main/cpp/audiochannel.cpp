@@ -82,7 +82,7 @@ void AudioChannel::readCachedBuffer( AudioBuffer* aOutputBuffer, int aReadOffset
 {
     if ( aReadOffset >= _cacheStartOffset && aReadOffset <= _cacheEndOffset )
     {
-        aOutputBuffer->mergeBuffers( _cachedBuffer, _cacheReadPointer, 0, MAX_PHASE );
+        aOutputBuffer->mergeBuffers( _cachedBuffer, _cacheReadPointer, 0, 1.0 );
         _cacheReadPointer += aOutputBuffer->bufferSize;
     }
 }
@@ -178,7 +178,7 @@ void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume ) {
  */
 void AudioChannel::writeCache( AudioBuffer* aBuffer, int aReadOffset )
 {
-    int mergedSamples   = _cachedBuffer->mergeBuffers( aBuffer, aReadOffset, _cacheWritePointer, MAX_PHASE );
+    int mergedSamples   = _cachedBuffer->mergeBuffers( aBuffer, aReadOffset, _cacheWritePointer, 1.0 );
     _cacheWritePointer += mergedSamples;
 
     // caching completed ?
@@ -238,7 +238,7 @@ void AudioChannel::init()
     _cacheWritePointer = 0;
     _cacheStartOffset  = 0;
     _cacheEndOffset    = 0;
-    _volume            = VolumeUtil::toLog( MAX_PHASE );
+    _volume            = VolumeUtil::toLog( 1.0 );
     maxBufferPosition  = 0;
     processingChain    = new ProcessingChain();
 

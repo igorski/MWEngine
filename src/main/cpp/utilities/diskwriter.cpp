@@ -67,7 +67,7 @@ namespace DiskWriter
         if ( cachedBuffer == 0 )
             generateOutputBuffer( channelAmount );
 
-        cachedBuffer->mergeBuffers( aBuffer, 0, outputWriterIndex, MAX_PHASE );
+        cachedBuffer->mergeBuffers( aBuffer, 0, outputWriterIndex, 1.0 );
         outputWriterIndex += bufferSize;
     }
 

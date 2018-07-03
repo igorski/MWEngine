@@ -80,7 +80,7 @@ void BaseSynthEvent::play()
 
     lastWriteIndex             = 0;
     cachedProps.envelopeOffset = 0;
-    cachedProps.envelope       = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : MAX_PHASE;
+    cachedProps.envelope       = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : 1.0;
 
     BaseAudioEvent::play();
 }
@@ -256,8 +256,8 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         // render the snippet
         _synthInstrument->synthesizer->render( _buffer, this );
 
-        // note we merge using MAX_PHASE as mix volume (event volume was applied during synthesis)
-        outputBuffer->mergeBuffers( _buffer, 0, writeOffset, MAX_PHASE );
+        // note we merge using 1.0 as mix volume (event volume was applied during synthesis)
+        outputBuffer->mergeBuffers( _buffer, 0, writeOffset, 1.0 );
 
         // reset of event properties at end of write
         if ( lastWriteIndex >= _eventLength )
@@ -276,8 +276,8 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 
             _synthInstrument->synthesizer->render( _buffer, this );    // overwrites old buffer contents
 
-            // note we merge using MAX_PHASE as mix volume (event volume was applied during synthesis)
-            outputBuffer->mergeBuffers( _buffer, 0, loopOffset, MAX_PHASE );
+            // note we merge using 1.0 as mix volume (event volume was applied during synthesis)
+            outputBuffer->mergeBuffers( _buffer, 0, loopOffset, 1.0 );
 
             // reset of event properties at end of write
             if ( lastWriteIndex >= _eventLength )
@@ -325,8 +325,8 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
             {
                 int amt = ceil( aBufferLength / 4 );
 
-                SAMPLE_TYPE envIncr = MAX_PHASE / amt;
-                SAMPLE_TYPE amp     = MAX_PHASE;
+                SAMPLE_TYPE envIncr = 1.0 / amt;
+                SAMPLE_TYPE amp     = 1.0;
 
                 for ( int i = aBufferLength - amt; i < aBufferLength; ++i )
                 {
@@ -353,7 +353,7 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
 void BaseSynthEvent::updateProperties()
 {
     // sync ADSR envelope values
-    cachedProps.envelope     = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : MAX_PHASE;
+    cachedProps.envelope     = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : 1.0;
     cachedProps.releaseLevel = ( SAMPLE_TYPE ) _synthInstrument->adsr->getSustainLevel();
 
     calculateBuffers();

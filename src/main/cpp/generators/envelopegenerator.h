@@ -34,8 +34,8 @@ namespace EnvelopeGenerator
     // tableLength describes the size of the table
     // startAmplitude describes the amplitude level at the beginning of the envelope where
     // endAmplitude describes the amplitude level at the end of the envelope, e.g.
-    // a startAmplitude of MAX_PHASE and an endAmplitude of 0.0 would create a fade out-envelope
-    // and a startAmplitude of 0.0 and an endAmplitude of MAX_PHASE would create a fade in-envelope
+    // a startAmplitude of 1.0 and an endAmplitude of 0.0 would create a fade out-envelope
+    // and a startAmplitude of 0.0 and an endAmplitude of 1.0 would create a fade in-envelope
 
     extern SAMPLE_TYPE* generateLinear( int tableLength, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude );
 

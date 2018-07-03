@@ -80,7 +80,7 @@ void Limiter::setThreshold( float thresholdDb )
 
 float Limiter::getLinearGR()
 {
-    return gain > MAX_PHASE ? MAX_PHASE / gain : MAX_PHASE;
+    return ( gain > 1.0f ) ? 1.0f / ( float ) gain : 1.0f;
 }
 
 void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
@@ -169,7 +169,7 @@ void Limiter::init( float attackMs, float releaseMs, float thresholdDb )
     pTrim    = ( SAMPLE_TYPE ) 0.60;
     pKnee    = ( SAMPLE_TYPE ) 0.40;
 
-    gain = MAX_PHASE;
+    gain = 1.0;
 
     recalculate();
 }

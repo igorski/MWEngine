@@ -138,13 +138,13 @@ TEST( AudioEngine, Output )
     SAMPLE_TYPE* rawBuffer = buffer->getBufferForChannel( 0 );
 
     for ( int i = 0; i < 4; ++i )
-        rawBuffer[ i ] = ( SAMPLE_TYPE ) -MAX_PHASE;
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
 
     for ( int i = 4; i < 8; ++i )
         rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
 
     for ( int i = 8; i < 12; ++i )
-        rawBuffer[ i ] = ( SAMPLE_TYPE ) MAX_PHASE;
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
 
     for ( int i = 12; i < 16; ++i )
         rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;

@@ -4,7 +4,7 @@
 
 TEST( AudioChannel, Construction )
 {
-    float volume = ( float ) randomSample( 0, MAX_PHASE );
+    float volume = ( float ) randomSample( 0, 1.0 );
     AudioChannel* audioChannel = new AudioChannel( volume );
 
     EXPECT_EQ( audioChannel->getVolume(), volume )
@@ -27,7 +27,7 @@ TEST( AudioChannel, Construction )
 
 TEST( AudioChannel, Volume )
 {
-    float volume    = ( float ) randomSample( 0, MAX_PHASE );
+    float volume    = ( float ) randomSample( 0, 1.0 );
     float logVolume = VolumeUtil::toLog( volume );
 
     AudioChannel* audioChannel = new AudioChannel( volume );
@@ -43,7 +43,7 @@ TEST( AudioChannel, Volume )
 
 TEST( AudioChannel, InstanceId )
 {
-    float volume = ( float ) randomSample( 0, MAX_PHASE );
+    float volume = ( float ) randomSample( 0, 1.0 );
 
     // 1. create first channel
 
@@ -75,7 +75,7 @@ TEST( AudioChannel, InstanceId )
 
 TEST( AudioChannel, Events )
 {
-    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, MAX_PHASE ));
+    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, 1.0 ));
 
     EXPECT_EQ( audioChannel->audioEvents.size(), 0 )
         << "expected AudioChannel events vector to be empty upon construction";
@@ -97,7 +97,7 @@ TEST( AudioChannel, Events )
 
 TEST( AudioChannel, LiveEvents )
 {
-    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, MAX_PHASE ));
+    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, 1.0 ));
 
     ASSERT_FALSE( audioChannel->hasLiveEvents )
         << "expected AudioChannel to contain no live events upon construction";
@@ -128,7 +128,7 @@ TEST( AudioChannel, LiveEvents )
 
 TEST( AudioChannel, OutputBuffer )
 {
-    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, MAX_PHASE ));
+    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, 1.0 ));
     AudioBuffer* outputBuffer  = audioChannel->getOutputBuffer();
 
     // ensure created buffer matches engine properties
@@ -167,7 +167,7 @@ TEST( AudioChannel, OutputBuffer )
 
 TEST( AudioChannel, Caching )
 {
-    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, MAX_PHASE ));
+    AudioChannel* audioChannel = new AudioChannel( ( float ) randomSample( 0, 1.0 ));
 
     ASSERT_FALSE( audioChannel->canCache() )
         << "expected caching to be disabled by default on construction";
@@ -289,7 +289,7 @@ TEST( AudioChannel, MixPannedBuffer )
 
     // TEST 1. right panning (source buffer has only left channel content, no right channel)
 
-    srcLeft[0] = MAX_PHASE;
+    srcLeft[0] = 1.0;
     srcRight[0] = 0.0f;
 
     audioChannel->setPan( 0.3 ); // set pan slightly to the right
@@ -303,7 +303,7 @@ TEST( AudioChannel, MixPannedBuffer )
     // TEST 2. left panning (source buffer has only right channel content, no left channel)
 
     srcLeft[0] = 0.0f;
-    srcRight[0] = MAX_PHASE;
+    srcRight[0] = 1.0;
 
     audioChannel->setPan( -0.7 ); // set pan slightly to the left
     audioChannel->mixBuffer( mixBuffer, 1 );

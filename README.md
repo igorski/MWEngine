@@ -57,6 +57,9 @@ packaging directly both from its IDE.
 
 When NDK builds fail, be aware that _ndk-build_ doesn't like it when paths contain spaces (yeah...)
 
+In case the Java build fails due to missing classes, see below to compile the
+audio engine as a library using CLI.
+
 #### Using CLI
 
 After making sure you have all the correct tools (see _Environment setup_):

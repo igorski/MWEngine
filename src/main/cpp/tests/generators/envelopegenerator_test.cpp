@@ -8,8 +8,8 @@ TEST( EnvelopeGenerator, GenerateLinear )
 
     int length = randomInt( 24, 512 );
 
-    SAMPLE_TYPE startAmplitude = randomSample( 0.0, MAX_PHASE );
-    SAMPLE_TYPE endAmplitude   = randomSample( 0.0, MAX_PHASE );
+    SAMPLE_TYPE startAmplitude = randomSample( 0.0, 1.0 );
+    SAMPLE_TYPE endAmplitude   = randomSample( 0.0, 1.0 );
 
     bool fadeIn = ( endAmplitude > startAmplitude );
 
@@ -20,7 +20,7 @@ TEST( EnvelopeGenerator, GenerateLinear )
     // evaluate results
 
     SAMPLE_TYPE sample;
-    SAMPLE_TYPE lastSample = fadeIn ? 0.0f : MAX_PHASE;
+    SAMPLE_TYPE lastSample = fadeIn ? 0.0f : 1.0;
 
     for ( int i = 0; i < length; ++i )
     {

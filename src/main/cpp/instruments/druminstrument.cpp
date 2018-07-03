@@ -143,7 +143,7 @@ void DrumInstrument::construct()
 {
     drumTimbre        = DrumTimbres::LIGHT;
     rOsc              = 0;// new RouteableOscillator();  // currently unused...
-    audioChannel      = new AudioChannel( MAX_PHASE, AudioEngine::samples_per_bar );
+    audioChannel      = new AudioChannel( 1.0, AudioEngine::samples_per_bar );
 
     activeDrumPattern = 0;
     drumPatterns      = new std::vector<DrumPattern*>();

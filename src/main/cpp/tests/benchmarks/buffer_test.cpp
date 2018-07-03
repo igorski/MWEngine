@@ -164,7 +164,7 @@ TEST( BufferBenchmark, LoopingVersusMemcpyCloning )
     int i, j;
 
     for ( i = 0; i < bufferSize; ++i ) {
-        sourceBuffer[ i ] = randomSample( -MAX_PHASE, MAX_PHASE );
+        sourceBuffer[ i ] = randomSample( -1.0, 1.0 );
     }
 
     // test 4. cloning buffer contents using looping versus memcpy

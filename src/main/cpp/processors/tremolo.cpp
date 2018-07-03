@@ -37,12 +37,12 @@ Tremolo::Tremolo( int aLeftType,  int aLeftAttack,  int aLeftDecay,
     SAMPLE_TYPE* rightTable;
 
     if ( aLeftType == LINEAR )
-        leftTable = EnvelopeGenerator::generateLinear( ENVELOPE_PRECISION, 0.0, MAX_PHASE );
+        leftTable = EnvelopeGenerator::generateLinear( ENVELOPE_PRECISION, 0.0, 1.0 );
     else
         leftTable = EnvelopeGenerator::generateExponential( ENVELOPE_PRECISION );
 
     if ( aRightType == LINEAR )
-        rightTable = EnvelopeGenerator::generateLinear( ENVELOPE_PRECISION, 0.0, MAX_PHASE );
+        rightTable = EnvelopeGenerator::generateLinear( ENVELOPE_PRECISION, 0.0, 1.0 );
     else
         rightTable = EnvelopeGenerator::generateExponential( ENVELOPE_PRECISION );
 
