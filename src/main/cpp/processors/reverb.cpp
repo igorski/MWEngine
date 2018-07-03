@@ -67,7 +67,7 @@ float Reverb::getSize()
 
 void Reverb::setSize( float value )
 {
-    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+    value = std::max( 0.f, std::min( value, ( float ) 1.0 ));
 
     if ( _size != value ) {
         _size = value;
@@ -82,7 +82,7 @@ float Reverb::getHFDamp()
 
 void Reverb::setHFDamp( float value )
 {
-    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+    value = std::max( 0.f, std::min( value, ( float ) 1.0 ));
 
     if ( _hfDamp != value ) {
         _hfDamp = value;
@@ -97,7 +97,7 @@ float Reverb::getMix()
 
 void Reverb::setMix( float value )
 {
-    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+    value = std::max( 0.f, std::min( value, ( float ) 1.0 ));
 
     if ( _mix != value ) {
         _mix = value;
@@ -112,7 +112,7 @@ float Reverb::getOutput()
 
 void Reverb::setOutput( float value )
 {
-    value = std::max( 0.f, std::min( value, ( float ) MAX_PHASE ));
+    value = std::max( 0.f, std::min( value, ( float ) 1.0 ));
 
     if ( _output != value ) {
         _output = value;

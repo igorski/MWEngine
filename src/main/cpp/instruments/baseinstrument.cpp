@@ -163,7 +163,7 @@ void BaseInstrument::unregisterFromSequencer()
 
 void BaseInstrument::construct()
 {
-    audioChannel = new AudioChannel( MAX_PHASE );
+    audioChannel = new AudioChannel( 1.0 );
 
     // events
 

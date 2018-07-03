@@ -7,7 +7,7 @@ TEST( BaseAudioEvent, GettersSettersVolume )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
 
-    EXPECT_EQ( audioEvent->getVolume(), MAX_PHASE )
+    EXPECT_EQ( audioEvent->getVolume(), 1.0 )
         << "expected default volume to be equal to the maximum phase value";
 
     float volume = randomFloat();

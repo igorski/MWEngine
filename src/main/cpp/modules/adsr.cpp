@@ -22,6 +22,7 @@
  */
 #include <modules/adsr.h>
 #include <utilities/bufferutility.h>
+#include <utilities/utils.h>
 #include <algorithm>
 
 /* constructors / destructor */
@@ -122,7 +123,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
     int eventDurationWithRelease = eventDuration + _releaseDuration;
 
     // nothing to do
-    if ( writeOffset > eventDurationWithRelease && lastEnvelope == MAX_PHASE )
+    if ( writeOffset > eventDurationWithRelease && lastEnvelope == 1.0 )
         return;
 
     // cache envelopes for given event duration
@@ -161,7 +162,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
          !applyDecay   &&
          !applyRelease )
     {
-        if ( lastEnvelope < MAX_PHASE )
+        if ( lastEnvelope < 1.0 )
             inputBuffer->adjustBufferVolumes( lastEnvelope );
 
         return;
@@ -181,7 +182,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
 
             // decay envelope
             else if ( applyDecay && readOffset >= _decayStart && readOffset <= _sustainStart )
-                lastEnvelope = MAX_PHASE - ( SAMPLE_TYPE ) ( readOffset - _decayStart ) * _decayDecrement;
+                lastEnvelope = 1.0 - ( SAMPLE_TYPE ) ( readOffset - _decayStart ) * _decayDecrement;
 
             // sustain envelope (keeps at last envelope value which is the last decay phase value)
 
@@ -226,8 +227,8 @@ void ADSR::setDurations( int attackDuration, int decayDuration, int releaseDurat
     _releaseStart   = bufferLength;
 
     // update increments for the envelope stages
-    _attackIncrement  = MAX_PHASE     / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );
-    _decayDecrement   = ( MAX_PHASE - _sustainLevel ) / _decayDuration;                  // move to sustain phase amplitude
+    _attackIncrement  = 1.0 / ( SAMPLE_TYPE ) std::max( 1, _attackDuration );
+    _decayDecrement   = ( 1.0 - _sustainLevel ) / _decayDuration;                  // move to sustain phase amplitude
     _releaseDecrement = _sustainLevel / ( SAMPLE_TYPE ) std::max( 1, _releaseDuration ); // release from sustain phase amp
 
     _bufferLength = bufferLength;
@@ -254,7 +255,7 @@ void ADSR::setEnvelopesInternal( float attackTime, float decayTime, float sustai
 
     // 3. SUSTAIN level should be between 0 - 1
 
-    _sustainLevel = std::max(( SAMPLE_TYPE ) 0, std::min(( SAMPLE_TYPE ) sustainLevel, MAX_PHASE ));
+    _sustainLevel = capParam( sustainLevel );
 
     // 4. RELEASE
 
@@ -276,7 +277,7 @@ void ADSR::construct()
     _bufferLength    = 0;
     _attackTime      = 0;
     _decayTime       = 0;
-    _sustainLevel    = ( float ) MAX_PHASE;
+    _sustainLevel    = ( float ) 1.0;
     _releaseTime     = 0;
     _decayStart      = 0;
     _sustainStart    = 0;

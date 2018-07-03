@@ -63,9 +63,9 @@ namespace AudioEngineProps
     extern int OUTPUT_CHANNELS; // initialized on engine start, valid options are 1 (mono) and 2 (stereo)
 
 #ifdef RECORD_DEVICE_INPUT
-    const int INPUT_CHANNELS   = 1;
+    const int INPUT_CHANNELS = 1;
 #else
-    const int INPUT_CHANNELS   = 0;
+    const int INPUT_CHANNELS = 0;
 #endif
 }
 
@@ -73,12 +73,10 @@ namespace AudioEngineProps
 
 #if PRECISION == 1 // float
  #define SAMPLE_TYPE float
- #define MAX_PHASE 1.0f
 #endif
 
 #if PRECISION == 2 // double
  #define SAMPLE_TYPE double
- #define MAX_PHASE 1.0
 #endif
 
 // global constants used throughout the engine

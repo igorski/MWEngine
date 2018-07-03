@@ -38,11 +38,12 @@ inline float capParam( float value )
     return std::min( 1.f, std::max( 0.f, value ));
 }
 
-// convenience method to ensure a sample is in the valid -1.f - +1.f range
+// convenience method to ensure a sample is within the valid -1.f to +1.f range
+// this prevents audio exceeding the maximum head room
 
 inline SAMPLE_TYPE capSample( SAMPLE_TYPE value )
 {
-    return std::min( 1.0, std::max( -1.0, value ));
+    return std::min(( SAMPLE_TYPE ) 1.0, std::max(( SAMPLE_TYPE ) -1.0, value ));
 }
 
 /* convenience methods */

@@ -112,7 +112,7 @@ void SynthInstrument::init()
 
     adsr->setAttackTime  ( 0.01 );
     adsr->setDecayTime   ( 0.0 );
-    adsr->setSustainLevel( MAX_PHASE );
+    adsr->setSustainLevel( 1.0 );
     adsr->setReleaseTime ( 0.01 );
 
     // default values

@@ -39,7 +39,7 @@ namespace EnvelopeGenerator
         startAmplitude = std::max(( SAMPLE_TYPE ) 0.001, startAmplitude );
         endAmplitude   = std::max(( SAMPLE_TYPE ) 0.001, endAmplitude );
 
-        SAMPLE_TYPE coeff  = MAX_PHASE + ( log( endAmplitude ) - log( startAmplitude )) / tableLength;
+        SAMPLE_TYPE coeff  = 1.0 + ( log( endAmplitude ) - log( startAmplitude )) / tableLength;
         SAMPLE_TYPE sample = startAmplitude;
 
         for ( int i = 0; i < tableLength; ++i )

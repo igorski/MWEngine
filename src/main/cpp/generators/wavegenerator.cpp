@@ -69,7 +69,7 @@ namespace WaveGenerator
 
                         case WaveForms::TRIANGLE:
                             sample += sin(( SAMPLE_TYPE ) s * TWO_PI * ( SAMPLE_TYPE ) t / numberOfSamples );
-                            tmp     = MAX_PHASE - ( SAMPLE_TYPE ) ( std::abs( sample - ( MAX_PHASE / 2 ) )) * ( MAX_PHASE * 4.0 );
+                            tmp     = 1.0 - ( SAMPLE_TYPE ) ( std::abs( sample - ( 1.0 / 2 ) )) * ( 1.0 * 4.0 );
                             break;
 
                         case WaveForms::SAWTOOTH:
@@ -79,7 +79,7 @@ namespace WaveGenerator
 
                         case WaveForms::SQUARE:
                             sample += sin(( SAMPLE_TYPE ) s * TWO_PI * ( SAMPLE_TYPE ) t / numberOfSamples );
-                            tmp     = ( sample >= 0.0 ) ? MAX_PHASE : -MAX_PHASE;
+                            tmp     = ( sample >= 0.0 ) ? 1.0 : -1.0;
                             break;
                     }
                 }
@@ -88,7 +88,7 @@ namespace WaveGenerator
                 if ( tmp > maxValue )
                     maxValue = tmp;
             }
-            SAMPLE_TYPE factor = MAX_PHASE / maxValue;
+            SAMPLE_TYPE factor = 1.0 / maxValue;
 
             // normalize values
             for ( int j = 0; j < numberOfSamples; ++j )

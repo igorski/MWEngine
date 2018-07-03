@@ -50,7 +50,7 @@ TEST( AudioBuffer, Silence )
 TEST( AudioBuffer, AdjustVolumes )
 {
     AudioBuffer* audioBuffer = fillAudioBuffer( randomAudioBuffer() );
-    SAMPLE_TYPE multiplier   = randomSample( 0.0, MAX_PHASE );
+    SAMPLE_TYPE multiplier   = randomSample( 0.0, 1.0 );
     SAMPLE_TYPE maxValue     = getMaxAmpForBuffer( audioBuffer );
 
     audioBuffer->adjustBufferVolumes( multiplier );
@@ -228,7 +228,7 @@ TEST( AudioBuffer, ApplyMonoSource )
         SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
 
         for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
-            buffer[ i ] = randomSample( -MAX_PHASE, +MAX_PHASE );
+            buffer[ i ] = randomSample( -1.0, +1.0 );
     }
 
     // get all mono values

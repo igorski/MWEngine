@@ -259,9 +259,9 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         {
             phase += aEvent->cachedProps.phaseIncr;
 
-            // keep phase within range (-MAX_PHASE to +MAX_PHASE)
-            if ( phase > MAX_PHASE )
-                phase -= MAX_PHASE;
+            // keep phase within range (-1.0 to +1.0)
+            if ( phase > 1.0 )
+                phase -= 1.0;
         }
 
         // update modules

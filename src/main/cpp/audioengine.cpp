@@ -93,7 +93,7 @@ namespace AudioEngine
 
     /* output related */
 
-    float volume = MAX_PHASE;
+    float volume = 1.0;
     ProcessingChain* masterBus = new ProcessingChain();
 
     static int thread;
@@ -312,7 +312,7 @@ namespace AudioEngine
                 // is played on the same instrument, but just as a different voice (note the
                 // events can have their own mix level)
 
-                float lAmp = channelVolume > 0.f ? MAX_PHASE / channelVolume : MAX_PHASE;
+                float lAmp = channelVolume > 0.f ? 1.0 / channelVolume : 1.0;
 
                 for ( int k = 0; k < lAmount; ++k )
                 {
@@ -349,7 +349,7 @@ namespace AudioEngine
             // write the channel buffer into the combined output buffer, apply channel volume
             // note live events are always audible as their volume is relative to the instrument
             if ( channel->hasLiveEvents && channelVolume == 0.0 )
-                channelVolume = MAX_PHASE;
+                channelVolume = 1.0;
 
             channel->mixBuffer( inBuffer, channelVolume );
         }
@@ -370,11 +370,11 @@ namespace AudioEngine
 
                 // and perform a fail-safe check in case we're exceeding the headroom ceiling
 
-                if ( sample < -MAX_PHASE )
-                    sample = -MAX_PHASE;
+                if ( sample < -1.0 )
+                    sample = -1.0;
 
-                else if ( sample > +MAX_PHASE )
-                    sample = +MAX_PHASE;
+                else if ( sample > +1.0 )
+                    sample = +1.0;
 
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)

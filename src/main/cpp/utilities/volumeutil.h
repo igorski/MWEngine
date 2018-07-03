@@ -28,12 +28,12 @@
 
 // a convenient macro which is used to mix in a sample
 // into an existing audio buffer preventing overflowing
-// the range (defined by MAX_PHASE) which in turn will lead to clipping
-// MAX_PHASE defines the maximum value for the sample (+1.f for a float based range)
+// the range (defined by 1.0) which in turn will lead to clipping
+// 1.0 defines the maximum value for the sample (+1.f for a float based range)
 // sampleBase = your base audio sample
 // sampleToAdd = sample to add to base
 
-#define SUM_SAMPLES( sampleBase, sampleToAdd ) ((( MAX_PHASE - (sampleBase)) * (sampleToAdd)) / MAX_PHASE ) + (sampleBase)
+#define SUM_SAMPLES( sampleBase, sampleToAdd ) ((( 1.0 - (sampleBase)) * (sampleToAdd)) / 1.0 ) + (sampleBase)
 
 namespace VolumeUtil
 {

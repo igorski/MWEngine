@@ -112,7 +112,7 @@ AudioBuffer* fillAudioBuffer( AudioBuffer* audioBuffer )
         SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( c );
 
         for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
-            buffer[ i ] = randomSample( -MAX_PHASE, +MAX_PHASE );
+            buffer[ i ] = randomSample( -1.0, +1.0 );
     }
     return audioBuffer;
 }
@@ -121,7 +121,7 @@ AudioBuffer* fillAudioBuffer( AudioBuffer* audioBuffer )
 
 SAMPLE_TYPE getMaxAmpForBuffer( AudioBuffer* audioBuffer )
 {
-    SAMPLE_TYPE max = -MAX_PHASE;
+    SAMPLE_TYPE max = -1.0;
 
     for ( int c = 0, ca = audioBuffer->amountOfChannels; c < ca; ++c )
     {

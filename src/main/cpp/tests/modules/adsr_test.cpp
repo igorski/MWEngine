@@ -10,7 +10,7 @@ TEST( ADSR, Constructor ) {
 
     EXPECT_EQ( 0,         adsr->getAttackTime() )   << "expected value to be 0 by default";
     EXPECT_EQ( 0,         adsr->getDecayTime() )    << "expected value to be 0 by default";
-    EXPECT_EQ( MAX_PHASE, adsr->getSustainLevel() ) << "expected value to be 1.0 by default";
+    EXPECT_EQ( 1.0, adsr->getSustainLevel() ) << "expected value to be 1.0 by default";
     EXPECT_EQ( 0,         adsr->getReleaseTime() )  << "expected value to be 0 by default";
 
     delete adsr;
@@ -51,8 +51,8 @@ TEST( ADSR, ReleaseDuration )
 }
 
 TEST( ADSR, ApplyPositiveSustain ) {
-    float HALF_PHASE    = MAX_PHASE / 2;
-    float QUARTER_PHASE = MAX_PHASE / 4;
+    float HALF_PHASE    = 1.0 / 2;
+    float QUARTER_PHASE = 1.0 / 4;
 
     int bufferLength = 8;
     SynthInstrument* instrument = new SynthInstrument();
@@ -77,7 +77,7 @@ TEST( ADSR, ApplyPositiveSustain ) {
 
     // fill buffer with maximum volume samples
     for ( int i = 0; i < inputBuffer->bufferSize; ++i )
-        buffer[ i ] = MAX_PHASE;
+        buffer[ i ] = 1.0;
 
     // apply ADSR envelopes
     adsr->apply( inputBuffer, synthEvent, 0 );
@@ -92,8 +92,8 @@ TEST( ADSR, ApplyPositiveSustain ) {
     EXPECT_FLOAT_EQ( buffer[ 1 ], HALF_PHASE );
 
     // decay phase
-    EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
-    EXPECT_FLOAT_EQ( buffer[ 3 ], MAX_PHASE - QUARTER_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 2 ], 1.0 );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], 1.0 - QUARTER_PHASE );
 
     // sustain phase
     EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
@@ -118,8 +118,8 @@ TEST( ADSR, ApplyPositiveSustain ) {
 }
 
 TEST( ADSR, ApplyZeroSustain ) {
-    float HALF_PHASE    = MAX_PHASE / 2;
-    float QUARTER_PHASE = MAX_PHASE / 4;
+    float HALF_PHASE    = 1.0 / 2;
+    float QUARTER_PHASE = 1.0 / 4;
 
     int bufferLength = 16;
     SynthInstrument* instrument = new SynthInstrument();
@@ -143,7 +143,7 @@ TEST( ADSR, ApplyZeroSustain ) {
 
     // fill buffer with maximum volume samples
     for ( int i = 0; i < inputBuffer->bufferSize; ++i )
-        buffer[ i ] = MAX_PHASE;
+        buffer[ i ] = 1.0;
 
     // apply ADSR envelopes
     adsr->apply( inputBuffer, synthEvent, 0 );
@@ -158,8 +158,8 @@ TEST( ADSR, ApplyZeroSustain ) {
     EXPECT_FLOAT_EQ( buffer[ 1 ], HALF_PHASE );
 
     // decay phase
-    EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
-    EXPECT_FLOAT_EQ( buffer[ 3 ], MAX_PHASE - QUARTER_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 2 ], 1.0 );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], 1.0 - QUARTER_PHASE );
 
     // sustain phase
     EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
@@ -184,8 +184,8 @@ TEST( ADSR, ApplyZeroSustain ) {
 }
 
 TEST( ADSR, ApplyOnLiveEvent ) {
-    float HALF_PHASE    = MAX_PHASE / 2;
-    float QUARTER_PHASE = MAX_PHASE / 4;
+    float HALF_PHASE    = 1.0 / 2;
+    float QUARTER_PHASE = 1.0 / 4;
 
     int bufferLength = 8;
     SynthInstrument* instrument = new SynthInstrument();
@@ -212,7 +212,7 @@ TEST( ADSR, ApplyOnLiveEvent ) {
 
     // fill buffer with maximum volume samples
     for ( int i = 0; i < inputBuffer->bufferSize; ++i )
-        buffer[ i ] = MAX_PHASE;
+        buffer[ i ] = 1.0;
 
     // apply ADSR envelopes
     adsr->apply( inputBuffer, synthEvent, 0 );
@@ -227,8 +227,8 @@ TEST( ADSR, ApplyOnLiveEvent ) {
     EXPECT_FLOAT_EQ( buffer[ 1 ], HALF_PHASE );
 
     // decay phase
-    EXPECT_FLOAT_EQ( buffer[ 2 ], MAX_PHASE );
-    EXPECT_FLOAT_EQ( buffer[ 3 ], MAX_PHASE - QUARTER_PHASE );
+    EXPECT_FLOAT_EQ( buffer[ 2 ], 1.0 );
+    EXPECT_FLOAT_EQ( buffer[ 3 ], 1.0 - QUARTER_PHASE );
 
     // sustain phase (longer as the release phase is only initiated when synthEvent is released
     EXPECT_FLOAT_EQ( buffer[ 4 ], HALF_PHASE );
@@ -239,7 +239,7 @@ TEST( ADSR, ApplyOnLiveEvent ) {
     // TEST 2. released event
     // fill buffer with maximum volume samples again
     for ( int i = 0; i < inputBuffer->bufferSize; ++i )
-        buffer[ i ] = MAX_PHASE;
+        buffer[ i ] = 1.0;
 
     // release event (by stopping)
     synthEvent->stop();
@@ -274,8 +274,8 @@ TEST( ADSR, ApplyOnLiveEvent ) {
 
 TEST( ADSR, LastEnvelope )
 {
-    float HALF_PHASE    = MAX_PHASE / 2;
-    float QUARTER_PHASE = MAX_PHASE / 4;
+    float HALF_PHASE    = 1.0 / 2;
+    float QUARTER_PHASE = 1.0 / 4;
 
     int bufferLength = 8;
     SynthInstrument* instrument = new SynthInstrument();
@@ -296,7 +296,7 @@ TEST( ADSR, LastEnvelope )
 
     // fill buffer with maximum volume samples
     for ( int i = 0; i < inputBuffer->bufferSize; ++i )
-        buffer[ i ] = MAX_PHASE;
+        buffer[ i ] = 1.0;
 
     EXPECT_FLOAT_EQ( 0.0, synthEvent->cachedProps.envelope )
         << "expected cached envelope to be 0 at start of application";

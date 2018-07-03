@@ -44,7 +44,7 @@ void WaveShaper::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         for ( int j = 0; j < bufferSize; ++j )
         {
             SAMPLE_TYPE input = channelBuffer[ j ];
-            channelBuffer[ j ] = (( MAX_PHASE + _multiplier ) * input / ( MAX_PHASE + _multiplier * std::abs( input ))) * _level;
+            channelBuffer[ j ] = (( 1.0 + _multiplier ) * input / ( 1.0 + _multiplier * std::abs( input ))) * _level;
         }
 
         // omit unnecessary cycles by copying the mono content
@@ -67,15 +67,15 @@ void WaveShaper::setAmount( float value )
 {
     // keep within range
 
-    if ( value <= -MAX_PHASE )
-        value = -( MAX_PHASE - .1f );
+    if ( value <= -1.0 )
+        value = -( 1.0 - .1f );
 
-    else if ( value >= MAX_PHASE )
-        value = MAX_PHASE - .1f;
+    else if ( value >= 1.0 )
+        value = 1.0 - .1f;
 
     _amount = value;
 
-    _multiplier = ( MAX_PHASE * 2.0 ) * _amount / ( MAX_PHASE - _amount );
+    _multiplier = ( 1.0 * 2.0 ) * _amount / ( 1.0 - _amount );
 }
 
 float WaveShaper::getLevel()

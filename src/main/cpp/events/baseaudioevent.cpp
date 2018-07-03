@@ -510,7 +510,7 @@ void BaseAudioEvent::construct()
     _loopeable         = false;
     _locked            = false;
     _addedToSequencer  = false;
-    _volume            = VolumeUtil::toLog( MAX_PHASE );
+    _volume            = VolumeUtil::toLog( 1.0 );
     _eventStart        = 0;
     _eventEnd          = 0;
     _eventLength       = 0;
