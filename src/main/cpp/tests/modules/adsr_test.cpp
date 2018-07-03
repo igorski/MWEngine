@@ -8,10 +8,10 @@
 TEST( ADSR, Constructor ) {
     ADSR* adsr = new ADSR();
 
-    EXPECT_EQ( 0,         adsr->getAttackTime() )   << "expected value to be 0 by default";
-    EXPECT_EQ( 0,         adsr->getDecayTime() )    << "expected value to be 0 by default";
+    EXPECT_EQ( 0,   adsr->getAttackTime() )   << "expected value to be 0 by default";
+    EXPECT_EQ( 0,   adsr->getDecayTime() )    << "expected value to be 0 by default";
     EXPECT_EQ( 1.0, adsr->getSustainLevel() ) << "expected value to be 1.0 by default";
-    EXPECT_EQ( 0,         adsr->getReleaseTime() )  << "expected value to be 0 by default";
+    EXPECT_EQ( 0,   adsr->getReleaseTime() )  << "expected value to be 0 by default";
 
     delete adsr;
 }
@@ -51,8 +51,8 @@ TEST( ADSR, ReleaseDuration )
 }
 
 TEST( ADSR, ApplyPositiveSustain ) {
-    float HALF_PHASE    = 1.0 / 2;
-    float QUARTER_PHASE = 1.0 / 4;
+    float HALF_PHASE    = 0.5f;
+    float QUARTER_PHASE = 0.25f;
 
     int bufferLength = 8;
     SynthInstrument* instrument = new SynthInstrument();
@@ -118,8 +118,8 @@ TEST( ADSR, ApplyPositiveSustain ) {
 }
 
 TEST( ADSR, ApplyZeroSustain ) {
-    float HALF_PHASE    = 1.0 / 2;
-    float QUARTER_PHASE = 1.0 / 4;
+    float HALF_PHASE    = 0.5f;
+    float QUARTER_PHASE = 0.25f;
 
     int bufferLength = 16;
     SynthInstrument* instrument = new SynthInstrument();
@@ -184,8 +184,8 @@ TEST( ADSR, ApplyZeroSustain ) {
 }
 
 TEST( ADSR, ApplyOnLiveEvent ) {
-    float HALF_PHASE    = 1.0 / 2;
-    float QUARTER_PHASE = 1.0 / 4;
+    float HALF_PHASE    = 0.5f;
+    float QUARTER_PHASE = 0.25f;
 
     int bufferLength = 8;
     SynthInstrument* instrument = new SynthInstrument();
@@ -274,8 +274,8 @@ TEST( ADSR, ApplyOnLiveEvent ) {
 
 TEST( ADSR, LastEnvelope )
 {
-    float HALF_PHASE    = 1.0 / 2;
-    float QUARTER_PHASE = 1.0 / 4;
+    float HALF_PHASE    = 0.5f;
+    float QUARTER_PHASE = 0.25f;
 
     int bufferLength = 8;
     SynthInstrument* instrument = new SynthInstrument();

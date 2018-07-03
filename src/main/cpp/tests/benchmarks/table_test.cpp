@@ -54,7 +54,7 @@ TEST( TableBenchmark, TableLookupVersusLiveCalculation )
             // increment phase
             phase += phaseStep;
 
-            // and be sure to keep phase within range (-1.0 to +1.0)
+            // and be sure to keep phase within range
             if ( phase > 1.0 )
                 phase -= 1.0;
         }

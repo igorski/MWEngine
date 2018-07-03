@@ -15,7 +15,7 @@ TEST( Reverb, GetSetSize )
     reverb->setSize( -1.0 );
     EXPECT_EQ( min, reverb->getSize() ) << "expected size to have been normalized to defined min value";
 
-    reverb->setSize( 1.0 * 2 );
+    reverb->setSize( 2.0 );
     EXPECT_EQ( max, reverb->getSize() ) << "expected size to have been normalized to defined max value";
 
     delete reverb;
@@ -36,7 +36,7 @@ TEST( Reverb, GetSetHFDamp )
     reverb->setHFDamp( -1.0 );
     EXPECT_EQ( min, reverb->getHFDamp() ) << "expected damp to have been normalized to defined min value";
 
-    reverb->setHFDamp( 1.0 * 2 );
+    reverb->setHFDamp( 2.0 );
     EXPECT_EQ( max, reverb->getHFDamp() ) << "expected damp to have been normalized to defined max value";
 
     delete reverb;
@@ -57,7 +57,7 @@ TEST( Reverb, GetSetMix )
     reverb->setMix( -1.0 );
     EXPECT_EQ( min, reverb->getMix() ) << "expected mix to have been normalized to defined min value";
 
-    reverb->setMix( 1.0 * 2 );
+    reverb->setMix( 2.0 );
     EXPECT_EQ( max, reverb->getMix() ) << "expected mix to have been normalized to defined max value";
 
     delete reverb;

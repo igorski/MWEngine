@@ -68,14 +68,14 @@ void WaveShaper::setAmount( float value )
     // keep within range
 
     if ( value <= -1.0 )
-        value = -( 1.0 - .1f );
+        value = -0.9f;
 
     else if ( value >= 1.0 )
-        value = 1.0 - .1f;
+        value = 0.9f;
 
     _amount = value;
 
-    _multiplier = ( 1.0 * 2.0 ) * _amount / ( 1.0 - _amount );
+    _multiplier = 2.0f * _amount / ( 1.0f - _amount );
 }
 
 float WaveShaper::getLevel()

@@ -259,7 +259,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
         {
             phase += aEvent->cachedProps.phaseIncr;
 
-            // keep phase within range (-1.0 to +1.0)
+            // keep phase within range
             if ( phase > 1.0 )
                 phase -= 1.0;
         }

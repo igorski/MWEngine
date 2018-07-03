@@ -80,7 +80,7 @@ void Limiter::setThreshold( float thresholdDb )
 
 float Limiter::getLinearGR()
 {
-    return gain > 1.0 ? 1.0 / gain : 1.0;
+    return ( gain > 1.0f ) ? 1.0f / ( float ) gain : 1.0f;
 }
 
 void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )

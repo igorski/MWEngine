@@ -31,7 +31,7 @@ namespace WaveUtil
      */
     inline void toUnipolar( SAMPLE_TYPE* buffer, int bufferSize )
     {
-        SAMPLE_TYPE halfPhase = 1.0 / 2.f;
+        SAMPLE_TYPE halfPhase = 0.5f;
         for ( int i = 0; i < bufferSize; ++i ) {
             buffer[ i ] = buffer[ i ] * halfPhase + halfPhase;
         }
@@ -44,7 +44,7 @@ namespace WaveUtil
     inline void toBipolar( SAMPLE_TYPE* buffer, int bufferSize )
     {
         for ( int i = 0; i < bufferSize; ++i ) {
-            buffer[ i ] = buffer[ i ] * ( 1.0 * 2.f ) - 1.0;
+            buffer[ i ] = buffer[ i ] * 2.0 - 1.0;
         }
     }
 
