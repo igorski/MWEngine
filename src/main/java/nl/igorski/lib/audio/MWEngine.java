@@ -123,7 +123,7 @@ public final class MWEngine extends Thread
      * (re)-register the interface between this Java class and the
      * native layer audio engine. This is recommended to synchronise
      * changes in the JNI environments (for instance: when suspending
-     * the application)
+     * the application or starting new Threads)
      */
     public void initJNI()
     {
@@ -308,7 +308,7 @@ public final class MWEngine extends Thread
 
     public void run()
     {
-        Log.d( "MWENGINE", "STARTING NATIVE AUDIO RENDER THREAD" );
+        Log.d( "MWENGINE", "starting MWEngine render thread" );
 
         android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
         handleThreadStartTimeout();
@@ -318,16 +318,18 @@ public final class MWEngine extends Thread
             // start the native rendering thread
             if ( !_paused && !_nativeEngineRunning )
             {
-                Log.d( "MWENGINE", "STARTING NATIVE THREAD @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
+                Log.d( "MWENGINE", "starting native audio rendering thread @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
                 _nativeEngineRunning = true;
                 MWEngineCore.start();
             }
 
-            // the remainder of this function body is actually blocked
-            // as long as the native thread is running
+            // the remainder of this function body is blocked
+            // as long as the native thread is running, getting here
+            // implies engine has been stopped (see pause()) or an
+            // error occurred
 
-            Log.d( "MWENGINE", "MWEngine THREAD STOPPED");
+            Log.d( "MWENGINE", "native audio rendering thread halted");
 
             if ( _paused ) {
                 synchronized ( this ) {
@@ -361,7 +363,7 @@ public final class MWEngine extends Thread
      */
     private void handleThreadStartTimeout()
     {
-        if ( !_nativeEngineRunning)
+        if ( !_nativeEngineRunning )
         {
             final Handler handler = new Handler( _context.getMainLooper() );
             handler.postDelayed( new Runnable()
