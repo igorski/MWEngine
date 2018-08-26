@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -95,7 +95,6 @@ public final class MWEngine extends Thread
     private boolean _threadStarted       = false;
     private boolean _isRunning           = false;
     private boolean _paused              = false;
-    private final Object _pauseLock;
 
     /**
      * The Java-side bridge to manage all native layer components
@@ -112,7 +111,6 @@ public final class MWEngine extends Thread
         INSTANCE   = this;
         _context   = aContext;
         _observer  = aObserver;
-        _pauseLock = new Object();
 
         initJNI();
     }
@@ -120,6 +118,13 @@ public final class MWEngine extends Thread
     /* public methods */
 
     // (re-)registers interface to match current/updated JNI environment
+
+    /**
+     * (re)-register the interface between this Java class and the
+     * native layer audio engine. This is recommended to synchronise
+     * changes in the JNI environments (for instance: when suspending
+     * the application)
+     */
     public void initJNI()
     {
         MWEngineCore.init();
@@ -240,19 +245,16 @@ public final class MWEngine extends Thread
         return ++_nativeEngineRetries < 5;
     }
 
-    // due to Object pooling we keep the thread alive by just pausing its execution, NOT actual cleanup
-    // exiting the application will kill the native library anyways
-
+    /**
+     * Invoke whenever you want to destroy MWEngine
+     * This halts the audio rendering and stops the Thread
+     */
     public void dispose()
     {
         pause();
-
-        _disposed      = true;
-        _nativeEngineRunning = false;
-
-        MWEngineCore.stop();       // halt the Native audio thread
-        //_isRunning     = false;  // nope, we won't halt this thread (pooled)
-   }
+        _disposed  = true;
+        _isRunning = false;
+    }
 
     /* threading */
 
@@ -269,22 +271,22 @@ public final class MWEngine extends Thread
         }
         else
         {
-            initJNI();  // update reference to this Java object in JNI
             unpause();
         }
     }
 
     /**
-     * invoke when the application suspends, this should
-     * halt the execution of the run method and cause the
-     * thread to clean up to free CPU resources
+     * invoke when the application suspends, this
+     * halts the execution of the audio rendering and causes the
+     * Thread to free CPU resources
      */
     public void pause()
     {
-        synchronized ( _pauseLock )
-        {
-            _paused = true;
-        }
+        _paused = true;
+
+        // halt the audio rendering in the native layer of the engine
+        _nativeEngineRunning = false;
+        MWEngineCore.stop();
     }
 
     /**
@@ -294,10 +296,8 @@ public final class MWEngine extends Thread
     {
         initJNI();
 
-        synchronized ( _pauseLock )
-        {
-            _paused = false;
-            _pauseLock.notifyAll();
+        synchronized ( this ) {
+            notify();
         }
     }
 
@@ -315,8 +315,8 @@ public final class MWEngine extends Thread
 
         while ( _isRunning )
         {
-            // start the Native audio thread
-            if ( !_nativeEngineRunning)
+            // start the native rendering thread
+            if ( !_paused && !_nativeEngineRunning )
             {
                 Log.d( "MWENGINE", "STARTING NATIVE THREAD @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
@@ -329,17 +329,13 @@ public final class MWEngine extends Thread
 
             Log.d( "MWENGINE", "MWEngine THREAD STOPPED");
 
-            _nativeEngineRunning = false;
-
-            synchronized ( _pauseLock )
-            {
-                while ( _paused )
-                {
-                    try
-                    {
-                        _pauseLock.wait();
+            if ( _paused ) {
+                synchronized ( this ) {
+                    try {
+                        wait();
                     }
                     catch ( InterruptedException e ) {}
+                    _paused = false;
                 }
             }
         }

@@ -239,21 +239,17 @@ public final class MWEngineActivity extends Activity
 
         if ( !hasFocus )
         {
-            // suspending the app - stop threads to save CPU cycles
-
+            // suspending the app - halt audio rendering in MWEngine Thread to save CPU cycles
             if ( _engine != null )
-            {
                 _engine.pause();
-                _engine.dispose();
-            }
         }
         else
         {
             // returning to the app
             if ( !_inited )
-                init();
+                init();            // initialize this example application
             else
-                _engine.start(); // resumes audio render thread
+                _engine.unpause(); // resumes existing audio rendering thread
         }
     }
 
