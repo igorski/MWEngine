@@ -127,10 +127,6 @@ namespace AudioEngine
 
         // audio hardware available, prepare environment
 
-        bool loopStarted = false;
-        int loopOffset   = 0;
-        int loopAmount   = 0;
-
         channels       = new std::vector<AudioChannel*>();
         outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
         isMono         = ( outputChannels == 1 );
