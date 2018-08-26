@@ -112,6 +112,9 @@ namespace AudioEngine
      */
     void start()
     {
+        if ( thread == 1 )
+            return;
+
         Debug::log( "STARTING engine" );
 
         // create the output driver using the adapter. If creation failed

@@ -95,6 +95,7 @@ public final class MWEngine extends Thread
     private boolean _threadStarted       = false;
     private boolean _isRunning           = false;
     private boolean _paused              = false;
+    private final Object _pauseLock      = new Object();
 
     /**
      * The Java-side bridge to manage all native layer components
@@ -251,9 +252,9 @@ public final class MWEngine extends Thread
      */
     public void dispose()
     {
-        pause();
         _disposed  = true;
         _isRunning = false;
+        pause();
     }
 
     /* threading */
@@ -269,8 +270,7 @@ public final class MWEngine extends Thread
             _threadStarted = true;
             _isRunning     = true;
         }
-        else
-        {
+        else {
             unpause();
         }
     }
@@ -285,8 +285,8 @@ public final class MWEngine extends Thread
         _paused = true;
 
         // halt the audio rendering in the native layer of the engine
-        _nativeEngineRunning = false;
-        MWEngineCore.stop();
+        if ( _nativeEngineRunning )
+            MWEngineCore.stop();
     }
 
     /**
@@ -294,10 +294,10 @@ public final class MWEngine extends Thread
      */
     public void unpause()
     {
-        initJNI();
+        _paused = false;
 
-        synchronized ( this ) {
-            notify();
+        synchronized ( _pauseLock ) {
+            _pauseLock.notify();
         }
     }
 
@@ -329,15 +329,28 @@ public final class MWEngine extends Thread
             // implies engine has been stopped (see pause()) or an
             // error occurred
 
-            Log.d( "MWENGINE", "native audio rendering thread halted");
+            _nativeEngineRunning = false;
 
-            if ( _paused ) {
-                synchronized ( this ) {
-                    try {
-                        wait();
+            Log.d( "MWENGINE", "native audio rendering thread halted" );
+
+            if ( _paused && !_disposed ) {
+
+                // slight timeout to avoid deadlocks when attempting to lock
+
+                try {
+                    Thread.sleep(50L);
+                }
+                catch ( Exception e ) {}
+
+                // obtain lock and wait until it is released by unpause()
+
+                synchronized ( _pauseLock ) {
+                    while ( _paused ) {
+                        try {
+                            _pauseLock.wait();
+                        }
+                        catch ( InterruptedException e ) {}
                     }
-                    catch ( InterruptedException e ) {}
-                    _paused = false;
                 }
             }
         }
