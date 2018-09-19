@@ -83,9 +83,9 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                     int compareOffset = (( currentIteration * AudioEngineProps::BUFFER_SIZE ) + i ) % 16;
 
-                    if ( sample != expected[ i ])
+                    if ( sample != expected[ compareOffset ])
                     {
-                        Debug::log( "expected %f, got %f at output position %d for sequencer buffer position %d",
+                        Debug::log( "TEST 2 expected %f, got %f at output position %d for sequencer buffer position %d",
                             expected[ i ], sample, c, AudioEngine::bufferPosition );
 
                         AudioEngine::test_successful = false;
@@ -123,7 +123,7 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                     if ( sample != expected )
                     {
-                        Debug::log( "expected %f, got %f at iteration %d (buffer pos %d)", expected, sample, i, bufferPosition );
+                        Debug::log( "TEST 3 expected %f, got %f at iteration %d (buffer pos %d)", expected, sample, i, bufferPosition );
 
                         AudioEngine::test_successful = false;
                         AudioEngine::stop();

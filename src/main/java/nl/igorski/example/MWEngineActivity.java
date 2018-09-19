@@ -96,7 +96,7 @@ public final class MWEngineActivity extends Activity
         final ProcessingChain masterBus     = _engine.getMasterBusProcessors();
         final SequencerController sequencer = _engine.getSequencerController();
 
-        sequencer.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
+        sequencer.updateMeasures( 2, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
         _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
         // create a lowpass filter to catch all low rumbling and a limiter to prevent clipping of output :)
@@ -153,6 +153,7 @@ public final class MWEngineActivity extends Activity
         _drumEvents   = new Vector<SampleEvent>();
 
         sequencer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
+        sequencer.setLoopRange( sequencer.getSamplesPerBar(), sequencer.getSamplesPerBar() * 2 );
 
         // STEP 4.1 : Sample events to play back a drum beat
 
@@ -195,6 +196,15 @@ public final class MWEngineActivity extends Activity
         createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
         createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
         createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+
+        createSynthEvent(_synth1, Pitch.note("E", 3), 16);
+        createSynthEvent(_synth1, Pitch.note("Bb", 3), 16);
+        createSynthEvent(_synth2, Pitch.note("E", 3), 20);
+        createSynthEvent(_synth2, Pitch.note("Bb", 3), 20);
+        createSynthEvent(_synth1, Pitch.note("E", 3), 24);
+        createSynthEvent(_synth1, Pitch.note("Bb", 3), 24);
+        createSynthEvent(_synth2, Pitch.note("E", 3), 28);
+        createSynthEvent(_synth2, Pitch.note("Bb", 3), 28);
 
         // a C note to be synthesized live when holding down the corresponding button
 
