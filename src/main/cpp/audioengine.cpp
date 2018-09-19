@@ -467,24 +467,30 @@ namespace AudioEngine
 
     void handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate )
     {
-        if ( broadcastUpdate )
+        float ratio = 1;
+
+        if ( broadcastUpdate ) {
+            ratio = tempo / aQueuedTempo;
             tempo = aQueuedTempo;
+        };
 
         time_sig_beat_amount = queuedTime_sig_beat_amount;
         time_sig_beat_unit   = queuedTime_sig_beat_unit;
 
-        float oldPosition       = ( float ) bufferPosition / ( float ) max_buffer_position;  // pct of loop offset
         float tempSamplesPerBar = ((( float ) AudioEngineProps::SAMPLE_RATE * 60 ) / tempo ) * time_sig_beat_amount;
         samples_per_beat        = ( int ) ( tempSamplesPerBar / ( float ) time_sig_beat_amount );
 
         // samples per step describes the smallest note size the sequencer acknowledges (i.e. 8ths, 16ths, 32nds, 64ths, etc.)
         samples_per_step = ( float ) samples_per_beat / ( float ) beat_subdivision;
-        samples_per_bar  = samples_per_step * beat_subdivision * time_sig_beat_amount; // in case of non-equals amount vs. unit
+        samples_per_bar  = ( int )( samples_per_step * beat_subdivision * time_sig_beat_amount ); // in case of non-equals amount vs. unit
 
-        max_buffer_position = ( samples_per_bar * amount_of_bars ) - 1; // TODO: this implies single time sig for all bars!!
+        int loopLength = max_buffer_position - min_buffer_position;
+
+        min_buffer_position = ( int )(( float ) min_buffer_position * ratio );
+        max_buffer_position = min_buffer_position + ( int )(( float ) loopLength * ratio );
 
         // make sure relative positions remain in sync
-        bufferPosition = ( int ) llround( max_buffer_position * oldPosition );
+        bufferPosition = ( int )(( float ) bufferPosition * ratio );
 
         // inform sequencer of the update
         Sequencer::updateEvents();

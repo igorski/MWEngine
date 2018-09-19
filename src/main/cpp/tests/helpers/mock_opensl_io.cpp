@@ -58,17 +58,17 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
             if ( Sequencer::playing )
             {
                 // test 1. ensure all buffer iterations are calculated accordingly
+                // when this method runs the engine is writing its renderer output (and has thus
+                // incremented buffer position pointers accordingly), we can thus assume that on
+                // first run the current iteration is 1, not 0 (as it has completed its run)
 
-                int currentIteration = AudioEngine::render_iterations;
-                int maxIterations    = AudioEngine::samples_per_bar / AudioEngineProps::BUFFER_SIZE;
+                int currentIteration = ++AudioEngine::render_iterations;
+                int maxIterations    = ( AudioEngine::max_buffer_position - AudioEngine::min_buffer_position ) / AudioEngineProps::BUFFER_SIZE;
 
-                int expectedBufferPosition = (( currentIteration + 1 ) * AudioEngineProps::BUFFER_SIZE );
+                int expectedBufferPosition = currentIteration * AudioEngineProps::BUFFER_SIZE;
 
-                if ( currentIteration == 0 )
+                if ( currentIteration == 1 )
                     AudioEngine::test_successful = true; // will be falsified by assertions below
-
-                else if ( currentIteration == maxIterations )
-                    expectedBufferPosition -= ( AudioEngine::max_buffer_position + 1 );
 
                 if ( AudioEngine::bufferPosition != expectedBufferPosition )
                     AudioEngine::test_successful = false;
@@ -83,9 +83,9 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                     int compareOffset = (( currentIteration * AudioEngineProps::BUFFER_SIZE ) + i ) % 16;
 
-                    if ( sample != expected[ i ])
+                    if ( sample != expected[ compareOffset/*i*/ ])
                     {
-                        Debug::log( "expected %f, got %f at output position %d for sequencer buffer position %d",
+                        Debug::log( "TEST 2 expected %f, got %f at output position %d for sequencer buffer position %d",
                             expected[ i ], sample, c, AudioEngine::bufferPosition );
 
                         AudioEngine::test_successful = false;
@@ -94,10 +94,11 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                     }
                 }
 
-                // stop the engine once it has rendered an entire measure
+                // stop the engine once it has rendered the full loop range
 
-                if ( ++AudioEngine::render_iterations > maxIterations )
+                if ( currentIteration == maxIterations )
                 {
+                    Debug::log("done.");
                     ++AudioEngine::test_program;    // advance to next test
                     AudioEngine::stop();
                 }
@@ -117,13 +118,14 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                 {
                     // 77175 being audioEvent1 start, -0.25f being audioEvent1 contents, _0.5f being audioEvent2 contents
                     SAMPLE_TYPE expected = ( bufferPosition > 77175 ) ? -0.25f : +0.5f;
-                    SAMPLE_TYPE sample   = buffer[ c ];
-                    // divide by amount of channels (volume is corrected for summing purposes)
+                    // divide by amount of channels (as volume is corrected for summing purposes)
                     expected /= 2;
+
+                    SAMPLE_TYPE sample = buffer[ c ];
 
                     if ( sample != expected )
                     {
-                        Debug::log( "expected %f, got %f at iteration %d (buffer pos %d)", expected, sample, i, bufferPosition );
+                        Debug::log( "TEST 3 expected %f, got %f at iteration %d (buffer pos %d)", expected, sample, i, bufferPosition );
 
                         AudioEngine::test_successful = false;
                         AudioEngine::stop();

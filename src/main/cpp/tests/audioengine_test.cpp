@@ -39,6 +39,7 @@ TEST( AudioEngine, TempoUpdate )
 
     float oldTempo = randomFloat( 40.0f,  199.0f );
     float newTempo = randomFloat( 120.0f, 300.0f );
+    float ratio    = oldTempo / newTempo;
 
     SequencerController* controller = new SequencerController();
 
@@ -47,6 +48,10 @@ TEST( AudioEngine, TempoUpdate )
 
     // mono output with 48 kHz sample rate and buffer size of 240 samples
     AudioEngine::setup( 240, 48000, 1 );
+    // define a custom loop range (rather than full 0 - end)
+    AudioEngine::min_buffer_position = randomInt( 24, 5512 );
+    AudioEngine::max_buffer_position = randomInt( 11025, 22050 );
+    AudioEngine::bufferPosition = randomInt( AudioEngine::min_buffer_position, AudioEngine::max_buffer_position );
 
     controller->setTempoNow( oldTempo, 4, 4 ); // ensure tempo is applied immediately
     controller->rewind();
@@ -54,12 +59,18 @@ TEST( AudioEngine, TempoUpdate )
     int oldSPBar  = AudioEngine::samples_per_bar;
     int oldSPBeat = AudioEngine::samples_per_beat;
     int oldSPStep = AudioEngine::samples_per_step;
-    int oldMaxBP  = AudioEngine::max_buffer_position = randomInt( 11025, 8820  );
+    int oldBP     = AudioEngine::bufferPosition;
+    int oldMinBP  = AudioEngine::min_buffer_position;
+    int oldMaxBP  = AudioEngine::max_buffer_position;
+
+    int expectedMinBP = ( int )( oldMinBP * ratio );
+    int expectedMaxBP = expectedMinBP + ( int )(( float )( oldMaxBP - oldMinBP ) * ratio );
+    int expectedBP    = ( int )( oldBP * ratio );
 
     EXPECT_EQ( oldTempo, controller->getTempo() )
         << "expected tempo to be set prior to engine start";
 
-    // request new tempo via controller
+    // request new tempo and time signature via controller
 
     controller->setTempo( newTempo, 12, 8 );
 
@@ -86,8 +97,14 @@ TEST( AudioEngine, TempoUpdate )
     EXPECT_EQ( 8, controller->getTimeSigBeatUnit() )
         << "expected engine to have updated the time signature during a single iteration of its render cycle";
 
-    ASSERT_FALSE( AudioEngine::max_buffer_position == oldMaxBP )
-        << "expected engine to have updated its max buffer position after tempo change";
+    EXPECT_EQ( AudioEngine::min_buffer_position, expectedMinBP )
+        << "expected engine to have updated its max buffer position after tempo change by ratio";
+
+    EXPECT_EQ( AudioEngine::max_buffer_position, expectedMaxBP )
+        << "expected engine to have updated its max buffer position after tempo change by ratio";
+
+    EXPECT_EQ( AudioEngine::bufferPosition, expectedBP )
+        << "expected engine to have updated its current buffer position after tempo change by ratio";
 
     ASSERT_FALSE( AudioEngine::samples_per_bar == oldSPBar )
         << "expected engine to have updated its samples per bar value after tempo change";
@@ -97,6 +114,7 @@ TEST( AudioEngine, TempoUpdate )
 
     ASSERT_FALSE( AudioEngine::samples_per_step == oldSPStep )
         << "expected engine to have updated its samples per step value after tempo change";
+
 
     EXPECT_EQ( 2, AudioEngine::test_program )
         << "expected program to have incremented";
