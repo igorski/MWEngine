@@ -151,5 +151,6 @@ solving of bugs, etc.) from the following developers :
  * Toufik Zitouni & Robert Avellar (Tize)
  * Koert Gaaikema (@koertgaaikema)
  * Matt Logan (@mattlogan)
+ * Thomas Flasche (@harthorst)
+ * Rickard Östergård (@rckrdstrgrd)
  * Aran Arunakiri
- * @rckrdstrgrd
