@@ -482,10 +482,12 @@ namespace AudioEngine
 
         // samples per step describes the smallest note size the sequencer acknowledges (i.e. 8ths, 16ths, 32nds, 64ths, etc.)
         samples_per_step = ( float ) samples_per_beat / ( float ) beat_subdivision;
-        samples_per_bar  = ( int ) samples_per_step * beat_subdivision * time_sig_beat_amount; // in case of non-equals amount vs. unit
+        samples_per_bar  = ( int )( samples_per_step * beat_subdivision * time_sig_beat_amount ); // in case of non-equals amount vs. unit
+
+        int loopLength = max_buffer_position - min_buffer_position;
 
         min_buffer_position = ( int )(( float ) min_buffer_position * ratio );
-        max_buffer_position = ( int )(( float ) max_buffer_position * ratio );
+        max_buffer_position = min_buffer_position + ( int )(( float ) loopLength * ratio );
 
         // make sure relative positions remain in sync
         bufferPosition = ( int )(( float ) bufferPosition * ratio );
