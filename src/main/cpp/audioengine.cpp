@@ -64,7 +64,7 @@ namespace AudioEngine
     float* recbufferIn = 0;
 
     AudioBuffer* inBuffer  = 0;
-    AudioBuffer* recBuffer = 0;
+    AudioBuffer* recbuffer = 0;
     std::vector<AudioChannel*>* channels = 0;
 
     /* tempo / sequencer position related */
