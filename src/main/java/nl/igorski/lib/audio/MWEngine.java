@@ -179,7 +179,12 @@ public final class MWEngine extends Thread
 
     public void setBouncing( boolean value, String outputDirectory )
     {
-        _sequencerController.setBounceState(value, calculateMaxBuffers(), outputDirectory);
+        setBouncing(value, outputDirectory, calculateMaxBuffers());
+    }
+
+    public void setBouncing( boolean value, String outputDirectory, int maxRecordBuffers)
+    {
+        _sequencerController.setBounceState(value, maxRecordBuffers, outputDirectory);
     }
 
     /**
