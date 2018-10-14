@@ -491,6 +491,9 @@ namespace AudioEngine
 
         // make sure relative positions remain in sync
         bufferPosition = ( int )(( float ) bufferPosition * ratio );
+        if ( marked_buffer_position > 0 ) {
+            marked_buffer_position = ( int )(( float ) marked_buffer_position * ratio );
+        }
 
         // inform sequencer of the update
         Sequencer::updateEvents();
