@@ -57,7 +57,8 @@ public final class MWEngineActivity extends Activity
     /* public methods */
 
     /**
-     * Called when the activity is first created.
+     * Called when the activity is created. This also fires
+     * on screen orientation changes.
      */
     @Override
     public void onCreate( Bundle savedInstanceState )
@@ -66,6 +67,22 @@ public final class MWEngineActivity extends Activity
         setContentView( R.layout.main );
 
         init();
+    }
+
+    /**
+     * Called when the activity is destroyed. This also fires
+     * on screen orientation changes, hence the override as we need
+     * to watch the engines memory allocation outside of the Java environment
+     */
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+
+        flushSong();        // free memory allocated by song
+        _engine.dispose();  // dispose the engine
+
+        Log.d( LOG_TAG, "MWEngineActivity destroyed" );
     }
 
     private void init()
@@ -89,119 +106,17 @@ public final class MWEngineActivity extends Activity
         SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
         _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
-        _sequencerController = _engine.getSequencerController();
-
-        // cache some of the engines properties
-
-        final ProcessingChain masterBus     = _engine.getMasterBusProcessors();
-        final SequencerController sequencer = _engine.getSequencerController();
-
-        sequencer.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
         _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
-        // create a lowpass filter to catch all low rumbling and a limiter to prevent clipping of output :)
-        _lpfhpf  = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
-        _limiter = new Limiter( 10f, 500f, 0.6f );
-
-        masterBus.addProcessor( _lpfhpf );
-        masterBus.addProcessor( _limiter );
-
-        // STEP 2 : let's create some instruments =D
-
-        _synth1  = new SynthInstrument();
-        _synth2  = new SynthInstrument();
-        _sampler = new SampledInstrument();
-
-        _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
-        _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
-
-        // a short decay for synth 1 with a 0 sustain level (provides a bubbly effect)
-        _synth1.getAdsr().setDecayTime( .1f );
-        _synth1.getAdsr().setSustainLevel( 0.0f );
-        // a short release for synth 2 (smooth fade out)
-        _synth2.getAdsr().setReleaseTime( 0.15f );
-
-        // add a filter to synth 1
-        maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
-
-        _filter = new Filter(
-            maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
-            minFilterCutoff, maxFilterCutoff, OUTPUT_CHANNELS
-        );
-        _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
-
-        // add a phaser to synth 1
-        _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );
-        _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
-
-        // add some funky delay to synth 2
-        _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
-        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
-
-        // adjust synthesizer volumes
-        _synth2.getAudioChannel().setVolume( .7f );
-
-        // STEP 3 : load some samples from the packaged assets folder into the SampleManager
-
-        loadWAVAsset( "hat.wav",  "hat" );
-        loadWAVAsset( "clap.wav", "clap" );
-
-        // STEP 4 : let's create some music !
+        // STEP 2 : let's create some music !
 
         _synth1Events = new Vector<SynthEvent>();
         _synth2Events = new Vector<SynthEvent>();
         _drumEvents   = new Vector<SampleEvent>();
 
-        sequencer.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
+        setupSong();
 
-        // STEP 4.1 : Sample events to play back a drum beat
-
-        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
-        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
-        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
-        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
-        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
-
-        // STEP 4.2 : Real-time synthesis events
-
-        // bubbly sixteenth note bass line for synth 1
-
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
-        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
-
-        // off-beat minor seventh chord stabs for synth 2
-
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
-        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
-
-        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
-
-        // a C note to be synthesized live when holding down the corresponding button
-
-        _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
-        _liveEvent.setVolume( .5f );
-
-        // STEP 5 : attach event handlers to the UI elements (see main.xml layout)
+        // STEP 3 : attach event handlers to the UI elements (see main.xml layout)
 
         final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
         playPauseButton.setOnClickListener( new PlayClickHandler() );
@@ -231,6 +146,159 @@ public final class MWEngineActivity extends Activity
     }
 
     /* protected methods */
+
+    protected void setupSong()
+    {
+        _sequencerController = _engine.getSequencerController();
+        _sequencerController.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
+        _sequencerController.setTempoNow( 130.0f, 4, 4 );            // 130 BPM in 4/4 time
+
+        // cache some of the engines properties
+
+        final ProcessingChain masterBus = _engine.getMasterBusProcessors();
+
+        // Load some samples from the packaged assets folder into the SampleManager
+
+        loadWAVAsset( "hat.wav",  "hat" );
+        loadWAVAsset( "clap.wav", "clap" );
+
+        // create a lowpass filter to catch all low rumbling and a limiter to prevent clipping of output :)
+
+        _lpfhpf  = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
+        _limiter = new Limiter( 10f, 500f, 0.6f );
+
+        masterBus.addProcessor( _lpfhpf );
+        masterBus.addProcessor( _limiter );
+
+        // STEP 2 : let's create some instruments =D
+
+        _synth1  = new SynthInstrument();
+        _synth2  = new SynthInstrument();
+        _sampler = new SampledInstrument();
+
+        _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
+        _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
+
+        // a short decay for synth 1 with a 0 sustain level (provides a bubbly effect)
+        _synth1.getAdsr().setDecayTime( .1f );
+        _synth1.getAdsr().setSustainLevel( 0.0f );
+        // a short release for synth 2 (smooth fade out)
+        _synth2.getAdsr().setReleaseTime( 0.15f );
+
+        // add a filter to synth 1
+        maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
+
+        _filter = new Filter(
+                maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
+                minFilterCutoff, maxFilterCutoff, OUTPUT_CHANNELS
+        );
+        _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
+
+        // add a phaser to synth 1
+        _phaser = new Phaser( .5f, .7f, .5f, 440.f, 1600.f );
+        _synth1.getAudioChannel().getProcessingChain().addProcessor( _phaser );
+
+        // add some funky delay to synth 2
+        _delay = new Delay( 250, 2000, .35f, .5f, OUTPUT_CHANNELS );
+        _synth2.getAudioChannel().getProcessingChain().addProcessor( _delay );
+
+        // adjust synthesizer volumes
+        _synth2.getAudioChannel().setVolume( .7f );
+
+        // STEP 2 : Sample events to play back a drum beat
+
+        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
+        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
+        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
+        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+
+        // Real-time synthesis events
+
+        // bubbly sixteenth note bass line for synth 1
+
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
+        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
+
+        // Off-beat minor seventh chord stabs for synth 2
+
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
+        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
+
+        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+
+        // a C note to be synthesized live when holding down the corresponding button
+
+        _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
+        _liveEvent.setVolume( .5f );
+    }
+
+    protected void flushSong()
+    {
+        // calling 'delete()' on a BaseAudioEvent invokes the
+        // native layer destructor (and removes it from the sequencer)
+
+        for ( final BaseAudioEvent event : _synth1Events )
+            event.delete();
+        for ( final BaseAudioEvent event : _synth2Events )
+            event.delete();
+        for ( final BaseAudioEvent event : _drumEvents )
+            event.delete();
+
+        // clear Vectors so all references to the events are broken
+
+        _synth1Events.clear();
+        _synth2Events.clear();
+        _drumEvents.clear();
+
+        // detach all processors from engine's master bus
+
+        _engine.getMasterBusProcessors().reset();
+
+        // calling 'delete()' on all instruments invokes the native layer destructor
+        // (and frees memory allocated to their resources, e.g. AudioChannels, Processors)
+
+        _synth1.delete();
+        _synth2.delete();
+        _sampler.delete();
+
+        // allow these to be garbage collected
+
+        _synth1  = null;
+        _synth2  = null;
+        _sampler = null;
+
+        // and these (garbage collection invokes native layer destructors, so we'll let
+        // these processors be cleared lazily)
+
+        _filter = null;
+        _phaser = null;
+        _delay  = null;
+        _lpfhpf = null;
+
+        // flush sample memory allocated in the SampleManager
+        SampleManager.flushSamples();
+    }
 
     @Override
     public void onWindowFocusChanged( boolean hasFocus )

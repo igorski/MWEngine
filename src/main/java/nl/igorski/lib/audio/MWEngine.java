@@ -259,7 +259,11 @@ public final class MWEngine extends Thread
     {
         _disposed  = true;
         _isRunning = false;
+
         pause();
+        reset();
+
+        INSTANCE = null;
     }
 
     /* threading */

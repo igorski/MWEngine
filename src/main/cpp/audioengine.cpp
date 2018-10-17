@@ -93,7 +93,7 @@ namespace AudioEngine
 
     /* output related */
 
-    float volume = 1.0;
+    float volume = 1.0f;
     ProcessingChain* masterBus = new ProcessingChain();
 
     static int thread;
@@ -192,7 +192,9 @@ namespace AudioEngine
     {
         Debug::log( "RESET engine" );
 
-        // nothing much... references are currently maintained by Java, causing SWIG to destruct referenced Objects
+        // nothing much... when used with USE_JNI references are maintained by Java, causing SWIG to
+        // destruct referenced Objects when breaking references through Java
+        // when USE_JNI is not defined, manual cleanup of allocated events must follow
 
         Sequencer::clearEvents();
 
@@ -370,10 +372,10 @@ namespace AudioEngine
                 // and perform a fail-safe check in case we're exceeding the headroom ceiling
 
                 if ( sample < -1.0 )
-                    sample = -1.0;
+                    sample = -1.0f;
 
                 else if ( sample > +1.0 )
-                    sample = +1.0;
+                    sample = +1.0f;
 
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
