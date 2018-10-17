@@ -525,7 +525,7 @@ namespace AudioEngine
 
     void handleSequencerPositionUpdate( int bufferOffset )
     {
-        stepPosition = floor( bufferPosition / samples_per_step );
+        stepPosition = ( int ) floor( bufferPosition / samples_per_step );
 
         if ( stepPosition > max_step_position )
             stepPosition = min_step_position;
