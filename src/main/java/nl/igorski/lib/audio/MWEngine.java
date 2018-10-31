@@ -177,6 +177,18 @@ public final class MWEngine extends Thread
         return MWEngineCore.getMasterBusProcessors();
     }
 
+    /**
+     * Retrieve the AudioChannel the engine allocated to the device input.
+     * Note: This returns null if the engine is built with RECORD_DEVICE_INPUT
+     * set to false.
+     *
+     * @return {AudioChannel}
+     */
+    public AudioChannel getInputChannel()
+    {
+        return MWEngineCore.getInputChannel();
+    }
+
     public void setBouncing( boolean value, String outputDirectory )
     {
         setBouncing(value, outputDirectory, calculateMaxBuffers());
