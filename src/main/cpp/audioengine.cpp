@@ -143,7 +143,7 @@ namespace AudioEngine
         // as well as the temporary buffer used to merge the input into
 
         recbufferIn  = new float[ AudioEngineProps::BUFFER_SIZE ]();
-        inputChannel = new AudioChannel();
+        inputChannel = new AudioChannel( 1.0f );
 #endif
         // accumulates all channels ("master strip")
 
@@ -238,6 +238,12 @@ namespace AudioEngine
 
             for ( int j = 0; j < recSamps; ++j )
                 recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
+
+            // apply processing chain onto the input
+
+            std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
+            for ( int k = 0; k < processors.size(); ++k )
+                processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
 
             // merge recording into current input buffer for instant monitoring
 
@@ -416,10 +422,10 @@ namespace AudioEngine
         {
 #ifdef RECORD_DEVICE_INPUT
             if ( recordFromDevice ) // recording from device input ? > write the record buffer
-                DiskWriter::appendBuffer( recbuffer );
+                DiskWriter::appendBuffer( inputChannel->getOutputBuffer() );
             else                    // recording global output ? > write the combined buffer
 #endif
-            DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
+                DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
 
             // are we bouncing the current sequencer range and have we played throughed the full range?
 
@@ -619,7 +625,7 @@ ProcessingChain* getMasterBusProcessors( JNIEnv* env, jobject jobj )
 }
 
 extern "C"
-ProcessingChain* getInputChannel( JNIEnv* env, jobject jobj )
+AudioChannel* getInputChannel( JNIEnv* env, jobject jobj )
 {
 #ifdef RECORD_DEVICE_INPUT
     return AudioEngine::inputChannel;
