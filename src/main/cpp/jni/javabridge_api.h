@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #define JAVABRIDGE_API_H_INCLUDED
 
 #include <jni/javabridge.h>
+#include "audiochannel.h"
 #include "processingchain.h"
 
 /**
@@ -47,7 +48,9 @@ extern "C"
     void start();
     void stop();
     void reset();
+
     ProcessingChain* getMasterBusProcessors();
+    AudioChannel* getInputChannel();
 }
 
 #endif

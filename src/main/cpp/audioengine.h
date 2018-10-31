@@ -66,11 +66,8 @@ namespace AudioEngine
     extern bool recordOutput;          // whether to record rendered output
     extern bool haltRecording;         // whether to stop the recording upon next iteration
     extern bool bouncing;              // whether bouncing audio (i.e. rendering in inaudible offline mode without thread lock)
-    extern int recordingIterator;
-    extern int recordingMaxIterations;
     extern int recordingFileId;
     extern bool recordFromDevice;   // whether to record audio from the Android devices input
-    extern bool monitorRecording;   // whether to make recorded audio audible in the output channel
 
     /* render properties */
 
@@ -79,17 +76,19 @@ namespace AudioEngine
     extern int loopAmount;   // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
     extern int outputChannels;
     extern bool isMono;
-    extern float* outbuffer;
-    extern float* recbufferIn;
-    extern AudioBuffer* inBuffer;
-    extern AudioBuffer* recBuffer;
     extern std::vector<AudioChannel*>* channels;
+    extern AudioBuffer* inBuffer;
+    extern float* outBuffer;
+
+#ifdef RECORD_DEVICE_INPUT
+    extern float* recbufferIn;
+    extern AudioChannel* inputChannel;
+#endif
 
     /* buffer read/write pointers */
 
     extern int bufferPosition;      // the current sequence position in samples "playback head" offset ;-)
     extern int stepPosition;        // the current sequence bar subdivided position (e.g. 16th note of a bar)
-    extern int playbackPos;
 
     /* tempo related */
 

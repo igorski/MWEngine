@@ -51,7 +51,6 @@ namespace AudioEngine
     bool haltRecording    = false;
     bool bouncing         = false;
     bool recordFromDevice = false;
-    bool monitorRecording = false; // might introduce feedback when using internal microphone ;)
     int recordingFileId = 0;
 
     bool loopStarted = false;
@@ -60,11 +59,14 @@ namespace AudioEngine
 
     int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
     bool isMono        = ( outputChannels == 1 );
-    float* outbuffer   = 0;
-    float* recbufferIn = 0;
+    float* outBuffer   = 0;
+
+#ifdef RECORD_DEVICE_INPUT
+    float* recbufferIn         = 0;
+    AudioChannel* inputChannel = 0;
+#endif
 
     AudioBuffer* inBuffer  = 0;
-    AudioBuffer* recbuffer = 0;
     std::vector<AudioChannel*>* channels = 0;
 
     /* tempo / sequencer position related */
@@ -133,15 +135,15 @@ namespace AudioEngine
         channels       = new std::vector<AudioChannel*>();
         outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
         isMono         = ( outputChannels == 1 );
-        outbuffer      = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
+        outBuffer      = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
 
 #ifdef RECORD_DEVICE_INPUT
 
-        // generate the input buffer used for recording from device input
+        // generate the input buffer used for recording from the device's input
         // as well as the temporary buffer used to merge the input into
 
-        recbufferIn = new float[ AudioEngineProps::BUFFER_SIZE ]();
-        recbuffer   = new AudioBuffer( AudioEngineProps::INPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
+        recbufferIn  = new float[ AudioEngineProps::BUFFER_SIZE ]();
+        inputChannel = new AudioChannel( 1.0f );
 #endif
         // accumulates all channels ("master strip")
 
@@ -174,11 +176,11 @@ namespace AudioEngine
 
         // clear heap memory allocated before thread loop
         delete channels;
-        delete outbuffer;
+        delete outBuffer;
         delete inBuffer;
 #ifdef RECORD_DEVICE_INPUT
-        delete recbuffer;
         delete recbufferIn;
+        delete inputChannel;
 #endif
     }
 
@@ -232,18 +234,21 @@ namespace AudioEngine
         if ( recordFromDevice && AudioEngineProps::INPUT_CHANNELS > 0 )
         {
             int recSamps                  = DriverAdapter::getInput( recbufferIn );
-            SAMPLE_TYPE* recBufferChannel = recbuffer->getBufferForChannel( 0 );
+            SAMPLE_TYPE* recBufferChannel = inputChannel->getOutputBuffer()->getBufferForChannel( 0 );
 
             for ( int j = 0; j < recSamps; ++j )
-            {
                 recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
 
-                // merge recording into current input buffer for instant monitoring
-                if ( monitorRecording )
-                {
-                    for ( int k = 0; k < outputChannels; ++k )
-                        inBuffer->getBufferForChannel( k )[ j ] = recBufferChannel[ j ];
-                }
+            // apply processing chain onto the input
+
+            std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
+            for ( int k = 0; k < processors.size(); ++k )
+                processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
+
+            // merge recording into current input buffer for instant monitoring
+
+            if ( inputChannel->getVolume() > 0.f ) {
+                inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
             }
         }
 #endif
@@ -380,7 +385,7 @@ namespace AudioEngine
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
 
-                outbuffer[ c + ci ] = sample;
+                outBuffer[ c + ci ] = sample;
             }
 
             // update the buffer pointers and sequencer position
@@ -408,7 +413,7 @@ namespace AudioEngine
         // write the synthesized output into the audio driver
 
         if ( !bouncing )
-            DriverAdapter::writeOutput( outbuffer, amountOfSamples * outputChannels );
+            DriverAdapter::writeOutput( outBuffer, amountOfSamples * outputChannels );
 
 
 #ifdef RECORD_TO_DISK
@@ -417,10 +422,10 @@ namespace AudioEngine
         {
 #ifdef RECORD_DEVICE_INPUT
             if ( recordFromDevice ) // recording from device input ? > write the record buffer
-                DiskWriter::appendBuffer( recbuffer );
+                DiskWriter::appendBuffer( inputChannel->getOutputBuffer() );
             else                    // recording global output ? > write the combined buffer
 #endif
-            DiskWriter::appendBuffer( outbuffer, amountOfSamples, outputChannels );
+                DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
 
             // are we bouncing the current sequencer range and have we played throughed the full range?
 
@@ -617,6 +622,16 @@ extern "C"
 ProcessingChain* getMasterBusProcessors( JNIEnv* env, jobject jobj )
 {
     return AudioEngine::masterBus;
+}
+
+extern "C"
+AudioChannel* getInputChannel( JNIEnv* env, jobject jobj )
+{
+#ifdef RECORD_DEVICE_INPUT
+    return AudioEngine::inputChannel;
+#else
+    return 0;
+#endif
 }
 
 #endif
