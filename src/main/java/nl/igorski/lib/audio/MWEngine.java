@@ -200,11 +200,34 @@ public final class MWEngine extends Thread
     }
 
     /**
-     * records the live output of the engine
+     * Records the audio coming in from the Android device input.
+     * Requires RECORD_DEVICE_INPUT to be enabled in global.h as well
+     * as the appropriate permissions in the AndroidManifest.
      *
-     * this keeps recording until setRecordingState is invoked with value false
-     * given outputDirectory will contain several .WAV files each at the buffer
-     * length returned by the "calculateMaxBuffers"-method
+     * In order to record the input directly to device storage, @see
+     * setRecordFromDeviceInputState()
+     *
+     * @param record {boolean}
+     */
+    public void recordInput( boolean record )
+    {
+        MWEngineCore.recordInput( record );
+    }
+
+    /**
+     * Records the audio output of the engine and writes it onto the Android
+     * device's storage.
+     *
+     * Note this keeps recording until setRecordingState() is invoked again with
+     * value false. Given outputDirectory will contain several .WAV files each of
+     * the buffer length returned by the "calculateMaxBuffers"-method.
+     * Additionally, the sequencer must be running!
+     *
+     * Requires RECORD_TO_DISK to be enabled in global.h as well as the
+     * appropriate permissions in the AndroidManifest.
+     *
+     * @param value {boolean} toggle the recording state on/off
+     * @param outputDirectory {string} path to the directory in which the recordings are written to
      */
     public void setRecordingState( boolean value, String outputDirectory )
     {
@@ -220,11 +243,16 @@ public final class MWEngine extends Thread
     }
 
     /**
-     * records the input channel of the Android device, note this can be done
-     * while the engine is running a sequence / synthesizing audio
+     * Records the audio coming in from the Android device input onto the Android
+     * device's storage.
      *
-     * given outputDirectory will contain a .WAV file at the buffer length
+     * Note this can be done while the engine is running a sequence / synthesizing audio.
+     * Given outputDirectory will contain a .WAV file at the buffer length
      * representing given maxDurationInMilliSeconds
+     *
+     * @param value {boolean} toggle the recording state on/off
+     * @param outputDirectory {string} path to the directory in which the recordings are written to
+     * @param maxDurationInMilliSeconds {int} the size (in milliseconds) of each individual written buffer
      */
     public void setRecordFromDeviceInputState( boolean value, String outputDirectory, int maxDurationInMilliSeconds )
     {
