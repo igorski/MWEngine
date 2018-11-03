@@ -63,11 +63,11 @@ namespace AudioEngine
     extern int marked_buffer_position; // the buffer position that should launch a notification when playback exceeds this position
     extern int min_step_position;      // the lowest step in the current sequence
     extern int max_step_position;      // the maximum step in the current sequence (e.g. 15 for 16 step sequencer - step starts at 0.)
-    extern bool recordOutput;          // whether to record rendered output
+    extern bool recordOutputToDisk;    // whether to record rendered output
     extern bool haltRecording;         // whether to stop the recording upon next iteration
     extern bool bouncing;              // whether bouncing audio (i.e. rendering in inaudible offline mode without thread lock)
     extern int recordingFileId;
-    extern bool recordFromDevice;   // whether to record audio from the Android devices input
+    extern bool recordInputToDisk;     // whether to record audio from the Android device input to disk
 
     /* render properties */
 
@@ -83,6 +83,7 @@ namespace AudioEngine
 #ifdef RECORD_DEVICE_INPUT
     extern float* recbufferIn;
     extern AudioChannel* inputChannel;
+    extern bool recordDeviceInput;  // whether audio from the Android device input should be audible
 #endif
 
     /* buffer read/write pointers */

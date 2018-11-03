@@ -257,13 +257,13 @@ void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, cha
 void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
     // in case Sequencer was recording input from the Android device, halt recording of input
-    if ( AudioEngine::recordFromDevice )
+    if ( AudioEngine::recordInputToDisk )
         setRecordingFromDeviceState( false, 0, ( char* ) "\0" );
 
-    bool wasRecording         = AudioEngine::recordOutput;
-    AudioEngine::recordOutput = aRecording;
+    bool wasRecording         = AudioEngine::recordOutputToDisk;
+    AudioEngine::recordOutputToDisk = aRecording;
 
-    if ( AudioEngine::recordOutput )
+    if ( AudioEngine::recordOutputToDisk )
     {
         DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::OUTPUT_CHANNELS );
     }
@@ -295,13 +295,13 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
 void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
 {
     // in case Sequencer was recording its output, halt recording of output
-    if ( AudioEngine::recordOutput )
+    if ( AudioEngine::recordOutputToDisk )
         setRecordingState( false, 0, ( char* ) "\0" );
 
-    bool wasRecording             = AudioEngine::recordFromDevice;
-    AudioEngine::recordFromDevice = aRecording;
+    bool wasRecording              = AudioEngine::recordInputToDisk;
+    AudioEngine::recordInputToDisk = aRecording;
 
-    if ( AudioEngine::recordFromDevice )
+    if ( AudioEngine::recordInputToDisk )
     {
         DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::INPUT_CHANNELS );
     }

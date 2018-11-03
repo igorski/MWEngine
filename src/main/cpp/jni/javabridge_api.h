@@ -51,6 +51,7 @@ extern "C"
 
     ProcessingChain* getMasterBusProcessors();
     AudioChannel* getInputChannel();
+    void recordInput( bool record );
 }
 
 #endif

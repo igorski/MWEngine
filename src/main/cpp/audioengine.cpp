@@ -47,10 +47,10 @@
 
 namespace AudioEngine
 {
-    bool recordOutput     = false;
-    bool haltRecording    = false;
-    bool bouncing         = false;
-    bool recordFromDevice = false;
+    bool recordOutputToDisk = false;
+    bool haltRecording      = false;
+    bool bouncing           = false;
+    bool recordInputToDisk  = false;
     int recordingFileId = 0;
 
     bool loopStarted = false;
@@ -63,7 +63,8 @@ namespace AudioEngine
 
 #ifdef RECORD_DEVICE_INPUT
     float* recbufferIn         = 0;
-    AudioChannel* inputChannel = 0;
+    AudioChannel* inputChannel = new AudioChannel( 1.0f );
+    bool recordDeviceInput     = false;
 #endif
 
     AudioBuffer* inBuffer  = 0;
@@ -80,7 +81,7 @@ namespace AudioEngine
     int max_buffer_position        = 0;  // calculated when SequencerController is created
     int marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
     int min_step_position          = 0;
-    int max_step_position          = 15; // sixteep sequencer (min step starts at 0)
+    int max_step_position          = 15; // default to sixteen step sequence (note min step starts at 0)
     float tempo                    = 90.0;
     float queuedTempo              = 120.0;
     int time_sig_beat_amount       = 4;
@@ -143,7 +144,7 @@ namespace AudioEngine
         // as well as the temporary buffer used to merge the input into
 
         recbufferIn  = new float[ AudioEngineProps::BUFFER_SIZE ]();
-        inputChannel = new AudioChannel( 1.0f );
+        inputChannel->createOutputBuffer();
 #endif
         // accumulates all channels ("master strip")
 
@@ -180,7 +181,6 @@ namespace AudioEngine
         delete inBuffer;
 #ifdef RECORD_DEVICE_INPUT
         delete recbufferIn;
-        delete inputChannel;
 #endif
     }
 
@@ -200,11 +200,14 @@ namespace AudioEngine
 
         Sequencer::clearEvents();
 
-        bufferPosition   = 0;
-        stepPosition     = 0;
-        recordOutput     = false;
-        recordFromDevice = false;
-        bouncing         = false;
+        bufferPosition    = 0;
+        stepPosition      = 0;
+#ifdef RECORD_DEVICE_INPUT
+        recordDeviceInput = false;
+#endif
+        recordOutputToDisk = false;
+        recordInputToDisk  = false;
+        bouncing           = false;
     }
 
     bool render( int amountOfSamples )
@@ -231,7 +234,7 @@ namespace AudioEngine
 
 #ifdef RECORD_DEVICE_INPUT
         // record audio from Android device ?
-        if ( recordFromDevice && AudioEngineProps::INPUT_CHANNELS > 0 )
+        if (( recordDeviceInput || recordInputToDisk ) && AudioEngineProps::INPUT_CHANNELS > 0 )
         {
             int recSamps                  = DriverAdapter::getInput( recbufferIn );
             SAMPLE_TYPE* recBufferChannel = inputChannel->getOutputBuffer()->getBufferForChannel( 0 );
@@ -418,10 +421,10 @@ namespace AudioEngine
 
 #ifdef RECORD_TO_DISK
         // write the output to disk if a recording state is active
-        if ( Sequencer::playing && ( recordOutput || recordFromDevice ))
+        if (( Sequencer::playing && recordOutputToDisk ) || recordInputToDisk )
         {
 #ifdef RECORD_DEVICE_INPUT
-            if ( recordFromDevice ) // recording from device input ? > write the record buffer
+            if ( recordInputToDisk ) // recording from device input ? > write the record buffer
                 DiskWriter::appendBuffer( inputChannel->getOutputBuffer() );
             else                    // recording global output ? > write the combined buffer
 #endif
@@ -440,7 +443,7 @@ namespace AudioEngine
             // exceeded maximum recording buffer amount ? > write current recording
             if ( DiskWriter::bufferFull() || haltRecording )
             {
-                int amountOfChannels = recordFromDevice ? AudioEngineProps::INPUT_CHANNELS : outputChannels;
+                int amountOfChannels = recordInputToDisk ? AudioEngineProps::INPUT_CHANNELS : outputChannels;
                 DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, amountOfChannels, true );
 
                 if ( !haltRecording )
@@ -631,6 +634,14 @@ AudioChannel* getInputChannel( JNIEnv* env, jobject jobj )
     return AudioEngine::inputChannel;
 #else
     return 0;
+#endif
+}
+
+extern "C"
+void recordInput( bool record )
+{
+#ifdef RECORD_DEVICE_INPUT
+    AudioEngine::recordDeviceInput = record;
 #endif
 }
 
