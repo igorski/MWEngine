@@ -24,7 +24,6 @@
 #define __UTILS_H_INCLUDED__
 
 #include <math.h>
-#include <sstream>
 #include <vector>
 #include <algorithm>
 #include "global.h"
@@ -55,7 +54,6 @@ char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startO
 unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool littleEndian );
 
 // numbers to string
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
- ( std::ostringstream() << std::dec << x ) ).str()
+#define SSTR( x ) std::to_string( x )
 
 #endif

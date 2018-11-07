@@ -1,38 +1,43 @@
 MWEngine is..
 =============
 
-...an audio engine for Android, using either OpenSL (compatible with Android 4.1 and up) or the new
-AAudio (Android 8.0 and up) drivers for low latency audio performance. The engine has been written for both
+...an audio engine for Android, using either OpenSL (compatible with Android 4.1 and up) or AAudio
+(Android 8.0 and up) as the drivers for low latency audio performance. The engine has been written for both
 [MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
 [Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) to provide fast live audio synthesis.
 
-The engine provides an architecture that allows you to work with audio within a musical context. It is easy to
+MWEngine provides an architecture that allows you to work with audio within a _musical context_. It is easy to
 build upon the base classes and create your own noise generating mayhem. A few keywords describing the
 out-of-the-box possibilities are:
 
- * tempo-based sequencing
- * support for alternate time signatures
- * multi-channel audio output
- * effect chains operating on individual channels
+ * tempo-based sequencing with support for alternative time signatures
  * on-the-fly audio synthesis
- * sample-based playback (e.g. drum machines)
- * bouncing output to WAV files, either live or "offline"
+ * multi-channel audio output
+ * effect chains operating on individual input/output channels
+ * sample playback with real time pitch shifting
+ * bouncing output to WAV files, either live (during a performance) or "offline" (for fast results)
+ 
+Also note that MWEngine's underlying audio drivers are _the same as Google Oboe uses_, MWEngine and
+Oboe are merely abstraction layers to solve the same problem, only in different ways.
 
-### SWIG / What about Java ?
+### C++ ??? What about Java ?
 
-Though the library is written in C++ (and can be used solely within this context), the library is built using JNI
-(Java Native Interface) allowing its methods to be exposed to Java while still executing in a native layer outside of
+Though the library is written in C++ (and can be used solely within this context), the library can be built using JNI
+(Java Native Interface) which makes its API expose itself to Java, while still executing in a native layer outside of
 the Dalvik/ART VM. In other words : high performance of the engine is ensured by the native layer operations, while
-ease of development is ensured by keeping application logic / UI within the realm of the Android Java SDK.
+ease of development is ensured by delegating application logic / UI to the realm of the Android Java SDK.
 
-If you intend to use the MWEngine for sample based playback / use the built-in synthesizer and processors you will not need to write any additional C++ code. If you however intend to create your own processors or synthesis routines (which is fun!), you must write them in C++, but can rely on SWIG for making them usable in Java.
+Whether you intend to use MWEngine for its sample based playback or to leverage its built-in synthesizer and
+audio processing, you are not required to write any additional C++ code. If you however intend to create your own
+DSP or synthesis routines (which is fun to do!) you must write them in C++, but can rely on SWIG for making them usable in Java.
 
 #### A note on garbage collection and SWIG
 
 It is important to note that when a Java object finalizes (i.e. all its references are broken and is garbage collected), the
 destructors of the native objects are invoked, which can lead to unpredictable results if you happen to overlook this!
 As such, audio engine objects such as effects processors or events that are created on the Java side, must also hold
-strong references during their lifecycle.
+strong references during their lifecycle. Basically, follow the same principles you'd use in Java, but be
+aware that ignoring these will have a particularly violent result with a very unfriendly stack trace.
 
 ### Environment setup
 
@@ -72,7 +77,7 @@ The makefile (_/src/main/cpp/Android.mk_) will by default compile the library wi
 Those of a Unix-bent can run the _build.sh_-file in the root folder of the repository whereas Windows users can run the
 _build.bat_-file that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available
 through the PATH settings of your system (or adjust the shell scripts accordingly). Note: the NDK platform version is
-defined in _project.properties_.
+defined in _local.properties_.
 
 After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.mwengine_-namespace, making the code available to Java.
 
@@ -101,12 +106,13 @@ the setup, consult the [Troubleshooting Wiki page](https://github.com/igorski/MW
 
 ### Documentation
 
-This repository is constantly being updated and as such so is the documentation. You can view the Wiki (which will document the basic
-engine architecture) here:
+You can view the Wiki (which documents all of the engine's actors as well as a variety of real world
+use cases) here:
 
 [https://github.com/igorski/MWEngine/wiki](https://github.com/igorski/MWEngine/wiki)
 
-Note you can also view the contents of the header files to get more details about the inner workings of each class.
+Note that you can also view the contents of the header files to get more details about the inner
+workings of each class.
 
 ### Unit tests
 
@@ -122,7 +128,7 @@ replaces the OpenSL driver with a mocked driver so the engine can be unit tested
 ### Demo
 
 The repository contains an example Activity that is ready to deploy onto any Android device/emulator supporting ARM-, ARMv7-,
-x86- or MIPS-architecture and running Android 4.1 or higher. The example will demonstrate how to quickly get a musical
+x86- architecture and running Android 4.1 or higher. The example will demonstrate how to quickly get a musical
 sequence going using the library.
 
 To install the demo: first build the library as described above, and then run the build script to deploy the .APK unto an
@@ -140,7 +146,7 @@ at your own peril. To use AAudio instead of OpenSL:
  
 Once AAudio is a stable library, MWEngine will allow on-the-fly switching between OpenSL and AAudio drivers.
 
-(!) MWEngine does not support recording from the device inputs using AAudio just yet.
+(!) MWEngine does not support recording from the device inputs using AAudio just yet. File an issue to resolve this. ;)
 
 ### Contributors
 
