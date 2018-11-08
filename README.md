@@ -122,7 +122,7 @@ This will also build the library prior to running the tests by calling the build
 Note: _adb_ must be available in your global path settings.
 
 *Note on unit testing:* To build the application for unit testing observe that there is a separate makefile for the
-unit test mode (see _Application_test.mk_). In short: this files set the compiler preprocesser MOCK_ENGINE which
+unit test mode (see _Application_test.mk_). In short: this file sets the compiler preprocesser MOCK_ENGINE which
 replaces the OpenSL driver with a mocked driver so the engine can be unit tested "offline".
 
 ### Demo
@@ -131,12 +131,12 @@ The repository contains an example Activity that is ready to deploy onto any And
 x86- architecture and running Android 4.1 or higher. The example will demonstrate how to quickly get a musical
 sequence going using the library.
 
-To install the demo: first build the library as described above, and then run the build script to deploy the .APK unto an
+To install the demo: first build the library as described above, and then run the build script to deploy the .APK onto an
 attached device/emulator (note that older emulated devices can only operate at a sample rate of 8 kHz!).
 
 ### Note on AAudio
 
-The AAudio implementation has been built using (in Googles words): _"a Preview release of the AAudio library. The API
+The AAudio implementation has been built using (in Google's words): _"a Preview release of the AAudio library. The API
 might change in backward-incompatible ways in future releases. It is not recommended for production use."_ so use it
 at your own peril. To use AAudio instead of OpenSL:
  
@@ -146,7 +146,7 @@ at your own peril. To use AAudio instead of OpenSL:
  
 Once AAudio is a stable library, MWEngine will allow on-the-fly switching between OpenSL and AAudio drivers.
 
-(!) MWEngine does not support recording from the device inputs using AAudio just yet. File an issue to resolve this. ;)
+(!) MWEngine does not support recording from the device inputs using AAudio just yet, (https://github.com/igorski/MWEngine/issues/70) references this feature.
 
 ### Contributors
 
