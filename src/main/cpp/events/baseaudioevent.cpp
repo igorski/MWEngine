@@ -60,7 +60,7 @@ void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
     // additionally, if event was added to the sequencer, add it to the new
     // instruments sequenced events list
 
-    if ( aInstrument != 0 &&
+    if ( aInstrument != nullptr &&
         _instrument  != aInstrument )
     {
         bool wasAddedToSequencer = _addedToSequencer;
@@ -77,7 +77,7 @@ void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
 
 void BaseAudioEvent::play()
 {
-    if ( _livePlayback || _instrument == 0 )
+    if ( _livePlayback || _instrument == nullptr )
         return;
 
     setDeletable( false );
@@ -118,7 +118,7 @@ void BaseAudioEvent::addToSequencer()
 
 void BaseAudioEvent::removeFromSequencer()
 {
-    if ( !_addedToSequencer || _instrument == 0 )
+    if ( !_addedToSequencer || _instrument == nullptr )
         return;
 
     if ( !isSequenced )
@@ -129,7 +129,7 @@ void BaseAudioEvent::removeFromSequencer()
     {
         std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
 
-        if ( events != 0 ) {
+        if ( events != nullptr ) {
             std::vector<BaseAudioEvent*>::iterator position = std::find( events->begin(),
                                                                          events->end(), this );
             if ( position != events->end() )
@@ -290,7 +290,7 @@ void BaseAudioEvent::setLoopeable( bool value )
 {
     _loopeable = value;
 
-    if ( _buffer != 0 )
+    if ( _buffer != nullptr )
         _buffer->loopeable = _loopeable;
 }
 
@@ -489,7 +489,7 @@ void BaseAudioEvent::setBuffer( AudioBuffer* buffer, bool destroyable )
 
 bool BaseAudioEvent::hasBuffer()
 {
-    return _buffer != 0;
+    return _buffer != nullptr;
 }
 
 AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
@@ -504,7 +504,7 @@ AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
 
 void BaseAudioEvent::construct()
 {
-    _buffer            = 0;
+    _buffer            = nullptr;
     _enabled           = true;
     _destroyableBuffer = true;
     _loopeable         = false;
@@ -517,7 +517,7 @@ void BaseAudioEvent::construct()
     _readPointer       = 0;
     _startPosition     = 0.f;
     _endPosition       = 0.f;
-    _instrument        = 0;
+    _instrument        = nullptr;
     _deleteMe          = false;
     _livePlayback      = false;
     isSequenced        = true;
@@ -525,10 +525,10 @@ void BaseAudioEvent::construct()
 
 void BaseAudioEvent::destroyBuffer()
 {
-    if ( _destroyableBuffer && _buffer != 0 )
+    if ( _destroyableBuffer && _buffer != nullptr )
     {
         delete _buffer;
-        _buffer = 0;
+        _buffer = nullptr;
     }
 }
 

@@ -23,8 +23,8 @@
 #include <jni/javabridge.h>
 #include <string.h>
 
-static JavaVM*  _vm    = 0;
-static jclass   _class = 0; // cached reference to Java mediator class
+static JavaVM*  _vm    = nullptr;
+static jclass   _class = nullptr; // cached reference to Java mediator class
 
 /**
  * called when the Java VM has finished
@@ -112,16 +112,16 @@ jclass JavaBridge::getJavaInterface()
 
     // might as well return as subsequent usage of
     // the interface requires a valid environment for it's invocation!
-    if ( environment == 0 )
-        return 0;
+    if ( environment == nullptr )
+        return nullptr;
 
     return _class; // we have a cached reference!
 }
 
 JNIEnv* JavaBridge::getEnvironment()
 {
-    if ( _vm == 0 )
-        return 0;
+    if ( _vm == nullptr )
+        return nullptr;
 
     JNIEnv *env;
     jint rs = _vm->AttachCurrentThread( &env, NULL );
@@ -133,7 +133,7 @@ JNIEnv* JavaBridge::getEnvironment()
     if ( rs == JNI_OK )
         return env;
     else
-        return 0;
+        return nullptr;
 }
 
 std::string JavaBridge::getString( jstring aString )

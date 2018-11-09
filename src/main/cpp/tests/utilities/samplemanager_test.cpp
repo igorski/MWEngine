@@ -72,7 +72,7 @@ TEST( SampleManager, RemoveSampleWithoutFree )
     ASSERT_FALSE( SampleManager::hasSample( id ))
         << "expected no Sample to be found as it has been removed";
 
-    ASSERT_FALSE( buffer == 0 ) << "expected AudioBuffer not to have been deleted";
+    ASSERT_FALSE( buffer == nullptr ) << "expected AudioBuffer not to have been deleted";
 
     delete buffer;
 }

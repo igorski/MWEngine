@@ -56,7 +56,7 @@ Reverb::~Reverb()
     if ( buf4 )
         delete[] buf4;
 
-    buf1 = buf2 = buf3 = buf4 = 0;
+    buf1 = buf2 = buf3 = buf4 = nullptr;
 }
 
 /* public methods */

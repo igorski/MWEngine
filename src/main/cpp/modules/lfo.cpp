@@ -66,6 +66,7 @@ LFO::LFO()
 LFO::~LFO()
 {
     delete _table;
+    _table = nullptr;
 }
 
 /* public methods */
@@ -113,7 +114,7 @@ void LFO::generate()
 
     WaveTable* table = TablePool::getTable( SSTR( _wave ));
 
-    if ( table == 0 ) {
+    if ( table == nullptr ) {
         // no table in pool, LFO will generate table inline
         WaveGenerator::generate( _table, _wave );
     }

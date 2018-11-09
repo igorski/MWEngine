@@ -59,16 +59,16 @@ namespace AudioEngine
 
     int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
     bool isMono        = ( outputChannels == 1 );
-    float* outBuffer   = 0;
+    float* outBuffer   = nullptr;
 
 #ifdef RECORD_DEVICE_INPUT
-    float* recbufferIn         = 0;
+    float* recbufferIn         = nullptr;
     AudioChannel* inputChannel = new AudioChannel( 1.0f );
     bool recordDeviceInput     = false;
 #endif
 
-    AudioBuffer* inBuffer  = 0;
-    std::vector<AudioChannel*>* channels = 0;
+    AudioBuffer* inBuffer                = nullptr;
+    std::vector<AudioChannel*>* channels = nullptr;
 
     /* tempo / sequencer position related */
 
@@ -179,8 +179,14 @@ namespace AudioEngine
         delete channels;
         delete outBuffer;
         delete inBuffer;
+
+        channels  = nullptr;
+        outBuffer = nullptr;
+        inBuffer  = nullptr;
+
 #ifdef RECORD_DEVICE_INPUT
         delete recbufferIn;
+        recBufferIn = nullptr;
 #endif
     }
 
@@ -299,7 +305,7 @@ namespace AudioEngine
                     {
                         BaseAudioEvent* audioEvent = audioEvents[ k ];
 
-                        if ( audioEvent != 0 && !audioEvent->isLocked()) // make sure we're allowed to query the contents
+                        if ( audioEvent != nullptr && !audioEvent->isLocked()) // make sure we're allowed to query the contents
                         {
                             audioEvent->mixBuffer( channelBuffer, bufferPos, min_buffer_position,
                                                    maxBufferPosition, loopStarted, loopOffset, useChannelRange );
@@ -633,7 +639,7 @@ AudioChannel* getInputChannel( JNIEnv* env, jobject jobj )
 #ifdef RECORD_DEVICE_INPUT
     return AudioEngine::inputChannel;
 #else
-    return 0;
+    return nullptr;
 #endif
 }
 

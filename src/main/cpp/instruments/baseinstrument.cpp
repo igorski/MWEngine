@@ -41,9 +41,9 @@ BaseInstrument::~BaseInstrument()
     delete _audioEvents;
     delete _liveAudioEvents;
 
-    audioChannel     = 0;
-    _audioEvents     = 0;
-    _liveAudioEvents = 0;
+    audioChannel     = nullptr;
+    _audioEvents     = nullptr;
+    _liveAudioEvents = nullptr;
 }
 
 /* public methods */
@@ -98,13 +98,13 @@ void BaseInstrument::updateEvents()
 
 void BaseInstrument::clearEvents()
 {
-    if ( _audioEvents != 0 )
+    if ( _audioEvents != nullptr )
     {
         while ( _audioEvents->size() > 0 )
             removeEvent( _audioEvents->at( 0 ), false );
     }
 
-    if ( _liveAudioEvents != 0 )
+    if ( _liveAudioEvents != nullptr )
     {
         while ( _liveAudioEvents->size() > 0 )
             removeEvent( _liveAudioEvents->at( 0 ), true );
@@ -115,7 +115,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
     bool removed = false;
 
-    if ( audioEvent == 0 )
+    if ( audioEvent == nullptr )
         return removed;
 
     if ( !isLiveEvent )
@@ -141,7 +141,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
         // otherwise we delete and dispose the events directly from this instrument
 
         delete audioEvent;
-        audioEvent = 0;
+        audioEvent = nullptr;
     }
 #endif
     return removed;

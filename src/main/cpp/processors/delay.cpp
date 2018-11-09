@@ -55,6 +55,9 @@ Delay::~Delay()
 {
     delete _delayBuffer;
     delete[] _delayIndices;
+
+    _delayBuffer = nullptr;
+    _delayIndices = nullptr;
 }
 
 /* public methods */
@@ -116,7 +119,7 @@ void Delay::process( AudioBuffer* sampleBuffer, bool isMonoSource )
  */
 void Delay::reset()
 {
-    if ( _delayBuffer != 0 )
+    if ( _delayBuffer != nullptr )
         _delayBuffer->silenceBuffers();
 }
 

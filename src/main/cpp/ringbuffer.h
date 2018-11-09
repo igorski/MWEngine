@@ -66,7 +66,7 @@ class RingBuffer
 
             // set buffer values to 0.0 for silence
 
-            if ( _buffer != 0 )
+            if ( _buffer != nullptr )
                 memset( _buffer, 0, _bufferLength * sizeof( SAMPLE_TYPE ));
         }
 

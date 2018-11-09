@@ -40,7 +40,7 @@ void SampleManager::setSample( std::string aIdentifier, AudioBuffer* aBuffer, un
 AudioBuffer* SampleManager::getSample( std::string aIdentifier )
 {
     if ( !hasSample( aIdentifier ))
-        return 0;
+        return nullptr;
 
     std::map<std::string, cachedSample>::iterator it = SampleManagerSamples::_sampleMap.find( aIdentifier );
 

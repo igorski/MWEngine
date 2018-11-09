@@ -60,6 +60,8 @@ Filter::~Filter()
     delete[] in2;
     delete[] out1;
     delete[] out2;
+
+    in1 = in2 = out1 = out2 = nullptr;
 }
 
 /* public methods */
@@ -168,7 +170,7 @@ void Filter::setLFO( LFO *lfo )
     _lfo = lfo;
 
     // no LFO ? make sure the filter returns to its default parameters
-    if ( lfo == 0 )
+    if ( lfo == nullptr )
     {
         _tempCutoff = _cutoff;
         calculateParameters();
@@ -180,7 +182,7 @@ void Filter::setLFO( LFO *lfo )
 
 bool Filter::hasLFO()
 {
-    return _lfo != 0;
+    return _lfo != nullptr;
 }
 
 /* private methods */
@@ -189,7 +191,7 @@ void Filter::init( float cutoff )
 {
     SAMPLE_RATE = ( float ) AudioEngineProps::SAMPLE_RATE;
 
-    _lfo        = 0;
+    _lfo        = nullptr;
     _cutoff     = _maxFreq;
     _tempCutoff = _cutoff;
 
