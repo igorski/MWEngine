@@ -262,7 +262,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     int outputChannels = outputBuffer->amountOfChannels;
 
     // but mixing mono events into multichannel output is OK
-    bool isMonoEvent   = _buffer->amountOfChannels < outputChannels;
+    bool mixMono = _buffer->amountOfChannels < outputChannels;
 
     int i, t, t2, c, ca;
     float frac;
@@ -322,7 +322,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                 for ( c = 0; c < outputChannels; ++c )
                 {
-                    srcBuffer = _buffer->getBufferForChannel( isMonoEvent ? 0 : c );
+                    srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                     t2 = t + 1;
@@ -349,7 +349,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                     for ( c = 0; c < outputChannels; ++c )
                     {
-                        srcBuffer = _buffer->getBufferForChannel( isMonoEvent ? 0 : c );
+                        srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                         tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                         t2 = t + 1;
@@ -387,7 +387,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 // use range pointers to read within the specific buffer ranges
                 for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
                 {
-                    srcBuffer = _buffer->getBufferForChannel( isMonoEvent ? 0 : c );
+                    srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                     t2 = t + 1;
