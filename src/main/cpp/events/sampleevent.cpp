@@ -132,10 +132,7 @@ unsigned int SampleEvent::getSampleRate()
 AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 {
     if ( _liveBuffer == 0 )
-        _liveBuffer = new AudioBuffer(
-            ( _buffer != 0 ) ? _buffer->amountOfChannels : AudioEngineProps::OUTPUT_CHANNELS,
-            AudioEngineProps::BUFFER_SIZE
-        );
+        _liveBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
     else
         _liveBuffer->silenceBuffers();  // clear previous contents
 
