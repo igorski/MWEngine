@@ -361,11 +361,15 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     int bufferSize = outputBuffer->bufferSize;
 
-    // if the output channel amount differs from this events channel amount, we might
+    // if the buffer channel amount differs from the output channel amount, we might
     // potentially have a bad time (e.g. engine has mono output while this event is stereo)
     // ideally events should never hold more channels than AudioEngineProps::OUTPUT_CHANNELS
 
-    int outputChannels = std::min( _buffer->amountOfChannels, outputBuffer->amountOfChannels );
+    int outputChannels = outputBuffer->amountOfChannels;
+
+    // but mixing mono events into multichannel output is OK
+    bool mixMono = _buffer->amountOfChannels < outputChannels;
+
     int bufferPointer, readPointer, i, c, ca;
     SAMPLE_TYPE* srcBuffer;
     SAMPLE_TYPE* tgtBuffer;
@@ -402,7 +406,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                 for ( c = 0; c < outputChannels; ++c )
                 {
-                    srcBuffer = _buffer->getBufferForChannel( c );
+                    srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                     if ( readPointer < maxReadPos )
@@ -419,7 +423,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                     for ( c = 0; c < outputChannels; ++c )
                     {
-                        srcBuffer = _buffer->getBufferForChannel( c );
+                        srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                         tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                         tgtBuffer[ i ] += ( srcBuffer[ readPointer ] * _volume );
@@ -432,7 +436,6 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     {
         // loopeable events mix their buffer contents using an internal read pointer
 
-        bool monoCopy = _buffer->amountOfChannels < outputBuffer->amountOfChannels;
         int maxBufPos = _buffer->bufferSize - 1;
 
         for ( i = 0; i < bufferSize; ++i )
@@ -445,11 +448,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 // use range pointers to read within the specific buffer ranges
                 for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
                 {
-                    // this sample might have less channels than the output buffer
-                    if ( !monoCopy )
-                        srcBuffer = _buffer->getBufferForChannel( c );
-                    else
-                        srcBuffer = _buffer->getBufferForChannel( 0 );
+                    srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
 
                     tgtBuffer       = outputBuffer->getBufferForChannel( c );
                     tgtBuffer[ i ] += ( srcBuffer[ _readPointer ] * _volume );
