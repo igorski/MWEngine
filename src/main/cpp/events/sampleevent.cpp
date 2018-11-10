@@ -133,10 +133,7 @@ unsigned int SampleEvent::getSampleRate()
 AudioBuffer* SampleEvent::synthesize( int aBufferLength )
 {
     if ( _liveBuffer == nullptr )
-        _liveBuffer = new AudioBuffer(
-            ( _buffer != nullptr ) ? _buffer->amountOfChannels : AudioEngineProps::OUTPUT_CHANNELS,
-            AudioEngineProps::BUFFER_SIZE
-        );
+        _liveBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
     else
         _liveBuffer->silenceBuffers();  // clear previous contents
 
@@ -256,11 +253,15 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     int bufferSize = outputBuffer->bufferSize;
 
-    // if the output channel amount differs from this events channel amount, we might
+    // if the buffer channel amount differs from the output channel amount, we might
     // potentially have a bad time (e.g. engine has mono output while this event is stereo)
     // ideally events should never hold more channels than AudioEngineProps::OUTPUT_CHANNELS
 
-    int outputChannels = std::min( _buffer->amountOfChannels, outputBuffer->amountOfChannels );
+    int outputChannels = outputBuffer->amountOfChannels;
+
+    // but mixing mono events into multichannel output is OK
+    bool mixMono = _buffer->amountOfChannels < outputChannels;
+
     int i, t, t2, c, ca;
     float frac;
     SAMPLE_TYPE* srcBuffer;
@@ -319,7 +320,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                 for ( c = 0; c < outputChannels; ++c )
                 {
-                    srcBuffer = _buffer->getBufferForChannel( c );
+                    srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                     t2 = t + 1;
@@ -346,7 +347,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                     for ( c = 0; c < outputChannels; ++c )
                     {
-                        srcBuffer = _buffer->getBufferForChannel( c );
+                        srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                         tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                         t2 = t + 1;
@@ -367,7 +368,6 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     {
         // loopeable events mix their buffer contents using an internal read pointer
 
-        bool monoCopy      = _buffer->amountOfChannels < outputBuffer->amountOfChannels;
         float maxBufPos    = ( float ) _buffer->bufferSize - 1.f;
         bufferPointerStart = _readPointerF; // use internal read pointer when reading loopeable content
 
@@ -385,12 +385,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 // use range pointers to read within the specific buffer ranges
                 for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
                 {
-                    // this sample might have less channels than the output buffer
-                    if ( !monoCopy )
-                        srcBuffer = _buffer->getBufferForChannel( c );
-                    else
-                        srcBuffer = _buffer->getBufferForChannel( 0 );
-
+                    srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
 
                     t2 = t + 1;
