@@ -41,7 +41,7 @@ TEST( TablePool, RemoveTable )
 
     TablePool::removeTable( id, false );
 
-    ASSERT_FALSE( table == 0 ) << "expected Table not to have been deleted";
+    ASSERT_FALSE( table == nullptr ) << "expected Table not to have been deleted";
 
     delete table;
 }

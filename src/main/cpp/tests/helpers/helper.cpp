@@ -201,7 +201,7 @@ void deleteAudioEvent( BaseAudioEvent* audioEvent )
     BaseInstrument* instrument = audioEvent->getInstrument();
     delete audioEvent;
 
-    if ( instrument != 0 )
+    if ( instrument != nullptr )
         instrument->unregisterFromSequencer();
 
     delete instrument;

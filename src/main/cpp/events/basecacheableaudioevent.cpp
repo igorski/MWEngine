@@ -59,7 +59,7 @@ void BaseCacheableAudioEvent::setAutoCache( bool aValue )
  */
 void BaseCacheableAudioEvent::cache( bool doCallback )
 {
-    if ( _buffer == 0 ) return; // cache request likely invoked after destruction
+    if ( _buffer == nullptr ) return; // cache request likely invoked after destruction
 
     _caching = true;
 

@@ -108,7 +108,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 
     // WaveTable specific
 
-    WaveTable* waveTable = 0;
+    WaveTable* waveTable = nullptr;
     int tableReadOffset;
     SAMPLE_TYPE waveTableAccumulator;
     SAMPLE_TYPE* tableBuffer;
@@ -321,7 +321,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 
     aEvent->setPhaseForOscillator( _oscillatorNum, phase );
 
-    if ( waveTable != 0 )
+    if ( waveTable != nullptr )
         waveTable->setAccumulator( waveTableAccumulator );
 }
 
@@ -382,7 +382,7 @@ void Synthesizer::destroyOscillator( int aOscillatorNum )
     Synthesizer* osc = _oscillators.at( aOscillatorNum );
     _oscillators.erase( _oscillators.begin() + aOscillatorNum );
 
-    if ( osc != 0 )
+    if ( osc != nullptr )
         delete osc;
 }
 

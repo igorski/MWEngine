@@ -33,7 +33,7 @@ unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
 
 BaseSynthEvent::BaseSynthEvent()
 {
-    _synthInstrument = 0;
+    _synthInstrument = nullptr;
 }
 
 /**
@@ -204,10 +204,10 @@ void BaseSynthEvent::calculateBuffers()
     // buffer is only instantiated once as it is the size of the engines BUFFER_SIZE
     // (this event will not be cached in its entirety but will repeatedly render snippets into its buffer)
 
-    if ( _buffer == 0 )
+    if ( _buffer == nullptr )
         _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 
-    if ( isSequenced && _synthInstrument != 0 )
+    if ( isSequenced && _synthInstrument != nullptr )
          _synthInstrument->synthesizer->initializeEventProperties( this, true );
 }
 
@@ -296,7 +296,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
 {
     // in case buffer length is unequal to cached length, create new write buffer
-    if ( aBufferLength != AudioEngineProps::BUFFER_SIZE || _buffer == 0 )
+    if ( aBufferLength != AudioEngineProps::BUFFER_SIZE || _buffer == nullptr )
     {
         destroyBuffer();
         _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );

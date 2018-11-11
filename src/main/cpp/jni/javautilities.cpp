@@ -40,7 +40,7 @@ bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
 
     // error during loading of WAV file ?
 
-    if ( WAV.buffer == 0 )
+    if ( WAV.buffer == nullptr )
         return false;
 
     SampleManager::setSample( JavaBridge::getString( aKey ), WAV.buffer, WAV.sampleRate );
@@ -116,7 +116,7 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
 
     // error during loading of WAV file ?
 
-    if ( WAV.buffer == 0 )
+    if ( WAV.buffer == nullptr )
         return false;
 
     SampleManager::setSample( JavaBridge::getString( aKey ), WAV.buffer, WAV.sampleRate );

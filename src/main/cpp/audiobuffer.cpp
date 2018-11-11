@@ -42,6 +42,7 @@ AudioBuffer::~AudioBuffer()
         delete[] _buffers->back(), _buffers->pop_back();
     }
     delete _buffers;
+    _buffers = nullptr;
 }
 
 /* public methods */
@@ -53,7 +54,7 @@ SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
 
 int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume )
 {
-    if ( aBuffer == 0 || aWriteOffset >= bufferSize )
+    if ( aBuffer == nullptr || aWriteOffset >= bufferSize )
         return 0;
 
     int sourceLength     = aBuffer->bufferSize;

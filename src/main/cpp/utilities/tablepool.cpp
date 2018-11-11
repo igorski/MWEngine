@@ -33,7 +33,7 @@ WaveTable* TablePool::getTable( std::string tableId )
         // table existed, load the pooled version
         return ( WaveTable* )( it->second );
     }
-    return 0;
+    return nullptr;
 }
 
 bool TablePool::setTable( WaveTable* waveTable, std::string tableId )

@@ -31,7 +31,7 @@ OscillatorProperties::OscillatorProperties( int aWaveform, float aDetune, int aO
     detune      = aDetune;
     octaveShift = aOctaveShift;
     fineShift   = aFineShift;
-    waveTable   = 0;
+    waveTable   = nullptr;
 
     setWaveform( aWaveform );
 }
@@ -39,6 +39,7 @@ OscillatorProperties::OscillatorProperties( int aWaveform, float aDetune, int aO
 OscillatorProperties::~OscillatorProperties()
 {
     delete waveTable;
+    waveTable = nullptr;
 }
 
 /* public methods */
@@ -50,24 +51,31 @@ int OscillatorProperties::getWaveform()
 
 void OscillatorProperties::setWaveform( int aWaveform )
 {
-    if ( waveTable != 0 )
-        delete waveTable;
+    if ( _waveform == aWaveform )
+        return;
 
     if ( aWaveform == WaveForms::TABLE ) {
-        // use setCustomWaveform instead
+        // use setCustomWaveform instead to provide a valid WaveTable
         return;
+    }
+    else {
+        // setting a waveform clears existing wave tables
+        if ( waveTable != nullptr ) {
+            delete waveTable;
+            waveTable = nullptr;
+        }
     }
     _waveform = aWaveform;
 }
 
 void OscillatorProperties::setCustomWaveform( std::string waveformId )
 {
-    if ( waveTable != 0 )
+    if ( waveTable != nullptr )
         delete waveTable;
 
     WaveTable* tableFromPool = TablePool::getTable( waveformId );
 
-    if ( tableFromPool != 0 )
+    if ( tableFromPool != nullptr )
         waveTable = tableFromPool->clone();
     else
         _waveform = WaveForms::SINE;

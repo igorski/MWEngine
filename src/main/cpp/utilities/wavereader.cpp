@@ -30,7 +30,7 @@
 waveFile WaveReader::fileToBuffer( std::string inputFile )
 { 
     FILE* fp;
-    AudioBuffer* buffer = 0;
+    AudioBuffer* buffer = nullptr;
     char id[ 5 ];
     unsigned int size;
     short* sound_buffer;
@@ -109,9 +109,9 @@ WaveTable* WaveReader::fileToTable( std::string inputFile )
 {
     waveFile WAV = fileToBuffer( inputFile );
 
-    if ( WAV.buffer == 0 ) {
+    if ( WAV.buffer == nullptr ) {
         Debug::log( "WaveReader::could not convert file '%s' to WaveTable", inputFile.c_str() );
-        return 0;
+        return nullptr;
     }
 
     WaveTable* out = new WaveTable( WAV.buffer->bufferSize, 440.0f );
@@ -132,7 +132,7 @@ waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
 {
     // TODO: this mostly mirrors the fileToBuffer-method, clean this up!
 
-    AudioBuffer* buffer = 0;
+    AudioBuffer* buffer = nullptr;
 
     // first we'll check the necessary headers identifying the WAV file
 

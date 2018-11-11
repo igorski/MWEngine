@@ -79,7 +79,7 @@ SAMPLE_TYPE* WaveTable::getBuffer()
 
 void WaveTable::setBuffer( SAMPLE_TYPE* aBuffer )
 {
-    if ( _buffer != 0 )
+    if ( _buffer != nullptr )
         delete[] _buffer;
 
     _buffer = aBuffer;

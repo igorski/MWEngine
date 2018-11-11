@@ -39,6 +39,9 @@ DrumInstrument::~DrumInstrument()
 {
     delete rOsc;
     delete drumPatterns;
+
+    rOsc = nullptr;
+    drumPatterns = nullptr;
 }
 
 /* public methods */
@@ -59,7 +62,7 @@ void DrumInstrument::updateEvents()
 
 void DrumInstrument::clearEvents()
 {
-    if ( drumPatterns != 0 )
+    if ( drumPatterns != nullptr )
     {
         for ( int i = 0, l = drumPatterns->size(); i < l; ++i )
         {
@@ -77,7 +80,7 @@ bool DrumInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
     bool removed = false;
 
-    if ( audioEvent != 0 )
+    if ( audioEvent != nullptr )
     {
         if ( !isLiveEvent )
         {
@@ -98,7 +101,7 @@ bool DrumInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
         if ( removed ) {
             delete audioEvent;
-            audioEvent = 0;
+            audioEvent = nullptr;
         }
     }
     return removed;
@@ -142,7 +145,7 @@ int DrumInstrument::setDrumPattern( DrumPattern* pattern )
 void DrumInstrument::construct()
 {
     drumTimbre        = DrumTimbres::LIGHT;
-    rOsc              = 0;// new RouteableOscillator();  // currently unused...
+    rOsc              = nullptr;// new RouteableOscillator();  // currently unused...
     audioChannel      = new AudioChannel( 1.0, AudioEngine::samples_per_bar );
 
     activeDrumPattern = 0;

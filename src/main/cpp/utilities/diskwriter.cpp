@@ -32,7 +32,7 @@ namespace DiskWriter
     std::string outputDirectory;
     unsigned long outputBufferSize  = 0;
     unsigned long outputWriterIndex = 0;
-    AudioBuffer*  cachedBuffer      = 0;
+    AudioBuffer*  cachedBuffer      = nullptr;
 
     /**
      * prepare a new iteration of recording
@@ -64,7 +64,7 @@ namespace DiskWriter
         int bufferSize    = aBuffer->bufferSize;
         int channelAmount = aBuffer->amountOfChannels;
 
-        if ( cachedBuffer == 0 )
+        if ( cachedBuffer == nullptr )
             generateOutputBuffer( channelAmount );
 
         cachedBuffer->mergeBuffers( aBuffer, 0, outputWriterIndex, 1.0 );
@@ -77,7 +77,7 @@ namespace DiskWriter
      */
     void appendBuffer( float* aBuffer, int aBufferSize, int amountOfChannels )
     {
-        if ( cachedBuffer == 0 )
+        if ( cachedBuffer == nullptr )
             generateOutputBuffer( amountOfChannels );
 
         int i, c, ci;
@@ -107,10 +107,10 @@ namespace DiskWriter
      */
     void flushOutput()
     {
-        if ( cachedBuffer != 0 )
+        if ( cachedBuffer != nullptr )
             delete cachedBuffer;
 
-        cachedBuffer      = 0;
+        cachedBuffer      = nullptr;
         outputWriterIndex = 0;
     }
 
@@ -123,7 +123,7 @@ namespace DiskWriter
     void writeBufferToFile( int aSampleRate, int aNumChannels, bool broadcastUpdate )
     {
         // quick assertion
-        if ( cachedBuffer == 0 )
+        if ( cachedBuffer == nullptr )
             return;
 
         // copy string contents for appending of filename

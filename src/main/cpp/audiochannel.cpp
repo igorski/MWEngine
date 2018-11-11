@@ -48,6 +48,10 @@ AudioChannel::~AudioChannel()
     delete _outputBuffer;
     delete _cachedBuffer;
     delete processingChain;
+
+    _outputBuffer   = nullptr;
+    _cachedBuffer   = nullptr;
+    processingChain = nullptr;
 }
 
 /* public methods */
@@ -101,12 +105,12 @@ void AudioChannel::canCache( bool value, int aBufferSize, int aCacheStartOffset,
     _cacheStartOffset = aCacheStartOffset;
     _cacheEndOffset   = aCacheEndOffset;
 
-    if ( !value || ( _cachedBuffer != 0 && _cachedBuffer->bufferSize != aBufferSize ))
+    if ( !value || ( _cachedBuffer != nullptr && _cachedBuffer->bufferSize != aBufferSize ))
         clearCachedBuffer();
 
     if ( value )
     {
-        if ( _cachedBuffer == 0 )
+        if ( _cachedBuffer == nullptr )
             _cachedBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferSize );
     }
     isCaching = value;
@@ -117,7 +121,7 @@ void AudioChannel::createOutputBuffer()
     int bufferSize     = AudioEngineProps::BUFFER_SIZE;
     int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
 
-    if ( _outputBuffer != 0 )
+    if ( _outputBuffer != nullptr )
     {
         if ( _outputBuffer->bufferSize       == bufferSize &&
              _outputBuffer->amountOfChannels == outputChannels )
@@ -194,10 +198,10 @@ void AudioChannel::writeCache( AudioBuffer* aBuffer, int aReadOffset )
 
 void AudioChannel::clearCachedBuffer()
 {
-    if ( _cachedBuffer != 0 )
+    if ( _cachedBuffer != nullptr )
     {
         delete _cachedBuffer;
-        _cachedBuffer = 0;
+        _cachedBuffer = nullptr;
     }
     hasCache  = false;
     isCaching = _canCache;
@@ -232,8 +236,8 @@ void AudioChannel::init()
     isCaching          = false;
     instanceId         = ++INSTANCE_COUNT;
     _canCache          = false;
-    _outputBuffer      = 0;
-    _cachedBuffer      = 0;
+    _outputBuffer      = nullptr;
+    _cachedBuffer      = nullptr;
     _cacheReadPointer  = 0;
     _cacheWritePointer = 0;
     _cacheStartOffset  = 0;
