@@ -477,10 +477,10 @@ namespace AudioEngine
 
 #if DRIVER == 1
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
-        if ( bouncing )
+        if ( bouncing && thread == 1 )
             render( amountOfSamples );
 #endif
-        return true;
+        return ( thread == 1 );
     }
 
     /* internal methods */
