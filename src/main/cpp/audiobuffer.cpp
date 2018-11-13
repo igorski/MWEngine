@@ -38,11 +38,13 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 
 AudioBuffer::~AudioBuffer()
 {
-    while ( !_buffers->empty()) {
-        delete[] _buffers->back(), _buffers->pop_back();
+    if ( _buffers != nullptr ) {
+        while ( !_buffers->empty()) {
+            delete[] _buffers->back(), _buffers->pop_back();
+        }
+        delete _buffers;
+        _buffers = nullptr;
     }
-    delete _buffers;
-    _buffers = nullptr;
 }
 
 /* public methods */
