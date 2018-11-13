@@ -106,7 +106,6 @@ public final class MWEngineActivity extends Activity
         SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
         _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
-        _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
 
         // STEP 2 : let's create some music !
 
@@ -116,7 +115,14 @@ public final class MWEngineActivity extends Activity
 
         setupSong();
 
-        // STEP 3 : attach event handlers to the UI elements (see main.xml layout)
+        // STEP 3 : start your engine!
+        // Starts engines render thread (NOTE: sequencer is still paused)
+        // this ensures that audio will be output as appropriate (e.g. when
+        // playing live events / starting sequencer and playing the song)
+
+        _engine.start();
+
+        // STEP 4 : attach event handlers to the UI elements (see main.xml layout)
 
         final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
         playPauseButton.setOnClickListener( new PlayClickHandler() );
@@ -255,6 +261,10 @@ public final class MWEngineActivity extends Activity
 
     protected void flushSong()
     {
+        // this ensures that Song resources currently in use by the engine are released
+
+        _engine.pause();
+
         // calling 'delete()' on a BaseAudioEvent invokes the
         // native layer destructor (and removes it from the sequencer)
 

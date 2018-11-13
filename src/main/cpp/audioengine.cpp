@@ -164,9 +164,10 @@ namespace AudioEngine
 
         while ( thread )
         {
-            // will only be interrupted if thread is set to 0 in render() method
-            // the audio drivers are responsible for calling render() at the
-            // appropriate time during this threads execution
+            // will only be interrupted if thread is set to 0 (thus halted)
+            // in the DriverAdapter::render() method the audio drivers are responsible
+            // for calling the engine's render() at the appropriate time, depending
+            // on the driver type
 
             DriverAdapter::render();
         }
@@ -419,11 +420,18 @@ namespace AudioEngine
             }
         }
 
-        // write the synthesized output into the audio driver
+        // thread has been stopped during operations above ? exit as writing the
+        // the output into the audio hardware will lock execution until the next buffer
+        // is enqueued (additionally, we prevent writing to device storage when recording/bouncing)
+
+        if ( thread == 0 )
+            return false;
+
+        // write the synthesized output into the audio driver (unless we are bouncing as writing the
+        // output to the hardware makes it both unnecessarily audible and stalls execution)
 
         if ( !bouncing )
             DriverAdapter::writeOutput( outBuffer, amountOfSamples * outputChannels );
-
 
 #ifdef RECORD_TO_DISK
         // write the output to disk if a recording state is active
@@ -467,16 +475,12 @@ namespace AudioEngine
         if ( queuedTempo != tempo )
             handleTempoUpdate( queuedTempo, true );
 
-        // render the buffer in the audio hardware (unless we're bouncing as writing the output
-        // makes it both unnecessarily audible and stalls this thread's execution)
-        bool keepRendering = ( thread == 1 );
-
 #if DRIVER == 1
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
-        if ( bouncing && keepRendering )
+        if ( bouncing )
             render( amountOfSamples );
 #endif
-        return keepRendering;
+        return true;
     }
 
     /* internal methods */
