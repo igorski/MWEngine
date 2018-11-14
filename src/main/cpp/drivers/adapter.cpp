@@ -43,7 +43,7 @@ namespace DriverAdapter {
             AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS,
             AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE
         );
-        return ( driver_openSL != nullptr );
+        return ( driver_openSL != NULL );
 
 #elif DRIVER == 1
 
@@ -66,8 +66,10 @@ namespace DriverAdapter {
 
 #if DRIVER == 0
         // OpenSL
-        android_CloseAudioDevice( driver_openSL );
-        delete driver_openSL;
+        if ( driver_openSL != nullptr ) {
+            android_CloseAudioDevice(driver_openSL);
+            delete driver_openSL;
+        }
         driver_openSL = nullptr;
 #elif DRIVER == 1
         // AAudio
