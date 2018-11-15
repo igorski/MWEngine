@@ -33,7 +33,7 @@ TEST( BaseSynthEvent, InstanceId )
 
     delete audioEvent3;
 // TODO: deleting this leads to occassional segmentation fault!?
-//    delete instrument;
+    delete instrument;
 }
 
 TEST( BaseSynthEvent, GettersSetters )

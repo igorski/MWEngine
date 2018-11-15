@@ -70,6 +70,9 @@ class SampleEvent : public BaseAudioEvent
         int getLoopStartOffset();
         void setLoopStartOffset( int value );
 
+        int getEventLength();
+        int getEventEnd();
+
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
 

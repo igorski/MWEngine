@@ -508,11 +508,13 @@ TEST( SampleEvent, PlaybackRateLimit )
 
     sampleEvent->setPlaybackRate( 0.f );
 
-    EXPECT_EQ( 0.01f, sampleEvent->getPlaybackRate()) << "expected minimum rate of 1% of original speed";
+    EXPECT_EQ( 0.01f, sampleEvent->getPlaybackRate())
+        << "expected minimum rate of 1% of original speed";
 
     sampleEvent->setPlaybackRate( 1000.f );
 
-    EXPECT_EQ( 100.f, sampleEvent->getPlaybackRate()) << "expected maximum rate of 100 x original speed";
+    EXPECT_EQ( 100.f, sampleEvent->getPlaybackRate())
+        << "expected maximum rate of 100 x original speed";
 
     delete sampleEvent;
 }
@@ -614,5 +616,142 @@ TEST( SampleEvent, PlaybackRateCustomRange )
     EXPECT_EQ( rangeStart + ( rangeLength * 2 ), sampleEvent->getBufferRangeEnd() )
         << "expected buffer range end at half playback rate to be above the original offset";
 
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, LoopeableState )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    
+    ASSERT_FALSE( sampleEvent->isLoopeable() )
+        << "expected audio event not to be loopeable after construction";
+    
+    sampleEvent->setLoopeable( true );
+    
+    ASSERT_TRUE( sampleEvent->isLoopeable() )
+        << "expected audio event to be loopeable after enabling loop";
+    
+    sampleEvent->setLoopeable( false );
+    
+    ASSERT_FALSE( sampleEvent->isLoopeable() )
+        << "expected audio event not to be loopeable after disabling loop";
+    
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, PositionInSamples )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    
+    int eventLength = randomInt( 512, 8192 );
+    int eventStart  = randomInt( 0, eventLength / 2 );
+    int expectedEnd = eventStart + ( eventLength - 1 );
+    
+    sampleEvent->setEventStart ( eventStart );
+    sampleEvent->setEventLength( eventLength );
+    
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
+        << "expected eventStart to match the set position";
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected eventEnd to match the implied end set by start + length";
+    
+    EXPECT_EQ( eventLength, sampleEvent->getEventLength() )
+        << "expected eventLength to match the set length";
+    
+    // test whether values in seconds have updated accordingly
+    // NOTE: this should be base (BaseAudioEvent) behaviour, we're verifying
+    // here whether the overrides behave accordingly
+    
+    int SAMPLE_RATE = 44100;
+    float expectedStartPosition = BufferUtility::bufferToSeconds( eventStart, SAMPLE_RATE );
+    float expectedEndPosition   = BufferUtility::bufferToSeconds( expectedEnd, SAMPLE_RATE );
+    float expectedDuration      = expectedEndPosition - expectedStartPosition;
+    
+    EXPECT_FLOAT_EQ( expectedStartPosition, sampleEvent->getStartPosition() );
+    EXPECT_FLOAT_EQ( expectedEndPosition,   sampleEvent->getEndPosition() );
+    EXPECT_FLOAT_EQ( expectedDuration,      sampleEvent->getDuration() );
+    
+    // test auto sanitation of properties
+    
+    sampleEvent->setEventEnd( expectedEnd * 2 );
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end not to exceed the range set by the event start and length properties";
+    
+    eventLength /= 2;
+    sampleEvent->setEventLength( eventLength );
+    expectedEnd = eventStart + ( eventLength - 1 );
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end not to exceed the range set by the event start and updated length properties";
+    
+    // Actual SampleEvent-unique test: testing non sanitation of properties for loopeable events
+    
+    sampleEvent->setLoopeable( true );
+    
+    expectedEnd *= 2;
+    sampleEvent->setEventEnd( expectedEnd );
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end to exceed the range set by the event start and length properties for loopeable event";
+    
+    eventLength /= 2;
+    sampleEvent->setEventLength( eventLength );
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end to exceed the range set by the event start and updated length properties for loopeable event";
+    
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, MixBufferLoopeableEvent )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+    fillAudioBuffer( sourceBuffer );
+    
+    sampleEvent->setBuffer( sourceBuffer, false );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength( 16 * 4 ); // thus will loop 4 times
+    sampleEvent->positionEvent ( 0, 16, 0 );
+    
+    // create an output buffer at a size smaller than the source buffer length
+    
+    int outputSize = ( int )(( double ) sourceSize * .4 );
+    AudioBuffer* targetBuffer = new AudioBuffer( sourceBuffer->amountOfChannels, outputSize );
+    
+    int minBufferPos = sampleEvent->getEventStart();
+    int bufferPos    = minBufferPos;
+    int maxBufferPos = sampleEvent->getEventEnd();
+    
+    // test the seamless mixing over multiple iterations
+    
+    for ( ; bufferPos < maxBufferPos; bufferPos += outputSize )
+    {
+        // mix buffer contents
+        
+        targetBuffer->silenceBuffers();
+        bool loopStarted = bufferPos + ( outputSize - 1 ) > maxBufferPos;
+        int loopOffset   = ( maxBufferPos - bufferPos ) + 1;
+        sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
+        
+        // assert results
+        
+        SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+        
+        for ( int i = 0; i < outputSize; ++i )
+        {
+            int compareOffset = ( bufferPos + i ) % sourceSize;
+            
+            EXPECT_EQ( rawBuffer[ compareOffset ], mixedBuffer[ i ] )
+                << "expected mixed buffer contents to equal the source contents at mixed offset " << i << " for source offset " << compareOffset;
+        }
+    }
+    
+    delete targetBuffer;
+    delete sourceBuffer;
     delete sampleEvent;
 }

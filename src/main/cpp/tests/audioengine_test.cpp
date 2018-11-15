@@ -168,8 +168,7 @@ TEST( AudioEngine, Output )
         rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
 
     event->setBuffer( buffer, false );
-    event->setLoopeable( true );
-    event->setEventLength( AudioEngine::samples_per_bar );
+    event->setEventLength( buffer->bufferSize );
     event->positionEvent( 0, 16, 0 );
     event->addToSequencer();
 

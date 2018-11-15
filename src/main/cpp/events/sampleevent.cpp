@@ -294,6 +294,16 @@ void SampleEvent::setLoopStartOffset( int value )
     _loopStartOffset = std::min( value, _eventLength );
 }
 
+int SampleEvent::getEventLength()
+{
+    return ( _playbackRate == 1.f || _loopeable ) ? _eventLength : ( int )(( float ) _eventLength / _playbackRate );
+}
+
+int SampleEvent::getEventEnd()
+{
+    return ( _playbackRate == 1.f || _loopeable ) ? _eventEnd : _eventStart + getEventLength();
+}
+
 void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                              int minBufferPosition, int maxBufferPosition,
                              bool loopStarted, int loopOffset, bool useChannelRange )
