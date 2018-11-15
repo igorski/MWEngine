@@ -250,7 +250,6 @@ public final class MWEngineActivity extends Activity
         // a C note to be synthesized live when holding down the corresponding button
 
         _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
-        _liveEvent.setVolume( .5f );
     }
 
     protected void flushSong()
