@@ -35,6 +35,10 @@ class SampleEvent : public BaseAudioEvent
 
         void play();
 
+        void setEventLength( int value );
+        void setEventStart( int value );
+        void setEventEnd( int value );
+
         virtual int getBufferRangeStart();
         virtual void setBufferRangeStart( int value );
         virtual int getBufferRangeEnd();
@@ -55,6 +59,16 @@ class SampleEvent : public BaseAudioEvent
 
         float getPlaybackRate();
         void setPlaybackRate( float value );
+
+        // use these to repeat this SampleEvents buffer for the total
+        // event duration. Optionally specify the point at which the loop will start
+
+        bool isLoopeable();
+        void setLoopeable( bool value );
+        int getReadPointer();
+
+        int getLoopStartOffset();
+        void setLoopStartOffset( int value );
 
         int getEventLength();
         int getEventEnd();
@@ -81,6 +95,12 @@ class SampleEvent : public BaseAudioEvent
 
         int _rangePointer;
         float _rangePointerF;
+
+        // looping / custom repeat range
+
+        bool _loopeable;
+        int _readPointer;  // when loopeable, used internally to keep track of last read buffer offset
+        int _loopStartOffset;
 
         // sample buffer regions (i.e. the sample contents thar are played)
 

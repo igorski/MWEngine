@@ -20,6 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <utilities/bufferutility.h>
 #include "sampleevent.h"
 #include "../audioengine.h"
 #include "../global.h"
@@ -51,6 +52,49 @@ void SampleEvent::play()
 {
     _lastPlaybackPosition = _bufferRangeStart;
     BaseAudioEvent::play();
+}
+
+void SampleEvent::setEventLength( int value )
+{
+    _eventLength = value;
+
+    if ( !_loopeable )
+        BaseAudioEvent::setEventLength( value );
+    else
+        // update end position in seconds
+        _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
+}
+
+void SampleEvent::setEventStart( int value )
+{
+    if ( !_loopeable ) {
+        BaseAudioEvent::setEventStart( value );
+        return;
+    }
+    _eventStart = value;
+
+    if ( _eventEnd <= _eventStart )
+    {
+        _eventEnd = _eventStart;
+
+        // update end position in seconds
+        _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
+    }
+    // update start position in seconds
+    _startPosition = BufferUtility::bufferToSeconds( _eventStart, AudioEngineProps::SAMPLE_RATE );
+}
+
+void SampleEvent::setEventEnd( int value )
+{
+    if ( !_loopeable ) {
+        BaseAudioEvent::setEventEnd( value );
+        return;
+    }
+
+    _eventEnd = value;
+
+    // update end position in seconds
+    _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
 }
 
 int SampleEvent::getBufferRangeStart()
@@ -217,6 +261,34 @@ void SampleEvent::setPlaybackRate( float value )
     _playbackRate = std::max( 0.01f, std::min( 100.f, value ));
 }
 
+bool SampleEvent::isLoopeable()
+{
+    return _loopeable;
+}
+
+void SampleEvent::setLoopeable( bool value )
+{
+    _loopeable = value;
+
+    if ( _buffer != nullptr )
+        _buffer->loopeable = _loopeable;
+}
+
+int SampleEvent::getReadPointer()
+{
+    return _readPointer;
+}
+
+int SampleEvent::getLoopStartOffset()
+{
+    return _loopStartOffset;
+}
+
+void SampleEvent::setLoopStartOffset( int value )
+{
+    _loopStartOffset = std::min( value, _eventLength );
+}
+
 int SampleEvent::getEventLength()
 {
     return ( _playbackRate == 1.f ) ? _eventLength : ( int )(( float ) _eventLength / _playbackRate );
@@ -242,15 +314,6 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
         return;
     }
 
-    if ( _playbackRate == 1.f ) {
-        // use BaseAudioEvent behaviour if no custom playback rate is requested
-        BaseAudioEvent::mixBuffer( outputBuffer, bufferPosition, minBufferPosition, maxBufferPosition,
-                                   loopStarted, loopOffset, useChannelRange );
-        return;
-    }
-
-    // custom playback rate
-
     int bufferSize = outputBuffer->bufferSize;
 
     // if the buffer channel amount differs from the output channel amount, we might
@@ -261,6 +324,60 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     // but mixing mono events into multichannel output is OK
     bool mixMono = _buffer->amountOfChannels < outputChannels;
+
+    if ( _playbackRate == 1.f )
+    {
+        // use BaseAudioEvent behaviour if no custom playback rate nor looping is set
+
+        if ( !_loopeable ) {
+            BaseAudioEvent::mixBuffer( outputBuffer, bufferPosition, minBufferPosition,
+                                       maxBufferPosition, loopStarted, loopOffset, useChannelRange );
+        }
+        else
+        {
+            // loopeable events mix their buffer contents using an internal read pointer
+
+            int maxBufPos = _buffer->bufferSize - 1;
+            int bufferPointer, i, c, ca;
+            SAMPLE_TYPE* srcBuffer;
+            SAMPLE_TYPE* tgtBuffer;
+
+            for ( i = 0; i < bufferSize; ++i )
+            {
+                bufferPointer = i + bufferPosition;
+
+                // read sample when the read pointer is within event start and end points
+                if ( bufferPointer >= _eventStart && bufferPointer <= _eventEnd )
+                {
+                    // use range pointers to read within the specific buffer ranges
+                    for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
+                    {
+                        srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
+
+                        tgtBuffer       = outputBuffer->getBufferForChannel( c );
+                        tgtBuffer[ i ] += ( srcBuffer[ _readPointer ] * _volume );
+                    }
+                    // this is a loopeable event (thus using internal read pointer)
+                    // set the internal read pointer to the event start so it keeps playing indefinitely
+
+                    if ( ++_readPointer > maxBufPos )
+                        _readPointer = 0;
+
+                }
+                else if ( loopStarted && bufferPointer > maxBufferPosition )
+                {
+                    // in case the Sequencers read offset exceeds the maximum and the
+                    // Sequencer is looping, read from start. internal _readPointer takes care of correct offset
+                    bufferPosition -= loopOffset;
+
+                    // decrement iterator as no write occurred in this iteration
+                    --i;
+                }
+            }
+        }
+    }
+
+    // custom playback rate
 
     int i, t, t2, c, ca;
     float frac;
@@ -538,6 +655,9 @@ void SampleEvent::init( BaseInstrument* instrument )
     _bufferRangeStart      = 0;
     _bufferRangeEnd        = 0;
     _bufferRangeLength     = 0;
+    _loopeable             = false;
+    _readPointer           = 0;
+    _loopStartOffset       = 0;
     _rangePointer          = 0;     // integer for non altered playback rates
     _rangePointerF         = 0.f;   // floating point for alternate playback rates
     _lastPlaybackPosition  = 0;

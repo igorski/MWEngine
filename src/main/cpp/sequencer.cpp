@@ -153,9 +153,8 @@ namespace Sequencer
                 int eventStart = audioEvent->getEventStart();
                 int eventEnd   = audioEvent->getEventEnd();
 
-                if ( audioEvent->isLoopeable() ||
-                   ( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
-                   ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
+                if (( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
+                    ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
                 {
                     if ( !audioEvent->isDeletable())
                         channel->addEvent( audioEvent );

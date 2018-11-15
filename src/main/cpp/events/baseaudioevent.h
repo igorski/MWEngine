@@ -134,14 +134,7 @@ class BaseAudioEvent
         // ( 1, 32, 4 ) positions audioEvent at 4 / 32 = 1/8th note in the second measure
         virtual void positionEvent( int startMeasure, int subdivisions, int offset );
 
-        /* looping (e.g. for samples) */
-
-        virtual bool isLoopeable();
-        virtual void setLoopeable( bool value );
-
         /* internally used properties */
-
-        virtual int getReadPointer();
 
         virtual bool isDeletable();   // query whether this event is queued for deletion
         virtual void setDeletable( bool value );
@@ -185,7 +178,6 @@ class BaseAudioEvent
 
         // buffer regions
 
-        int _readPointer;  // when loopeable, used to internally keep track of last read buffer offset
         float _startPosition;
         float _endPosition;
 
@@ -193,7 +185,6 @@ class BaseAudioEvent
 
         // properties
         bool _enabled;
-        bool _loopeable;
         bool _livePlayback;
 
         bool _addedToSequencer;      // whether this event exists in the instruments event list (and is eligible for playback)
