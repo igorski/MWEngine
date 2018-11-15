@@ -172,6 +172,10 @@ TEST( AudioEngine, Output )
     event->positionEvent( 0, 16, 0 );
     event->addToSequencer();
 
+    // a single quick iteration at the length of the events buffer will suffice
+    AudioEngine::min_buffer_position = 0;
+    AudioEngine::max_buffer_position = event->getEventLength();
+
     // start the engine
 
     controller->setPlaying( true );

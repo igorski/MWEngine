@@ -219,7 +219,7 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate 
     int sampleLength = sampleBuffer->bufferSize;
 
     // delete previous contents
-    if ( _eventLength != sampleLength || _buffer == nullptr )
+    if ( _eventLength != sampleLength )
         destroyBuffer();
 
     // is this events buffer destroyable ? then clone
@@ -291,7 +291,7 @@ int SampleEvent::getLoopStartOffset()
 
 void SampleEvent::setLoopStartOffset( int value )
 {
-    _loopStartOffset = std::min( value, _eventLength );
+    _loopStartOffset = std::min( value, std::max( 0, _eventLength - 1 ));
 }
 
 int SampleEvent::getEventLength()

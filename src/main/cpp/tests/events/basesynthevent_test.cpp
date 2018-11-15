@@ -32,7 +32,6 @@ TEST( BaseSynthEvent, InstanceId )
         << "expected old instance id to be equal to the new BaseAudioEvents id as the old events have been disposed";
 
     delete audioEvent3;
-// TODO: deleting this leads to occassional segmentation fault!?
     delete instrument;
 }
 

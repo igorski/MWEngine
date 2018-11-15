@@ -39,16 +39,16 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
     // android_AudioOut is called upon each iteration, here
     // we can check whether we can halt the thread
 
-    // note the output buffer is interleaved audio at this point!
     int outputChannels   = AudioEngineProps::OUTPUT_CHANNELS;
     int singleBufferSize = size / outputChannels;
+
+    Debug::log( "Audio Engine test %d running", AudioEngine::test_program );
 
     switch ( AudioEngine::test_program )
     {
         case 0: // engine start test
         case 1: // engine tempo update test
 
-            Debug::log( "stopping mocked engine" );
             ++AudioEngine::test_program;    // advance to next test
             AudioEngine::stop();
             break;
@@ -75,18 +75,27 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                 // test 2. evaluate buffer contents
 
-                for ( int i = 0, c = 0; i < singleBufferSize; ++i, c += outputChannels )
+                // expected samples as defined in audioengine_test.cpp
+                SAMPLE_TYPE expected[] = { -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0 };
+
+                for ( int i = 0, j = 0; i < singleBufferSize; ++i, j += outputChannels )
                 {
-                    // expected samples as defined in audioengine_test.cpp
-                    SAMPLE_TYPE expected[] = { -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0 };
-                    SAMPLE_TYPE sample     = buffer[ c ];
+                    // note we increment by the output channel amount as the output
+                    // buffer contains interleaved samples
+
+                    SAMPLE_TYPE actualSample = buffer[ j ];
+
+                    // previously we tested with a looping event (with buffer of 16 samples and
+                    // event length of a full measure). mixing of looping events is tested in
+                    // sampleevent_test.cpp
 
                     int compareOffset = (( currentIteration * AudioEngineProps::BUFFER_SIZE ) + i ) % 16;
+                    SAMPLE_TYPE expectedSample = ( i < 16 ) ? expected[ compareOffset ] : 0;
 
-                    if ( sample != expected[ compareOffset/*i*/ ])
+                    if ( actualSample != expectedSample )
                     {
                         Debug::log( "TEST 2 expected %f, got %f at output position %d for sequencer buffer position %d",
-                            expected[ i ], sample, c, AudioEngine::bufferPosition );
+                            expectedSample, actualSample, j, AudioEngine::bufferPosition );
 
                         AudioEngine::test_successful = false;
                         AudioEngine::stop();
@@ -98,7 +107,8 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                 if ( currentIteration == maxIterations )
                 {
-                    Debug::log("done.");
+                    Debug::log( "Audio Engine test %d done", AudioEngine::test_program );
+
                     ++AudioEngine::test_program;    // advance to next test
                     AudioEngine::stop();
                 }
