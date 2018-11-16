@@ -354,6 +354,11 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 // read sample when the read pointer is within event start and end points
                 if ( bufferPointer >= _eventStart && bufferPointer <= _eventEnd )
                 {
+                    // when playing event from the beginning, ensure that its looped sample is playing from the beginning
+
+                    if ( bufferPointer == _eventStart && !_livePlayback )
+                        _readPointer = 0;
+
                     // use range pointers to read within the specific buffer ranges
                     for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
                     {
@@ -496,6 +501,13 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
         for ( i = 0; i < bufferSize; ++i, fi += _playbackRate )
         {
+            // when playing event from the beginning, ensure that its looped sample is playing from the beginning
+
+            if (( i + bufferPosition ) == eventStart && !_livePlayback ) {
+                _readPointerF      = 0.f;
+                bufferPointerStart = 0.f;
+            }
+
             // buffer pointer progresses by the playback rate
             bufferPointer = bufferPointerStart + fi;
 
@@ -609,8 +621,8 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 
         int t;
         SAMPLE_TYPE s1, s2;
-        float bufferRangeEnd = ( float ) getBufferRangeEnd(),
-              frac;
+        float bufferRangeEnd = ( float ) getBufferRangeEnd();
+        float frac;
 
         for ( int i = 0; i < bufferSize; ++i )
         {
