@@ -76,31 +76,68 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                 // test 2. evaluate buffer contents
 
                 // expected samples as defined in audioengine_test.cpp
-                SAMPLE_TYPE expected[] = { -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0 };
+                SAMPLE_TYPE event1buffer[] = { -1,-1,-1,-1, 0,0,0,0, 1,1,1,1, 0,0,0,0 };
+                SAMPLE_TYPE event2buffer[] = { .5,.5,.5,.5, 1,1,1,1, -.5,-.5,-.5,-.5, -1,-1,-1,-1 };
+                SAMPLE_TYPE event3buffer[] = { .25,.25,.25,.25, 0,0,0,0, -.25,-.25,-.25,-.25, 0,0,0,0 };
 
-                for ( int i = 0, j = 0; i < singleBufferSize; ++i, j += outputChannels )
+                int event2start = 16;
+                int event2end   = event2start + 16;
+                int event3start = 24; // event 3 ends at singleBufferSize end
+
+                for ( int i = 0, j = 0; i < singleBufferSize; ++i, j += AudioEngineProps::OUTPUT_CHANNELS )
                 {
-                    // note we increment by the output channel amount as the output
-                    // buffer contains interleaved samples
+                    // minus 1 as we are testing the last iterations output buffer
+                    int sequencerPos = (( currentIteration - 1 ) * AudioEngineProps::BUFFER_SIZE ) + i;
 
-                    SAMPLE_TYPE actualSample = buffer[ j ];
+                    // 16 == size of the expected event buffers
+                    // note that the contents of float* are interleaved
+                    // (every other value is a sample for the other channel, hence the j increment)
+                    int readOffset = (( currentIteration * AudioEngineProps::BUFFER_SIZE ) + j ) % 16;
 
-                    // previously we tested with a looping event (with buffer of 16 samples and
-                    // event length of a full measure). mixing of looping events is tested in
-                    // sampleevent_test.cpp
+                    SAMPLE_TYPE leftSample  = buffer[ j ];
+                    SAMPLE_TYPE rightSample = buffer[ j + 1 ];
 
-                    int compareOffset = (( currentIteration * AudioEngineProps::BUFFER_SIZE ) + i ) % 16;
-                    SAMPLE_TYPE expectedSample = ( i < 16 ) ? expected[ compareOffset ] : 0;
+                    SAMPLE_TYPE expectedLeftSample  = 0.f;
+                    SAMPLE_TYPE expectedRightSample = 0.f;
 
-                    if ( actualSample != expectedSample )
-                    {
-                        Debug::log( "TEST 2 expected %f, got %f at output position %d for sequencer buffer position %d",
-                            expectedSample, actualSample, j, AudioEngine::bufferPosition );
+                    // test 2.1 test event1buffer (range 0 - 16)
 
-                        AudioEngine::test_successful = false;
-                        AudioEngine::stop();
-                        break;
+                    if ( sequencerPos < event2start ) {
+                        // mono event will be mixed into both channels
+                        expectedLeftSample = expectedRightSample = event1buffer[ sequencerPos ];
                     }
+                    else if ( sequencerPos >= event2start && sequencerPos < event3start ) {
+                        // stereo event that only has right channel contents
+                        expectedRightSample = event2buffer[ sequencerPos - event2start ];
+                    }
+                    else if ( sequencerPos >= event3start )
+                    {
+                        // left buffer is expected to contain event 3 samples only
+                        expectedLeftSample  = event3buffer[ sequencerPos - event3start ];
+
+                        // right buffer will have overlap with tail of event 2
+                        expectedRightSample = event3buffer[ sequencerPos - event3start ];
+
+                        if ( sequencerPos <= event2end )
+                            expectedRightSample += event2buffer[ sequencerPos - event2start ];
+                    }
+
+                    if ( leftSample != expectedLeftSample )
+                    {
+                        Debug::log( "TEST 2 expected left sample: %f, got %f at buffer readoffset %d at sequencer position %d",
+                                    expectedLeftSample, leftSample, readOffset, sequencerPos );
+                    }
+                    else if ( rightSample != expectedRightSample )
+                    {
+                        Debug::log( "TEST 2 expected right sample: %f, got %f at buffer readoffset %d at sequencer position %d",
+                                    expectedRightSample, rightSample, readOffset, sequencerPos );
+                    }
+                    else {
+                        continue;
+                    }
+                    AudioEngine::test_successful = false;
+                    AudioEngine::stop();
+                    break;
                 }
 
                 // stop the engine once it has rendered the full loop range
