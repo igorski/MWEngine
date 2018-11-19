@@ -324,16 +324,10 @@ namespace AudioEngine
             {
                 int lAmount = channel->liveEvents.size();
 
-                // the volume of the live events is divided by the channel mix as a live event
-                // is played on the same instrument, but just as a different voice (note the
-                // events can have their own mix level)
-
-                float lAmp = channelVolume > 0.f ? 1.0 / channelVolume : 1.0;
-
                 for ( int k = 0; k < lAmount; ++k )
                 {
                     BaseAudioEvent* vo = channel->liveEvents[ k ];
-                    channelBuffer->mergeBuffers( vo->synthesize( amountOfSamples ), 0, 0, lAmp );
+                    channelBuffer->mergeBuffers( vo->synthesize( amountOfSamples ), 0, 0, 1.0f );
                 }
             }
 
