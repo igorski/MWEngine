@@ -67,7 +67,7 @@ namespace DriverAdapter {
 #if DRIVER == 0
         // OpenSL
         if ( driver_openSL != nullptr ) {
-            android_CloseAudioDevice(driver_openSL);
+            android_CloseAudioDevice( driver_openSL );
             delete driver_openSL;
         }
         driver_openSL = nullptr;
