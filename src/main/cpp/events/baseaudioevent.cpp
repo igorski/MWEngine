@@ -348,7 +348,7 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     // but mixing mono events into multichannel output is OK
     bool mixMono = _buffer->amountOfChannels < outputChannels;
 
-    int bufferPointer, readPointer, i, c, ca;
+    int bufferPointer, readPointer, i, c;
     SAMPLE_TYPE* srcBuffer;
     SAMPLE_TYPE* tgtBuffer;
 

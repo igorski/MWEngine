@@ -360,7 +360,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                         _readPointer = 0;
 
                     // use range pointers to read within the specific buffer ranges
-                    for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
+                    for ( c = 0, ca = outputChannels; c < ca; ++c )
                     {
                         srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
 
@@ -520,7 +520,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 frac = readPointer - t; // between 0 - 1 range
 
                 // use range pointers to read within the specific buffer ranges
-                for ( c = 0, ca = _buffer->amountOfChannels; c < ca; ++c )
+                for ( c = 0, ca = outputChannels; c < ca; ++c )
                 {
                     srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
                     tgtBuffer = outputBuffer->getBufferForChannel( c );
