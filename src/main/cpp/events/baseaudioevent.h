@@ -44,8 +44,9 @@ class BaseAudioEvent
         virtual void  setVolume( float value );
 
         /**
-         * used by the AudioEngine to mix in parts of this
-         * event buffer at a specific range
+         * Used by the AudioEngine to mix in parts of this events buffer for a specific range
+         * the buffer samples written are equal to the length of given outputBuffers buffer size
+         * (multiplied by the amount of output channels for the given buffer).
          *
          * outputBuffer describes the AudioBuffer this event will mix its contents into
          * bufferPosition is the current position (playback head) of the sequencer
@@ -55,8 +56,8 @@ class BaseAudioEvent
          *     bufferSize of given outputBuffer will be greater than the maxBufferPosition, meaning the
          *     sequencer will also require a render for the first samples at minBufferPosition (the amount of
          *     bufferSize samples left after having rendered the last samples up until maxBufferPosition)
-         * loopOffset describes at which sample position the loop is started so we can calculate the amount of
-         *     samples to render from the minBufferPosition)
+         * loopOffset describes at which iterator position the loop is started so we can calculate the amount of
+         *     samples to render from the minBufferPosition onwards for the remainder of the mixing)
          * useChannelRange whether the channel we're mixing into has its own range
          */
         virtual void mixBuffer( AudioBuffer* outputBuffer, int bufferPosition, int minBufferPosition,

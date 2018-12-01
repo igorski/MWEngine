@@ -349,9 +349,10 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
             for ( i = 0; i < bufferSize; ++i )
             {
-                bufferPointer = i + bufferPosition;
+                bufferPointer = ( loopStarted && i >= loopOffset ) ? minBufferPosition + ( i - loopOffset ) : i + bufferPosition;
 
                 // read sample when the read pointer is within event start and end points
+
                 if ( bufferPointer >= _eventStart && bufferPointer <= _eventEnd )
                 {
                     // when playing event from the beginning, ensure that its looped sample is playing from the beginning
@@ -372,16 +373,6 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                     if ( ++_readPointer > maxBufPos )
                         _readPointer = _loopStartOffset;
-
-                }
-                else if ( loopStarted && bufferPointer > maxBufferPosition )
-                {
-                    // in case the Sequencers read offset exceeds the maximum and the
-                    // Sequencer is looping, read from start. internal _readPointer takes care of correct offset
-                    bufferPosition -= loopOffset;
-
-                    // decrement iterator as no write occurred in this iteration
-                    --i;
                 }
             }
         }
@@ -402,18 +393,22 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     int maxPos = _buffer->bufferSize - 1;
 
-    // at custom playback rate we require floating point precision
-    float eventStart = ( float ) _eventStart;
-    float eventEnd   = ( float ) getEventEnd();
-    float mbp = ( float ) maxBufferPosition;
-    float lo  = ( float ) loopOffset;
+    // at custom playback rate we require floating point precision for these properties
+    // also we need values relative to the playback speed
+
+    float fEventStart        = ( float ) _eventStart;
+    float fEventEnd          = ( float ) getEventEnd();
+    float fMinBufferPosition = ( float ) minBufferPosition;
+    float fMaxBufferPosition = ( float ) maxBufferPosition * _playbackRate;
+    float fLoopOffset        = ( float ) loopOffset * _playbackRate;
+
     // iterator that increments by the playback rate
     float fi = 0.f;
 
     // take sequencer playhead position and determine what the position
     // should be relative to this events playback rate
-    float bufferPointerStart = eventStart + ((( float ) bufferPosition - eventStart ) * _playbackRate );
-    float bufferPointer, readPointer;
+    float fBufferPosition = fEventStart + ((( float ) bufferPosition - fEventStart ) * _playbackRate );
+    float fBufferPointer, fReadPointer;
 
     // non-loopeable event whose playback is tied to the Sequencer
 
@@ -421,30 +416,31 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     {
         for ( i = 0; i < bufferSize; ++i, fi += _playbackRate )
         {
-            // buffer pointer progresses by the playback rate
-            bufferPointer = bufferPointerStart + fi;
+            // NOTE buffer pointer progresses by the playback rate
+
+            fBufferPointer = ( loopStarted && fi >= fLoopOffset ) ? fMinBufferPosition + ( fi - fLoopOffset ) : fBufferPosition + fi;
 
             // over the max position ? read from the start ( implies that sequence has started loop )
-            if ( bufferPointer > mbp )
+            if ( fBufferPointer > fMaxBufferPosition )
             {
                 if ( useChannelRange )
-                    bufferPointer -= mbp;
+                    fBufferPointer -= fMaxBufferPosition;
 
                 else if ( !loopStarted )
                     break;
             }
 
-            if ( bufferPointer >= eventStart && bufferPointer <= eventEnd )
+            if ( fBufferPointer >= fEventStart && fBufferPointer <= fEventEnd )
             {
                 // mind the offset ! ( source buffer starts at 0 while
-                // the _eventStart defines where the event is positioned
-                // subtract it from current sequencer pointer to get the
+                // the eventStart defines where the event is positioned )
+                // subtract it from current sequencer position to get the
                 // offset relative to the source buffer
 
-                readPointer = bufferPointer - eventStart;
+                fReadPointer = fBufferPointer - fEventStart;
 
-                t    = ( int ) readPointer;
-                frac = readPointer - t; // between 0 - 1 range
+                t    = ( int ) fReadPointer;
+                frac = fReadPointer - t; // between 0 - 1 range
 
                 for ( c = 0; c < outputChannels; ++c )
                 {
@@ -462,34 +458,6 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
                 }
             }
-            else if ( loopStarted && fi >= lo )
-            {
-                bufferPointer = minBufferPosition + ( fi - lo );
-
-                if ( bufferPointer >= eventStart && bufferPointer <= eventEnd )
-                {
-                    readPointer = bufferPointer - eventStart;
-
-                    t    = ( int ) readPointer;
-                    frac = readPointer - t; // between 0 - 1 range
-
-                    for ( c = 0; c < outputChannels; ++c )
-                    {
-                        srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
-                        tgtBuffer = outputBuffer->getBufferForChannel( c );
-
-                        t2 = t + 1;
-
-                        if ( t2 > maxPos )
-                            continue;
-
-                        s1 = srcBuffer[ t ];
-                        s2 = srcBuffer[ t2 ];
-
-                        tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
-                    }
-                }
-            }
         }
     }
     else
@@ -497,27 +465,32 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
         // loopeable events mix their buffer contents using an internal read pointer
 
         float maxBufPos    = ( float ) _buffer->bufferSize - 1.f;
-        bufferPointerStart = _readPointerF; // use internal read pointer when reading loopeable content
+        fBufferPosition = _readPointerF; // use internal read pointer when reading loopeable content
 
         for ( i = 0; i < bufferSize; ++i, fi += _playbackRate )
         {
-            // when playing event from the beginning, ensure that its looped sample is playing from the beginning
+            // when playing event from the beginning (e.g. "(re)trigger"), ensure that its looped
+            // sample is playing from the beginning too. We use the non-rate adjusted iterators
+            // to determine this, as they are locked to the Sequencer which is responsible
+            // for these (re)triggers
 
-            if (( i + bufferPosition ) == eventStart && !_livePlayback ) {
-                _readPointerF      = 0.f;
-                bufferPointerStart = 0.f;
+            if ( loopStarted && i >= loopOffset ) {
+                _readPointerF   = 0.0f;
+                fBufferPosition = 0.0f;
+                fi              = 0.0f;
             }
 
-            // buffer pointer progresses by the playback rate
-            bufferPointer = bufferPointerStart + fi;
+            // NOTE buffer pointer progresses by the playback rate
+
+            fBufferPointer = fBufferPosition + fi;
 
             // read sample when the read pointer is within event start and end points
-            if ( bufferPointer >= eventStart && bufferPointer <= eventEnd )
+            if ( fBufferPointer >= fEventStart && fBufferPointer <= fEventEnd )
             {
-                readPointer = bufferPointer - eventStart;
+                fReadPointer = fBufferPointer - fEventStart;
 
-                t    = ( int ) readPointer;
-                frac = readPointer - t; // between 0 - 1 range
+                t    = ( int ) fReadPointer;
+                frac = fReadPointer - t; // between 0 - 1 range
 
                 // use range pointers to read within the specific buffer ranges
                 for ( c = 0, ca = outputChannels; c < ca; ++c )
@@ -541,15 +514,6 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
                 if (( _readPointerF += _playbackRate ) > maxBufPos )
                     _readPointerF = ( float ) _loopStartOffset;
-            }
-            else if ( loopStarted && bufferPointer > mbp )
-            {
-                // in case the Sequencers read offset exceeds the maximum and the
-                // Sequencer is looping, read from start. internal _readPointerF takes care of correct offset
-                bufferPointerStart -= lo;
-
-                // decrement iterator as no write occurred in this iteration
-                --i;
             }
         }
     }
