@@ -296,7 +296,8 @@ void SampleEvent::setLoopStartOffset( int value )
 
 int SampleEvent::getEventLength()
 {
-    return ( _playbackRate == 1.f || _loopeable ) ? _eventLength : ( int )(( float ) _eventLength / _playbackRate );
+    return _eventLength;
+   // return ( _playbackRate == 1.f || _loopeable ) ? _eventLength : ( int )(( float ) _eventLength / _playbackRate );
 }
 
 int SampleEvent::getEventEnd()
@@ -469,20 +470,21 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
         for ( i = 0; i < bufferSize; ++i, fi += _playbackRate )
         {
+            // NOTE buffer pointer progresses by the playback rate
+
+            fBufferPointer = fBufferPosition + fi;
+
             // when playing event from the beginning (e.g. "(re)trigger"), ensure that its looped
             // sample is playing from the beginning too. We use the non-rate adjusted iterators
             // to determine this, as they are locked to the Sequencer which is responsible
             // for these (re)triggers
 
-            if ( loopStarted && i >= loopOffset ) {
+            if (( loopStarted && i >= loopOffset ) ||
+                ( !_livePlayback && ( bufferPosition + i ) == _eventStart )) {
                 _readPointerF   = 0.0f;
                 fBufferPosition = 0.0f;
                 fi              = 0.0f;
             }
-
-            // NOTE buffer pointer progresses by the playback rate
-
-            fBufferPointer = fBufferPosition + fi;
 
             // read sample when the read pointer is within event start and end points
             if ( fBufferPointer >= fEventStart && fBufferPointer <= fEventEnd )
