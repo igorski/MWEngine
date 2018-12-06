@@ -150,8 +150,8 @@ public final class MWEngineActivity extends Activity
     protected void setupSong()
     {
         _sequencerController = _engine.getSequencerController();
-        _sequencerController.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
-        _sequencerController.setTempoNow( 120.0f, 4, 4 );            // 120 BPM in 4/4 time
+        _sequencerController.setTempoNow( 120.0f, 4, 4 ); // 120 BPM in 4/4 time
+        _sequencerController.updateMeasures( 4, STEPS_PER_MEASURE ); // we'll loop four measures with given subdivisions
 
         // cache some of the engines properties
 
@@ -212,6 +212,8 @@ public final class MWEngineActivity extends Activity
         loop.setSample( SampleManager.getSample( "1234" ));
         int originalSampleLength = loop.getEventLength();
         loop.setLoopeable( true );
+        loop.setEventStart( _sequencerController.getSamplesPerBar() / 2 );
+        loop.setEventLength( originalSampleLength * 2 ); // extend playback by twice the sample length
         loop.setLoopStartOffset( originalSampleLength / 2 ); // start loop halfway through the sample (from 5 to 8)
         loop.addToSequencer();
         _drumEvents.add( loop );
@@ -224,6 +226,11 @@ public final class MWEngineActivity extends Activity
         // set loop range halfway through the sample (thus starts looping from when counting from 5 to 8)
         _liveEvent.setLoopeable( true );
         _liveEvent.setLoopStartOffset( _liveEvent.getEventLength() / 2 );
+
+        // tests
+        // PERFORM EACH TWICE (once unpitched, once pitched)
+        // sequenced sample events: non looped, looped (extend length), looped w/ custom start offset
+        // live sample events: non looped, looped, looped w/custom start offset
     }
 
     protected void flushSong()
