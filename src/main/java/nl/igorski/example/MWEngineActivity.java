@@ -17,8 +17,6 @@ import java.util.Vector;
 
 public final class MWEngineActivity extends Activity
 {
-    public final String LOG_ID = "MWENGINE";
-
     /**
      * IMPORTANT : when creating native layer objects through JNI it
      * is important to remember that when the Java references go out of scope
@@ -150,8 +148,8 @@ public final class MWEngineActivity extends Activity
     protected void setupSong()
     {
         _sequencerController = _engine.getSequencerController();
+        _sequencerController.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
         _sequencerController.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
-        _sequencerController.setTempoNow( 130.0f, 4, 4 );            // 130 BPM in 4/4 time
 
         // cache some of the engines properties
 
@@ -396,9 +394,8 @@ public final class MWEngineActivity extends Activity
     private class PitchChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            for ( final SampleEvent drumEvent : _drumEvents ) {
+            for ( final SampleEvent drumEvent : _drumEvents )
                 drumEvent.setPlaybackRate(( progress / 50f ));
-            }
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
@@ -410,8 +407,8 @@ public final class MWEngineActivity extends Activity
     private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
-            final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
+           final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
+           final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
            final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
             _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
         }
