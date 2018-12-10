@@ -307,6 +307,11 @@ int SampleEvent::getEventLength()
     return ( _playbackRate == 1.f || _loopeable ) ? _eventLength : ( int )(( float ) _eventLength / _playbackRate );
 }
 
+int SampleEvent::getOriginalEventLength()
+{
+    return _eventLength;
+}
+
 int SampleEvent::getEventEnd()
 {
     return ( _playbackRate == 1.f || _loopeable ) ? _eventEnd : _eventStart + getEventLength();
@@ -459,7 +464,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     t2 = t + 1;
 
                     if ( t2 > maxPos )
-                        continue;
+                        break;
 
                     s1 = srcBuffer[ t ];
                     s2 = srcBuffer[ t2 ];
@@ -508,7 +513,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 // when looping, we start reading from the loop start offset again
 
                 if ( fReadPointer > fMaxPos ) {
-                    fReadPointer = fmod( fReadPointer, fMaxPos ) + ( float ) _loopStartOffset;
+                    fReadPointer = + ( float ) _loopStartOffset + fmod( fReadPointer, fMaxPos - ( float ) _loopStartOffset );
                 }
 
                 t    = ( int ) fReadPointer;
@@ -523,7 +528,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     t2 = t + 1;
 
                     if ( t2 > maxPos )
-                        continue;
+                        break;
 
                     s1 = srcBuffer[ t ];
                     s2 = srcBuffer[ t2 ];

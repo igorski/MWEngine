@@ -70,7 +70,12 @@ class SampleEvent : public BaseAudioEvent
         int getLoopStartOffset();
         void setLoopStartOffset( int value );
 
+        // custom override allowing the engine to get this events
+        // length relative to this playback rate
+
         int getEventLength();
+
+        int getOriginalEventLength(); // original, untransformed event length
         int getEventEnd();
 
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,

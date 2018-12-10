@@ -550,6 +550,9 @@ TEST( SampleEvent, PlaybackRate )
     EXPECT_EQ( eventLength / 2, sampleEvent->getEventLength() )
         << "expected event length at double playback rate to be at half the original length";
 
+    EXPECT_EQ( eventLength, sampleEvent->getOriginalEventLength() )
+        << "expected original event length to be returned unchanged";
+
     EXPECT_EQ( eventStart + ( eventLength / 2 ), sampleEvent->getEventEnd() )
         << "expected event end at double playback rate to be below the original offset";
 
@@ -592,7 +595,7 @@ TEST( SampleEvent, PlaybackRateLoopeable )
     EXPECT_EQ( eventLength, sampleEvent->getEventLength() )
         << "expected event length at double playback rate to be at half the original length for a loopeable event";
 
-    EXPECT_EQ( eventStart, sampleEvent->getEventEnd() )
+    EXPECT_EQ( eventEnd, sampleEvent->getEventEnd() )
         << "expected event end at double playback rate to be below the original offset for a loopeable event";
 
     delete sampleEvent;
