@@ -233,8 +233,8 @@ namespace AudioEngine
 
         // read pointer exceeds maximum allowed offset (max_buffer_position) ? => sequencer has started its loop
         // we must now also gather extra events at the start position (min_buffer_position)
-        loopOffset = ( max_buffer_position - bufferPosition ) + 1; // buffer index where the loop occurs
-        loopAmount = amountOfSamples - loopOffset; // loopOffset is equal to the amount of samples read prior to loop start
+        loopOffset = ( max_buffer_position - bufferPosition ) + 1; // buffer iterator index at which the loop will occur
+        loopAmount = amountOfSamples - loopOffset;                 // the amount of samples to write after looping starts
 
         // collect all audio events that are eligible for playback for this iteration
         Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );

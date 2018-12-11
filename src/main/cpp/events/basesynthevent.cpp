@@ -184,11 +184,9 @@ void BaseSynthEvent::calculateBuffers()
         _updateAfterUnlock = true;
         return;
     }
-    int oldLength;
 
     if ( isSequenced )
     {
-        oldLength = _eventLength;
         setEventStart( position * ( int ) AudioEngine::samples_per_step );
         setEventLength(( int )( length * AudioEngine::samples_per_step ));
         setEventEnd( _eventStart + _eventLength );
@@ -197,7 +195,6 @@ void BaseSynthEvent::calculateBuffers()
         // quick releases of a noteOn-instruction should ring for at least a 64th note
         setEventLength( AudioEngine::samples_per_bar );     // important for amplitude swell in
         _minLength    = AudioEngine::samples_per_bar / 64;
-        oldLength     = AudioEngineProps::BUFFER_SIZE;  // buffer is as long as the engine's buffer size
         _hasMinLength = false;                          // keeping track if the min length has been rendered
     }
 
@@ -230,7 +227,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
             return;
     }
 
-    int bufferEndPos = bufferPos + AudioEngineProps::BUFFER_SIZE;
+    int bufferEndPos = bufferPos + outputBuffer->bufferSize;
 
     // we use the overridden getter method as the event length can be
     // extended by a positive release time on the instruments ADSR envelope
@@ -242,7 +239,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         lastWriteIndex  = _eventStart > bufferPos ? 0 : bufferPos - _eventStart;
         int writeOffset = _eventStart > bufferPos ? _eventStart - bufferPos : 0;
 
-        // if we're mixing into the ADSR release tail, make sure released is triggered
+        // if we're mixing into the ADSR release tail, make sure release envelope is triggered
 
         if ( bufferPos > _eventEnd ) {
             if ( !released ) {
@@ -264,24 +261,31 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
             calculateBuffers();
     }
 
-    if ( loopStarted && bufferPos >= loopOffset )
+    if ( loopStarted )
     {
-        bufferPos = minBufferPosition + loopOffset;
+        // Sequencer has started its loop, generate a new render from the beginning of
+        // the Sequencer position for the total amount of loop frames in length
 
-        if ( bufferPos >= _eventStart && bufferPos <= eventEnd )
+        int totalSamplesToWrite = outputBuffer->bufferSize - loopOffset;
+
+        if (( minBufferPosition >= _eventStart || ( minBufferPosition + totalSamplesToWrite ) > _eventStart ) &&
+              minBufferPosition < eventEnd )
         {
-            lastWriteIndex = 0; // render the snippet from the start
+            // render the snippet from the starts
+            calculateBuffers();
+            lastWriteIndex = 0;
 
-            // TODO: specify range in ::render method ? this would avoid unnecessary buffer merging ;)
+            // TODO: specify total render range in ::render method ? this would avoid unnecessary buffer merging ;)
+            // also synthesizer now renders a full output buffer size (wasteful)
 
-            _synthInstrument->synthesizer->render( _buffer, this );    // overwrites old buffer contents
+            _synthInstrument->synthesizer->render( _buffer, this ); // overwrites previous buffer contents
 
             // note we merge using 1.0 as mix volume (event volume was applied during synthesis)
             outputBuffer->mergeBuffers( _buffer, 0, loopOffset, 1.0 );
 
-            // reset of event properties at end of write
-            if ( lastWriteIndex >= _eventLength )
-                calculateBuffers();
+            // update the last write index so the next iteration can pick up
+            // rendering from the last audible sample
+            lastWriteIndex = totalSamplesToWrite;
         }
     }
     unlock();

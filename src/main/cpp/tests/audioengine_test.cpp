@@ -134,44 +134,66 @@ TEST( AudioEngine, Output )
     // 130 BPM in 4/4 time
     controller->prepare( 1340, 4, 4 );
 
-    // mono output with 48 kHz sample rate and buffer size of 16 samples
-    AudioEngine::setup( 16, 48000, 1 );
+    // stereo output at 48 kHz sample rate and buffer size of 16 samples
+    AudioEngine::setup( 16, 48000, 2 );
 
     controller->setTempoNow( 130.0f, 4, 4 );
     controller->rewind();
 
     AudioEngine::volume = 1;    // QQQ : later on we test mix volume ;)
 
-    // create an AudioEvent that holds a simple waveform
-    // the resulting 16 sample mono buffer contains the following samples:
-    //
-    // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
-    //
-    // the event will last for an entire measure in duration
+    // create three AudioEvents where each will have the following buffers
+    SAMPLE_TYPE event1buffer[] = { -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0 };
+    SAMPLE_TYPE event2buffer[] = { .5,.5,.5,.5,1,1,1,1,-.5,-.5,-.5,-.5,-1,-1,-1,-1 };
+    SAMPLE_TYPE event3buffer[] = { .25,.25,.25,.25,0,0,0,0,-.25,-.25,-.25,-.25,0,0,0,0 };
 
     BaseInstrument* instrument = new BaseInstrument();
-    BaseAudioEvent* event      = new BaseAudioEvent( instrument );
 
-    AudioBuffer* buffer    = new AudioBuffer( 1, 16 );
-    SAMPLE_TYPE* rawBuffer = buffer->getBufferForChannel( 0 );
+    // event1 has a mono buffer used for testing that mono content is
+    // written to all output channels
 
-    for ( int i = 0; i < 4; ++i )
-        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+    BaseAudioEvent* event1 = new BaseAudioEvent( instrument );
+    AudioBuffer* buffer1   = new AudioBuffer( 1, 16 );
 
-    for ( int i = 4; i < 8; ++i )
-        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+    for ( int i = 0; i < 16; ++i )
+        buffer1->getBufferForChannel( 0 )[ i ] = event1buffer[ i ];
 
-    for ( int i = 8; i < 12; ++i )
-        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+    event1->setBuffer( buffer1, false );
+    event1->setEventLength( buffer1->bufferSize );
+    event1->addToSequencer();
 
-    for ( int i = 12; i < 16; ++i )
-        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+    // event2 has a stereo buffer that only has content in the right channel
+    // used for testing that multichannel audio is renderer to the output correctly
 
-    event->setBuffer( buffer, false );
-    event->setLoopeable( true );
-    event->setEventLength( AudioEngine::samples_per_bar );
-    event->positionEvent( 0, 16, 0 );
-    event->addToSequencer();
+    BaseAudioEvent* event2 = new BaseAudioEvent( instrument );
+    AudioBuffer* buffer2   = new AudioBuffer( 2, 16 );
+
+    for ( int i = 0; i < 16; ++i )
+        buffer2->getBufferForChannel( 1 )[ i ] = event2buffer[ i ];
+
+    event2->setBuffer( buffer2, false );
+    event2->setEventLength( buffer2->bufferSize );
+    event2->setEventStart( 16 ); // after event1 has finished playing
+    event2->addToSequencer();
+
+    // event3 has buffer contents in the left and right channels and overlaps
+    // event2. this is used for testing sample summing
+
+    BaseAudioEvent* event3 = new BaseAudioEvent( instrument );
+    AudioBuffer* buffer3   = new AudioBuffer( 2, 16 );
+
+    for ( int i = 0; i < 16; ++i ) {
+        buffer3->getBufferForChannel( 0 )[ i ] = event3buffer[ i ];
+        buffer3->getBufferForChannel( 1 )[ i ] = event3buffer[ i ];
+    }
+    event3->setBuffer( buffer3, false );
+    event3->setEventLength( buffer3->bufferSize );
+    event3->setEventStart( 24 ); // start half way through event2
+    event3->addToSequencer();
+
+    // max buffer position is at the end of the last event
+    AudioEngine::min_buffer_position = 0;
+    AudioEngine::max_buffer_position = event3->getEventStart() + event3->getEventLength();
 
     // start the engine
 
@@ -193,8 +215,12 @@ TEST( AudioEngine, Output )
 
     delete controller;
     delete instrument;
-    delete event;
-    delete buffer;
+    delete event1;
+    delete event2;
+    delete event3;
+    delete buffer1;
+    delete buffer2;
+    delete buffer3;
 }
 
 TEST( AudioEngine, OutputAtLoopStart )

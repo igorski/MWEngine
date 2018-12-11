@@ -53,7 +53,7 @@ void SequencerController::prepare( float aQueuedTempo, int aTimeSigBeatAmount, i
     {
         setTempo( aQueuedTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
         AudioEngine::handleTempoUpdate( aQueuedTempo, false );   // just to initialize all buffer sizes
-        setLoopRange( 0, AudioEngine::samples_per_bar - 1, stepsPerBar );
+        setLoopRange( 0, ( AudioEngine::amount_of_bars * AudioEngine::samples_per_bar ) - 1, stepsPerBar );
     }
 };
 

@@ -318,6 +318,288 @@ TEST( SampleEvent, GetBufferForRange )
     delete buffer;
 }
 
+TEST( SampleEvent, PlaybackRateDefault )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    EXPECT_EQ( 1.f, sampleEvent->getPlaybackRate() )
+        << "expected default playback rate to be 1";
+
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, PlaybackRateSetter )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    float expectedRate = randomFloat();
+    sampleEvent->setPlaybackRate( expectedRate );
+
+    EXPECT_EQ( expectedRate, sampleEvent->getPlaybackRate() )
+        << "expected default playback rate to equal the set value";
+
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, PlaybackRateLimit )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    sampleEvent->setPlaybackRate( 0.f );
+
+    EXPECT_EQ( 0.01f, sampleEvent->getPlaybackRate())
+        << "expected minimum rate of 1% of original speed";
+
+    sampleEvent->setPlaybackRate( 1000.f );
+
+    EXPECT_EQ( 100.f, sampleEvent->getPlaybackRate())
+        << "expected maximum rate of 100 x original speed";
+
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, PlaybackRate )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    // properties for 1.f playback rate
+    int eventStart  = 1000;
+    int eventLength = 1000;
+    int eventEnd    = eventStart + eventLength - 1;
+
+    sampleEvent->setEventStart( eventStart );
+    sampleEvent->setEventLength( eventLength );
+
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
+        << "expected event start to be unchanged for 1.f playback rate";
+
+    EXPECT_EQ( eventLength, sampleEvent->getEventLength() )
+        << "expected event length to be unchanged for 1.f playback rate";
+
+    EXPECT_EQ( eventEnd, sampleEvent->getEventEnd() )
+        << "expected event end to be unchanged for 1.f playback rate";
+
+    // adjust playback rate to 2.f (twice the original speed)
+
+    sampleEvent->setPlaybackRate( 2.f );
+
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
+        << "expected event start at double playback rate to remain unchanged";
+
+    EXPECT_EQ( eventLength / 2, sampleEvent->getEventLength() )
+        << "expected event length at double playback rate to be at half the original length";
+
+    EXPECT_EQ( eventLength, sampleEvent->getOriginalEventLength() )
+        << "expected original event length to be returned unchanged";
+
+    EXPECT_EQ( eventStart + ( eventLength / 2 ), sampleEvent->getEventEnd() )
+        << "expected event end at double playback rate to be below the original offset";
+
+    // adjust playback rate to .5f (half the original speed)
+
+    sampleEvent->setPlaybackRate( .5f );
+
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
+        << "expected event start at half playback rate to remain unchanged";
+
+    EXPECT_EQ( eventLength * 2, sampleEvent->getEventLength() )
+        << "expected event length at half playback rate to be at twice the original length";
+
+    EXPECT_EQ( eventStart + ( eventLength * 2 ), sampleEvent->getEventEnd() )
+        << "expected event end at half playback rate to be above the original offset";
+
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, PlaybackRateLoopeable )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    sampleEvent->setLoopeable( true );
+
+    // properties for 1.f playback rate
+    int eventStart  = 1000;
+    int eventLength = 1000;
+    int eventEnd    = eventStart + eventLength - 1;
+
+    sampleEvent->setEventStart( eventStart );
+    sampleEvent->setEventLength( eventLength );
+
+    // adjust playback rate to 2.f (twice the original speed)
+
+    sampleEvent->setPlaybackRate( 2.f );
+
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
+        << "expected event start at double playback rate to remain unchanged for a loopeable event";
+
+    EXPECT_EQ( eventLength, sampleEvent->getEventLength() )
+        << "expected event length at double playback rate to be at half the original length for a loopeable event";
+
+    EXPECT_EQ( eventEnd, sampleEvent->getEventEnd() )
+        << "expected event end at double playback rate to be below the original offset for a loopeable event";
+
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, PlaybackRateCustomRange )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    // properties for 1.f playback rate
+    int rangeStart  = 1000;
+    int rangeLength = 1000;
+    int rangeEnd    = rangeStart + rangeLength - 1;
+
+    sampleEvent->setBufferRangeStart( rangeStart );
+    sampleEvent->setBufferRangeEnd( rangeEnd );
+
+    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
+        << "expected buffer range start to be unchanged for 1.f playback rate";
+
+    EXPECT_EQ( rangeLength, sampleEvent->getBufferRangeLength() )
+        << "expected buffer range length to be unchanged for 1.f playback rate";
+
+    EXPECT_EQ( rangeEnd, sampleEvent->getBufferRangeEnd() )
+        << "expected buffer range end to be unchanged for 1.f playback rate";
+
+    // adjust playback rate to 2.f (twice the original speed)
+
+    sampleEvent->setPlaybackRate( 2.f );
+
+    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
+        << "expected buffer range start at double playback rate to remain unchanged";
+
+    EXPECT_EQ( rangeLength / 2, sampleEvent->getBufferRangeLength() )
+        << "expected buffer range length at double playback rate to be at half the original length";
+
+    EXPECT_EQ( rangeStart + ( rangeLength / 2 ), sampleEvent->getBufferRangeEnd() )
+        << "expected buffer range end at double playback rate to be below the original offset";
+
+    // adjust playback rate to .5f (half the original speed)
+
+    sampleEvent->setPlaybackRate( .5f );
+
+    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
+        << "expected buffer range start at half playback rate to remain unchanged";
+
+    EXPECT_EQ( rangeLength * 2, sampleEvent->getBufferRangeLength() )
+        << "expected buffer range length at half playback rate to be at twice the original length";
+
+    EXPECT_EQ( rangeStart + ( rangeLength * 2 ), sampleEvent->getBufferRangeEnd() )
+        << "expected buffer range end at half playback rate to be above the original offset";
+
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, LoopeableState )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    
+    ASSERT_FALSE( sampleEvent->isLoopeable() )
+        << "expected audio event not to be loopeable after construction";
+    
+    sampleEvent->setLoopeable( true );
+    
+    ASSERT_TRUE( sampleEvent->isLoopeable() )
+        << "expected audio event to be loopeable after enabling loop";
+    
+    sampleEvent->setLoopeable( false );
+    
+    ASSERT_FALSE( sampleEvent->isLoopeable() )
+        << "expected audio event not to be loopeable after disabling loop";
+    
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, PositionInSamples )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    
+    int eventLength = randomInt( 512, 8192 );
+    int eventStart  = randomInt( 0, eventLength / 2 );
+    int expectedEnd = eventStart + ( eventLength - 1 );
+    
+    sampleEvent->setEventStart ( eventStart );
+    sampleEvent->setEventLength( eventLength );
+    
+    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
+        << "expected eventStart to match the set position";
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected eventEnd to match the implied end set by start + length";
+    
+    EXPECT_EQ( eventLength, sampleEvent->getEventLength() )
+        << "expected eventLength to match the set length";
+    
+    // test whether values in seconds have updated accordingly
+    // NOTE: this should be base (BaseAudioEvent) behaviour, we're verifying
+    // here whether the overrides behave accordingly
+    
+    int SAMPLE_RATE = 44100;
+    float expectedStartPosition = BufferUtility::bufferToSeconds( eventStart, SAMPLE_RATE );
+    float expectedEndPosition   = BufferUtility::bufferToSeconds( expectedEnd, SAMPLE_RATE );
+    float expectedDuration      = expectedEndPosition - expectedStartPosition;
+    
+    EXPECT_FLOAT_EQ( expectedStartPosition, sampleEvent->getStartPosition() );
+    EXPECT_FLOAT_EQ( expectedEndPosition,   sampleEvent->getEndPosition() );
+    EXPECT_FLOAT_EQ( expectedDuration,      sampleEvent->getDuration() );
+    
+    // test auto sanitation of properties
+    
+    sampleEvent->setEventEnd( expectedEnd * 2 );
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end not to exceed the range set by the event start and length properties";
+    
+    eventLength /= 2;
+    sampleEvent->setEventLength( eventLength );
+    expectedEnd = eventStart + ( eventLength - 1 );
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end not to exceed the range set by the event start and updated length properties";
+    
+    // Actual SampleEvent-unique test: testing non sanitation of properties for loopeable events
+    
+    sampleEvent->setLoopeable( true );
+    
+    expectedEnd *= 2;
+    sampleEvent->setEventEnd( expectedEnd );
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end to exceed the range set by the event start and length properties for loopeable event";
+    
+    eventLength /= 2;
+    sampleEvent->setEventLength( eventLength );
+    
+    EXPECT_EQ( expectedEnd, sampleEvent->getEventEnd() )
+        << "expected event end to exceed the range set by the event start and updated length properties for loopeable event";
+    
+    delete sampleEvent;
+}
+
+
+TEST( SampleEvent, LoopWithCustomOffset )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    int eventLength = 16;
+    sampleEvent->setEventLength( eventLength );
+
+    EXPECT_EQ( sampleEvent->getLoopStartOffset(), 0 )
+        << "expected loop start offset by default to equal 0";
+
+    int startOffset = 8;
+
+    sampleEvent->setLoopStartOffset( startOffset );
+
+    EXPECT_EQ( sampleEvent->getLoopStartOffset(), startOffset )
+        << "expected loop start offset to equal the set value";
+
+    sampleEvent->setLoopStartOffset( eventLength * 2);
+
+    EXPECT_EQ( sampleEvent->getLoopStartOffset(), eventLength - 1 )
+        << "expected loop start offset to be sanitized to the event length";
+
+    delete sampleEvent;
+}
+
 // test overridden mix buffer method
 TEST( SampleEvent, MixBuffer )
 {
@@ -397,7 +679,6 @@ TEST( SampleEvent, MixBuffer )
                     << "expected mixed sample at " << i << " to be equal to the calculated expected sample at read offset " << r;
             }
         }
-
     }
     else {
         ASSERT_FALSE( bufferHasContent( targetBuffer ))
@@ -431,8 +712,8 @@ TEST( SampleEvent, MixBuffer )
     expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
                     (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd ) ||
                     ( loopStartIteratorPosition > maxBufferPos && (
-                        ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
-                        ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
+                            ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
+                            ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
 
     sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
 
@@ -479,140 +760,438 @@ TEST( SampleEvent, MixBuffer )
     delete buffer;
 }
 
-TEST( SampleEvent, PlaybackRateDefault )
+TEST( SampleEvent, MixBufferCustomPlaybackRangeDoubleSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
-    EXPECT_EQ( 1.f, sampleEvent->getPlaybackRate() )
-        << "expected default playback rate to be 1";
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
 
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    for ( int i = 8; i < 12; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+
+    for ( int i = 12; i < 16; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setPlaybackRate( 2.0f ); // twice the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+
+    SAMPLE_TYPE expected[16] = { -1, -1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferCustomPlaybackRangeHalfSpeed )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    for ( int i = 8; i < 12; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+
+    for ( int i = 12; i < 16; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    sampleEvent->setSample( sourceBuffer, false);
+    sampleEvent->setPlaybackRate( 0.5f ); // half the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 2 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+    // note the .5 values as sample interpolation is expected
+
+    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, -1, -1, -1, -.5, 0, 0, 0, 0, 0, 0, 0, .5, 1, 1, 1, 1, 1, 1, 1, .5, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, 32, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferLoopeableEvent )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+    fillAudioBuffer( sourceBuffer );
+    
+    sampleEvent->setBuffer( sourceBuffer, false );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength( 16 * 4 ); // thus will loop 4 times
+    sampleEvent->positionEvent ( 0, 16, 0 );
+    
+    // create an output buffer at a size smaller than the source buffer length
+    
+    int outputSize = ( int )(( double ) sourceSize * .4 );
+    AudioBuffer* targetBuffer = new AudioBuffer( sourceBuffer->amountOfChannels, outputSize );
+    
+    int minBufferPos = sampleEvent->getEventStart();
+    int bufferPos    = minBufferPos;
+    int maxBufferPos = sampleEvent->getEventEnd();
+    
+    // test the seamless mixing over multiple iterations
+    
+    for ( ; bufferPos < maxBufferPos; bufferPos += outputSize )
+    {
+        // mix buffer contents
+        
+        targetBuffer->silenceBuffers();
+        bool loopStarted = bufferPos + ( outputSize - 1 ) > maxBufferPos;
+        int loopOffset   = ( maxBufferPos - bufferPos ) + 1;
+        sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
+        
+        // assert results
+        
+        SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+        
+        for ( int i = 0; i < outputSize; ++i )
+        {
+            int compareOffset = ( bufferPos + i ) % sourceSize;
+            
+            EXPECT_EQ( rawBuffer[ compareOffset ], mixedBuffer[ i ] )
+                << "expected mixed buffer contents to equal the source contents at mixed offset " << i << " for source offset " << compareOffset;
+        }
+    }
+    
+    delete targetBuffer;
+    delete sourceBuffer;
     delete sampleEvent;
 }
 
-TEST( SampleEvent, PlaybackRateSetter )
+TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeDoubleSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
-    float expectedRate = randomFloat();
-    sampleEvent->setPlaybackRate( expectedRate );
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
 
-    EXPECT_EQ( expectedRate, sampleEvent->getPlaybackRate() )
-        << "expected default playback rate to equal the set value";
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,.5,.5
 
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength( sourceSize * 2 );  // extend playback by twice the sample length
+    sampleEvent->setPlaybackRate( 2.0f ); // twice the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 2 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+    // note that we verify empty samples at the end
+    // and the .5 value at index 6 as sample interpolation is expected
+
+    SAMPLE_TYPE expected[16] = { -1, -1, .5, .5, -1, -1, .5, -1, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeHalfSpeed )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,.5,.5
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength(( int )( sourceSize * 1.5 )); // extend playback to play 1.5 times
+    sampleEvent->setPlaybackRate( 0.5f ); // half the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 4 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at half the speed
+    // note we verify empty samples at the end and that there is interpolation happening
+
+    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, -1, -1, -1, -.25, .5, .5, .5, .5, .5, .5, 0, -1,
+                                 -1, -1, -1, -1, -1, -.25, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferCustomLoopOffset )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    for ( int i = 8; i < 12; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+
+    for ( int i = 12; i < 16; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    sampleEvent->setBuffer( sourceBuffer, false );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength( 16 * 4 ); // thus will loop 4 times
+    sampleEvent->positionEvent ( 0, 16, 0 );
+    sampleEvent->setLoopStartOffset( 8 ); // thus loop will start halfway through the sourceBuffer
+
+    // create an output buffer at double the size of the source buffer
+
+    int outputSize = sourceSize * 2;
+    AudioBuffer* targetBuffer = new AudioBuffer( sourceBuffer->amountOfChannels, outputSize );
+
+    int minBufferPos = sampleEvent->getEventStart();
+    int bufferPos    = minBufferPos;
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing of looped content
+    // note that at index 16 we repeat 8 samples from index 8 - 15 and again at index 24
+
+    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, sourceSize, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < outputSize; ++i )
+    {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete targetBuffer;
+    delete sourceBuffer;
     delete sampleEvent;
 }
 
-TEST( SampleEvent, PlaybackRateLimit )
+TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeDoubleSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
-    sampleEvent->setPlaybackRate( 0.f );
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
 
-    EXPECT_EQ( 0.01f, sampleEvent->getPlaybackRate()) << "expected minimum rate of 1% of original speed";
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,1,1
 
-    sampleEvent->setPlaybackRate( 1000.f );
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
 
-    EXPECT_EQ( 100.f, sampleEvent->getPlaybackRate()) << "expected maximum rate of 100 x original speed";
+    for ( int i = 4; i < 6; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
+
+    for ( int i = 6; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setLoopStartOffset( 4 ); // start looping from the second half of the sample
+    sampleEvent->setEventLength( sourceSize * 2 );  // extend playback by twice the sample length
+    sampleEvent->setPlaybackRate( 2.0f ); // twice the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 2 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+    // note that we verify empty samples at the end
+    // and that sample interpolation is expected
+
+    SAMPLE_TYPE expected[16] = { -1, -1, .5, 1, 1, .5, .5, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
 
     delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
 }
 
-TEST( SampleEvent, PlaybackRate )
+TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeHalfSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
-    // properties for 1.f playback rate
-    int eventStart  = 1000;
-    int eventLength = 1000;
-    int eventEnd    = eventStart + eventLength - 1;
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
 
-    sampleEvent->setEventStart( eventStart );
-    sampleEvent->setEventLength( eventLength );
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,1,1
 
-    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
-        << "expected event start to be unchanged for 1.f playback rate";
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
 
-    EXPECT_EQ( eventLength, sampleEvent->getEventLength() )
-        << "expected event length to be unchanged for 1.f playback rate";
+    for ( int i = 4; i < 6; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
 
-    EXPECT_EQ( eventEnd, sampleEvent->getEventEnd() )
-        << "expected event end to be unchanged for 1.f playback rate";
+    for ( int i = 6; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1;
 
-    // adjust playback rate to 2.f (twice the original speed)
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setLoopStartOffset( 4 ); // start looping from the second half of the sample
+    sampleEvent->setEventLength(( int )( sourceSize * 1.5 )); // extend playback to play 1.5 times
+    sampleEvent->setPlaybackRate( 0.5f ); // half the speed
 
-    sampleEvent->setPlaybackRate( 2.f );
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 4 );
+    int maxBufferPos = sampleEvent->getEventEnd();
 
-    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
-        << "expected event start at double playback rate to remain unchanged";
+    // test the mixing at double the speed
+    // note that we verify empty samples at the end
+    // and that sample interpolation is expected
 
-    EXPECT_EQ( eventLength / 2, sampleEvent->getEventLength() )
-        << "expected event length at double playback rate to be at half the original length";
+    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, -1, -1, -1, -0.25, .5, .5, .5, .75, 1, 1, 0, 0.75,
+                                 1, 1, .5, .5, .5, .75, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    EXPECT_EQ( eventStart + ( eventLength / 2 ), sampleEvent->getEventEnd() )
-        << "expected event end at double playback rate to be below the original offset";
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
 
-    // adjust playback rate to .5f (half the original speed)
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
 
-    sampleEvent->setPlaybackRate( .5f );
+    // assert results
 
-    EXPECT_EQ( eventStart, sampleEvent->getEventStart() )
-        << "expected event start at half playback rate to remain unchanged";
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
 
-    EXPECT_EQ( eventLength * 2, sampleEvent->getEventLength() )
-        << "expected event length at half playback rate to be at twice the original length";
-
-    EXPECT_EQ( eventStart + ( eventLength * 2 ), sampleEvent->getEventEnd() )
-        << "expected event end at half playback rate to be above the original offset";
-
-    delete sampleEvent;
-}
-
-TEST( SampleEvent, PlaybackRateCustomRange )
-{
-    SampleEvent* sampleEvent = new SampleEvent();
-
-    // properties for 1.f playback rate
-    int rangeStart  = 1000;
-    int rangeLength = 1000;
-    int rangeEnd    = rangeStart + rangeLength - 1;
-
-    sampleEvent->setBufferRangeStart( rangeStart );
-    sampleEvent->setBufferRangeEnd( rangeEnd );
-
-    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
-        << "expected buffer range start to be unchanged for 1.f playback rate";
-
-    EXPECT_EQ( rangeLength, sampleEvent->getBufferRangeLength() )
-        << "expected buffer range length to be unchanged for 1.f playback rate";
-
-    EXPECT_EQ( rangeEnd, sampleEvent->getBufferRangeEnd() )
-        << "expected buffer range end to be unchanged for 1.f playback rate";
-
-    // adjust playback rate to 2.f (twice the original speed)
-
-    sampleEvent->setPlaybackRate( 2.f );
-
-    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
-        << "expected buffer range start at double playback rate to remain unchanged";
-
-    EXPECT_EQ( rangeLength / 2, sampleEvent->getBufferRangeLength() )
-        << "expected buffer range length at double playback rate to be at half the original length";
-
-    EXPECT_EQ( rangeStart + ( rangeLength / 2 ), sampleEvent->getBufferRangeEnd() )
-        << "expected buffer range end at double playback rate to be below the original offset";
-
-    // adjust playback rate to .5f (half the original speed)
-
-    sampleEvent->setPlaybackRate( .5f );
-
-    EXPECT_EQ( rangeStart, sampleEvent->getBufferRangeStart() )
-        << "expected buffer range start at half playback rate to remain unchanged";
-
-    EXPECT_EQ( rangeLength * 2, sampleEvent->getBufferRangeLength() )
-        << "expected buffer range length at half playback rate to be at twice the original length";
-
-    EXPECT_EQ( rangeStart + ( rangeLength * 2 ), sampleEvent->getBufferRangeEnd() )
-        << "expected buffer range end at half playback rate to be above the original offset";
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
 
     delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
 }
