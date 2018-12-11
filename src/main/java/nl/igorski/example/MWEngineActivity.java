@@ -17,8 +17,6 @@ import java.util.Vector;
 
 public final class MWEngineActivity extends Activity
 {
-    public final String LOG_ID = "MWENGINE";
-
     /**
      * IMPORTANT : when creating native layer objects through JNI it
      * is important to remember that when the Java references go out of scope
@@ -39,7 +37,7 @@ public final class MWEngineActivity extends Activity
     private Vector<SynthEvent>  _synth1Events;
     private Vector<SynthEvent>  _synth2Events;
     private Vector<SampleEvent> _drumEvents;
-    private SampleEvent         _liveEvent;
+    private SynthEvent          _liveEvent;
 
     private boolean _sequencerPlaying = false;
     private boolean _inited           = false;
@@ -150,8 +148,8 @@ public final class MWEngineActivity extends Activity
     protected void setupSong()
     {
         _sequencerController = _engine.getSequencerController();
-        _sequencerController.setTempoNow( 120.0f, 4, 4 ); // 120 BPM in 4/4 time
-        _sequencerController.updateMeasures( 4, STEPS_PER_MEASURE ); // we'll loop four measures with given subdivisions
+        _sequencerController.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
+        _sequencerController.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
 
         // cache some of the engines properties
 
@@ -161,7 +159,6 @@ public final class MWEngineActivity extends Activity
 
         loadWAVAsset( "hat.wav",  "hat" );
         loadWAVAsset( "clap.wav", "clap" );
-        loadWAVAsset( "1234.wav", "1234" ); // counting to 8 over 4 seconds
 
         // create a lowpass filter to catch all low rumbling and a limiter to prevent clipping of output :)
 
@@ -208,29 +205,49 @@ public final class MWEngineActivity extends Activity
 
         // STEP 2 : Sample events to play back a drum beat
 
-        SampleEvent loop = new SampleEvent( _sampler );
-        loop.setSample( SampleManager.getSample( "1234" ));
-        int originalSampleLength = loop.getEventLength();
-        loop.setLoopeable( true );
-        loop.setEventStart( _sequencerController.getSamplesPerBar() / 2 );
-        loop.setEventLength( originalSampleLength * 2 ); // extend playback by twice the sample length
-        loop.setLoopStartOffset( originalSampleLength / 2 ); // start loop halfway through the sample (from 5 to 8)
-        loop.addToSequencer();
-        _drumEvents.add( loop );
+        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
+        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
+        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
+        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
 
-        // live loopable sample
+        // Real-time synthesis events
 
-        _liveEvent = new SampleEvent( _sampler );
-        _liveEvent.setSample( SampleManager.getSample( "1234" ));
+        // bubbly sixteenth note bass line for synth 1
 
-        // set loop range halfway through the sample (thus starts looping from when counting from 5 to 8)
-        _liveEvent.setLoopeable( true );
-        _liveEvent.setLoopStartOffset( _liveEvent.getEventLength() / 2 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
+        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
+        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
+        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
+        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
 
-        // tests
-        // PERFORM EACH TWICE (once unpitched, once pitched)
-        // sequenced sample events: non looped, looped (extend length), looped w/ custom start offset
-        // live sample events: non looped, looped, looped w/custom start offset
+        // Off-beat minor seventh chord stabs for synth 2
+
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
+        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
+        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
+
+        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+
+        // a C note to be synthesized live when holding down the corresponding button
+
+        _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
     }
 
     protected void flushSong()
@@ -377,10 +394,8 @@ public final class MWEngineActivity extends Activity
     private class PitchChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            for ( final SampleEvent drumEvent : _drumEvents ) {
+            for ( final SampleEvent drumEvent : _drumEvents )
                 drumEvent.setPlaybackRate(( progress / 50f ));
-                _liveEvent.setPlaybackRate(( progress / 50f ));
-            }
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
@@ -392,8 +407,8 @@ public final class MWEngineActivity extends Activity
     private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener
     {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
-            final float maxTempo = 240f;    // maximum allowed tempo is 260 BPM
+           final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
+           final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
            final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
             _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
         }
