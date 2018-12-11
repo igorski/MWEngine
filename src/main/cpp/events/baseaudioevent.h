@@ -44,8 +44,9 @@ class BaseAudioEvent
         virtual void  setVolume( float value );
 
         /**
-         * used by the AudioEngine to mix in parts of this
-         * event buffer at a specific range
+         * Used by the AudioEngine to mix in parts of this events buffer for a specific range
+         * the buffer samples written are equal to the length of given outputBuffers buffer size
+         * (multiplied by the amount of output channels for the given buffer).
          *
          * outputBuffer describes the AudioBuffer this event will mix its contents into
          * bufferPosition is the current position (playback head) of the sequencer
@@ -55,8 +56,8 @@ class BaseAudioEvent
          *     bufferSize of given outputBuffer will be greater than the maxBufferPosition, meaning the
          *     sequencer will also require a render for the first samples at minBufferPosition (the amount of
          *     bufferSize samples left after having rendered the last samples up until maxBufferPosition)
-         * loopOffset describes at which sample position the loop is started so we can calculate the amount of
-         *     samples to render from the minBufferPosition)
+         * loopOffset describes at which iterator position the loop is started so we can calculate the amount of
+         *     samples to render from the minBufferPosition onwards for the remainder of the mixing)
          * useChannelRange whether the channel we're mixing into has its own range
          */
         virtual void mixBuffer( AudioBuffer* outputBuffer, int bufferPosition, int minBufferPosition,
@@ -134,14 +135,7 @@ class BaseAudioEvent
         // ( 1, 32, 4 ) positions audioEvent at 4 / 32 = 1/8th note in the second measure
         virtual void positionEvent( int startMeasure, int subdivisions, int offset );
 
-        /* looping (e.g. for samples) */
-
-        virtual bool isLoopeable();
-        virtual void setLoopeable( bool value );
-
         /* internally used properties */
-
-        virtual int getReadPointer();
 
         virtual bool isDeletable();   // query whether this event is queued for deletion
         virtual void setDeletable( bool value );
@@ -185,7 +179,6 @@ class BaseAudioEvent
 
         // buffer regions
 
-        int _readPointer;  // when loopeable, used to internally keep track of last read buffer offset
         float _startPosition;
         float _endPosition;
 
@@ -193,7 +186,6 @@ class BaseAudioEvent
 
         // properties
         bool _enabled;
-        bool _loopeable;
         bool _livePlayback;
 
         bool _addedToSequencer;      // whether this event exists in the instruments event list (and is eligible for playback)

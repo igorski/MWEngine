@@ -1,4 +1,5 @@
 #include "../events/baseaudioevent.h"
+#include "../events/sampleevent.h"
 #include "../utilities/bufferutility.h"
 #include "../instruments/baseinstrument.h"
 #include "../audioengine.h"
@@ -7,7 +8,7 @@
 
 TEST( BaseAudioEventDeprecation, PositionInSamples )
 {
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
+    SampleEvent* audioEvent = new SampleEvent();
 
     int eventLength = randomInt( 512, 8192 );
     int eventStart  = randomInt( 0, eventLength / 2 );

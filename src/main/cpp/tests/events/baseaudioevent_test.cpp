@@ -144,26 +144,6 @@ TEST( BaseAudioEvent, EnabledState )
     delete audioEvent;
 }
 
-TEST( BaseAudioEvent, LoopeableState )
-{
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-
-    ASSERT_FALSE( audioEvent->isLoopeable() )
-        << "expected audio event not to be loopeable after construction";
-
-    audioEvent->setLoopeable( true );
-
-    ASSERT_TRUE( audioEvent->isLoopeable() )
-        << "expected audio event to be loopeable after enabling loop";
-
-    audioEvent->setLoopeable( false );
-
-    ASSERT_FALSE( audioEvent->isLoopeable() )
-        << "expected audio event not to be loopeable after disabling loop";
-
-    delete audioEvent;
-}
-
 TEST( BaseAudioEvent, LockedState )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
@@ -368,22 +348,6 @@ TEST( BaseAudioEvent, PositionInSamples )
 
     EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
         << "expected event end not to exceed the range set by the event start and updated length properties";
-
-    // test non sanitation of properties for loopeable events
-
-    audioEvent->setLoopeable( true );
-
-    expectedEnd *= 2;
-    audioEvent->setEventEnd( expectedEnd );
-
-    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
-        << "expected event end to exceed the range set by the event start and length properties for loopeable event";
-
-    eventLength /= 2;
-    audioEvent->setEventLength( eventLength );
-
-    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
-        << "expected event end to exceed the range set by the event start and updated length properties for loopeable event";
 
     delete audioEvent;
 }
@@ -644,58 +608,6 @@ TEST( BaseAudioEvent, MixBuffer )
     delete audioEvent;
     delete targetBuffer;
     delete buffer;
-}
-
-TEST( BaseAudioEvent, MixBufferLoopeableEvent )
-{
-    BaseAudioEvent* audioEvent = new BaseAudioEvent();
-
-    int sourceSize            = 16;
-    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
-    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
-    fillAudioBuffer( sourceBuffer );
-
-    audioEvent->setBuffer( sourceBuffer, false );
-    audioEvent->setLoopeable( true );
-    audioEvent->setEventLength( 16 * 4 ); // thus will loop 4 times
-    audioEvent->positionEvent ( 0, 16, 0 );
-
-    // create an output buffer at a size smaller than the source buffer length
-
-    int outputSize = ( int )(( double ) sourceSize * .4 );
-    AudioBuffer* targetBuffer = new AudioBuffer( sourceBuffer->amountOfChannels, outputSize );
-
-    int minBufferPos = audioEvent->getEventStart();
-    int bufferPos    = minBufferPos;
-    int maxBufferPos = audioEvent->getEventEnd();
-
-    // test the seamless mixing over multiple iterations
-
-    for ( ; bufferPos < maxBufferPos; bufferPos += outputSize )
-    {
-        // mix buffer contents
-
-        targetBuffer->silenceBuffers();
-        bool loopStarted = bufferPos + ( outputSize - 1 ) > maxBufferPos;
-        int loopOffset   = ( maxBufferPos - bufferPos ) + 1;
-        audioEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
-
-        // assert results
-
-        SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
-
-        for ( int i = 0; i < outputSize; ++i )
-        {
-            int compareOffset = ( bufferPos + i ) % sourceSize;
-
-            EXPECT_EQ( rawBuffer[ compareOffset ], mixedBuffer[ i ] )
-                << "expected mixed buffer contents to equal the source contents at mixed offset " << i << " for source offset " << compareOffset;
-        }
-    }
-
-    delete targetBuffer;
-    delete sourceBuffer;
-    delete audioEvent;
 }
 
 TEST( BaseAudioEvent, Instrument )

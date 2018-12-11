@@ -37,23 +37,7 @@ SampledInstrument::SampledInstrument()
 
 SampledInstrument::~SampledInstrument()
 {
-    // when using JNI, we let SWIG invoke destructors when Java references are finalized
-    // otherwise we delete and dispose the events directly from this instrument
-#ifndef USE_JNI
-
-    while ( !_audioEvents->empty() )
-    {
-        delete _audioEvents->back();
-        _audioEvents->pop_back();
-    }
-
-    while ( !_liveAudioEvents->empty() )
-    {
-        delete _liveAudioEvents->back();
-        _liveAudioEvents->pop_back();
-    }
-
-#endif
+    // nowt... see BaseInstrument
 }
 
 /* public methods */
@@ -71,9 +55,9 @@ void SampledInstrument::updateEvents()
 
         for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
         {
-            BaseAudioEvent* event = _audioEvents->at( i );
-            event->setEventStart(( float ) event->getEventStart()  * ratio );
-            event->setEventEnd( event->getEventStart() + event->getEventLength() );
+            SampleEvent* event = ( SampleEvent* ) _audioEvents->at( i );
+            event->setEventStart(( int )(( float ) event->getEventStart() * ratio ));
+            event->setEventEnd( event->getEventStart() + event->getOriginalEventLength() );
         }
         _oldTempo = AudioEngine::tempo;
     }
