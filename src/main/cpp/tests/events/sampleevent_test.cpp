@@ -318,167 +318,6 @@ TEST( SampleEvent, GetBufferForRange )
     delete buffer;
 }
 
-// test overridden mix buffer method
-TEST( SampleEvent, MixBuffer )
-{
-    SampledInstrument* instrument = new SampledInstrument();
-    SampleEvent* sampleEvent = new SampleEvent( instrument );
-
-    int sampleLength = randomInt( 8, 24 );
-    int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
-
-    sampleEvent->setEventStart ( sampleStart );
-    sampleEvent->setEventLength( sampleLength );
-
-    int sampleEnd = sampleEvent->getEventEnd();
-
-    AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
-    sampleEvent->setSample( buffer );
-
-    // mixing happens against logarithmically scaled volume
-    sampleEvent->setVolume( randomFloat() );
-    float volume = sampleEvent->getVolumeLogarithmic();
-
-    //std::cout << " ss: " << sampleStart << " se: " << sampleEnd << " sl: " << sampleLength << " ch: " << buffer->amountOfChannels;
-
-    // create a temporary buffer to write output in, ensure it is smaller than the event buffer
-    AudioBuffer* targetBuffer = new AudioBuffer( buffer->amountOfChannels, randomInt( 2, 4 ));
-    int buffersToWrite        = targetBuffer->bufferSize;
-
-    ASSERT_FALSE( bufferHasContent( targetBuffer ))
-        << "expected target buffer to be silent after creation, but it has content";
-
-    // test 1. mix without loopable range
-
-    int maxBufferPos = sampleLength * 2; // use a "loop range" larger than the size of the events length
-    int minBufferPos = randomInt( 0, maxBufferPos / 2 );
-    int bufferPos    = randomInt( minBufferPos, maxBufferPos - 1 );
-    bool loopStarted = false;
-    int loopOffset   = 0;
-
-    // if the random bufferPosition wasn't within the events sampleStart and sampleEnd range, we expect no content
-
-    bool expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
-                         (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd );
-
-    //std::cout << " expected content: " << expectContent << " for buffer size: " << buffersToWrite;
-    //std::cout << " min: " << minBufferPos << " max: " << maxBufferPos << " cur: " << bufferPos;
-
-    sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
-
-    // validate buffer contents after mixing
-
-    if ( expectContent )
-    {
-        for ( int c = 0, ca = targetBuffer->amountOfChannels; c < ca; ++c )
-        {
-            SAMPLE_TYPE* buffer       = targetBuffer->getBufferForChannel( c );
-            SAMPLE_TYPE* sourceBuffer = sampleEvent->getBuffer()->getBufferForChannel( c );
-            SAMPLE_TYPE expectedSample;
-
-            for ( int i = 0; i < buffersToWrite; ++i )
-            {
-                int r = i + bufferPos; // read pointer for the source buffer
-
-                if ( r >= maxBufferPos && !loopStarted )
-                    r -= ( maxBufferPos - minBufferPos );
-
-                if ( r >= sampleStart && r <= sampleEnd )
-                {
-                    r -= sampleStart; // substract sampleEvent start position
-                    expectedSample = sourceBuffer[ r ] * volume;
-                }
-                else {
-                    expectedSample = 0.0;
-                }
-                SAMPLE_TYPE sample = buffer[ i ];
-
-                EXPECT_EQ( expectedSample, sample )
-                    << "expected mixed sample at " << i << " to be equal to the calculated expected sample at read offset " << r;
-            }
-        }
-
-    }
-    else {
-        ASSERT_FALSE( bufferHasContent( targetBuffer ))
-            << "expected target buffer to contain no content after mixing for an out-of-range buffer position";
-    }
-
-    // test 2. mixing within a loopable range (implying sequencer is starting a loop)
-
-    targetBuffer->silenceBuffers();
-
-    ASSERT_FALSE( bufferHasContent( targetBuffer ))
-        << "expected target buffer to be silent after silencing, but it still has content";
-
-    bufferPos     = randomInt( minBufferPos, maxBufferPos - 1 );
-    loopStarted   = true;
-    loopOffset    = ( maxBufferPos - bufferPos ) + 1;
-
-    // pre calculate at which buffer iterator the looping will commence
-    // loopStartIteratorPosition describes at which sequencer position the loop starts
-    // loopStartWritePointer describes at which position in the targetBuffer the loop is written to
-    // amountOfLoopedWrites is the amount of samples written in the loop
-    // loopStartReadPointer describes at which position the samples from the source sampleEvent will be read when loop starts
-    // loopStartReadPointerEnd describes the last position the samples from the source sampleEvent will be read for the amount of loop writes
-
-    int loopStartIteratorPosition = maxBufferPos + 1;
-    int loopStartWritePointer     = loopOffset;
-    int loopStartReadPointer      = minBufferPos;
-    int amountOfLoopedWrites      = ( bufferPos + buffersToWrite ) - loopStartIteratorPosition;
-    int loopStartReadPointerEnd   = ( loopStartReadPointer + amountOfLoopedWrites ) - 1;
-
-    expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
-                    (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd ) ||
-                    ( loopStartIteratorPosition > maxBufferPos && (
-                        ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
-                        ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
-
-    sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
-
-    //std::cout << " expected content: " << expectContent << " for buffer size: " << buffersToWrite;
-    //std::cout << " min: " << minBufferPos << " max: " << maxBufferPos << " cur: " << bufferPos << " loop offset: " << loopOffset;
-
-    if ( expectContent )
-    {
-        for ( int c = 0, ca = targetBuffer->amountOfChannels; c < ca; ++c )
-        {
-            SAMPLE_TYPE* buffer       = targetBuffer->getBufferForChannel( c );
-            SAMPLE_TYPE* sourceBuffer = sampleEvent->getBuffer()->getBufferForChannel( c );
-
-            for ( int i = 0; i < buffersToWrite; ++i )
-            {
-                SAMPLE_TYPE expectedSample = 0.0;
-
-                int r = i + bufferPos; // read pointer for the source buffer
-
-                if ( i >= loopOffset )
-                    r = minBufferPos + ( i - loopOffset );
-
-                if ( r >= sampleStart && r <= sampleEnd )
-                {
-                    r -= sampleStart; // substract sampleEvent start position
-                    expectedSample = sourceBuffer[ r ] * volume;
-                }
-                SAMPLE_TYPE sample = buffer[ i ];
-
-                EXPECT_EQ( expectedSample, sample )
-                    << "expected mixed sample at " << i << " to be equal to the calculated expected sample at read "
-                    << "offset " << r << " ( sanitized from " << ( i + bufferPos ) << " )";
-            }
-        }
-    }
-    else {
-        ASSERT_FALSE( bufferHasContent( targetBuffer ))
-            << "expected output buffer to contain no content after mixing for an out-of-range buffer position";
-    }
-
-    delete sampleEvent;
-    delete instrument;
-    delete targetBuffer;
-    delete buffer;
-}
-
 TEST( SampleEvent, PlaybackRateDefault )
 {
     SampleEvent* sampleEvent = new SampleEvent();
@@ -736,6 +575,298 @@ TEST( SampleEvent, PositionInSamples )
     delete sampleEvent;
 }
 
+
+TEST( SampleEvent, LoopWithCustomOffset )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    int eventLength = 16;
+    sampleEvent->setEventLength( eventLength );
+
+    EXPECT_EQ( sampleEvent->getLoopStartOffset(), 0 )
+        << "expected loop start offset by default to equal 0";
+
+    int startOffset = 8;
+
+    sampleEvent->setLoopStartOffset( startOffset );
+
+    EXPECT_EQ( sampleEvent->getLoopStartOffset(), startOffset )
+        << "expected loop start offset to equal the set value";
+
+    sampleEvent->setLoopStartOffset( eventLength * 2);
+
+    EXPECT_EQ( sampleEvent->getLoopStartOffset(), eventLength - 1 )
+        << "expected loop start offset to be sanitized to the event length";
+
+    delete sampleEvent;
+}
+
+// test overridden mix buffer method
+TEST( SampleEvent, MixBuffer )
+{
+    SampledInstrument* instrument = new SampledInstrument();
+    SampleEvent* sampleEvent = new SampleEvent( instrument );
+
+    int sampleLength = randomInt( 8, 24 );
+    int sampleStart  = randomInt( 0, ( int )( sampleLength / 2 ));
+
+    sampleEvent->setEventStart ( sampleStart );
+    sampleEvent->setEventLength( sampleLength );
+
+    int sampleEnd = sampleEvent->getEventEnd();
+
+    AudioBuffer* buffer = fillAudioBuffer( new AudioBuffer( randomInt( 1, 4 ), sampleLength ));
+    sampleEvent->setSample( buffer );
+
+    // mixing happens against logarithmically scaled volume
+    sampleEvent->setVolume( randomFloat() );
+    float volume = sampleEvent->getVolumeLogarithmic();
+
+    //std::cout << " ss: " << sampleStart << " se: " << sampleEnd << " sl: " << sampleLength << " ch: " << buffer->amountOfChannels;
+
+    // create a temporary buffer to write output in, ensure it is smaller than the event buffer
+    AudioBuffer* targetBuffer = new AudioBuffer( buffer->amountOfChannels, randomInt( 2, 4 ));
+    int buffersToWrite        = targetBuffer->bufferSize;
+
+    ASSERT_FALSE( bufferHasContent( targetBuffer ))
+        << "expected target buffer to be silent after creation, but it has content";
+
+    // test 1. mix without loopable range
+
+    int maxBufferPos = sampleLength * 2; // use a "loop range" larger than the size of the events length
+    int minBufferPos = randomInt( 0, maxBufferPos / 2 );
+    int bufferPos    = randomInt( minBufferPos, maxBufferPos - 1 );
+    bool loopStarted = false;
+    int loopOffset   = 0;
+
+    // if the random bufferPosition wasn't within the events sampleStart and sampleEnd range, we expect no content
+
+    bool expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
+                         (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd );
+
+    //std::cout << " expected content: " << expectContent << " for buffer size: " << buffersToWrite;
+    //std::cout << " min: " << minBufferPos << " max: " << maxBufferPos << " cur: " << bufferPos;
+
+    sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
+
+    // validate buffer contents after mixing
+
+    if ( expectContent )
+    {
+        for ( int c = 0, ca = targetBuffer->amountOfChannels; c < ca; ++c )
+        {
+            SAMPLE_TYPE* buffer       = targetBuffer->getBufferForChannel( c );
+            SAMPLE_TYPE* sourceBuffer = sampleEvent->getBuffer()->getBufferForChannel( c );
+            SAMPLE_TYPE expectedSample;
+
+            for ( int i = 0; i < buffersToWrite; ++i )
+            {
+                int r = i + bufferPos; // read pointer for the source buffer
+
+                if ( r >= maxBufferPos && !loopStarted )
+                    r -= ( maxBufferPos - minBufferPos );
+
+                if ( r >= sampleStart && r <= sampleEnd )
+                {
+                    r -= sampleStart; // substract sampleEvent start position
+                    expectedSample = sourceBuffer[ r ] * volume;
+                }
+                else {
+                    expectedSample = 0.0;
+                }
+                SAMPLE_TYPE sample = buffer[ i ];
+
+                EXPECT_EQ( expectedSample, sample )
+                    << "expected mixed sample at " << i << " to be equal to the calculated expected sample at read offset " << r;
+            }
+        }
+    }
+    else {
+        ASSERT_FALSE( bufferHasContent( targetBuffer ))
+            << "expected target buffer to contain no content after mixing for an out-of-range buffer position";
+    }
+
+    // test 2. mixing within a loopable range (implying sequencer is starting a loop)
+
+    targetBuffer->silenceBuffers();
+
+    ASSERT_FALSE( bufferHasContent( targetBuffer ))
+        << "expected target buffer to be silent after silencing, but it still has content";
+
+    bufferPos     = randomInt( minBufferPos, maxBufferPos - 1 );
+    loopStarted   = true;
+    loopOffset    = ( maxBufferPos - bufferPos ) + 1;
+
+    // pre calculate at which buffer iterator the looping will commence
+    // loopStartIteratorPosition describes at which sequencer position the loop starts
+    // loopStartWritePointer describes at which position in the targetBuffer the loop is written to
+    // amountOfLoopedWrites is the amount of samples written in the loop
+    // loopStartReadPointer describes at which position the samples from the source sampleEvent will be read when loop starts
+    // loopStartReadPointerEnd describes the last position the samples from the source sampleEvent will be read for the amount of loop writes
+
+    int loopStartIteratorPosition = maxBufferPos + 1;
+    int loopStartWritePointer     = loopOffset;
+    int loopStartReadPointer      = minBufferPos;
+    int amountOfLoopedWrites      = ( bufferPos + buffersToWrite ) - loopStartIteratorPosition;
+    int loopStartReadPointerEnd   = ( loopStartReadPointer + amountOfLoopedWrites ) - 1;
+
+    expectContent = ( bufferPos >= sampleStart && bufferPos <= sampleEnd ) ||
+                    (( bufferPos + buffersToWrite ) >= sampleStart && ( bufferPos + buffersToWrite ) <= sampleEnd ) ||
+                    ( loopStartIteratorPosition > maxBufferPos && (
+                            ( loopStartReadPointer >= sampleStart && loopStartReadPointer <= sampleEnd ) ||
+                            ( loopStartReadPointerEnd >= sampleStart && loopStartReadPointerEnd <= sampleEnd )));
+
+    sampleEvent->mixBuffer( targetBuffer, bufferPos, minBufferPos, maxBufferPos, loopStarted, loopOffset, false );
+
+    //std::cout << " expected content: " << expectContent << " for buffer size: " << buffersToWrite;
+    //std::cout << " min: " << minBufferPos << " max: " << maxBufferPos << " cur: " << bufferPos << " loop offset: " << loopOffset;
+
+    if ( expectContent )
+    {
+        for ( int c = 0, ca = targetBuffer->amountOfChannels; c < ca; ++c )
+        {
+            SAMPLE_TYPE* buffer       = targetBuffer->getBufferForChannel( c );
+            SAMPLE_TYPE* sourceBuffer = sampleEvent->getBuffer()->getBufferForChannel( c );
+
+            for ( int i = 0; i < buffersToWrite; ++i )
+            {
+                SAMPLE_TYPE expectedSample = 0.0;
+
+                int r = i + bufferPos; // read pointer for the source buffer
+
+                if ( i >= loopOffset )
+                    r = minBufferPos + ( i - loopOffset );
+
+                if ( r >= sampleStart && r <= sampleEnd )
+                {
+                    r -= sampleStart; // substract sampleEvent start position
+                    expectedSample = sourceBuffer[ r ] * volume;
+                }
+                SAMPLE_TYPE sample = buffer[ i ];
+
+                EXPECT_EQ( expectedSample, sample )
+                    << "expected mixed sample at " << i << " to be equal to the calculated expected sample at read "
+                    << "offset " << r << " ( sanitized from " << ( i + bufferPos ) << " )";
+            }
+        }
+    }
+    else {
+        ASSERT_FALSE( bufferHasContent( targetBuffer ))
+            << "expected output buffer to contain no content after mixing for an out-of-range buffer position";
+    }
+
+    delete sampleEvent;
+    delete instrument;
+    delete targetBuffer;
+    delete buffer;
+}
+
+TEST( SampleEvent, MixBufferCustomPlaybackRangeDoubleSpeed )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    for ( int i = 8; i < 12; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+
+    for ( int i = 12; i < 16; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setPlaybackRate( 2.0f ); // twice the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+
+    SAMPLE_TYPE expected[16] = { -1, -1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferCustomPlaybackRangeHalfSpeed )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,0,0,0,0,1,1,1,1,0,0,0,0
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    for ( int i = 8; i < 12; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+
+    for ( int i = 12; i < 16; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 0;
+
+    sampleEvent->setSample( sourceBuffer, false);
+    sampleEvent->setPlaybackRate( 0.5f ); // half the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 2 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+    // note the .5 values as sample interpolation is expected
+
+    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, -1, -1, -1, -.5, 0, 0, 0, 0, 0, 0, 0, .5, 1, 1, 1, 1, 1, 1, 1, .5, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, 32, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
 TEST( SampleEvent, MixBufferLoopeableEvent )
 {
     SampleEvent* sampleEvent = new SampleEvent();
@@ -788,28 +919,106 @@ TEST( SampleEvent, MixBufferLoopeableEvent )
     delete sampleEvent;
 }
 
-TEST( SampleEvent, LoopWithCustomOffset )
+TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeDoubleSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
-    int eventLength = 16;
-    sampleEvent->setEventLength( eventLength );
 
-    EXPECT_EQ( sampleEvent->getLoopStartOffset(), 0 )
-        << "expected loop start offset by default to equal 0";
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
 
-    int startOffset = 8;
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,.5,.5
 
-    sampleEvent->setLoopStartOffset( startOffset );
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
 
-    EXPECT_EQ( sampleEvent->getLoopStartOffset(), startOffset )
-        << "expected loop start offset to equal the set value";
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
 
-    sampleEvent->setLoopStartOffset( eventLength * 2);
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength( sourceSize * 2 );  // extend playback by twice the sample length
+    sampleEvent->setPlaybackRate( 2.0f ); // twice the speed
 
-    EXPECT_EQ( sampleEvent->getLoopStartOffset(), eventLength - 1 )
-        << "expected loop start offset to be sanitized to the event length";
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 2 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+    // note that we verify empty samples at the end
+    // and the .5 value at index 6 as sample interpolation is expected
+
+    SAMPLE_TYPE expected[16] = { -1, -1, .5, .5, -1, -1, .5, -1, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
 
     delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeHalfSpeed )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,.5,.5
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength(( int )( sourceSize * 1.5 )); // extend playback to play 1.5 times
+    sampleEvent->setPlaybackRate( 0.5f ); // half the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 4 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at half the speed
+    // note we verify empty samples at the end and that there is interpolation happening
+
+    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, -1, -1, -1, -.25, .5, .5, .5, .5, .5, .5, 0, -1,
+                                 -1, -1, -1, -1, -1, -.25, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
 }
 
 TEST( SampleEvent, MixBufferCustomLoopOffset )
@@ -874,4 +1083,115 @@ TEST( SampleEvent, MixBufferCustomLoopOffset )
     delete targetBuffer;
     delete sourceBuffer;
     delete sampleEvent;
+}
+
+TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeDoubleSpeed )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,1,1
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 6; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
+
+    for ( int i = 6; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setLoopStartOffset( 4 ); // start looping from the second half of the sample
+    sampleEvent->setEventLength( sourceSize * 2 );  // extend playback by twice the sample length
+    sampleEvent->setPlaybackRate( 2.0f ); // twice the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 2 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+    // note that we verify empty samples at the end
+    // and that sample interpolation is expected
+
+    SAMPLE_TYPE expected[16] = { -1, -1, .5, 1, 1, .5, .5, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeHalfSpeed )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    int sourceSize            = 8;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 8 sample mono buffer contains the following samples:
+    //
+    // -1,-1,-1,-1,.5,.5,1,1
+
+    for ( int i = 0; i < 4; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    for ( int i = 4; i < 6; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) .5;
+
+    for ( int i = 6; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1;
+
+    sampleEvent->setSample( sourceBuffer );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setLoopStartOffset( 4 ); // start looping from the second half of the sample
+    sampleEvent->setEventLength(( int )( sourceSize * 1.5 )); // extend playback to play 1.5 times
+    sampleEvent->setPlaybackRate( 0.5f ); // half the speed
+
+    AudioBuffer* targetBuffer = new AudioBuffer( 1, sourceSize * 4 );
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing at double the speed
+    // note that we verify empty samples at the end
+    // and that sample interpolation is expected
+
+    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, -1, -1, -1, -0.25, .5, .5, .5, .75, 1, 1, 0, 0.75,
+                                 1, 1, .5, .5, .5, .75, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, maxBufferPos, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < targetBuffer->bufferSize; ++i ) {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    delete sampleEvent;
+    delete sourceBuffer;
+    delete targetBuffer;
 }
