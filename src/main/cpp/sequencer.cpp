@@ -227,7 +227,7 @@ namespace Sequencer
                 BaseAudioEvent* audioEvent = audioEvents->at( j );
 
                 // if event is an instance of BaseCacheableAudioEvent add it to the list
-                if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != NULL )
+                if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != nullptr )
                 {
                     int eventStart = audioEvent->getEventStart();
                     int eventEnd   = audioEvent->getEventEnd();
