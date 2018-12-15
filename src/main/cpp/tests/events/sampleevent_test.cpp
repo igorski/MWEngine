@@ -587,12 +587,12 @@ TEST( SampleEvent, LoopWithCustomOffset )
 
     int startOffset = 8;
 
-    sampleEvent->setLoopStartOffset( startOffset );
+    sampleEvent->setLoopStartOffset( startOffset, false );
 
     EXPECT_EQ( sampleEvent->getLoopStartOffset(), startOffset )
         << "expected loop start offset to equal the set value";
 
-    sampleEvent->setLoopStartOffset( eventLength * 2);
+    sampleEvent->setLoopStartOffset( eventLength * 2, false );
 
     EXPECT_EQ( sampleEvent->getLoopStartOffset(), eventLength - 1 )
         << "expected loop start offset to be sanitized to the event length";
@@ -760,7 +760,7 @@ TEST( SampleEvent, MixBuffer )
     delete buffer;
 }
 
-TEST( SampleEvent, MixBufferCustomPlaybackRangeDoubleSpeed )
+TEST( SampleEvent, MixBufferCustomPlaybackRateDoubleSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
@@ -813,7 +813,7 @@ TEST( SampleEvent, MixBufferCustomPlaybackRangeDoubleSpeed )
     delete targetBuffer;
 }
 
-TEST( SampleEvent, MixBufferCustomPlaybackRangeHalfSpeed )
+TEST( SampleEvent, MixBufferCustomPlaybackRateHalfSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
@@ -919,7 +919,7 @@ TEST( SampleEvent, MixBufferLoopeableEvent )
     delete sampleEvent;
 }
 
-TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeDoubleSpeed )
+TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRateDoubleSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
@@ -947,7 +947,7 @@ TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeDoubleSpeed )
     int maxBufferPos = sampleEvent->getEventEnd();
 
     // test the mixing at double the speed
-    // note that we verify empty samples at the end
+    // note that we verify empty samples at the end (event duration is halved due to double speed playback)
     // and the .5 value at index 6 as sample interpolation is expected
 
     SAMPLE_TYPE expected[16] = { -1, -1, .5, .5, -1, -1, .5, -1, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -970,7 +970,7 @@ TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeDoubleSpeed )
     delete targetBuffer;
 }
 
-TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRangeHalfSpeed )
+TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRateHalfSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
@@ -1050,7 +1050,7 @@ TEST( SampleEvent, MixBufferCustomLoopOffset )
     sampleEvent->setLoopeable( true );
     sampleEvent->setEventLength( 16 * 4 ); // thus will loop 4 times
     sampleEvent->positionEvent ( 0, 16, 0 );
-    sampleEvent->setLoopStartOffset( 8 ); // thus loop will start halfway through the sourceBuffer
+    sampleEvent->setLoopStartOffset( 8, false ); // thus loop will start halfway through the sourceBuffer
 
     // create an output buffer at double the size of the source buffer
 
@@ -1085,7 +1085,77 @@ TEST( SampleEvent, MixBufferCustomLoopOffset )
     delete sampleEvent;
 }
 
-TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeDoubleSpeed )
+TEST( SampleEvent, MixBufferCustomLoopOffsetWithCrossfade )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+
+    // set sample rate to a low value so we can more easily test crossfades
+    int orgSampleRate = AudioEngineProps::SAMPLE_RATE;
+    AudioEngineProps::SAMPLE_RATE = 2000;
+
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // 1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1
+
+    for ( int i = 0; i < 8; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+
+    for ( int i = 8; i < 16; ++i )
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+
+    sampleEvent->setBuffer( sourceBuffer, false );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength( sourceSize * 2 ); // will loop twice
+    sampleEvent->positionEvent ( 0, 16, 0 );
+    sampleEvent->setLoopStartOffset( 8, true );    // loop will start halfway through the sourceBuffer and has crossfading applied
+
+    // create an output buffer at double the size of the source buffer
+
+    int outputSize = sourceSize * 2;
+    AudioBuffer* targetBuffer = new AudioBuffer( sourceBuffer->amountOfChannels, outputSize );
+
+    int minBufferPos = sampleEvent->getEventStart();
+    int bufferPos    = minBufferPos;
+    int maxBufferPos = sampleEvent->getEventEnd();
+
+    // test the mixing of looped content
+
+    SAMPLE_TYPE expected[32] = {
+        1, 1, 1, 1, 1, 1, 1, 1, // first 8 samples unchanged
+        -1, -1, -1, -1,         // next 4 samples unchanged
+        -0.75, -0.5, -0.25, 0,  // last 4 samples prior to sample end with cross fade to 0
+        0, -0.25, -0.5, -0.75,  // first 4 samples at loop offset with cross fade from 0
+        -0.75, -0.5, -0.25, 0,  // next 4 samples from loop offset with cross fade to 0 (we're at the end of the sample range again)
+        0, -0.25, -0.5, -0.75,  // first 4 samples at loop offset with cross fade from 0
+        -0.75, -0.5, -0.25, 0   // next 4 samples from loop offset with cross fade to 0 (we're at the end of the sample range again)
+    };
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, sourceSize, false, sourceSize, false );
+
+    // assert results
+
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < outputSize; ++i )
+    {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+
+    AudioEngineProps::SAMPLE_RATE = orgSampleRate; // restore sample rate
+
+    delete targetBuffer;
+    delete sourceBuffer;
+    delete sampleEvent;
+}
+
+TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRateDoubleSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
@@ -1109,7 +1179,7 @@ TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeDoubleSpeed )
 
     sampleEvent->setSample( sourceBuffer );
     sampleEvent->setLoopeable( true );
-    sampleEvent->setLoopStartOffset( 4 ); // start looping from the second half of the sample
+    sampleEvent->setLoopStartOffset( 4, false ); // start looping from the second half of the sample
     sampleEvent->setEventLength( sourceSize * 2 );  // extend playback by twice the sample length
     sampleEvent->setPlaybackRate( 2.0f ); // twice the speed
 
@@ -1117,7 +1187,7 @@ TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeDoubleSpeed )
     int maxBufferPos = sampleEvent->getEventEnd();
 
     // test the mixing at double the speed
-    // note that we verify empty samples at the end
+    // note that we verify empty samples at the end (sample played back at twice its length and looped)
     // and that sample interpolation is expected
 
     SAMPLE_TYPE expected[16] = { -1, -1, .5, 1, 1, .5, .5, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -1140,7 +1210,7 @@ TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeDoubleSpeed )
     delete targetBuffer;
 }
 
-TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeHalfSpeed )
+TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRateHalfSpeed )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
@@ -1164,7 +1234,7 @@ TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeHalfSpeed )
 
     sampleEvent->setSample( sourceBuffer );
     sampleEvent->setLoopeable( true );
-    sampleEvent->setLoopStartOffset( 4 ); // start looping from the second half of the sample
+    sampleEvent->setLoopStartOffset( 4, false ); // start looping from the second half of the sample
     sampleEvent->setEventLength(( int )( sourceSize * 1.5 )); // extend playback to play 1.5 times
     sampleEvent->setPlaybackRate( 0.5f ); // half the speed
 
@@ -1194,4 +1264,75 @@ TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRangeHalfSpeed )
     delete sampleEvent;
     delete sourceBuffer;
     delete targetBuffer;
+}
+
+TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRateDoubleSpeedWithCrossfade )
+{
+    SampleEvent* sampleEvent = new SampleEvent();
+    
+    // set sample rate to a low value so we can more easily test crossfades
+    int orgSampleRate = AudioEngineProps::SAMPLE_RATE;
+    AudioEngineProps::SAMPLE_RATE = 2000;
+    
+    int sourceSize            = 16;
+    AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
+    SAMPLE_TYPE* rawBuffer    = sourceBuffer->getBufferForChannel( 0 );
+    
+    // create an AudioEvent that holds a simple waveform
+    // the resulting 16 sample mono buffer contains the following samples:
+    //
+    // 1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1
+    
+    for ( int i = 0; i < 8; ++i )
+    rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+    
+    for ( int i = 8; i < 16; ++i )
+    rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+    
+    sampleEvent->setBuffer( sourceBuffer, false );
+    sampleEvent->setLoopeable( true );
+    sampleEvent->setEventLength( sourceSize * 2 ); // extend playback by twice the sample length
+    sampleEvent->setLoopStartOffset( 8, true );    // loop will start halfway through the sourceBuffer and has crossfading applied
+    sampleEvent->setPlaybackRate( 2.0f );          // twice the speed
+    
+    // create an output buffer at double the size of the source buffer
+    
+    int outputSize = sourceSize * 2;
+    AudioBuffer* targetBuffer = new AudioBuffer( sourceBuffer->amountOfChannels, outputSize );
+    
+    int minBufferPos = sampleEvent->getEventStart();
+    int bufferPos    = minBufferPos;
+    int maxBufferPos = sampleEvent->getEventEnd();
+    
+    // test the mixing of looped content
+    
+    SAMPLE_TYPE expected[32] = {
+        1, 1, 1, 1, -1, -1,     // first 6 samples unchanged
+        -0.75, -0.25,           // next 2 samples before sample end with cross fade to 0
+        -0.5, -0.75,            // next 2 samples fade in from loop offset
+        -0.25, -0.25,           // next 2 samples reach sample end and perform fade out/in at interpolated offsets
+        -0.75, -0.5,            // next 2 samples fade in at interpolated loop offset
+        0, -0.5,                // next 2 samples fade  out at interpolated sample end
+        0, 0, 0, 0, 0, 0, 0, 0, // empty samples as event has played back at twice its length and looped
+        0, 0, 0, 0, 0, 0, 0, 0
+    };
+    // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
+    
+    sampleEvent->mixBuffer( targetBuffer, 0, 0, sourceSize, false, sourceSize, false );
+
+    // assert results
+    
+    SAMPLE_TYPE* mixedBuffer = targetBuffer->getBufferForChannel( 0 );
+    
+    for ( int i = 0; i < outputSize; ++i )
+    {
+        EXPECT_EQ( expected[ i ], mixedBuffer[ i ] )
+            << "expected mixed buffer contents to equal the source contents at mixed offset " << i;
+    }
+    
+    AudioEngineProps::SAMPLE_RATE = orgSampleRate; // restore sample rate
+    
+    delete targetBuffer;
+    delete sourceBuffer;
+    delete sampleEvent;
 }

@@ -62,13 +62,15 @@ class SampleEvent : public BaseAudioEvent
 
         // use these to repeat this SampleEvents buffer for the total
         // event duration. Optionally specify the point at which the loop will start
+        // for samples where the loop start offset is not at a zero crossing
+        // cross fading can be applied to prevent popping sounds on loop start
 
         bool isLoopeable();
         void setLoopeable( bool value );
         int getReadPointer();
 
         int getLoopStartOffset();
-        void setLoopStartOffset( int value );
+        void setLoopStartOffset( int value, bool applyCrossfade );
 
         // custom override allowing the engine to get this events
         // length relative to this playback rate
@@ -104,7 +106,9 @@ class SampleEvent : public BaseAudioEvent
         // looping / custom repeat range
 
         bool _loopeable;
-        int _readPointer;  // when loopeable, used internally to keep track of last read buffer offset
+        int _crossfadeStart; // the amount of samples to crossfade when about to loop
+        int _crossfadeEnd;   // the amount of samples to crossfade when reading from the loop offset
+        int _readPointer;    // when loopeable, used internally to keep track of last read buffer offset
         int _loopStartOffset;
 
         // sample buffer regions (i.e. the sample contents thar are played)

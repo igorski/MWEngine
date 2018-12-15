@@ -297,9 +297,21 @@ int SampleEvent::getLoopStartOffset()
     return _loopStartOffset;
 }
 
-void SampleEvent::setLoopStartOffset( int value )
+void SampleEvent::setLoopStartOffset( int value, bool applyCrossfade )
 {
     _loopStartOffset = std::min( value, std::max( 0, _eventLength - 1 ));
+
+    if ( applyCrossfade ) {
+
+        // calculate the amount of samples we deem satisfactory to prevent popping at non-zero crossings
+        int samplesToFade = BufferUtility::millisecondsToBuffer( 2, AudioEngineProps::SAMPLE_RATE );
+        _crossfadeStart = _buffer->bufferSize - ( samplesToFade + 1 ); // at end of sample, prior to looping
+        _crossfadeEnd   = _loopStartOffset + samplesToFade;            // from beginning of loop start offset
+    }
+    else {
+        _crossfadeStart =
+        _crossfadeEnd   = 0;
+    }
 }
 
 int SampleEvent::getEventLength()
@@ -360,6 +372,11 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
             SAMPLE_TYPE* srcBuffer;
             SAMPLE_TYPE* tgtBuffer;
 
+            bool applyCrossfade    = _crossfadeStart != 0 || _crossfadeEnd != 0;
+            bool sampleLoopStarted = false;
+            float crossfadeLength  = ( float ) ( maxBufPos - _crossfadeStart );
+            float volume           = _volume;
+
             for ( i = 0; i < bufferSize; ++i )
             {
                 bufferPointer = ( loopStarted && i >= loopOffset ) ? minBufferPosition + ( i - loopOffset ) : i + bufferPosition;
@@ -373,19 +390,30 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     if ( bufferPointer == _eventStart && !_livePlayback )
                         _readPointer = 0;
 
+                    if ( applyCrossfade ) {
+
+                        if ( _readPointer > _crossfadeStart )
+                            volume = _volume * (( maxBufPos - _readPointer ) / crossfadeLength );
+
+                        else if ( sampleLoopStarted && _readPointer < _crossfadeEnd )
+                            volume = _volume * (( _readPointer - _crossfadeEnd ) / crossfadeLength + 1.f );
+                    }
+
                     // use range pointers to read within the specific buffer ranges
                     for ( c = 0, ca = outputChannels; c < ca; ++c )
                     {
                         srcBuffer = _buffer->getBufferForChannel( mixMono ? 0 : c );
 
                         tgtBuffer       = outputBuffer->getBufferForChannel( c );
-                        tgtBuffer[ i ] += ( srcBuffer[ _readPointer ] * _volume );
+                        tgtBuffer[ i ] += ( srcBuffer[ _readPointer ] * volume );
                     }
                     // this is a loopeable event (thus using internal read pointer)
                     // set the internal read pointer to the loop start so it keeps playing indefinitely
 
-                    if ( ++_readPointer > maxBufPos )
-                        _readPointer = _loopStartOffset;
+                    if ( ++_readPointer > maxBufPos ) {
+                        _readPointer      = _loopStartOffset;
+                        sampleLoopStarted = true;
+                    }
                 }
             }
         }
@@ -483,6 +511,11 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
         if ( _livePlayback )
             fBufferPosition = _readPointerF; // use internal read pointer when reading loopeable content
 
+        bool applyCrossfade    = _crossfadeStart != 0 || _crossfadeEnd != 0;
+        bool sampleLoopStarted = false;
+        float crossfadeLength  = fMaxPos - ( float ) _crossfadeStart;
+        float volume           = _volume;
+
         for ( i = 0; i < bufferSize; ++i, fi += _playbackRate )
         {
             // when playing event from the beginning (e.g. "(re)trigger"), ensure that its looped
@@ -519,6 +552,15 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                 t    = ( int ) fReadPointer;
                 frac = fReadPointer - t; // between 0 - 1 range
 
+                if ( applyCrossfade ) {
+
+                    if ( t > _crossfadeStart )
+                        volume = _volume * (( fMaxPos - t ) / crossfadeLength );
+
+                    else if ( sampleLoopStarted && t < _crossfadeEnd )
+                        volume = _volume * (( t - _crossfadeEnd ) / crossfadeLength + 1.f );
+                }
+
                 // use range pointers to read within the specific buffer ranges
                 for ( c = 0, ca = outputChannels; c < ca; ++c )
                 {
@@ -533,14 +575,16 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
                     s1 = srcBuffer[ t ];
                     s2 = srcBuffer[ t2 ];
 
-                    tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * _volume );
+                    tgtBuffer[ i ] += (( s1 + ( s2 - s1 ) * frac ) * volume );
                 }
 
                 // this is a loopeable event (thus using internal read pointer)
                 // set the internal read pointer to the loop start so it keeps playing indefinitely
 
-                if (( _readPointerF += _playbackRate ) > fMaxPos )
-                    _readPointerF = ( float ) _loopStartOffset;
+                if (( _readPointerF += _playbackRate ) > fMaxPos ) {
+                    _readPointerF     = ( float ) _loopStartOffset;
+                    sampleLoopStarted = true;
+                }
             }
         }
     }
@@ -667,6 +711,8 @@ void SampleEvent::init( BaseInstrument* instrument )
     _bufferRangeEnd        = 0;
     _bufferRangeLength     = 0;
     _loopeable             = false;
+    _crossfadeStart        = 0;
+    _crossfadeEnd          = 0;
     _readPointer           = 0;
     _loopStartOffset       = 0;
     _rangePointer          = 0;     // integer for non altered playback rates
