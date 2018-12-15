@@ -6,12 +6,16 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 # unit test-specific or library creation specific builds
+# note we add JNI interface classes when building as a library
 
 ifeq ($(MW_BUILD_TYPE),test)
     LOCAL_MODULE      := mwengine_test
     LOCAL_CPPFLAGS    := $(LOCAL_CFLAGS) -D=MOCK_ENGINE
 else
     LOCAL_MODULE      := mwengine
+    LOCAL_SRC_FILES   := \
+    jni/java_interface_wrap.cpp \
+    jni/javautilities.cpp
 endif
 
 # shared configurations
@@ -23,9 +27,7 @@ LOCAL_CPPFLAGS    += $(LOCAL_CFLAGS)
 # source files
 
 LOCAL_SRC_FILES   := \
-jni/java_interface_wrap.cpp \
 jni/javabridge.cpp \
-jni/javautilities.cpp \
 global.cpp \
 drivers/adapter.cpp \
 drivers/opensl_io.c \
