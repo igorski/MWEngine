@@ -1,7 +1,8 @@
 # Experimental AAudio support, set to true when building for AAudio (requires NDK target 26)
 BUILD_AAUDIO = false
 
-LOCAL_PATH := $(call my-dir)
+LOCAL_PATH      := $(call my-dir)
+LOCAL_SRC_FILES := \
 
 include $(CLEAR_VARS)
 
@@ -13,7 +14,7 @@ ifeq ($(MW_BUILD_TYPE),test)
     LOCAL_CPPFLAGS    := $(LOCAL_CFLAGS) -D=MOCK_ENGINE
 else
     LOCAL_MODULE      := mwengine
-    LOCAL_SRC_FILES   := \
+    LOCAL_SRC_FILES   += \
     jni/java_interface_wrap.cpp \
     jni/javautilities.cpp
 endif
@@ -26,7 +27,7 @@ LOCAL_CPPFLAGS    += $(LOCAL_CFLAGS)
 
 # source files
 
-LOCAL_SRC_FILES   := \
+LOCAL_SRC_FILES   += \
 jni/javabridge.cpp \
 global.cpp \
 drivers/adapter.cpp \
