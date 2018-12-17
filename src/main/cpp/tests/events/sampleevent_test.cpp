@@ -1089,9 +1089,10 @@ TEST( SampleEvent, MixBufferCustomLoopOffsetWithCrossfade )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
-    // set sample rate to a low value so we can more easily test crossfades
+    // set sample rate to a low value so we can more easily test 1 ms crossfades
+    // 4000 Hz provides 4 samples for crossfading 1 ms of audio
     int orgSampleRate = AudioEngineProps::SAMPLE_RATE;
-    AudioEngineProps::SAMPLE_RATE = 2000;
+    AudioEngineProps::SAMPLE_RATE = 4000;
 
     int sourceSize            = 16;
     AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
@@ -1271,8 +1272,9 @@ TEST( SampleEvent, MixBufferCustomLoopOffsetCustomPlaybackRateDoubleSpeedWithCro
     SampleEvent* sampleEvent = new SampleEvent();
     
     // set sample rate to a low value so we can more easily test crossfades
+    // 4000 Hz allows 4 samples for crossfading 1 ms of audio
     int orgSampleRate = AudioEngineProps::SAMPLE_RATE;
-    AudioEngineProps::SAMPLE_RATE = 2000;
+    AudioEngineProps::SAMPLE_RATE = 4000;
     
     int sourceSize            = 16;
     AudioBuffer* sourceBuffer = new AudioBuffer( 1, sourceSize );
