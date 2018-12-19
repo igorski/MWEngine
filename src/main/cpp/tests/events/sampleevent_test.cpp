@@ -255,7 +255,7 @@ TEST( SampleEvent, GetBufferForRange )
 
     sampleEvent->setBufferRangeStart( bufferRangeStart );
     sampleEvent->setBufferRangeEnd  ( bufferRangeEnd );
-    sampleEvent->setLoopeable( loopeable, false );
+    sampleEvent->setLoopeable( loopeable, 0 );
 
     // generate random audio content
 
@@ -332,7 +332,7 @@ TEST( SampleEvent, PlaybackRateSetter )
 {
     SampleEvent* sampleEvent = new SampleEvent();
 
-    float expectedRate = randomFloat();
+    float expectedRate = randomFloat( 0.01f, 100.f );
     sampleEvent->setPlaybackRate( expectedRate );
 
     EXPECT_EQ( expectedRate, sampleEvent->getPlaybackRate() )
@@ -502,7 +502,7 @@ TEST( SampleEvent, LoopeableState )
     ASSERT_TRUE( sampleEvent->isLoopeable() )
         << "expected audio event to be loopeable after enabling loop";
     
-    sampleEvent->setLoopeable( false, false );
+    sampleEvent->setLoopeable( false, 0 );
     
     ASSERT_FALSE( sampleEvent->isLoopeable() )
         << "expected audio event not to be loopeable after disabling loop";
@@ -972,7 +972,7 @@ TEST( SampleEvent, MixBufferLoopeableCustomPlaybackRateDoubleSpeed )
 
     // test the mixing at double the speed
     // note that we verify empty samples at the end (event duration is halved due to double speed playback)
-    // and the .5 value at index 6 as sample interpolation is expected
+    // and the -1 value at index 7 as sample interpolation is expected
 
     SAMPLE_TYPE expected[16] = { -1, -1, .5, .5, -1, -1, .5, -1, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -1072,7 +1072,7 @@ TEST( SampleEvent, MixBufferCustomLoopStartOffset )
 
     sampleEvent->setSample( sourceBuffer );
     sampleEvent->setLoopeable( true, 0 );
-    sampleEvent->setEventLength( 16 * 4 ); // thus will loop 4 times
+    sampleEvent->setEventLength( 16 * 2 ); // thus will loop twice
     sampleEvent->positionEvent ( 0, 16, 0 );
     sampleEvent->setLoopStartOffset( 8 );  // thus loop will start halfway through the sourceBuffer
 
@@ -1088,7 +1088,10 @@ TEST( SampleEvent, MixBufferCustomLoopStartOffset )
     // test the mixing of looped content
     // note that at index 16 we repeat 8 samples from index 8 - 15 and again at index 24
 
-    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0 };
+    SAMPLE_TYPE expected[32] = {
+        -1, -1, -1, -1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+        1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0
+    };
 
     // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
 
@@ -1215,7 +1218,12 @@ TEST( SampleEvent, MixBufferCustomLoopStartOffsetCustomPlaybackRateDoubleSpeed )
     // note that we verify empty samples at the end (sample played back at twice its length and looped)
     // and that sample interpolation is expected
 
-    SAMPLE_TYPE expected[16] = { -1, -1, .5, 1, 1, .5, .5, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+    SAMPLE_TYPE expected[16] = {
+        -1, -1, .5, 1,
+        1, .5, .5, 1,
+        0, 0, 0, 0,
+        0, 0, 0, 0
+    };
 
     // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
 
@@ -1270,8 +1278,12 @@ TEST( SampleEvent, MixBufferCustomLoopStartOffsetCustomPlaybackRateHalfSpeed )
     // note that we verify empty samples at the end
     // and that sample interpolation is expected
 
-    SAMPLE_TYPE expected[32] = { -1, -1, -1, -1, -1, -1, -1, -0.25, .5, .5, .5, .75, 1, 1, 0, 0.75,
-                                 1, 1, .5, .5, .5, .75, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    SAMPLE_TYPE expected[32] = {
+        -1, -1, -1, -1, -1, -1, -1, -0.25,
+        .5, .5, .5, .75, 1, 1, 0, 0.75,
+         1, 1, .5, .5, .5, .75, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0
+    };
 
     // mix buffer contents (note we can do it in a single pass using 0 - sourceSize as range)
 
@@ -1310,10 +1322,10 @@ TEST( SampleEvent, MixBufferCustomLoopStartOffsetCustomPlaybackRateDoubleSpeedWi
     // 1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1
     
     for ( int i = 0; i < 8; ++i )
-    rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) 1.0;
     
     for ( int i = 8; i < 16; ++i )
-    rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
+        rawBuffer[ i ] = ( SAMPLE_TYPE ) -1.0;
     
     sampleEvent->setSample( sourceBuffer );
     sampleEvent->setLoopeable( true, 1 );          // loop will crossfade over 1 ms

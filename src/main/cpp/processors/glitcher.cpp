@@ -33,7 +33,7 @@ Glitcher::Glitcher( int amountOfChannels, int fragmentLengthInMilliseconds )
 
     _sample = new SampleEvent();
     _sample->setSample( _buffer );
-    _sample->setLoopeable( true, false );
+    _sample->setLoopeable( true, 0 );
 
     _recording = false;
     _playback  = false;
