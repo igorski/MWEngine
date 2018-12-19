@@ -96,7 +96,7 @@ class BaseSynthEvent : public BaseAudioEvent
                         int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
 
-        AudioBuffer* synthesize( int aBufferLength );
+        void mixBuffer( AudioBuffer* outputBuffer );
 
         void unlock();
 

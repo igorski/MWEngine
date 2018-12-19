@@ -45,8 +45,6 @@ class SampleEvent : public BaseAudioEvent
         virtual void setBufferRangeEnd( int value );
         virtual int getBufferRangeLength();
 
-        virtual AudioBuffer* synthesize( int aBufferLength );
-
         // set the sample that this SampleEvent will playback
         // by default the sample will playback at the sampling rate of the engine
 
@@ -80,6 +78,8 @@ class SampleEvent : public BaseAudioEvent
 
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
+
+        void mixBuffer( AudioBuffer* outputBuffer );
 
         // whether to mix sample data from a specific range instead of the full sampleLength range
 

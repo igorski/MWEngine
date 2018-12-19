@@ -42,8 +42,7 @@ SampleEvent::SampleEvent( BaseInstrument* aInstrument )
 
 SampleEvent::~SampleEvent()
 {
-    delete _liveBuffer;
-    _liveBuffer = nullptr;
+    // nowt...
 }
 
 /* public methods */
@@ -181,34 +180,6 @@ int SampleEvent::getPlaybackPosition()
 unsigned int SampleEvent::getSampleRate()
 {
     return _sampleRate;
-}
-
-/**
- * only invoked for a live event (see sequencer.cpp and audioengine.cpp)
- * or a SampleEvent triggered by play()
- */
-AudioBuffer* SampleEvent::synthesize( int aBufferLength )
-{
-    if ( _liveBuffer == nullptr )
-        _liveBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
-    else
-        _liveBuffer->silenceBuffers();  // clear previous contents
-
-    // write sample contents into live buffer
-    // we specify the maximum buffer position as the full sample playback range
-    mixBuffer( _liveBuffer, _lastPlaybackPosition, 0, getBufferRangeLength(), false, 0, false );
-
-    if (( _lastPlaybackPosition += aBufferLength ) >= getBufferRangeEnd() )
-    {
-        // if this is a one-shot SampleEvent, remove it from the sequencer when we have exceeded
-        // the sample length (e.g. played it in its entirety)
-
-        if ( !_loopeable )
-            removeLiveEvent();
-        else
-            _lastPlaybackPosition = std::max( _bufferRangeStart, _lastPlaybackPosition - getBufferRangeLength());
-    }
-    return _liveBuffer;
 }
 
 void SampleEvent::setSample( AudioBuffer* sampleBuffer )
@@ -546,6 +517,28 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     }
 }
 
+/**
+ * Invoked by the Sequencer in case this event isn't sequenced
+ * but triggered manually via a "noteOn" / "noteOff" operation for instant "live" playback
+ */
+void SampleEvent::mixBuffer( AudioBuffer* outputBuffer )
+{
+    // write sample contents into live buffer
+    // we specify the maximum buffer position as the full sample playback range
+    mixBuffer( outputBuffer, _lastPlaybackPosition, 0, getBufferRangeLength(), false, 0, false );
+
+    if (( _lastPlaybackPosition += outputBuffer->bufferSize ) >= getBufferRangeEnd() )
+    {
+        // if this is a one-shot SampleEvent, remove it from the sequencer when we have exceeded
+        // the sample length (e.g. played it in its entirety)
+
+        if ( !_loopeable )
+            removeLiveEvent();
+        else
+            _lastPlaybackPosition = std::max( _bufferRangeStart, _lastPlaybackPosition - getBufferRangeLength());
+    }
+}
+
 bool SampleEvent::getRangeBasedPlayback()
 {
     return _useBufferRange;
@@ -677,6 +670,5 @@ void SampleEvent::init( BaseInstrument* instrument )
     _destroyableBuffer     = false; // is referenced via SampleManager !
     _useBufferRange        = false;
     _instrument            = instrument;
-    _liveBuffer            = nullptr;
     _sampleRate            = ( unsigned int ) AudioEngineProps::SAMPLE_RATE;
 }
