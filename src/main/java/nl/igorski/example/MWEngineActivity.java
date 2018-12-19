@@ -1,7 +1,9 @@
 package nl.igorski.example;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -63,6 +65,23 @@ public final class MWEngineActivity extends Activity
     {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.main );
+
+        // these may not necessarily all be necessary for your use case (e.g. if you're not
+        // recording from device audio inputs or reading/writing files) but are here for documentation purposes
+
+        if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M ) {
+            String[] PERMISSIONS = {
+                    Manifest.permission.RECORD_AUDIO,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
+
+            // Check if we have all the necessary permissions, if not prompt user
+
+            int permission = checkSelfPermission( Manifest.permission.RECORD_AUDIO );
+            if ( permission != PackageManager.PERMISSION_GRANTED )
+                requestPermissions( PERMISSIONS, 8081981 );
+        }
 
         init();
     }

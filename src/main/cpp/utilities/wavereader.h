@@ -37,7 +37,8 @@ class WaveReader
         // opens the File at the given path, reads its WAV data and
         // returns an AudioBuffer representing this file, NOTE : if
         // file doesn't exist / is not a valid WAV file, a null
-        // pointer is returned
+        // pointer is returned for the returned waveFile
+
         static waveFile fileToBuffer( std::string inputFile );
 
         // opens the File at the given path, reads its WAV data and

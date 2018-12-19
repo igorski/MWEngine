@@ -25,7 +25,7 @@
 #include <time.h>
 #include <ctime>
 #include <string.h>
-#include <cstdlib>
+#include <stdlib.h>
 
 /* convenience methods */
 

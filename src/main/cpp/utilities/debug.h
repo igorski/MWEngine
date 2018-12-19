@@ -23,8 +23,6 @@
 #ifndef __DEBUG_H_INCLUDED__
 #define __DEBUG_H_INCLUDED__
 
-#include <stdio.h>
-
 namespace Debug
 {
     /* convenience log method that hooks into the Android logcat */

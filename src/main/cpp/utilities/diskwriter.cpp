@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,35 +23,100 @@
 #include "diskwriter.h"
 #include "audioengine.h"
 #include "wavewriter.h"
+#include "wavereader.h"
 #include "utils.h"
+#include <stdio.h>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 
 namespace DiskWriter
 {
-    std::string outputDirectory;
-    unsigned long outputBufferSize  = 0;
-    unsigned long outputWriterIndex = 0;
-    AudioBuffer*  cachedBuffer      = nullptr;
+    std::string              outputFile;
+    std::string              tempDirectory;
+    std::vector<writtenFile> outputFiles;
+    unsigned long            tempChunkSize     = 0;
+    unsigned long            outputWriterIndex = 0;
+    AudioBuffer*             cachedBuffer      = nullptr;
 
-    /**
-     * prepare a new iteration of recording
-     */
-    void prepare( std::string aOutputDir, int aBufferSize, int amountOfChannels )
+    void prepare( std::string outputFilename, int chunkSize, int amountOfChannels )
     {
-        outputDirectory  = aOutputDir;
-        outputBufferSize = aBufferSize;
+        outputFile = outputFilename;
 
+        std::string path   = std::string( outputFilename );
+        std::size_t dirPos = path.find_last_of( "/" );
+        tempDirectory      = path.substr( 0, dirPos ) + "/";
+
+        tempChunkSize = chunkSize;
+
+        outputFiles.clear();
         generateOutputBuffer( amountOfChannels );
     }
 
+    bool finish()
+    {
+        if ( outputFiles.size() == 0 )
+            return false;
+
+        // calculate total data size of concatenated wave files
+
+        size_t totalBufferSize = 0;
+
+        for ( std::size_t i = 0; i < outputFiles.size(); ++i )
+            totalBufferSize += outputFiles.at( i ).size;
+
+        // create a stream for writing the output file to
+
+        std::ofstream waveStream = WaveWriter::createWAVStream(
+            outputFile.c_str(), totalBufferSize,
+            AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS
+        );
+
+        // concatenate the wave files into a single output file
+
+        while ( outputFiles.size() > 0 )
+        {
+            writtenFile file = outputFiles.at( 0 );
+
+            // read WAV data from file
+
+            AudioBuffer* tempBuffer = WaveReader::fileToBuffer( file.path ).buffer;
+
+            if ( tempBuffer != nullptr ) {
+
+                // convert data to a temporary PCM buffer
+                // TODO: can we just extract the existing PCM data without this
+                // back-and-forth conversion?
+                short int* outputBuffer = WaveWriter::bufferToPCM( tempBuffer );
+
+                delete tempBuffer; // free memory allocated to read WAV file
+
+                // write PCM buffer into the output stream
+
+                WaveWriter::appendBufferToStream( waveStream, outputBuffer, file.size );
+
+                delete[] outputBuffer; // free memory allocated to the temporary PCM buffer
+            }
+
+            // delete the source WAV file
+
+            remove( file.path.c_str() );
+
+            // remove from vector, iterate onto next
+
+            outputFiles.erase( outputFiles.begin() );
+        }
+        waveStream.close();
+
+        return true;
+    }
+
     /**
-     * allocates a new buffer for the next write iterations
+     * allocates a new buffer for the next write iteration
      */
     void generateOutputBuffer( int amountOfChannels )
     {
         flushOutput(); // free previous contents
-        cachedBuffer = new AudioBuffer( amountOfChannels, outputBufferSize );
+        cachedBuffer = new AudioBuffer( amountOfChannels, tempChunkSize );
 
         outputWriterIndex = 0;
     }
@@ -86,7 +151,7 @@ namespace DiskWriter
 
         for ( i = 0, c = 0; i < aBufferSize; ++i, ++outputWriterIndex, c += amountOfChannels )
         {
-            if ( outputWriterIndex == outputBufferSize )
+            if ( outputWriterIndex == tempChunkSize )
                 return;
 
             for ( ci = 0; ci < amountOfChannels; ++ci )
@@ -99,7 +164,7 @@ namespace DiskWriter
      */
     bool bufferFull()
     {
-        return outputWriterIndex >= outputBufferSize;
+        return outputWriterIndex >= tempChunkSize;
     }
 
     /**
@@ -122,14 +187,16 @@ namespace DiskWriter
      */
     void writeBufferToFile( int aSampleRate, int aNumChannels, bool broadcastUpdate )
     {
-        // quick assertion
         if ( cachedBuffer == nullptr )
             return;
 
-        // copy string contents for appending of filename
-        std::string outputFile = std::string( outputDirectory.c_str());
+        // create output file name
+        std::string outputFile = std::string(
+            tempDirectory.c_str()
+        ).append( "rec_snippet_" + SSTR( AudioEngine::recordingFileId ) + ".WAV" );
 
-        int bufferSize = outputBufferSize;
+        int bufferSize        = tempChunkSize;
+        size_t writtenWAVSize = 0;
 
         // recorded less than maximum available in buffer ? cut silence
         // by writing recording into temporary buffers
@@ -145,8 +212,7 @@ namespace DiskWriter
                 for ( int c = 0; c < aNumChannels; ++c )
                     tempBuffer->getBufferForChannel( c )[ i ] = cachedBuffer->getBufferForChannel( c )[ i ];
             }
-            WaveWriter::bufferToFile( outputFile.append( SSTR( AudioEngine::recordingFileId )),
-                                      tempBuffer, aSampleRate );
+            writtenWAVSize = WaveWriter::bufferToWAV( outputFile, tempBuffer, aSampleRate );
 
             // free memory allocated by temporary buffer
 
@@ -154,11 +220,16 @@ namespace DiskWriter
         }
         else
         {
-            WaveWriter::bufferToFile( outputFile.append( SSTR( AudioEngine::recordingFileId )),
-                                      cachedBuffer, aSampleRate );
+            writtenWAVSize = WaveWriter::bufferToWAV( outputFile, cachedBuffer, aSampleRate );
         }
 
-        flushOutput(); // free memory
+        flushOutput(); // free allocated buffer memory
+
+        // store output file in vector
+        writtenFile file;
+        file.path = outputFile;
+        file.size = writtenWAVSize;
+        outputFiles.push_back( file );
 
         // broadcast update, pass buffer identifier to identify last recording
         if ( broadcastUpdate )

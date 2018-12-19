@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,13 +45,13 @@
 // (note this requires android.permission.WRITE_EXTERNAL_STORAGE), like RECORD_AUDIO this requires a Runtime Permission
 // grant when compiling for target SDK level 23 (Android M)
 
-//#define RECORD_TO_DISK
+#define RECORD_TO_DISK
 
-// if you don't wish to get logcat messages uncomment DEBUG (e.g. release build)
+// uncomment to use debugging (e.g. logging to disk/logcat, etc.)
 #define DEBUG
 #define LOGTAG "MWENGINE" // the logtag used when logging messages to logcat
 
-// if you wish to use the engine without JNI support (for C++ only usage), comment the USE_JNI definition
+// if you wish to use the engine without JNI support (e.g. using solely C++/NDK), comment the USE_JNI definition
 #define USE_JNI
 
 namespace AudioEngineProps
@@ -82,7 +82,6 @@ namespace AudioEngineProps
 // global constants used throughout the engine
 const SAMPLE_TYPE PI      = atan( 1 ) * 4;
 const SAMPLE_TYPE TWO_PI  = PI * 2.0;
-const SAMPLE_TYPE HALF_PI = PI / 2.0;
 const int WAVE_TABLE_PRECISION = 128; // the amount of samples in a wave table
 
 extern void *print_message( void* );

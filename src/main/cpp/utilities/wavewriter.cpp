@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,9 +25,39 @@
 #include "utils.h"
 #include <fstream>
 
-void WaveWriter::bufferToFile( std::string outputFile, AudioBuffer* buffer, int sampleRate )
+/* public methods */
+
+size_t WaveWriter::bufferToWAV( std::string outputFile, AudioBuffer* buffer, int sampleRate )
 {
-    int writerIndex      = 0;
+    int bufferSize       = buffer->bufferSize;
+    int amountOfChannels = buffer->amountOfChannels;
+
+    // convert floating point buffer samples to interleaved shorts (PCM audio)
+
+    short int* outputBuffer = bufferToPCM( buffer );
+
+    unsigned int bytes_per_sample = sizeof( short int );
+    const char* filename          = outputFile.c_str();
+
+    // write converted buffer to file
+
+    size_t outputBufferSize = bytes_per_sample * bufferSize * amountOfChannels;
+
+    std::ofstream stream = createWAVStream(
+        filename, outputBufferSize, sampleRate, amountOfChannels
+    );
+
+    appendBufferToStream( stream, outputBuffer, outputBufferSize );
+    stream.close();
+
+    delete[] outputBuffer;   // free memory allocated to temporary PCM buffer
+
+    return outputBufferSize; // return size of written WAV buffer data
+}
+
+short int* WaveWriter::bufferToPCM( AudioBuffer* buffer )
+{
+    int writeIndex       = 0;
     int bufferSize       = buffer->bufferSize;
     int amountOfChannels = buffer->amountOfChannels;
 
@@ -38,13 +68,13 @@ void WaveWriter::bufferToFile( std::string outputFile, AudioBuffer* buffer, int 
 
     // write samples into PCM short buffer
 
-    for ( int i = 0; i < bufferSize; ++i, writerIndex += amountOfChannels )
+    for ( int i = 0; i < bufferSize; ++i, writeIndex += amountOfChannels )
     {
         for ( int c = 0; c < amountOfChannels; ++c )
         {
             short int sample = ( short int )( buffer->getBufferForChannel( c )[ i ] * MAX_VALUE );
 
-            // keep sample within range
+            // sanity check to keep converted samples within range
 
             if ( sample > +MAX_VALUE )
                 sample = +MAX_VALUE;
@@ -52,17 +82,8 @@ void WaveWriter::bufferToFile( std::string outputFile, AudioBuffer* buffer, int 
             else if ( sample < -MAX_VALUE )
                 sample = -MAX_VALUE;
 
-            outputBuffer[ writerIndex + c ] = sample;
+            outputBuffer[ writeIndex + c ] = sample;
         }
     }
-
-    unsigned int bytes_per_sample = sizeof( short int );
-    const char* filename          = outputFile.c_str();
-
-    // actual writing of the file
-
-    writeWAVData( filename, outputBuffer, bytes_per_sample * bufferSize * amountOfChannels,
-                  sampleRate, ( short ) amountOfChannels );
-
-    delete[] outputBuffer;  // free allocated memory
+    return outputBuffer;
 }

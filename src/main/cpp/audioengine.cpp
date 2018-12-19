@@ -48,7 +48,6 @@
 namespace AudioEngine
 {
     bool recordOutputToDisk = false;
-    bool haltRecording      = false;
     bool bouncing           = false;
     bool recordInputToDisk  = false;
     int recordingFileId = 0;
@@ -187,7 +186,7 @@ namespace AudioEngine
 
 #ifdef RECORD_DEVICE_INPUT
         delete recbufferIn;
-        recBufferIn = nullptr;
+        recbufferIn = nullptr;
 #endif
     }
 
@@ -449,19 +448,13 @@ namespace AudioEngine
             }
 
             // exceeded maximum recording buffer amount ? > write current recording
-            if ( DiskWriter::bufferFull() || haltRecording )
+            if ( DiskWriter::bufferFull())
             {
                 int amountOfChannels = recordInputToDisk ? AudioEngineProps::INPUT_CHANNELS : outputChannels;
                 DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, amountOfChannels, true );
 
-                if ( !haltRecording )
-                {
-                    DiskWriter::generateOutputBuffer( amountOfChannels ); // allocate new buffer for next iteration
-                    ++recordingFileId;
-                }
-                else {
-                    haltRecording = false;
-                }
+                DiskWriter::generateOutputBuffer( amountOfChannels ); // allocate new buffer for next iteration
+                ++recordingFileId;
             }
         }
 #endif
