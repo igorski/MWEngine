@@ -64,6 +64,13 @@ class BaseAudioEvent
                                 int maxBufferPosition, bool loopStarted, int loopOffset, bool useChannelRange );
 
         /**
+         * an AudioEvent can also synthesize audio "live" which actually implies the event
+         * is not sequenced, but triggered by a manual "note on" / "note off" action.
+         * This method is called during the write cycle on each buffer update of the AudioRenderer
+         */
+        virtual void mixBuffer( AudioBuffer* outputBuffer );
+
+        /**
          * get / set the AudioBuffer for this event
          *
          * depending on the inheriting class type buffers can be
@@ -72,15 +79,6 @@ class BaseAudioEvent
         virtual AudioBuffer* getBuffer();
         virtual void setBuffer( AudioBuffer* buffer, bool destroyable );
         virtual bool hasBuffer();
-
-        /**
-         * an AudioEvent can also synthesize audio live, this
-         * method should be called during the write cycle on
-         * each buffer update of the AudioRenderer
-         * @param aBufferLength {int} desired buffer length ( usually buffer size )
-         * @return {AudioBuffer*} the buffer containing the live generated samples
-         */
-        virtual AudioBuffer* synthesize( int aBufferLength );
 
         virtual BaseInstrument* getInstrument(); // retrieve reference to the instrument this event belongs to
         virtual void setInstrument( BaseInstrument* aInstrument ); // set / swap instrument this event belongs to

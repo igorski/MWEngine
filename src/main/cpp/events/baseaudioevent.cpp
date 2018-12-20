@@ -408,6 +408,15 @@ void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     unlock();   // release lock
 }
 
+/**
+ * Invoked by the Sequencer in case this event isn't sequenced
+ * but triggered manually via a "noteOn" / "noteOff" operation for instant "live" playback
+ */
+void BaseAudioEvent::mixBuffer( AudioBuffer* outputBuffer )
+{
+    // custom implementation should be implemented in derivative classes, see SampleEvent or BaseSynthEvent
+}
+
 AudioBuffer* BaseAudioEvent::getBuffer()
 {
     return _buffer;
@@ -423,14 +432,6 @@ void BaseAudioEvent::setBuffer( AudioBuffer* buffer, bool destroyable )
 bool BaseAudioEvent::hasBuffer()
 {
     return _buffer != nullptr;
-}
-
-AudioBuffer* BaseAudioEvent::synthesize( int aBufferLength )
-{
-    // override in subclass as this memory allocation requires cleanup
-    // (and basically contains nothing but silence ;-) ... !
-
-    return new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
 }
 
 /* protected methods */

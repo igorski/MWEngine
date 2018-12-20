@@ -52,7 +52,7 @@ TEST( BaseAudioEventDeprecation, PositionInSamples )
 
     // test non sanitation of properties for loopeable events
 
-    audioEvent->setLoopeable( true );
+    audioEvent->setLoopeable( true, 0 );
 
     expectedEnd *= 2;
     audioEvent->setSampleEnd( expectedEnd );
