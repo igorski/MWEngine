@@ -33,6 +33,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/live_btn" />
+
+        <Button
+                android:id="@+id/RecordButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/rec_btn_on" />
     </LinearLayout>
 
     <!-- synth 1 filter cutoff -->

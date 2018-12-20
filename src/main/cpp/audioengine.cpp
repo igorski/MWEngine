@@ -50,7 +50,6 @@ namespace AudioEngine
     bool recordOutputToDisk = false;
     bool bouncing           = false;
     bool recordInputToDisk  = false;
-    int recordingFileId = 0;
 
     bool loopStarted = false;
     int loopOffset   = 0;
@@ -437,24 +436,33 @@ namespace AudioEngine
 #endif
                 DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
 
-            // are we bouncing the current sequencer range and have we played throughed the full range?
+            // are we bouncing the current sequencer range and have we played through the full range?
 
             if ( bouncing && ( loopStarted || bufferPosition == 0 ))
             {
-                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, outputChannels, false );
+                // write current snippet onto disk (can be done synchronously as rendering will now halt)
+
+                int bufferToWrite = DiskWriter::currentBufferIndex;
+                DiskWriter::prepareSnippet();
+                DiskWriter::writeBufferToFile( bufferToWrite, false );
+
                 // broadcast update via JNI, pass buffer identifier name to identify last recording
+
                 Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
-                stop(); // stops thread, halts rendering
+
+                // stops thread, halts rendering
+
+                stop();
             }
 
             // exceeded maximum recording buffer amount ? > write current recording
+
             if ( DiskWriter::bufferFull())
             {
-                int amountOfChannels = recordInputToDisk ? AudioEngineProps::INPUT_CHANNELS : outputChannels;
-                DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, amountOfChannels, true );
+                // broadcast that a snippet has recorded in full and can be written onto storage
 
-                DiskWriter::generateOutputBuffer( amountOfChannels ); // allocate new buffer for next iteration
-                ++recordingFileId;
+                Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, DiskWriter::currentBufferIndex );
+                DiskWriter::prepareSnippet();
             }
         }
 #endif

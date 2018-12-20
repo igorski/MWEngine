@@ -66,6 +66,8 @@ class SequencerController
         void setRecordingState          ( bool aRecording,  int aMaxBuffers, char* aOutputFile );
         void setRecordingFromDeviceState( bool aRecording,  int aMaxBuffers, char* aOutputFile );
 
+        void saveRecordedSnippet( int snippetBufferIndex );
+
     protected:
         int stepsPerBar;
 };

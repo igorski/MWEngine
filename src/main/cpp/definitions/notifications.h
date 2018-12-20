@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,17 +33,29 @@ class Notifications
          *
          * see observer.h and notifier.h for integration
          */
-        enum ids {
-            SEQUENCER_POSITION_UPDATED,
-            MARKER_POSITION_REACHED,
-            SEQUENCER_TEMPO_UPDATED,
-            RECORDING_STATE_UPDATED,
-            BOUNCE_COMPLETE,
+        enum ids
+        {
+            /* sequencer actions */
 
-            STATUS_BRIDGE_CONNECTED,
+            SEQUENCER_POSITION_UPDATED, // sequencer has progressed to the next step within the measure
+            MARKER_POSITION_REACHED,    // sequencer has reached the requested marker position
+            SEQUENCER_TEMPO_UPDATED,    // sequencer has updated its tempo to the requested tempo
 
-            ERROR_HARDWARE_UNAVAILABLE,
-            ERROR_THREAD_START
+            /* recording actions */
+
+            RECORDED_SNIPPET_READY,     // single snippet is ready for writing to storage
+            RECORDED_SNIPPET_SAVED,     // single snippet has been written to storage and flushed from memory
+            RECORDING_COMPLETED,        // recording has completed in full all snippets have been saved into requested output file, memory and temp files flushed
+            BOUNCE_COMPLETE,            // bouncing has completed, see RECORDING_COMPLETED
+
+            /* system messages */
+
+            STATUS_BRIDGE_CONNECTED,    // JNI bridge connected
+
+            /* fatal errors */
+
+            ERROR_HARDWARE_UNAVAILABLE, // audio hardware unavailable
+            ERROR_THREAD_START          // error occurred during starting of render thread
         };
 };
 

@@ -41,12 +41,13 @@ public final class MWEngine extends Thread
          * invoked whenever the engine broadcasts a notification
          * @param aNotificationId {int} unique identifier for the notification
          *
-         * supported notification identifiers :
+         * supported notification identifiers (see notifications.h):
          *
          * ERROR_HARDWARE_UNAVAILABLE fired when MWEngine cannot connect to audio hardware (fatal)
          * ERROR_THREAD_START         fired when MWEngine cannot start the rendering thread (fatal)
          * STATUS_BRIDGE_CONNECTED    fired when MWEngine connects to the native layer code through JNI
          * MARKER_POSITION_REACHED    fired when request Sequencer marker position has been reached
+         * RECORDING_COMPLETED        fired when recording has completed and requested output file is saved
          */
         void handleNotification( int aNotificationId );
 
@@ -56,13 +57,14 @@ public final class MWEngine extends Thread
          * @param aNotificationId {int} unique identifier for the notification
          * @param aNotificationValue {int} payload for the notification
          *
-         * supported notiifcations identifiers :
+         * supported notification identifiers (see notifications.h):
          *
          * SEQUENCER_POSITION_UPDATED fired when Sequencer has advanced a step, payload describes
          *                            the precise buffer offset of the Sequencer when the notification fired
          *                            (as a value in the range of 0 - BUFFER_SIZE)
-         * RECORDING_STATE_UPDATED    fired when a recording snippet of request size has been written
-         *                            to the output folder, payload contains snippet number
+         * RECORDED_SNIPPET_READY     fired when a recording snippet of the requested size is ready for
+         *                            writing onto storage, payload describes snippets buffer index (see DiskWriter)
+         * RECORDED_SNIPPET_SAVED     fired when snippet has been saved onto storage, payload describes snippets number
          * BOUNCE_COMPLETE            fired when the offline bouncing of the Sequencer range has completed
          */
         void handleNotification( int aNotificationId, int aNotificationValue );
@@ -81,10 +83,6 @@ public final class MWEngine extends Thread
     public static int OUTPUT_CHANNELS = 1; // 1 = mono, 2 = stereo
 
     private static float _volume = 1.0f;
-
-    /* recording buffer specific */
-
-    private boolean _recordOutput = false;
 
     /* engine / thread states */
 
@@ -233,8 +231,7 @@ public final class MWEngine extends Thread
         if ( value )
             maxRecordBuffers = calculateRecordingSnippetBufferSize();
 
-        _recordOutput = value;
-        _sequencerController.setRecordingState( _recordOutput, maxRecordBuffers, outputFile );
+        _sequencerController.setRecordingState( value, maxRecordBuffers, outputFile );
     }
 
     /**
@@ -260,13 +257,19 @@ public final class MWEngine extends Thread
         if ( value )
             maxRecordBuffers = BufferUtility.millisecondsToBuffer( maxDurationInMilliSeconds, SAMPLE_RATE );
 
-        _recordOutput = value;
-        _sequencerController.setRecordingFromDeviceState( _recordOutput, maxRecordBuffers, outputFile );
+        _sequencerController.setRecordingFromDeviceState( value, maxRecordBuffers, outputFile );
     }
 
-    public boolean getRecordingState()
+    /**
+     * Invoke when RECORDED_SNIPPET_READY fires. This will write an in-memory audio recording
+     * snippet onto device storage. Execute as soon as notification as fired for continuous recording,
+     * invoke from a different thread than the audio rendering thread to prevent buffer under runs.
+     *
+     * @param snippetBufferIndex {int}
+     */
+    public void saveRecordedSnippet( int snippetBufferIndex )
     {
-        return _recordOutput;
+        _sequencerController.saveRecordedSnippet( snippetBufferIndex );
     }
 
     public void reset()
@@ -405,7 +408,7 @@ public final class MWEngine extends Thread
 
     private int calculateRecordingSnippetBufferSize()
     {
-        // we divide a recording into 15 second snippets (are combined when recording finishes)
+        // we divide a recording into 15 second snippets (these are combined when recording finishes)
         final double amountOfMinutes = .25;
 
         // convert milliseconds to sample buffer size

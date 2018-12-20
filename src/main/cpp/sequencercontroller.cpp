@@ -270,13 +270,16 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
     }
     else if ( wasRecording )
     {
-        // write last recorded buffer to file
-        DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
+        // recording halted, write currently recording snippet into file
+        // and concatenate all recorded snippets into the requested output file name
+        // we can do this synchronously as this method is called from outside the
+        // rendering thread and thus won't lead to buffer under runs
 
-        // concatenate all recordings into the requested output file
-        DiskWriter::finish();
+        DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
+
+        if ( DiskWriter::finish())
+            Notifier::broadcast( Notifications::RECORDING_COMPLETED );
     }
-    AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!
 }
 
 /**
@@ -304,11 +307,24 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
     }
     else if ( wasRecording )
     {
-        // write last recorded buffer to file
-        DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
+        // recording halted, write currently recording snippet into file
+        // and concatenate all recorded snippets into the requested output file name
+        // we can do this synchronously as this method is called from outside the
+        // rendering thread and thus won't lead to buffer under runs
 
-        // concatenate all recordings into the requested output file
-        DiskWriter::finish();
+        DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
+
+        if ( DiskWriter::finish())
+            Notifier::broadcast( Notifications::RECORDING_COMPLETED );
     }
-    AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!
+}
+
+/**
+ * Save the contents of the snippet at given buffer index
+ * onto storage. This should be invoked from a thread separate to the
+ * audio rendering thread to prevent buffer under runs from happening
+ */
+void SequencerController::saveRecordedSnippet( int snippetBufferIndex )
+{
+    DiskWriter::writeBufferToFile( snippetBufferIndex, true );
 }

@@ -65,7 +65,6 @@ namespace AudioEngine
     extern int max_step_position;      // the maximum step in the current sequence (e.g. 15 for 16 step sequencer - step starts at 0.)
     extern bool recordOutputToDisk;    // whether to record rendered output
     extern bool bouncing;              // whether bouncing audio (i.e. rendering in inaudible offline mode without thread lock)
-    extern int recordingFileId;
     extern bool recordInputToDisk;     // whether to record audio from the Android device input to disk
 
     /* render properties */

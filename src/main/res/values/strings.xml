@@ -4,8 +4,11 @@
     <string name="app_help">Example MW Engine application. Start the sequencer by hitting play!
         You can alter the properties of the instruments and sequencer by using the sliders below, all
         in real time! Also note how the engine pauses and picks up where it left off when suspending the app, funky huh?</string>
-    <string name="play_btn">Play / Pause</string>
-    <string name="live_btn">C note (hold to play)</string>
+    <string name="play_btn">Play</string>
+    <string name="pause_btn">Pause</string>
+    <string name="live_btn">C note (hold)</string>
+    <string name="rec_btn_on">Rec start</string>
+    <string name="rec_btn_off">Stop rec</string>
     <string name="slider_cutoff">Bass filter cutoff</string>
     <string name="slider_decay">Bass synth decay</string>
     <string name="slider_mix">Chord delay mix</string>
