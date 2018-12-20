@@ -292,22 +292,15 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
 }
 
 /**
- * synthesize is invoked by the Sequencer for rendering a non-sequenced
- * BaseSynthEvent into a single buffer
- *
- * aBufferLength {int} length of the buffer to synthesize
+ * Invoked by the Sequencer in case this event isn't sequenced
+ * but triggered manually via a "noteOn" / "noteOff" operation for instant "live" playback
  */
-AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
+void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer )
 {
-    // in case buffer length is unequal to cached length, create new write buffer
-    if ( aBufferLength != AudioEngineProps::BUFFER_SIZE || _buffer == nullptr )
-    {
-        destroyBuffer();
-        _buffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, aBufferLength );
-    }
     lock();
 
-    _synthInstrument->synthesizer->render( _buffer, this );
+    int bufferSize = outputBuffer->bufferSize;
+    _synthInstrument->synthesizer->render( outputBuffer, this );
 
     // keep track of the rendered samples, in case of a key up event
     // we still want to have the sound ring for the minimum period
@@ -315,7 +308,7 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
 
     if ( _queuedForDeletion )
     {
-        _minLength -= aBufferLength;
+        _minLength -= bufferSize;
 
         if ( _minLength <= 0 )
         {
@@ -327,12 +320,12 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
             // this event is about to be deleted, apply a tiny fadeout
             if ( _queuedForDeletion )
             {
-                int amt = ceil( aBufferLength / 4 );
+                int amt = ( int ) ceil( bufferSize / 4 );
 
                 SAMPLE_TYPE envIncr = 1.0 / amt;
                 SAMPLE_TYPE amp     = 1.0;
 
-                for ( int i = aBufferLength - amt; i < aBufferLength; ++i )
+                for ( int i = bufferSize - amt; i < bufferSize; ++i )
                 {
                     for ( int c = 0, nc = _buffer->amountOfChannels; c < nc; ++c )
                         _buffer->getBufferForChannel( c )[ i ] *= amp;
@@ -343,8 +336,6 @@ AudioBuffer* BaseSynthEvent::synthesize( int aBufferLength )
         }
     }
     unlock();
-
-    return _buffer;
 }
 
 /* protected methods */
