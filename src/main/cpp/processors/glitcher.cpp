@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,7 +33,7 @@ Glitcher::Glitcher( int amountOfChannels, int fragmentLengthInMilliseconds )
 
     _sample = new SampleEvent();
     _sample->setSample( _buffer );
-    _sample->setLoopeable( true );
+    _sample->setLoopeable( true, 0 );
 
     _recording = false;
     _playback  = false;
