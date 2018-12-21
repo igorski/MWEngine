@@ -48,6 +48,7 @@ inline SAMPLE_TYPE capSample( SAMPLE_TYPE value )
 /* convenience methods */
 
 float scale( float value, float maxValue, float maxCompareValue );
+int roundTo( int value, int multipleOf );
 float randomFloat();
 unsigned long long now_ms();
 char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startOffset, int length );

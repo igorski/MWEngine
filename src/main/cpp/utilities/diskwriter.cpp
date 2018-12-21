@@ -42,6 +42,8 @@ namespace DiskWriter
     int savedSnippets          = 0;
     int recordingChannelAmount = AudioEngineProps::OUTPUT_CHANNELS;
 
+    bool prepared = false;
+
     void prepare( std::string outputFilename, int chunkSize, int amountOfChannels )
     {
         outputFile = outputFilename;
@@ -56,6 +58,8 @@ namespace DiskWriter
 
         outputFiles.clear();
         prepareSnippet();
+
+        prepared = true;
     }
 
     void prepareSnippet()
@@ -67,6 +71,9 @@ namespace DiskWriter
 
     bool finish()
     {
+        if ( !prepared )
+            return false;
+
         // flush all temporary buffers as recording has finished
         // and snippets have been written onto disk
 
@@ -130,6 +137,8 @@ namespace DiskWriter
         }
         waveStream.close();
 
+        prepared = false;
+
         return true;
     }
 
@@ -156,6 +165,9 @@ namespace DiskWriter
      */
     void appendBuffer( AudioBuffer* aBuffer )
     {
+        if ( !prepared )
+            return;
+
         int bufferSize    = aBuffer->bufferSize;
         int channelAmount = aBuffer->amountOfChannels;
 
@@ -174,6 +186,9 @@ namespace DiskWriter
      */
     void appendBuffer( float* aBuffer, int aBufferSize, int amountOfChannels )
     {
+        if ( !prepared )
+            return;
+
         AudioBuffer* cachedBuffer = getCachedBuffer( currentBufferIndex );
 
         if ( cachedBuffer == nullptr )
@@ -209,6 +224,9 @@ namespace DiskWriter
      */
     void writeBufferToFile( int bufferIndex, bool broadcastUpdate )
     {
+        if ( !prepared )
+            return;
+
         AudioBuffer* cachedBuffer = getCachedBuffer( bufferIndex );
 
         if ( cachedBuffer == nullptr )

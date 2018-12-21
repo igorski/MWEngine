@@ -440,11 +440,11 @@ namespace AudioEngine
 
             if ( bouncing && ( loopStarted || bufferPosition == 0 ))
             {
-                // write current snippet onto disk (can be done synchronously as rendering will now halt)
+                // write current snippet onto disk and finish recording
+                // (this can be done synchronously as rendering will now halt)
 
-                int bufferToWrite = DiskWriter::currentBufferIndex;
-                DiskWriter::prepareSnippet();
-                DiskWriter::writeBufferToFile( bufferToWrite, false );
+                DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
+                DiskWriter::finish();
 
                 // broadcast update via JNI, pass buffer identifier name to identify last recording
 
@@ -453,15 +453,25 @@ namespace AudioEngine
                 // stops thread, halts rendering
 
                 stop();
+
+                bouncing           =
+                recordOutputToDisk = false;
+
+                return false;
             }
 
-            // exceeded maximum recording buffer amount ? > write current recording
+            // exceeded maximum recording buffer amount ? > write current recording to temporary storage
 
             if ( DiskWriter::bufferFull())
             {
+                // when bouncing do this synchronously (engine is not writing to hardware), otherwise
                 // broadcast that a snippet has recorded in full and can be written onto storage
 
-                Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, DiskWriter::currentBufferIndex );
+                if ( bouncing )
+                    DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
+                else
+                    Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, DiskWriter::currentBufferIndex );
+
                 DiskWriter::prepareSnippet();
             }
         }

@@ -15,14 +15,14 @@ out-of-the-box possibilities are:
  * multi-channel audio output
  * effect chains operating on individual input/output channels
  * sample playback with real time pitch shifting
- * bouncing output to WAV files, either live (during a performance) or "offline" (for fast results)
+ * bouncing output to WAV files, either live (during a performance) or "offline"
  
 Also note that MWEngine's underlying audio drivers are _the same as Google Oboe uses_, MWEngine and
 Oboe are merely abstraction layers to solve the same problem, only in different ways. Additionally, MWEngine provides a complete audio processing environment.
 
-### The [Issue Tracker](https://github.com/igorski/MWEngine/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) is the official developer's forum
+### The [Issue Tracker](https://github.com/igorski/MWEngine/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) is your point of contact
 
-Bug reports, feature requests, questions, and discussions are welcome on the GitHub Issue Tracker, please do not send e-mails through the development website. However, please search before posting to avoid duplicates, and limit to one issue per post.
+Bug reports, feature requests, questions and discussions are welcome on the GitHub Issue Tracker, please do not send e-mails through the development website. However, please search before posting to avoid duplicates, and limit to one issue per post.
 
 Please vote on feature requests by using the Thumbs Up/Down reaction on the first post.
 

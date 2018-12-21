@@ -61,6 +61,8 @@ namespace DiskWriter
         extern int savedSnippets;      // amount of snippets within the current recording that have been saved
         extern int recordingChannelAmount;
 
+        extern bool prepared;
+
         extern AudioBuffer* getCachedBuffer( int bufferIndex );
         extern void flushOutput( int bufferIndex );
 

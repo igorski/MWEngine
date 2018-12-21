@@ -266,7 +266,10 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
 
     if ( AudioEngine::recordOutputToDisk )
     {
-        DiskWriter::prepare( std::string( aOutputFile ), aMaxBuffers, AudioEngineProps::OUTPUT_CHANNELS );
+        DiskWriter::prepare(
+            std::string( aOutputFile ), roundTo( aMaxBuffers, AudioEngineProps::BUFFER_SIZE ),
+            AudioEngineProps::OUTPUT_CHANNELS
+        );
     }
     else if ( wasRecording )
     {
@@ -303,7 +306,10 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
 
     if ( AudioEngine::recordInputToDisk )
     {
-        DiskWriter::prepare( std::string( aOutputFile ), aMaxBuffers, AudioEngineProps::INPUT_CHANNELS );
+        DiskWriter::prepare(
+            std::string( aOutputFile ), roundTo( aMaxBuffers, AudioEngineProps::BUFFER_SIZE ),
+            AudioEngineProps::INPUT_CHANNELS
+        );
     }
     else if ( wasRecording )
     {

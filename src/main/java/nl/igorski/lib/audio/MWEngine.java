@@ -189,7 +189,7 @@ public final class MWEngine extends Thread
 
     public void setBouncing( boolean value, String outputDirectory )
     {
-        setBouncing(value, outputDirectory, calculateRecordingSnippetBufferSize());
+        setBouncing( value, outputDirectory, calculateRecordingSnippetBufferSize() );
     }
 
     public void setBouncing( boolean value, String outputFile, int maxRecordBuffers )
