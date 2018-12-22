@@ -233,7 +233,7 @@ BulkCacher* SequencerController::getBulkCacher()
  * when bouncing, the writing of buffers into the hardware is omitted
  * for an increase in bouncing speed (otherwise its real time)
  */
-void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputDirectory )
+void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputFile )
 {
     AudioEngine::bouncing = aIsBouncing;
 
@@ -242,44 +242,47 @@ void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, cha
         AudioEngine::bufferPosition = 0;
         AudioEngine::stepPosition   = 0;
     }
-    setRecordingState( aIsBouncing, aMaxBuffers, aOutputDirectory );
+    setRecordingState( aIsBouncing, aMaxBuffers, aOutputFile );
 }
 
 /**
- * record the output of the sequencer
+ * Record the output of the sequencer onto storage
  *
  * aRecording        {bool} toggles the recording state
  * aMaxBuffers        {int} the total recorded buffer size to store in memory
- *                          before writing the recorded contents as .WAV file into
- *                          the given output directory.
- * aOutputDirectory {char*} name of the folder to write each snippet into
+ *                          before writing the recorded snippet as .WAV file into
+ *                          the given output file's directory.
+ * aOutputDirectory {char*} name of the output WAV file to generate when recording completes
+ *                          (when recording state is disabled), this will concatenate all snippets.
  */
-void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
+void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputFile )
 {
     // in case Sequencer was recording input from the Android device, halt recording of input
     if ( AudioEngine::recordInputToDisk )
         setRecordingFromDeviceState( false, 0, ( char* ) "\0" );
 
-    bool wasRecording         = AudioEngine::recordOutputToDisk;
+    bool wasRecording               = AudioEngine::recordOutputToDisk;
     AudioEngine::recordOutputToDisk = aRecording;
 
     if ( AudioEngine::recordOutputToDisk )
     {
-        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::OUTPUT_CHANNELS );
+        DiskWriter::prepare(
+            std::string( aOutputFile ), roundTo( aMaxBuffers, AudioEngineProps::BUFFER_SIZE ),
+            AudioEngineProps::OUTPUT_CHANNELS
+        );
     }
     else if ( wasRecording )
     {
-        if ( !Sequencer::playing )
-        {
-            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
-        }
-        else {
-            // apparently renderer is stopped before cycle completes next Disk Writing query... =/
-            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::OUTPUT_CHANNELS, true );
-            AudioEngine::haltRecording = true;
-        }
+        // recording halted, write currently recording snippet into file
+        // and concatenate all recorded snippets into the requested output file name
+        // we can do this synchronously as this method is called from outside the
+        // rendering thread and thus won't lead to buffer under runs
+
+        DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
+
+        if ( DiskWriter::finish())
+            Notifier::broadcast( Notifications::RECORDING_COMPLETED );
     }
-    AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!
 }
 
 /**
@@ -292,7 +295,7 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
  *                          the given output directory.
  * aOutputDirectory {char*} name of the folder to write each snippet into
  */
-void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputDirectory )
+void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputFile )
 {
     // in case Sequencer was recording its output, halt recording of output
     if ( AudioEngine::recordOutputToDisk )
@@ -303,19 +306,31 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
 
     if ( AudioEngine::recordInputToDisk )
     {
-        DiskWriter::prepare( std::string( aOutputDirectory ), aMaxBuffers, AudioEngineProps::INPUT_CHANNELS );
+        DiskWriter::prepare(
+            std::string( aOutputFile ), roundTo( aMaxBuffers, AudioEngineProps::BUFFER_SIZE ),
+            AudioEngineProps::INPUT_CHANNELS
+        );
     }
     else if ( wasRecording )
     {
-        if ( !Sequencer::playing )
-        {
-            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
-        }
-        else {
-            // apparently renderer is stopped before cycle completes next Disk Writing query... =/
-            DiskWriter::writeBufferToFile( AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS, true );
-            AudioEngine::haltRecording = true;
-        }
+        // recording halted, write currently recording snippet into file
+        // and concatenate all recorded snippets into the requested output file name
+        // we can do this synchronously as this method is called from outside the
+        // rendering thread and thus won't lead to buffer under runs
+
+        DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
+
+        if ( DiskWriter::finish())
+            Notifier::broadcast( Notifications::RECORDING_COMPLETED );
     }
-    AudioEngine::recordingFileId = 0;  // write existing buffers using previous iteration before resetting this counter!!
+}
+
+/**
+ * Save the contents of the snippet at given buffer index
+ * onto storage. This should be invoked from a thread separate to the
+ * audio rendering thread to prevent buffer under runs from happening
+ */
+void SequencerController::saveRecordedSnippet( int snippetBufferIndex )
+{
+    DiskWriter::writeBufferToFile( snippetBufferIndex, true );
 }

@@ -1,8 +1,11 @@
 package nl.igorski.example;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,8 +18,7 @@ import nl.igorski.lib.audio.mwengine.*;
 
 import java.util.Vector;
 
-public final class MWEngineActivity extends Activity
-{
+public final class MWEngineActivity extends Activity {
     /**
      * IMPORTANT : when creating native layer objects through JNI it
      * is important to remember that when the Java references go out of scope
@@ -40,6 +42,7 @@ public final class MWEngineActivity extends Activity
     private SynthEvent          _liveEvent;
 
     private boolean _sequencerPlaying = false;
+    private boolean _isRecording      = false;
     private boolean _inited           = false;
 
     private float minFilterCutoff = 50.0f;
@@ -59,11 +62,26 @@ public final class MWEngineActivity extends Activity
      * on screen orientation changes.
      */
     @Override
-    public void onCreate( Bundle savedInstanceState )
-    {
+    public void onCreate( Bundle savedInstanceState ) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.main );
 
+        // these may not necessarily all be required for your use case (e.g. if you're not recording
+        // from device audio inputs or reading/writing files) but are here for self-documentation
+
+        if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M ) {
+            String[] PERMISSIONS = {
+                Manifest.permission.RECORD_AUDIO, // RECORD_AUDIO must be granted prior to engine.start()
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
+
+            // Check if we have all the necessary permissions, if not prompt user
+
+            int permission = checkSelfPermission( Manifest.permission.RECORD_AUDIO );
+            if ( permission != PackageManager.PERMISSION_GRANTED )
+                requestPermissions( PERMISSIONS, 8081981 );
+        }
         init();
     }
 
@@ -73,18 +91,14 @@ public final class MWEngineActivity extends Activity
      * to watch the engines memory allocation outside of the Java environment
      */
     @Override
-    public void onDestroy()
-    {
+    public void onDestroy() {
         super.onDestroy();
-
         flushSong();        // free memory allocated by song
         _engine.dispose();  // dispose the engine
-
         Log.d( LOG_TAG, "MWEngineActivity destroyed" );
     }
 
-    private void init()
-    {
+    private void init() {
         if ( _inited )
             return;
 
@@ -128,6 +142,9 @@ public final class MWEngineActivity extends Activity
         final Button liveNoteButton = ( Button ) findViewById( R.id.LiveNoteButton );
         liveNoteButton.setOnTouchListener( new LiveNoteHandler() );
 
+        final Button recordButton = ( Button ) findViewById( R.id.RecordButton );
+        recordButton.setOnClickListener( new RecordHandler() );
+
         final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
         filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
 
@@ -151,8 +168,7 @@ public final class MWEngineActivity extends Activity
 
     /* protected methods */
 
-    protected void setupSong()
-    {
+    protected void setupSong() {
         _sequencerController = _engine.getSequencerController();
         _sequencerController.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
         _sequencerController.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
@@ -256,8 +272,7 @@ public final class MWEngineActivity extends Activity
         _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
     }
 
-    protected void flushSong()
-    {
+    protected void flushSong() {
         // this ensures that Song resources currently in use by the engine are released
 
         _engine.pause();
@@ -308,18 +323,15 @@ public final class MWEngineActivity extends Activity
     }
 
     @Override
-    public void onWindowFocusChanged( boolean hasFocus )
-    {
+    public void onWindowFocusChanged( boolean hasFocus ) {
         Log.d( LOG_TAG, "window focus changed for MWEngineActivity, has focus > " + hasFocus );
 
-        if ( !hasFocus )
-        {
+        if ( !hasFocus ) {
             // suspending the app - halt audio rendering in MWEngine Thread to save CPU cycles
             if ( _engine != null )
                 _engine.pause();
         }
-        else
-        {
+        else {
             // returning to the app
             if ( !_inited )
                 init();            // initialize this example application
@@ -330,25 +342,15 @@ public final class MWEngineActivity extends Activity
 
     /* event handlers */
 
-    /**
-     *  invoked when user presses the play / pause button
-     */
-    private class PlayClickHandler implements View.OnClickListener
-    {
-        public void onClick( View v )
-        {
-            // start/stop the sequencer so we can toggle hearing actual output! ;)
-
+    private class PlayClickHandler implements View.OnClickListener {
+        public void onClick( View v ) {
             _sequencerPlaying = !_sequencerPlaying;
             _engine.getSequencerController().setPlaying( _sequencerPlaying );
+            (( Button ) v ).setText( _sequencerPlaying ? R.string.pause_btn : R.string.play_btn );
         }
     }
 
-    /**
-     * invoked when user holds / release the live play button
-     */
-    private class LiveNoteHandler implements View.OnTouchListener
-    {
+    private class LiveNoteHandler implements View.OnTouchListener {
         @Override
         public boolean onTouch( View v, MotionEvent event ) {
             switch( event.getAction()) {
@@ -364,11 +366,18 @@ public final class MWEngineActivity extends Activity
         }
     }
 
-    /**
-     *  invoked when user interacts with the filter cutoff slider
-     */
-    private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener
-    {
+    private class RecordHandler implements View.OnClickListener {
+        @Override
+        public void onClick( View v ) {
+            _isRecording = !_isRecording;
+            _engine.setRecordingState(
+                _isRecording, Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav"
+            );
+            (( Button ) v ).setText( _isRecording ? R.string.rec_btn_off : R.string.rec_btn_on );
+        }
+    }
+
+    private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
         }
@@ -376,8 +385,7 @@ public final class MWEngineActivity extends Activity
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener
-    {
+    private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _synth1.getAdsr().setDecayTime( progress / 100f );
             _synth1.updateEvents(); // update all synth events to match new ADSR properties
@@ -386,11 +394,7 @@ public final class MWEngineActivity extends Activity
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    /**
-     *  invoked when user interacts with the delay mix slider
-     */
-    private class DelayMixChangeHandler implements SeekBar.OnSeekBarChangeListener
-    {
+    private class DelayMixChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _delay.setFeedback( progress / 100f );
         }
@@ -398,11 +402,7 @@ public final class MWEngineActivity extends Activity
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    /**
-     *  invoked when user interacts with the pitch change slider
-     */
-    private class PitchChangeHandler implements SeekBar.OnSeekBarChangeListener
-    {
+    private class PitchChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             for ( final SampleEvent drumEvent : _drumEvents )
                 drumEvent.setPlaybackRate(( progress / 50f ));
@@ -411,11 +411,7 @@ public final class MWEngineActivity extends Activity
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    /**
-     *  invoked when user interacts with the tempo slider
-     */
-    private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener
-    {
+    private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
            final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
@@ -426,11 +422,7 @@ public final class MWEngineActivity extends Activity
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
     }
 
-    /**
-     *  invoked when user interacts with the volume slider
-     */
-    private class VolumeChangeHandler implements SeekBar.OnSeekBarChangeListener
-    {
+    private class VolumeChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             _engine.setVolume( progress / 100f );
         }
@@ -440,23 +432,15 @@ public final class MWEngineActivity extends Activity
 
     /* state change message listener */
 
-    private class StateObserver implements MWEngine.IObserver
-    {
-        // cache the enumerations (from native layer) as integer Array
+    private class StateObserver implements MWEngine.IObserver {
+        private final Notifications.ids[] _notificationEnums = Notifications.ids.values(); // cache the enumerations (from native layer) as int Array
+        public void handleNotification( final int aNotificationId ) {
+            switch ( _notificationEnums[ aNotificationId ]) {
 
-        private final Notifications.ids[] _notificationEnums = Notifications.ids.values();
-
-        public void handleNotification( int aNotificationId )
-        {
-            switch ( _notificationEnums[ aNotificationId ])
-            {
                 case ERROR_HARDWARE_UNAVAILABLE:
-
                     Log.d( LOG_TAG, "ERROR : received Open SL error callback from native layer" );
-
                     // re-initialize thread
-                    if ( _engine.canRestartEngine() )
-                    {
+                    if ( _engine.canRestartEngine() ) {
                         _engine.dispose();
                         _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
                         _engine.start();
@@ -467,16 +451,17 @@ public final class MWEngineActivity extends Activity
                     break;
 
                 case MARKER_POSITION_REACHED:
-
                     Log.d( LOG_TAG, "Marker position has been reached" );
+                    break;
+
+                case RECORDING_COMPLETED:
+                    Log.d( LOG_TAG, "Recording has completed" );
                     break;
             }
         }
 
-        public void handleNotification( int aNotificationId, int aNotificationValue )
-        {
-            switch ( _notificationEnums[ aNotificationId ])
-            {
+        public void handleNotification( final int aNotificationId, final int aNotificationValue ) {
+            switch ( _notificationEnums[ aNotificationId ]) {
                 case SEQUENCER_POSITION_UPDATED:
 
                     // for this notification id, the notification value describes the precise buffer offset of the
@@ -489,6 +474,20 @@ public final class MWEngineActivity extends Activity
 
                     Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
                             ", elapsed samples: " + elapsedSamples );
+                    break;
+
+
+                case RECORDED_SNIPPET_READY:
+                    runOnUiThread( new Runnable() {
+                        public void run() {
+                            // we run the saving on a different thread to prevent buffer under runs while rendering audio
+                            _engine.saveRecordedSnippet( aNotificationValue ); // notification value == snippet buffer index
+                        }
+                    });
+                    break;
+
+                case RECORDED_SNIPPET_SAVED:
+                    Log.d( LOG_TAG, "Recorded snippet " + aNotificationValue + " saved to storage" );
                     break;
             }
         }
@@ -504,8 +503,7 @@ public final class MWEngineActivity extends Activity
      * @param frequency {double} frequency in Hz of the note to play
      * @param position  {int}    position the position of the note within the bar
      */
-    private void createSynthEvent( SynthInstrument synth, double frequency, int position )
-    {
+    private void createSynthEvent( SynthInstrument synth, double frequency, int position ) {
         // duration in measure subdivisions, essentially a 16th note for the current STEPS_PER_MEASURE (16)
 
         final int duration = 1;
@@ -525,8 +523,7 @@ public final class MWEngineActivity extends Activity
      * @param sampleName {String} identifier (inside the SampleManager) of the sample to use
      * @param position {int} position within the composition to place the event at
      */
-    private void createDrumEvent( String sampleName, int position )
-    {
+    private void createDrumEvent( String sampleName, int position ) {
         final SampleEvent drumEvent = new SampleEvent( _sampler );
         drumEvent.setSample( SampleManager.getSample( sampleName ));
         drumEvent.positionEvent( 0, STEPS_PER_MEASURE, position );
@@ -542,8 +539,7 @@ public final class MWEngineActivity extends Activity
      * @param assetName {String} assetName filename for the resource in the /assets folder
      * @param sampleName {String} identifier for the files WAV content inside the SampleManager
      */
-    private void loadWAVAsset( String assetName, String sampleName )
-    {
+    private void loadWAVAsset( String assetName, String sampleName ) {
         final Context ctx = getApplicationContext();
         JavaUtilities.createSampleFromAsset(
             sampleName, ctx.getAssets(), ctx.getCacheDir().getAbsolutePath(), assetName

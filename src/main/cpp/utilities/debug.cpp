@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,8 +22,12 @@
  */
 #include "debug.h"
 #include "../global.h"
-#include <android/log.h>
 #include <string>
+
+#ifdef DEBUG
+#include <android/log.h>
+#include <stdio.h>
+#endif
 
 /* logging */
 
@@ -53,6 +57,7 @@ namespace Debug
 
     void logToFile( const char* aFileName, const char* aMessage, ... )
     {
+#ifdef DEBUG
         FILE* file = fopen( aFileName, "a" );
 
         aMessage = ( std::string( aMessage ) + std::string( "\n" )).c_str();
@@ -63,5 +68,6 @@ namespace Debug
         va_end( args );
 
         fclose( file );
+#endif
     }
 }

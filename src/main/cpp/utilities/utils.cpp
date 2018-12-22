@@ -25,12 +25,11 @@
 #include <time.h>
 #include <ctime>
 #include <string.h>
-#include <cstdlib>
+#include <stdlib.h>
 
 /* convenience methods */
 
 /**
- * @method scale
  * scales a value against a scale different to the one "value" stems from
  * i.e. a UI slider with a value 0 - 100 ( percent ) to match against an
  * 8-bit scale with a maximum value of 255
@@ -45,6 +44,18 @@ float scale( float value, float maxValue, float maxCompareValue )
 {
     double ratio = maxCompareValue / maxValue;
     return ( float ) ( value * ratio );
+}
+
+/**
+ * rounds given value to the nearest multiple of given multipleOf
+ * should only be used on positive numbers
+ */
+int roundTo( int value, int multipleOf )
+{
+    if ( value < multipleOf )
+        return multipleOf;
+
+    return ( int )( multipleOf * round( value / multipleOf ));
 }
 
 //
