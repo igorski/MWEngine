@@ -57,7 +57,6 @@ namespace DiskWriter
 
         extern int recordingChunkSize;
         extern int outputWriterIndex;
-        extern int currentBufferIndex; // index of the cachedBuffer currently being written to
         extern int savedSnippets;      // amount of snippets within the current recording that have been saved
         extern int recordingChannelAmount;
 
@@ -69,7 +68,9 @@ namespace DiskWriter
         extern AudioBuffer* generateOutputBuffer( int bufferIndex, int amountOfChannels );
     //}
 
-    /* public methods */
+    /* public properties / methods */
+
+    extern int currentBufferIndex; // index of the cachedBuffer currently being written to
 
     /**
      * Prepare for a new recording. The recording can consist
