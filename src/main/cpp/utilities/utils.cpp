@@ -47,7 +47,7 @@ float scale( float value, float maxValue, float maxCompareValue )
 }
 
 /**
- * rounds given value to the nearest multiple of give multipleOf
+ * rounds given value to the nearest multiple of given multipleOf
  * should only be used on positive numbers
  */
 int roundTo( int value, int multipleOf )
