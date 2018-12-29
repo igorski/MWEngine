@@ -10,3 +10,4 @@ src/main/cpp/jni/java_interface_wrap.cpp
 libs/*
 obj
 build
+local.properties

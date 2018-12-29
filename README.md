@@ -82,8 +82,7 @@ The makefile (_/src/main/cpp/Android.mk_) will by default compile the library wi
 
 Those of a Unix-bent can run the _build.sh_-file in the root folder of the repository whereas Windows users can run the
 _build.bat_-file that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available
-through the PATH settings of your system (or adjust the shell scripts accordingly). Note: the NDK platform version is
-defined in _local.properties_.
+through the PATH settings of your system (or adjust the shell scripts accordingly).
 
 After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.mwengine_-namespace, making the code available to Java.
 
