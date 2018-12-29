@@ -20,21 +20,23 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __AUDIOENGINE_H_INCLUDED__
-#define __AUDIOENGINE_H_INCLUDED__
+#ifndef __MWENGINE__AUDIOENGINE_H_INCLUDED__
+#define __MWENGINE__AUDIOENGINE_H_INCLUDED__
 
 #include "audiobuffer.h"
 #include "audiochannel.h"
 #include "global.h"
 #include "processingchain.h"
 
-/**
- * this is the API exposed to an external application
- * for interacting with the AudioEngine (it does nothing
- * more than prepare and start / stop / reset the render thread
- */
+namespace MWEngine {
 namespace AudioEngine
 {
+    /**
+     * this is the API exposed to an external application
+     * for interacting with the AudioEngine (it does nothing
+     * more than prepare and start / stop / reset the render thread
+     */
+
     /* public methods */
 
 #ifdef USE_JNI
@@ -125,4 +127,6 @@ namespace AudioEngine
     extern int render_iterations;
     extern float mock_opensl_time;
 }
+} // E.O namespace MWEngine
+
 #endif

@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __PHASER_H_INCLUDED__
-#define __PHASER_H_INCLUDED__
+#ifndef __MWENGINE__PHASER_H_INCLUDED__
+#define __MWENGINE__PHASER_H_INCLUDED__
 
 #include "baseprocessor.h"
 #include <vector>
 
+namespace MWEngine {
 class AllPassDelay
 {
     public:
@@ -71,5 +72,6 @@ class Phaser : public BaseProcessor
 
         void init( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels );
 };
+} // E.O namespace MWEngine
 
 #endif

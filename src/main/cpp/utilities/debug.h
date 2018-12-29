@@ -20,9 +20,10 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DEBUG_H_INCLUDED__
-#define __DEBUG_H_INCLUDED__
+#ifndef __MWENGINE__DEBUG_H_INCLUDED__
+#define __MWENGINE__DEBUG_H_INCLUDED__
 
+namespace MWEngine {
 namespace Debug
 {
     /* convenience log method that hooks into the Android logcat */
@@ -33,5 +34,6 @@ namespace Debug
 
     extern void logToFile( const char* aFileName, const char* aMessage, ... );
 }
+} // E.O namespace MWEngine
 
 #endif

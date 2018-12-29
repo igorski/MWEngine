@@ -3,6 +3,10 @@
 #include <gtest/gtest.h>
 #include <ctime>
 #include <cstdlib>
+
+#include "../global.h"
+using namespace MWEngine;
+
 #include "helpers/helper.cpp"
 
 #include "audioengine_test.cpp"

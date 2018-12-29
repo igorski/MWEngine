@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BITCRUSHER_H_INCLUDED__
-#define __BITCRUSHER_H_INCLUDED__
+#ifndef __MWENGINE__BITCRUSHER_H_INCLUDED__
+#define __MWENGINE__BITCRUSHER_H_INCLUDED__
 
 #include "baseprocessor.h"
 
+namespace MWEngine {
 class BitCrusher : public BaseProcessor
 {
     public:
@@ -46,5 +47,6 @@ class BitCrusher : public BaseProcessor
         float _inputMix;
         float _outputMix;
 };
+} // E.O namespace MWEngine
 
 #endif

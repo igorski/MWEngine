@@ -23,6 +23,8 @@
 #include "audiochannel.h"
 #include <utilities/volumeutil.h>
 
+namespace MWEngine {
+
 unsigned int AudioChannel::INSTANCE_COUNT = 0;
 
 /* constructor / destructor */
@@ -249,3 +251,5 @@ void AudioChannel::init()
     setPan( 0 );
     createOutputBuffer();
 }
+
+} // E.O namespace MWEngine

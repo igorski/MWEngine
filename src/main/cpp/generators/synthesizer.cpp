@@ -28,6 +28,8 @@
 #include <utilities/bufferutility.h>
 #include <utilities/utils.h>
 
+namespace MWEngine {
+
 /* constructors / destructor */
 
 Synthesizer::Synthesizer( SynthInstrument* aInstrument, int aOscillatorNum )
@@ -426,3 +428,5 @@ void Synthesizer::initKarplusStrong( RingBuffer* ringBuffer )
     for ( int i = 0, l = ringBuffer->getBufferLength(); i < l; ++i )
         ringBuffer->enqueue( randomFloat() );
 }
+
+} // E.O namespace MWEngine

@@ -27,6 +27,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+namespace MWEngine {
+
 /* convenience methods */
 
 /**
@@ -114,3 +116,5 @@ unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool li
            inputBuffer[ startOffset + 1 ] <<  8 ||
            inputBuffer[ startOffset + 0 ];
 }
+
+} // E.O namespace MWEngine

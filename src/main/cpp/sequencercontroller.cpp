@@ -29,6 +29,8 @@
 #include <utilities/diskwriter.h>
 #include <utilities/volumeutil.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 SequencerController::SequencerController()
@@ -111,8 +113,9 @@ void SequencerController::setLoopRange( int aStartPosition, int aEndPosition, in
     {
         AudioEngine::bufferPosition = AudioEngine::min_buffer_position;
     }
-    AudioEngine::min_step_position = round(( aStartPosition / AudioEngine::samples_per_bar ) * aStepsPerBar );
-    AudioEngine::max_step_position = round(((( float ) aEndPosition / ( float ) AudioEngine::samples_per_bar ) * aStepsPerBar ) - 1 );
+
+    AudioEngine::min_step_position = ( int ) round(( aStartPosition / AudioEngine::samples_per_bar ) * aStepsPerBar );
+    AudioEngine::max_step_position = ( int ) round(((( float ) aEndPosition / ( float ) AudioEngine::samples_per_bar ) * aStepsPerBar ) - 1 );
 
     // keep current sequencer step within the new loop range
     if ( AudioEngine::stepPosition < AudioEngine::min_step_position ||
@@ -334,3 +337,5 @@ void SequencerController::saveRecordedSnippet( int snippetBufferIndex )
 {
     DiskWriter::writeBufferToFile( snippetBufferIndex, true );
 }
+
+} // E.O namespace MWEngine

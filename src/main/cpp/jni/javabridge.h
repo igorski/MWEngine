@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -28,15 +28,15 @@
  * JAVA_CLASS make sure obfuscation leaves these intact in
  * production builds!
  */
-#ifndef JAVA_BRIDGE_H
-#define JAVA_BRIDGE_H
+#ifndef __MWENGINE__JAVA_BRIDGE_H
+#define __MWENGINE__JAVA_BRIDGE_H
 
 #include <jni.h>
 #include <string>
 
 /* this is the classpath to the Java class the MWEngine communicates with */
 
-#define JAVA_CLASS "nl/igorski/lib/audio/MWEngine"
+#define MWENGINE_JAVA_CLASS "nl/igorski/lib/audio/MWEngine"
 
 /* method signatures of aforementioned mediator JAVA_CLASS */
 

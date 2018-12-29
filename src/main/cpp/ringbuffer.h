@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __RINGBUFFER_H_INCLUDED__
-#define __RINGBUFFER_H_INCLUDED__
+#ifndef __MWENGINE__RINGBUFFER_H_INCLUDED__
+#define __MWENGINE__RINGBUFFER_H_INCLUDED__
 
 #include "global.h"
 #include <cstring>
 
+namespace MWEngine {
 class RingBuffer
 {
     public:
@@ -76,5 +77,6 @@ class RingBuffer
         int _first;
         int _last;
 };
+} // E.O namespace MWEngine
 
 #endif

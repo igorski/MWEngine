@@ -20,13 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LFO_H_INCLUDED__
-#define __LFO_H_INCLUDED__
+#ifndef __MWENGINE__LFO_H_INCLUDED__
+#define __MWENGINE__LFO_H_INCLUDED__
 
 #include "global.h"
 #include "wavetable.h"
 #include <algorithm>
 
+namespace MWEngine {
 class LFO
 {
     public:
@@ -84,5 +85,6 @@ class LFO
 
         float _cvalue, _cmin, _cmax;
 };
+} // E.O namespace MWEngine
 
 #endif

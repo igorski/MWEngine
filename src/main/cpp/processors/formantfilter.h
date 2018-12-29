@@ -21,11 +21,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FORMANTFILTER_H_INCLUDED__
-#define __FORMANTFILTER_H_INCLUDED__
+#ifndef __MWENGINE__FORMANTFILTER_H_INCLUDED__
+#define __MWENGINE__FORMANTFILTER_H_INCLUDED__
 
 #include "baseprocessor.h"
 
+namespace MWEngine {
 class FormantFilter : public BaseProcessor
 {
     public:
@@ -51,5 +52,6 @@ class FormantFilter : public BaseProcessor
         double _memory[ 10 ];
         void calculateCoeffs();
 };
+} // E.O namespace MWEngine
 
 #endif

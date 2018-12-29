@@ -24,13 +24,14 @@
 #include "../audioengine.h"
 #include <utilities/debug.h>
 
-#if DRIVER == 0
-OPENSL_STREAM* driver_openSL = nullptr; // OpenSL
-#elif DRIVER == 1
-AAudio_IO* driver_aAudio = nullptr;     // AAudio
-#endif
-
+namespace MWEngine {
 namespace DriverAdapter {
+
+#if DRIVER == 0
+    OPENSL_STREAM* driver_openSL = nullptr; // OpenSL
+#elif DRIVER == 1
+    AAudio_IO* driver_aAudio = nullptr;     // AAudio
+#endif
 
     bool create() {
 
@@ -114,3 +115,5 @@ namespace DriverAdapter {
         return 0;
     }
 }
+
+} // E.O namespace MWEngine

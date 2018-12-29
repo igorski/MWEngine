@@ -28,6 +28,8 @@
 #include <utilities/utils.h>
 #include <cstddef>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 SynthInstrument::SynthInstrument()
@@ -132,3 +134,5 @@ void SynthInstrument::init()
 
     setOscillatorAmount( 1 );
 }
+
+} // E.O namespace MWEngine

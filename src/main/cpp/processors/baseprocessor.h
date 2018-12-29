@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BASEPROCESSOR_H_INCLUDED__
-#define __BASEPROCESSOR_H_INCLUDED__
+#ifndef __MWENGINE__BASEPROCESSOR_H_INCLUDED__
+#define __MWENGINE__BASEPROCESSOR_H_INCLUDED__
 
 #include "../global.h"
 #include "../audiobuffer.h"
 
+namespace MWEngine {
 class BaseProcessor
 {
     public:
@@ -47,5 +48,6 @@ class BaseProcessor
          */
         virtual bool isCacheable();
 };
+} // E.O namespace MWEngine
 
 #endif

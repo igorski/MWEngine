@@ -20,9 +20,10 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __NOTIFICATIONS_H_INCLUDED__
-#define __NOTIFICATIONS_H_INCLUDED__
+#ifndef __MWENGINE__NOTIFICATIONS_H_INCLUDED__
+#define __MWENGINE__NOTIFICATIONS_H_INCLUDED__
 
+namespace MWEngine {
 class Notifications
 {
     public:
@@ -58,5 +59,6 @@ class Notifications
             ERROR_THREAD_START          // error occurred during starting of render thread
         };
 };
+} // E.O namespace MWEngine
 
 #endif

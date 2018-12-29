@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SAMPLE_UTIL_H_INCLUDED__
-#define __SAMPLE_UTIL_H_INCLUDED__
+#ifndef __MWENGINE__SAMPLE_UTIL_H_INCLUDED__
+#define __MWENGINE__SAMPLE_UTIL_H_INCLUDED__
 
 #include "../events/sampleevent.h"
 
+namespace MWEngine {
 class SampleUtility
 {
     public:
@@ -56,5 +57,6 @@ class SampleUtility
             }
         }
 };
+} // E.O namespace MWEngine
 
 #endif

@@ -21,11 +21,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FLANGER_H_INCLUDED__
-#define __FLANGER_H_INCLUDED__
+#ifndef __MWENGINE__FLANGER_H_INCLUDED__
+#define __MWENGINE__FLANGER_H_INCLUDED__
 
 #include "baseprocessor.h"
 #include "lowpassfilter.h"
+
+namespace MWEngine {
 
 // Adaptation of modf() by Dennis Cronin
 // this macro breaks a double into integer and fractional components i and f respectively.
@@ -107,5 +109,6 @@ class Flanger : public BaseProcessor
         void setSweep();
         void init( float rate, float width, float feedback, float delay, float mix );
 };
+} // E.O namespace MWEngine
 
 #endif

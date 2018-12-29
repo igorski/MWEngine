@@ -20,13 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BASEAUDIOEVENT_H_INCLUDED__
-#define __BASEAUDIOEVENT_H_INCLUDED__
+#ifndef __MWENGINE__BASEAUDIOEVENT_H_INCLUDED__
+#define __MWENGINE__BASEAUDIOEVENT_H_INCLUDED__
 
 #include "../audiobuffer.h"
 
-class BaseInstrument;  // forward declaration, see <instruments/baseinstrument.h>
+namespace MWEngine {
 
+class BaseInstrument;  // forward declaration, see <instruments/baseinstrument.h>
 class BaseAudioEvent
 {
     public:
@@ -205,5 +206,6 @@ class BaseAudioEvent
 
         bool _destroyableBuffer;
 };
+} // E.O namespace MWEngine
 
 #endif

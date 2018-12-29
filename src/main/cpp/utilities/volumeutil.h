@@ -20,11 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __VOLUME_UTIL_H_INCLUDED__
-#define __VOLUME_UTIL_H_INCLUDED__
+#ifndef __MWENGINE__VOLUME_UTIL_H_INCLUDED__
+#define __MWENGINE__VOLUME_UTIL_H_INCLUDED__
 
 #include "../global.h"
 #include <math.h>
+
+namespace MWEngine {
 
 // a convenient macro which is used to mix in a sample
 // into an existing audio buffer preventing overflowing
@@ -63,5 +65,7 @@ namespace VolumeUtil
         return pow( value, 1.0f / CURVE );
     }
 }
+
+} // E.O namespace MWEngine
 
 #endif

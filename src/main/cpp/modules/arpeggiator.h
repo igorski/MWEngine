@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ARPEGGIATOR_H_INCLUDED__
-#define __ARPEGGIATOR_H_INCLUDED__
+#ifndef __MWENGINE__ARPEGGIATOR_H_INCLUDED__
+#define __MWENGINE__ARPEGGIATOR_H_INCLUDED__
 
 #include <cmath>
 
+namespace MWEngine {
 class Arpeggiator
 {
     public:
@@ -102,5 +103,6 @@ class Arpeggiator
         int _stepShifts[ MAX_STEPS ];
         int _bufferPosition;
 };
+} // E.O namespace MWEngine
 
 #endif

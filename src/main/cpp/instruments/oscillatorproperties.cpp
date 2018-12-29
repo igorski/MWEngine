@@ -24,6 +24,8 @@
 #include <definitions/waveforms.h>
 #include <utilities/tablepool.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 OscillatorProperties::OscillatorProperties( int aWaveform, float aDetune, int aOctaveShift, int aFineShift )
@@ -82,3 +84,5 @@ void OscillatorProperties::setCustomWaveform( std::string waveformId )
 
     _waveform = WaveForms::TABLE;
 };
+
+} // E.O namespace MWEngine

@@ -20,13 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SAMPLEMANAGER_H_INCLUDED__
-#define __SAMPLEMANAGER_H_INCLUDED__
+#ifndef __MWENGINE__SAMPLEMANAGER_H_INCLUDED__
+#define __MWENGINE__SAMPLEMANAGER_H_INCLUDED__
 
 #include "audiobuffer.h"
 #include <string>
 #include <map>
 #include <utility>
+
+namespace MWEngine {
 
 typedef struct
 {
@@ -72,5 +74,7 @@ namespace SampleManagerSamples
 {
     extern std::map<std::string, cachedSample> _sampleMap;
 }
+
+} // E.O namespace MWEngine
 
 #endif

@@ -20,14 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FASTMATH_H_INCLUDED__
-#define __FASTMATH_H_INCLUDED__
+#ifndef __MWENGINE__FASTMATH_H_INCLUDED__
+#define __MWENGINE__FASTMATH_H_INCLUDED__
 
 /**
  * faster versions of standard library methods
  * note that these might not be full-on replacements
  * of existing methods, as accuracy or error handling is ignored
  */
+namespace MWEngine {
 namespace FastMath
 {
     /* public methods */
@@ -38,5 +39,6 @@ namespace FastMath
 
     extern float _fmodTmp;
 }
+} // E.O namespace MWEngine
 
 #endif

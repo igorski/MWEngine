@@ -23,6 +23,7 @@
 #include "bufferpool.h"
 #include <utilities/bufferutility.h>
 
+namespace MWEngine {
 namespace BufferPool
 {
     std::map<unsigned int, SAMPLE_TYPE*> _silentBufferMap;
@@ -113,3 +114,5 @@ namespace BufferPool
         return false;
     }
 }
+
+} // E.O namespace MWEngine

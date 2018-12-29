@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BASEINSTRUMENT_H_INCLUDED__
-#define __BASEINSTRUMENT_H_INCLUDED__
+#ifndef __MWENGINE__BASEINSTRUMENT_H_INCLUDED__
+#define __MWENGINE__BASEINSTRUMENT_H_INCLUDED__
 
 #include "../audiochannel.h"
 #include <events/baseaudioevent.h>
 
+namespace MWEngine {
 class BaseInstrument
 {
     public:
@@ -56,5 +57,6 @@ class BaseInstrument
 
         float _oldTempo; // last known sequencer tempo
 };
+} // E.O namespace MWEngine
 
 #endif

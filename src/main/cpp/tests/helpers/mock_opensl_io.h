@@ -1,6 +1,8 @@
 #ifndef MOCK_OPENSL_IO
 #define MOCK_OPENSL_IO
 
+using namespace MWEngine;
+
 #include "../../drivers/opensl_io.h"
 #include "mock_opensl_io.cpp"
 

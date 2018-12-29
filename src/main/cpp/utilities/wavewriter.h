@@ -21,8 +21,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __WAVEWRITER_H_INCLUDED__
-#define __WAVEWRITER_H_INCLUDED__
+#ifndef __MWENGINE__WAVEWRITER_H_INCLUDED__
+#define __MWENGINE__WAVEWRITER_H_INCLUDED__
 
 #include <string>
 #include <fstream>
@@ -30,6 +30,7 @@
 #include "../audiobuffer.h"
 #include "../global.h"
 
+namespace MWEngine {
 class WaveWriter
 {
     public:
@@ -91,5 +92,6 @@ class WaveWriter
             stream.write(( const char* )&t, sizeof( T ));
         }
 };
+} // E.O namespace MWEngine
 
 #endif

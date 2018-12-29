@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SEQUENCERCONTROLLER_H_INCLUDED__
-#define __SEQUENCERCONTROLLER_H_INCLUDED__
+#ifndef __MWENGINE__SEQUENCERCONTROLLER_H_INCLUDED__
+#define __MWENGINE__SEQUENCERCONTROLLER_H_INCLUDED__
 
 #include "sequencer.h"
 #include <utilities/bulkcacher.h>
@@ -31,6 +31,7 @@
  * speed, position, range, etc. it is basically the mediator between
  * the user interface and the Sequencer
  */
+namespace MWEngine {
 class SequencerController
 {
     public:
@@ -71,5 +72,6 @@ class SequencerController
     protected:
         int stepsPerBar;
 };
+} // E.O namespace MWEngine
 
 #endif

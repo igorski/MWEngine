@@ -27,6 +27,8 @@
 #include <instruments/synthinstrument.h>
 #include <cmath>
 
+namespace MWEngine {
+
 unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
 
 /* constructors / destructor */
@@ -417,3 +419,5 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     if ( isSequenced )
         addToSequencer();
 }
+
+} // E.O namespace MWEngine

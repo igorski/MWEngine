@@ -25,130 +25,213 @@
 #include <utilities/utils.h>
 #include <vector>
 
-namespace Sequencer
+namespace MWEngine {
+
+/* static member intialization */
+
+bool Sequencer::playing           = false;
+BulkCacher* Sequencer::bulkCacher = new BulkCacher( true );
+std::vector<BaseInstrument*> Sequencer::instruments;
+
+/* public methods */
+
+int Sequencer::registerInstrument( BaseInstrument* instrument )
 {
-    bool playing = false;
-    std::vector<BaseInstrument*> instruments;
-    BulkCacher* bulkCacher = new BulkCacher( true );
+    int index       = -1;
+    bool wasPresent = false; // prevent double addition
 
-    /* public methods */
-
-    int registerInstrument( BaseInstrument* instrument )
+    for ( int i = 0; i < instruments.size(); i++ )
     {
-        int index       = -1;
-        bool wasPresent = false; // prevent double addition
-
-        for ( int i = 0; i < instruments.size(); i++ )
-        {
-            if ( instruments.at( i ) == instrument )
-                wasPresent = true;
-        }
-
-        if ( !wasPresent ) {
-            instruments.push_back( instrument );
-            index = instruments.size() - 1;
-        }
-        return index; // the index this instrument is registered at
+        if ( instruments.at( i ) == instrument )
+            wasPresent = true;
     }
 
-    bool unregisterInstrument( BaseInstrument* instrument )
+    if ( !wasPresent ) {
+        instruments.push_back( instrument );
+        index = instruments.size() - 1;
+    }
+    return index; // the index this instrument is registered at
+}
+
+bool Sequencer::unregisterInstrument( BaseInstrument* instrument )
+{
+    for ( int i = 0; i < instruments.size(); i++ )
     {
-        for ( int i = 0; i < instruments.size(); i++ )
+        if ( instruments.at( i ) == instrument )
         {
-            if ( instruments.at( i ) == instrument )
+            instruments.erase( instruments.begin() + i );
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
+                                       int bufferSize, bool addLiveInstruments, bool flushChannels )
+{
+    channels->clear();
+
+    int bufferEnd    = bufferPosition + ( bufferSize - 1 );          // the highest SampleEnd value we'll query
+    bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
+
+    int i, l;
+
+    // note we update the channels mix properties here as they might change during playback
+
+    for ( i = 0, l = ( int ) instruments.size(); i < l; ++i )
+    {
+        BaseInstrument* instrument      = instruments.at( i );
+        AudioChannel* instrumentChannel = instrument->audioChannel;
+
+        // clear previous channel contents when requested
+        if ( flushChannels )
+            instrumentChannel->reset();
+
+        if ( !instrumentChannel->muted )
+        {
+            if ( playing )
+                collectSequencedEvents( instrument, bufferPosition, bufferEnd );
+
+            if ( addLiveInstruments && instrument->hasLiveEvents() )
+                collectLiveEvents( instrument );
+
+            channels->push_back( instrumentChannel );
+        }
+    }
+    return loopStarted;
+}
+
+void Sequencer::updateEvents()
+{
+    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
+        instruments.at( i )->updateEvents();
+}
+
+void Sequencer::clearEvents()
+{
+    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
+        instruments.at( i )->clearEvents();
+}
+
+/**
+ * used by the getAudioEvents-method of the sequencer, this validates
+ * the present AudioEvents against the requested position
+ * and updates and flushes the removal queue
+ *
+ * @param instrument     {BaseInstrument*} instrument to gather events from
+ * @param bufferPosition {int} the current buffers start pointer
+ * @param bufferEnd      {int} the current buffers end pointer
+ */
+void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd )
+{
+    if ( !instrument->hasEvents() )
+        return;
+
+    AudioChannel* channel                     = instrument->audioChannel;
+    std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
+
+    // removal queue
+    std::vector<BaseAudioEvent*> removes;
+
+    // channel has an internal loop (e.g. drum machine) ? recalculate requested
+    // buffer position by subtracting all measures above the first
+    
+    if ( channel->maxBufferPosition > 0 )
+    {
+        int samplesPerBar = AudioEngine::samples_per_bar;
+
+        while ( bufferPosition >= channel->maxBufferPosition )
+        {
+            bufferPosition -= samplesPerBar;
+            bufferEnd      -= samplesPerBar;
+        }
+    }
+
+    int i = 0, amount = ( int ) audioEvents->size();
+    for ( ; i < amount; i++ )
+    {
+        BaseAudioEvent* audioEvent = audioEvents->at( i );
+
+        if ( audioEvent->isEnabled() )
+        {
+            int eventStart = audioEvent->getEventStart();
+            int eventEnd   = audioEvent->getEventEnd();
+
+            if (( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
+                ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
             {
-                instruments.erase( instruments.begin() + i );
-                return true;
+                if ( !audioEvent->isDeletable())
+                    channel->addEvent( audioEvent );
+                else
+                    removes.push_back( audioEvent );
             }
         }
-        return false;
     }
-
-    bool getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
-                         int bufferSize, bool addLiveInstruments, bool flushChannels )
+    // removal queue filled ? process it so we can safely
+    // remove "deleted" AudioEvents without errors occurring
+    if ( removes.size() > 0 )
     {
-        channels->clear();
-
-        int bufferEnd    = bufferPosition + ( bufferSize - 1 );          // the highest SampleEnd value we'll query
-        bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
-
-        int i, l;
-
-        // note we update the channels mix properties here as they might change during playback
-
-        for ( i = 0, l = instruments.size(); i < l; ++i )
+        for ( i = 0; i < removes.size(); i++ )
         {
-            BaseInstrument* instrument      = instruments.at( i );
-            AudioChannel* instrumentChannel = instrument->audioChannel;
-
-            // clear previous channel contents when requested
-            if ( flushChannels )
-                instrumentChannel->reset();
-
-            if ( !instrumentChannel->muted )
-            {
-                if ( playing )
-                    collectSequencedEvents( instrument, bufferPosition, bufferEnd );
-
-                if ( addLiveInstruments && instrument->hasLiveEvents() )
-                    collectLiveEvents( instrument );
-
-                channels->push_back( instrumentChannel );
-            }
+            BaseAudioEvent* audioEvent = removes[ i ];
+            instrument->removeEvent( audioEvent, false );
         }
-        return loopStarted;
     }
+}
 
-    void updateEvents()
+void Sequencer::collectLiveEvents( BaseInstrument* instrument )
+{
+    AudioChannel* channel                    = instrument->audioChannel;
+    std::vector<BaseAudioEvent*>* liveEvents = instrument->getLiveEvents();
+
+    // removal queue
+    std::vector<BaseAudioEvent*> removes;
+
+    for ( int i = 0; i < liveEvents->size(); i++ )
     {
-        for ( int i = 0, l = instruments.size(); i < l; ++i )
-            instruments.at( i )->updateEvents();
+        BaseAudioEvent* audioEvent = liveEvents->at( i );
+
+        if ( !audioEvent->isDeletable())
+            channel->addLiveEvent( audioEvent );
+        else
+            removes.push_back( audioEvent );
     }
-
-    void clearEvents()
+    // removal queue filled ? process it so we can safely
+    // remove "deleted" AudioEvents without errors occurring
+    if ( removes.size() > 0 )
     {
-        for ( int i = 0, l = instruments.size(); i < l; ++i )
-            instruments.at( i )->clearEvents();
-    }
-
-    /**
-     * used by the getAudioEvents-method of the sequencer, this validates
-     * the present AudioEvents against the requested position
-     * and updates and flushes the removal queue
-     *
-     * @param instrument     {BaseInstrument*} instrument to gather events from
-     * @param bufferPosition {int} the current buffers start pointer
-     * @param bufferEnd      {int} the current buffers end pointer
-     */
-    void collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd )
-    {
-        if ( !instrument->hasEvents() )
-            return;
-
-        AudioChannel* channel                     = instrument->audioChannel;
-        std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
-
-        // removal queue
-        std::vector<BaseAudioEvent*> removes;
-
-        // channel has an internal loop (e.g. drum machine) ? recalculate requested
-        // buffer position by subtracting all measures above the first
-        if ( channel->maxBufferPosition > 0 )
+        for ( int i = 0; i < removes.size(); i++ )
         {
-            int samplesPerBar = AudioEngine::samples_per_bar;
-
-            while ( bufferPosition >= channel->maxBufferPosition )
-            {
-                bufferPosition -= samplesPerBar;
-                bufferEnd      -= samplesPerBar;
-            }
+            BaseAudioEvent* audioEvent = removes[ i ];
+            instrument->removeEvent( audioEvent, true );
         }
-        int i = 0, amount = audioEvents->size();
-        for ( ; i < amount; i++ )
-        {
-            BaseAudioEvent* audioEvent = audioEvents->at( i );
+    }
+}
 
-            if ( audioEvent->isEnabled() )
+/**
+ * used by the cacheAudioEventsForMeasure-method, this collects
+ * all AudioEvents in the requested measure for entry into the BulkCacher
+ *
+ * @param bufferPosition {int} the desired measures buffers start pointer
+ * @param bufferEnd      {int} the desired measures buffers end pointer
+ *
+ * @return {std::vector<BaseCacheableAudioEvent*>}
+ */
+std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvents( int bufferPosition, int bufferEnd )
+{
+    std::vector<BaseCacheableAudioEvent*>* events = new std::vector<BaseCacheableAudioEvent*>();
+
+    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
+    {
+        std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
+        int amount = ( int ) audioEvents->size();
+
+        for ( int j = 0; j < amount; j++ )
+        {
+            BaseAudioEvent* audioEvent = audioEvents->at( j );
+
+            // if event is an instance of BaseCacheableAudioEvent add it to the list
+            if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != nullptr )
             {
                 int eventStart = audioEvent->getEventStart();
                 int eventEnd   = audioEvent->getEventEnd();
@@ -157,90 +240,12 @@ namespace Sequencer
                     ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
                 {
                     if ( !audioEvent->isDeletable())
-                        channel->addEvent( audioEvent );
-                    else
-                        removes.push_back( audioEvent );
+                        events->push_back(( BaseCacheableAudioEvent* ) audioEvent );
                 }
             }
         }
-        // removal queue filled ? process it so we can safely
-        // remove "deleted" AudioEvents without errors occurring
-        if ( removes.size() > 0 )
-        {
-            for ( int i = 0; i < removes.size(); i++ )
-            {
-                BaseAudioEvent* audioEvent = removes[ i ];
-                instrument->removeEvent( audioEvent, false );
-            }
-        }
     }
-
-    void collectLiveEvents( BaseInstrument* instrument )
-    {
-        AudioChannel* channel                    = instrument->audioChannel;
-        std::vector<BaseAudioEvent*>* liveEvents = instrument->getLiveEvents();
-
-        // removal queue
-        std::vector<BaseAudioEvent*> removes;
-
-        for ( int i = 0; i < liveEvents->size(); i++ )
-        {
-            BaseAudioEvent* audioEvent = liveEvents->at( i );
-
-            if ( !audioEvent->isDeletable())
-                channel->addLiveEvent( audioEvent );
-            else
-                removes.push_back( audioEvent );
-        }
-        // removal queue filled ? process it so we can safely
-        // remove "deleted" AudioEvents without errors occurring
-        if ( removes.size() > 0 )
-        {
-            for ( int i = 0; i < removes.size(); i++ )
-            {
-                BaseAudioEvent* audioEvent = removes[ i ];
-                instrument->removeEvent( audioEvent, true );
-            }
-        }
-    }
-
-    /**
-     * used by the cacheAudioEventsForMeasure-method, this collects
-     * all AudioEvents in the requested measure for entry into the BulkCacher
-     *
-     * @param bufferPosition {int} the desired measures buffers start pointer
-     * @param bufferEnd      {int} the desired measures buffers end pointer
-     *
-     * @return {std::vector<BaseCacheableAudioEvent*>}
-     */
-    std::vector<BaseCacheableAudioEvent*>* collectCacheableSequencerEvents( int bufferPosition, int bufferEnd )
-    {
-        std::vector<BaseCacheableAudioEvent*>* events = new std::vector<BaseCacheableAudioEvent*>();
-
-        for ( int i = 0, l = instruments.size(); i < l; ++i )
-        {
-            std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
-            int amount = audioEvents->size();
-
-            for ( int j = 0; j < amount; j++ )
-            {
-                BaseAudioEvent* audioEvent = audioEvents->at( j );
-
-                // if event is an instance of BaseCacheableAudioEvent add it to the list
-                if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != nullptr )
-                {
-                    int eventStart = audioEvent->getEventStart();
-                    int eventEnd   = audioEvent->getEventEnd();
-
-                    if (( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
-                        ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
-                    {
-                        if ( !audioEvent->isDeletable())
-                            events->push_back(( BaseCacheableAudioEvent* ) audioEvent );
-                    }
-                }
-            }
-        }
-        return events;
-    }
+    return events;
 }
+
+} // E.O namespace MWEngine

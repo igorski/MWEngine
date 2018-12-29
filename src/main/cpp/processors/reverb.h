@@ -20,9 +20,10 @@
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
 
-#ifndef __REVERB_H_INCLUDED__
-#define __REVERB_H_INCLUDED__
+#ifndef __MWENGINE__REVERB_H_INCLUDED__
+#define __MWENGINE__REVERB_H_INCLUDED__
 
+namespace MWEngine {
 class Reverb : public BaseProcessor {
 
     public:
@@ -56,5 +57,6 @@ class Reverb : public BaseProcessor {
         SAMPLE_TYPE fil, fbak, damp, wet, dry, size;
         int pos, den, rdy;
 };
+} // E.O namespace MWEngine
 
 #endif

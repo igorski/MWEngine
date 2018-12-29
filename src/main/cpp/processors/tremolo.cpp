@@ -24,6 +24,8 @@
 #include "../global.h"
 #include <generators/envelopegenerator.h>
 
+namespace MWEngine {
+
 /* constructors / destructor */
 
 Tremolo::Tremolo( int aLeftType,  int aLeftAttack,  int aLeftDecay,
@@ -220,3 +222,5 @@ void Tremolo::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         }
     }
 }
+
+} // E.O namespace MWEngine

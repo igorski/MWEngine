@@ -24,6 +24,8 @@
 #include "../global.h"
 #include <string>
 
+namespace MWEngine {
+
 #ifdef DEBUG
 #include <android/log.h>
 #include <stdio.h>
@@ -71,3 +73,5 @@ namespace Debug
 #endif
     }
 }
+
+} // E.O namespace MWEngine

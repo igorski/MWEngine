@@ -28,6 +28,7 @@
 #include <math.h>
 #include <cmath>
 
+namespace MWEngine {
 namespace WaveGenerator
 {
     void generate( WaveTable* waveTable, int waveformType )
@@ -96,3 +97,5 @@ namespace WaveGenerator
         }
     }
 }
+
+} // E.O namespace MWEngine

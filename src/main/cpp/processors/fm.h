@@ -20,13 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __FM_H_INCLUDED__
-#define __FM_H_INCLUDED__
+#ifndef __MWENGINE__FM_H_INCLUDED__
+#define __MWENGINE__FM_H_INCLUDED__
 
 #include "baseprocessor.h"
 #include "../global.h"
 #include <modules/lfo.h>
 
+namespace MWEngine {
 class FrequencyModulator : public BaseProcessor, public LFO
 {
     public:
@@ -47,5 +48,6 @@ class FrequencyModulator : public BaseProcessor, public LFO
         SAMPLE_TYPE fmamp;
         SAMPLE_TYPE TWO_PI_OVER_SR;
 };
+} // E.O namespace MWEngine
 
 #endif

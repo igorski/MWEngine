@@ -26,6 +26,8 @@
 #include <utilities/debug.h>
 #include <instruments/druminstrument.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 DrumPattern::DrumPattern( int aNum, BaseInstrument* aInstrument )
@@ -228,3 +230,5 @@ void DrumPattern::destroyAudioEvents()
     audioEvents->clear();
     eventAmount = 0;
 }
+
+} // E.O namespace MWEngine

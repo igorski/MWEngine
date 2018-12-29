@@ -45,6 +45,7 @@
 
 #endif
 
+namespace MWEngine {
 namespace AudioEngine
 {
     bool recordOutputToDisk = false;
@@ -661,3 +662,5 @@ void recordInput( bool record )
 }
 
 #endif
+
+} // E.O namespace MWEngine

@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DECIMATOR_H_INCLUDED__
-#define __DECIMATOR_H_INCLUDED__
+#ifndef __MWENGINE__DECIMATOR_H_INCLUDED__
+#define __MWENGINE__DECIMATOR_H_INCLUDED__
 
 #include "baseprocessor.h"
 
+namespace MWEngine {
 class Decimator : public BaseProcessor
 {
     public:
@@ -42,5 +43,6 @@ class Decimator : public BaseProcessor
         long _m;
         float _count;
 };
+} // E.O namespace MWEngine
 
 #endif

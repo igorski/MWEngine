@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMINSTRUMENT_H_INCLUDED__
-#define __DRUMINSTRUMENT_H_INCLUDED__
+#ifndef __MWENGINE__DRUMINSTRUMENT_H_INCLUDED__
+#define __MWENGINE__DRUMINSTRUMENT_H_INCLUDED__
 
 #include "baseinstrument.h"
 #include "../audiochannel.h"
@@ -30,6 +30,7 @@
 #include <modules/routeableoscillator.h>
 #include <vector>
 
+namespace MWEngine {
 class DrumInstrument : public BaseInstrument
 {
     public:
@@ -59,5 +60,6 @@ class DrumInstrument : public BaseInstrument
     protected:
         void construct();
 };
+} // E.O namespace MWEngine
 
 #endif

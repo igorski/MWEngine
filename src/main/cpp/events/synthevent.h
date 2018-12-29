@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SYNTHEVENT_H_INCLUDED__
-#define __SYNTHEVENT_H_INCLUDED__
+#ifndef __MWENGINE__SYNTHEVENT_H_INCLUDED__
+#define __MWENGINE__SYNTHEVENT_H_INCLUDED__
 
 #include "basesynthevent.h"
 #include "../ringbuffer.h"
@@ -34,6 +34,7 @@
  *
  * see: https://play.google.com/store/apps/details?id=nl.igorski.mikrowave&hl=en
  */
+namespace MWEngine {
 class SynthEvent : public BaseSynthEvent
 {
     public:
@@ -41,5 +42,6 @@ class SynthEvent : public BaseSynthEvent
         SynthEvent( float aFrequency, SynthInstrument* aInstrument );
         ~SynthEvent();
 };
+} // E.O namespace MWEngine
 
 #endif

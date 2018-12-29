@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SEQUENCER_H_INCLUDED__
-#define __SEQUENCER_H_INCLUDED__
+#ifndef __MWENGINE__SEQUENCER_H_INCLUDED__
+#define __MWENGINE__SEQUENCER_H_INCLUDED__
 
 #include "audiochannel.h"
 #include <instruments/baseinstrument.h>
@@ -38,30 +38,31 @@
  * song position / length / tempo manipulations, for these purposes
  * you should be using the methods exposed by the SequencerController instead
  */
-namespace Sequencer
+namespace MWEngine {
+class Sequencer
 {
-    extern std::vector<BaseInstrument*> instruments;
-    extern bool playing; // whether the sequencer is running or paused
+    public:
 
-    extern int registerInstrument   ( BaseInstrument* instrument );
-    extern bool unregisterInstrument( BaseInstrument* instrument );
+        static bool playing;
+        static std::vector<BaseInstrument*> instruments;
+        static BulkCacher* bulkCacher;
 
+        static int registerInstrument   ( BaseInstrument* instrument );
+        static bool unregisterInstrument( BaseInstrument* instrument );
 
-    // collect all audio events which should be rendered at the given buffer range
-    extern bool getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
-                                int bufferSize, bool addLiveInstruments, bool flushChannels );
+        // collect all audio events which should be rendered at the given buffer range
 
-    extern void updateEvents();
-    extern void clearEvents();
+        static bool getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
+                                    int bufferSize, bool addLiveInstruments, bool flushChannels );
 
-    extern BulkCacher* bulkCacher;
+        static void updateEvents();
+        static void clearEvents();
 
-    // internal methods to collect audio events by their instruments type
+        static void collectSequencedEvents( BaseInstrument* aInstrument, int bufferPosition, int bufferEnd );
+        static void collectLiveEvents     ( BaseInstrument* aInstrument );
 
-    extern void collectSequencedEvents( BaseInstrument* aInstrument, int bufferPosition, int bufferEnd );
-    extern void collectLiveEvents     ( BaseInstrument* aInstrument );
-
-    extern std::vector<BaseCacheableAudioEvent*>* collectCacheableSequencerEvents( int bufferPosition, int bufferEnd );
-}
+        static std::vector<BaseCacheableAudioEvent*>* collectCacheableSequencerEvents( int bufferPosition, int bufferEnd );
+};
+} // E.O namespace MWEngine
 
 #endif

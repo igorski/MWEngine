@@ -22,6 +22,7 @@
  */
 #include "fastmath.h"
 
+namespace MWEngine {
 namespace FastMath
 {
     /* public methods */
@@ -38,3 +39,5 @@ namespace FastMath
 
     float _fmodTmp;
 }
+
+} // E.O namespace MWEngine

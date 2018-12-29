@@ -50,7 +50,7 @@ jint JNI_OnLoad( JavaVM* vm, void* reserved )
 void JavaBridge::registerInterface( JNIEnv* env, jobject jobj )
 {
     JNIEnv* environment = getEnvironment(); // always use stored environment reference!
-    jclass localRefCls  = environment->FindClass( JAVA_CLASS );
+    jclass localRefCls  = environment->FindClass( MWENGINE_JAVA_CLASS );
 
     if ( localRefCls == NULL )
         return; /* exception thrown */

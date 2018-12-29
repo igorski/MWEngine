@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BULKCACHER_H_INCLUDED__
-#define __BULKCACHER_H_INCLUDED__
+#ifndef __MWENGINE__BULKCACHER_H_INCLUDED__
+#define __MWENGINE__BULKCACHER_H_INCLUDED__
 
 #include <events/basecacheableaudioevent.h>
 #include <vector>
 
+namespace MWEngine {
 class BulkCacher
 {
     public:
@@ -43,5 +44,6 @@ class BulkCacher
         std::vector<BaseCacheableAudioEvent*>* _queue;
         bool _sequential;
 };
+} // E.O namespace MWEngine
 
 #endif

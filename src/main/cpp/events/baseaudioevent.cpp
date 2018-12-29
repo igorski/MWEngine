@@ -28,6 +28,8 @@
 #include <utilities/volumeutil.h>
 #include <algorithm>
 
+namespace MWEngine {
+
 // constructors / destructor
 
 BaseAudioEvent::BaseAudioEvent()
@@ -491,3 +493,5 @@ int BaseAudioEvent::getSampleEnd() {
 }
 
 /* E.O. DEPRECATION */
+
+} // E.O namespace MWEngine

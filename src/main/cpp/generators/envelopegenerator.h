@@ -22,12 +22,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ENVELOPEGENERATOR_H_INCLUDED__
-#define __ENVELOPEGENERATOR_H_INCLUDED__
+#ifndef __MWENGINE__ENVELOPEGENERATOR_H_INCLUDED__
+#define __MWENGINE__ENVELOPEGENERATOR_H_INCLUDED__
 
 #include "../global.h"
 #include "../wavetable.h"
 
+namespace MWEngine {
 namespace EnvelopeGenerator
 {
     // generate a single envelope into a table
@@ -44,5 +45,6 @@ namespace EnvelopeGenerator
 
     extern SAMPLE_TYPE* generateExponential( int tableLength );
 }
+} // E.O namespace MWEngine
 
 #endif

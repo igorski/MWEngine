@@ -20,13 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BUFFERPOOL_H_INCLUDED__
-#define __BUFFERPOOL_H_INCLUDED__
+#ifndef __MWENGINE__BUFFERPOOL_H_INCLUDED__
+#define __MWENGINE__BUFFERPOOL_H_INCLUDED__
 
 #include "../ringbuffer.h"
 #include <events/basesynthevent.h>
 #include <map>
 
+namespace MWEngine {
 namespace BufferPool
 {
     // lazily instantiates / retrieves existing buffers of SAMPLE_TYPE
@@ -53,5 +54,6 @@ namespace BufferPool
     extern ringMap                              _eventBufferMap;
     extern std::map<unsigned int, SAMPLE_TYPE*> _silentBufferMap;
 }
+} // E.O namespace MWEngine
 
 #endif

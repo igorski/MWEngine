@@ -25,6 +25,8 @@
 #include "../utilities/utils.h"
 #include <limits.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 BitCrusher::BitCrusher( float amount, float inputMix, float outputMix )
@@ -110,3 +112,5 @@ void BitCrusher::setOutputMix( float value )
 {
     _outputMix = value;
 }
+
+} // E.O namespace MWEngine

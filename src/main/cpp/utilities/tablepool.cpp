@@ -22,6 +22,8 @@
  */
 #include "tablepool.h"
 
+namespace MWEngine {
+
 std::map<std::string, WaveTable*> TablePool::_cachedTables;
 
 WaveTable* TablePool::getTable( std::string tableId )
@@ -72,3 +74,5 @@ bool TablePool::removeTable( std::string tableId, bool free )
     }
     return false;
 }
+
+} // E.O namespace MWEngine

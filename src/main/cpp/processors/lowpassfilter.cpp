@@ -23,6 +23,8 @@
 #include "lowpassfilter.h"
 #include "../global.h"
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 LowPassFilter::LowPassFilter( float cutoff )
@@ -106,3 +108,5 @@ void LowPassFilter::restore()
     y1 = orgy1;
     y2 = orgy2;
 }
+
+} // E.O namespace MWEngine

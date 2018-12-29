@@ -24,6 +24,8 @@
 #include "../global.h"
 #include <math.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 /**
@@ -202,3 +204,5 @@ float AllPassDelay::update( float aSample )
 
     return y;
 }
+
+} // E.O namespace MWEngine

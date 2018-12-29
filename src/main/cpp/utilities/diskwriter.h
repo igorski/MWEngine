@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DISKWRITER_H_INCLUDED__
-#define __DISKWRITER_H_INCLUDED__
+#ifndef __MWENGINE__DISKWRITER_H_INCLUDED__
+#define __MWENGINE__DISKWRITER_H_INCLUDED__
 
 #include "audiobuffer.h"
 #include <string>
@@ -37,6 +37,7 @@
  * written in snippets (with a length defined by chunkSize in the prepare()-method).
  * When a full snippet has been recorded, a
  */
+namespace MWEngine {
 namespace DiskWriter
 {
     /* internal properties */
@@ -103,5 +104,6 @@ namespace DiskWriter
     extern bool bufferFull();
     extern void writeBufferToFile( int bufferIndex, bool broadcastUpdate );
 }
+} // E.O namespace MWEngine
 
 #endif

@@ -22,6 +22,7 @@
  */
 #include "samplemanager.h"
 
+namespace MWEngine {
 namespace SampleManagerSamples
 {
     std::map<std::string, cachedSample> _sampleMap;
@@ -102,3 +103,5 @@ void SampleManager::flushSamples()
     }
     SampleManagerSamples::_sampleMap.clear();
 }
+
+} // E.O namespace MWEngine

@@ -30,6 +30,8 @@
 #include "pitchshifter.h"
 #include "../audioengine.h"
 
+namespace MWEngine {
+
 /* constructors / destructors */
 
 PitchShifter::PitchShifter( float shiftAmount, long osampAmount )
@@ -248,3 +250,5 @@ bool PitchShifter::isCacheable()
 {
     return true;
 }
+
+} // E.O namespace MWEngine

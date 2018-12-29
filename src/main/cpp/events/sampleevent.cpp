@@ -26,6 +26,8 @@
 #include "../global.h"
 #include "../sequencer.h"
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 SampleEvent::SampleEvent()
@@ -762,3 +764,5 @@ void SampleEvent::cacheFades()
         _crossfadeEnd   = 0;
     }
 }
+
+} // E.O namespace MWEngine

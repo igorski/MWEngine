@@ -25,6 +25,8 @@
 #include <modules/routeableoscillator.h>
 #include <utilities/utils.h>
 
+namespace MWEngine {
+
 // constructor
 
 RouteableOscillator::RouteableOscillator()
@@ -68,3 +70,5 @@ LFO* RouteableOscillator::getLinkedOscillator()
 {
     return _oscillator;
 }
+
+} // E.O namespace MWEngine

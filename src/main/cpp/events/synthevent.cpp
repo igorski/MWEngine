@@ -28,6 +28,8 @@
 #include <utilities/bufferutility.h>
 #include <cmath>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 /**
@@ -59,3 +61,5 @@ SynthEvent::~SynthEvent()
 {
     BufferPool::destroyRingBuffersForEvent( this ); // see synthesizer.h
 }
+
+} // E.O namespace MWEngine

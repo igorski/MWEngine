@@ -2,7 +2,7 @@
  * this file describes which native classes will
  * be made available to the Java using a SWIG wrapper
  * NOTE : the audio engine itself is not directly available
- * but only through javajni.h and sequencercontroller.h which are
+ * but only through javabridge_api.h and sequencercontroller.h which are
  * wrapped in the nl.igorski.lib.audio.MWEngine class
  *
  * optional Java-specific utilities can be included by adding
@@ -12,6 +12,11 @@
 %module MWEngineCore
 
 %{
+
+// first up include and declare use of MWEngine namespace inside generated wrapper file
+#include "global.h"
+using namespace MWEngine;
+
 #include "jni/javabridge_api.h"
 #include "jni/javautilities.h"
 #include "definitions/notifications.h"

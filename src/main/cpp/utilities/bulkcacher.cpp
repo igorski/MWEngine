@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <vector>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 /**
@@ -119,3 +121,5 @@ void BulkCacher::clearQueue()
 {
     _queue->clear();
 }
+
+} // E.O namespace MWEngine

@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <string.h>
 
+namespace MWEngine {
+
 AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 {
     loopeable        = false;
@@ -165,3 +167,5 @@ AudioBuffer* AudioBuffer::clone()
     }
     return output;
 }
+
+} // E.O namespace MWEngine

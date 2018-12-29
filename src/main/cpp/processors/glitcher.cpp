@@ -23,6 +23,8 @@
 #include "glitcher.h"
 #include <utilities/bufferutility.h>
 
+namespace MWEngine {
+
 /* contructor / destructor */
 
 Glitcher::Glitcher( int amountOfChannels, int fragmentLengthInMilliseconds )
@@ -128,3 +130,5 @@ void Glitcher::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             _readOffset -= sampleLength;
     }
 }
+
+} // E.O namespace MWEngine

@@ -20,13 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMEVENT_H_INCLUDED__
-#define __DRUMEVENT_H_INCLUDED__
+#ifndef __MWENGINE__DRUMEVENT_H_INCLUDED__
+#define __MWENGINE__DRUMEVENT_H_INCLUDED__
 
 #include "sampleevent.h"
 #include <instruments/baseinstrument.h>
 #include <string>
 
+namespace MWEngine {
 class DrumEvent : public SampleEvent
 {
     public:
@@ -64,5 +65,6 @@ class DrumTimbres
         enum Timbres { LIGHT,
                        GRAVEL };
 };
+} // E.O namespace MWEngine
 
 #endif

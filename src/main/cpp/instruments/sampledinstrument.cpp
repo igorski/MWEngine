@@ -28,6 +28,8 @@
 #include <utilities/utils.h>
 #include <events/sampleevent.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 SampledInstrument::SampledInstrument()
@@ -62,3 +64,5 @@ void SampledInstrument::updateEvents()
         _oldTempo = AudioEngine::tempo;
     }
 }
+
+} // E.O namespace MWEngine

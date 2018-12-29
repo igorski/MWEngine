@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef JAVABRIDGE_API_H_INCLUDED
-#define JAVABRIDGE_API_H_INCLUDED
+#ifndef __MWENGINE__JAVABRIDGE_API_H_INCLUDED
+#define __MWENGINE__JAVABRIDGE_API_H_INCLUDED
 
 #include <jni/javabridge.h>
 #include "audiochannel.h"
@@ -31,7 +31,7 @@
  * javabridge_api.h is used to establish a two-way communication (together with javabridge.h)
  * to allow the AudioEngine to send messages to the Java VM, if you do not need
  * to send messages TO Java and are using the engine only in a native environment,
- * simple omit adding this header file in the "native_audio_lib.i"-file which
+ * simple omit adding this header file in the "mwengine.i"-file which
  * describes the SWIG-enabled classes for the JNI environment
  */
 
@@ -49,8 +49,8 @@ extern "C"
     void stop();
     void reset();
 
-    ProcessingChain* getMasterBusProcessors();
-    AudioChannel* getInputChannel();
+    MWEngine::ProcessingChain* getMasterBusProcessors();
+    MWEngine::AudioChannel* getInputChannel();
     void recordInput( bool record );
 }
 
