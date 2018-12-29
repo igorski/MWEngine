@@ -24,34 +24,19 @@
 #define __MWENGINE__JAVABRIDGE_API_H_INCLUDED
 
 #include <jni/javabridge.h>
-#include "audiochannel.h"
-#include "processingchain.h"
 
-/**
- * javabridge_api.h is used to establish a two-way communication (together with javabridge.h)
- * to allow the AudioEngine to send messages to the Java VM, if you do not need
- * to send messages TO Java and are using the engine only in a native environment,
- * simple omit adding this header file in the "mwengine.i"-file which
- * describes the SWIG-enabled classes for the JNI environment
- */
+// javabridge_api.h is used to establish a two-way communication (together with javabridge.h)
+// to allow the AudioEngine to send messages to the Java VM, if you do not need
+// to send messages to the Java environment or are using the engine only within a native
+// environment, simply omit adding this header file in the "mwengine.i"-file.
+//
+// the methods declared here are implemented within the AudioEngine class, but
+// re-declared to contain JNIEnv* en jobject arguments. This intermediate header file
+// fools the SWIG wrapper to not remove these.
 
-/**
- * these are the same methods as declared in the AudioEngine namespace, but
- * re-declared so we can call them from Java without having to resort to
- * go through a lot of trouble declaring the JNIEnv* en jobject arguments
- * which otherwise wouldn't survive the SWIG wrapping...
- */
 extern "C"
 {
     void init();
-    void setup( int bufferSize, int sampleRate, int amountOfChannels );
-    void start();
-    void stop();
-    void reset();
-
-    MWEngine::ProcessingChain* getMasterBusProcessors();
-    MWEngine::AudioChannel* getInputChannel();
-    void recordInput( bool record );
 }
 
 #endif

@@ -46,61 +46,66 @@
 #endif
 
 namespace MWEngine {
-namespace AudioEngine
-{
-    bool recordOutputToDisk = false;
-    bool bouncing           = false;
-    bool recordInputToDisk  = false;
 
-    bool loopStarted = false;
-    int loopOffset   = 0;
-    int loopAmount   = 0;
+    /* static member initialization */
 
-    int outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
-    bool isMono        = ( outputChannels == 1 );
-    float* outBuffer   = nullptr;
+    bool AudioEngine::recordOutputToDisk = false;
+    bool AudioEngine::bouncing           = false;
+    bool AudioEngine::recordInputToDisk  = false;
 
 #ifdef RECORD_DEVICE_INPUT
-    float* recbufferIn         = nullptr;
-    AudioChannel* inputChannel = new AudioChannel( 1.0f );
-    bool recordDeviceInput     = false;
+    float*        AudioEngine::recbufferIn  = nullptr;
+    AudioChannel* AudioEngine::inputChannel = new AudioChannel( 1.0f );
 #endif
 
-    AudioBuffer* inBuffer                = nullptr;
-    std::vector<AudioChannel*>* channels = nullptr;
+    bool  AudioEngine::recordDeviceInput = false;
 
     /* tempo / sequencer position related */
 
-    int samples_per_beat;                // strictly speaking sequencer specific, but scoped onto the AudioEngine
-    int samples_per_bar;                 // for rendering purposes, see SequencerController on how to read and
-    float samples_per_step;              // adjust these values
-    int amount_of_bars             = 1;
-    int beat_subdivision           = 4;
-    int min_buffer_position        = 0;  // initially 0, but can differ when looping specific measures
-    int max_buffer_position        = 0;  // calculated when SequencerController is created
-    int marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
-    int min_step_position          = 0;
-    int max_step_position          = 15; // default to sixteen step sequence (note min step starts at 0)
-    float tempo                    = 90.0;
-    float queuedTempo              = 120.0;
-    int time_sig_beat_amount       = 4;
-    int time_sig_beat_unit         = 4;
-    int queuedTime_sig_beat_amount = time_sig_beat_amount;
-    int queuedTime_sig_beat_unit   = time_sig_beat_unit;
+    int   AudioEngine::samples_per_beat           = 0;  // strictly speaking sequencer specific, but scoped onto the AudioEngine
+    int   AudioEngine::samples_per_bar            = 0;  // for rendering purposes, see SequencerController on how to read and
+    float AudioEngine::samples_per_step         = 0;  // adjust these values
+    int   AudioEngine::amount_of_bars             = 1;
+    int   AudioEngine::beat_subdivision           = 4;
+    int   AudioEngine::min_buffer_position        = 0;  // initially 0, but can differ when looping specific measures
+    int   AudioEngine::max_buffer_position        = 0;  // calculated when SequencerController is created
+    int   AudioEngine::marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
+    int   AudioEngine::min_step_position          = 0;
+    int   AudioEngine::max_step_position          = 15; // default to sixteen step sequence (note min step starts at 0)
+    float AudioEngine::tempo                    = 90.0;
+    float AudioEngine::queuedTempo              = 120.0;
+    int   AudioEngine::time_sig_beat_amount       = 4;
+    int   AudioEngine::time_sig_beat_unit         = 4;
+    int   AudioEngine::queuedTime_sig_beat_amount = time_sig_beat_amount;
+    int   AudioEngine::queuedTime_sig_beat_unit   = time_sig_beat_unit;
 
     /* buffer read/write pointers */
 
-    int bufferPosition = 0;
-    int stepPosition   = 0;
+    int AudioEngine::bufferPosition = 0;
+    int AudioEngine::stepPosition   = 0;
 
     /* output related */
 
-    float volume = 1.0f;
-    ProcessingChain* masterBus = new ProcessingChain();
+    float            AudioEngine::volume    = 1.0f;
+    ProcessingChain* AudioEngine::masterBus = new ProcessingChain();
 
-    static int thread;
+    /* private properties */
 
-    void setup( int bufferSize, int sampleRate, int amountOfChannels )
+    bool AudioEngine::loopStarted = false;
+    int  AudioEngine::loopOffset  = 0;
+    int  AudioEngine::loopAmount  = 0;
+
+    int    AudioEngine::outputChannels                = AudioEngineProps::OUTPUT_CHANNELS;
+    bool   AudioEngine::isMono                        = ( outputChannels == 1 );
+    float* AudioEngine::outBuffer                     = nullptr;
+    AudioBuffer* AudioEngine::inBuffer                = nullptr;
+    std::vector<AudioChannel*>* AudioEngine::channels = nullptr;
+
+    int AudioEngine::thread = 0;
+
+    /* public methods */
+
+    void AudioEngine::setup( int bufferSize, int sampleRate, int amountOfChannels )
     {
         AudioEngineProps::BUFFER_SIZE     = bufferSize;
         AudioEngineProps::SAMPLE_RATE     = sampleRate;
@@ -112,7 +117,7 @@ namespace AudioEngine
      * NOTE: the render thread is always active, even when the
      * sequencer is paused
      */
-    void start()
+    void AudioEngine::start()
     {
         if ( thread == 1 )
             return;
@@ -190,13 +195,13 @@ namespace AudioEngine
 #endif
     }
 
-    void stop()
+    void AudioEngine::stop()
     {
         Debug::log( "STOPPING engine" );
         thread = 0;
     }
 
-    void reset()
+    void AudioEngine::reset()
     {
         Debug::log( "RESET engine" );
 
@@ -216,7 +221,16 @@ namespace AudioEngine
         bouncing           = false;
     }
 
-    bool render( int amountOfSamples )
+    AudioChannel* AudioEngine::getInputChannel()
+    {
+#ifdef RECORD_DEVICE_INPUT
+        return inputChannel;
+#else
+        return nullptr;
+#endif
+    }
+
+    bool AudioEngine::render( int amountOfSamples )
     {
         if ( thread == 0 )
             return false;
@@ -491,7 +505,7 @@ namespace AudioEngine
 
     /* internal methods */
 
-    void handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate )
+    void AudioEngine::handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate )
     {
         float ratio = 1;
 
@@ -549,7 +563,7 @@ namespace AudioEngine
         }
     }
 
-    void handleSequencerPositionUpdate( int bufferOffset )
+    void AudioEngine::handleSequencerPositionUpdate( int bufferOffset )
     {
         stepPosition = ( int ) floor( bufferPosition / samples_per_step );
 
@@ -559,7 +573,7 @@ namespace AudioEngine
         Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED, bufferOffset );
     }
 
-    bool writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )
+    bool AudioEngine::writeChannelCache( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos )
     {
         // mustCache isn't the same as isCaching (likely sequencer is waiting for start offset ;))
         if ( channel->isCaching )
@@ -574,91 +588,28 @@ namespace AudioEngine
 
     /* unit test related */
 
-    bool engine_started    = false;
-    int test_program       = 0;
-    bool test_successful   = false;
-    int render_iterations  = 0;
-    float mock_opensl_time = 0.0f;
+    bool  AudioEngine::engine_started    = false;
+    int   AudioEngine::test_program      = 0;
+    bool  AudioEngine::test_successful   = false;
+    int   AudioEngine::render_iterations = 0;
+    float AudioEngine::mock_opensl_time  = 0.0f;
 
 #endif
 
-}
-
-/**
- * the remainder is only in use when USE_JNI is set to true to allow using
- * the engine from Java. These method provide a proxied hook into the
- * public methods of the AudioEngine, these shouldn't be called directly
- * but are proxied via nl.igorski.lib.audio.MWEngine
- *
- * they are exposed in javabridge_api.h
- */
 #ifdef USE_JNI
 
 /**
- * registers the calling Object and its environment
- * in the Java bridge (note: there should be only one
- * Java class talking to the engine)
+ * This exposed method is used to synchronize the native layer with a Java Object, allowing
+ * us to broadcast messages from the rendering thread. The method is defined in javabridge_api.h
+ *
+ * It registers the calling Object and its environment in the Java bridge
+ * NOTE: the only Java class that can be registered is the one that has created
+ * the thread in which the engine is started.
  */
 extern "C"
 void init( JNIEnv* env, jobject jobj )
 {
     JavaBridge::registerInterface( env, jobj );
-}
-
-extern "C"
-void setup( int bufferSize, int sampleRate, int amountOfChannels )
-{
-    AudioEngine::setup( bufferSize, sampleRate, amountOfChannels );
-}
-
-/**
- * when starting the render thread of the AudioEngine, we
- * make sure the JavaBridge is registered to the right
- * env en jobj (as it is likely that this is invoked from
- * a different Java thread that loaded the MWEngine (which
- * can cause concurrency issues when broadcasting messages to the VM)
- */
-extern "C"
-void start( JNIEnv* env, jobject jobj )
-{
-    JavaBridge::registerInterface( env, jobj );
-    AudioEngine::start();
-}
-
-extern "C"
-void stop( JNIEnv* env, jobject jobj )
-{
-    AudioEngine::stop();
-}
-
-extern "C"
-void reset( JNIEnv* env, jobject jobj )
-{
-    AudioEngine::reset();
-}
-
-extern "C"
-ProcessingChain* getMasterBusProcessors( JNIEnv* env, jobject jobj )
-{
-    return AudioEngine::masterBus;
-}
-
-extern "C"
-AudioChannel* getInputChannel( JNIEnv* env, jobject jobj )
-{
-#ifdef RECORD_DEVICE_INPUT
-    return AudioEngine::inputChannel;
-#else
-    return nullptr;
-#endif
-}
-
-extern "C"
-void recordInput( bool record )
-{
-#ifdef RECORD_DEVICE_INPUT
-    AudioEngine::recordDeviceInput = record;
-#endif
 }
 
 #endif
