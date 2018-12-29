@@ -23,10 +23,7 @@
 
 /**
  * JavaBridge acts as the mediator between the native C(++) layer
- * audio engine and a Java application, note that the constants
- * inside JavaAPIs must match the method signature present inside
- * JAVA_CLASS make sure obfuscation leaves these intact in
- * production builds!
+ * audio engine and a Java application
  */
 #ifndef __MWENGINE__JAVA_BRIDGE_H
 #define __MWENGINE__JAVA_BRIDGE_H
@@ -34,17 +31,25 @@
 #include <jni.h>
 #include <string>
 
+namespace MWEngine {
+
 /* this is the classpath to the Java class the MWEngine communicates with */
 
 #define MWENGINE_JAVA_CLASS "nl/igorski/lib/audio/MWEngine"
 
-/* method signatures of aforementioned mediator JAVA_CLASS */
+/* method signatures of aforementioned mediator MWENGINE_JAVA_CLASS */
 
 typedef struct {
    char const* method;
    char const* signature;
 } javaAPI;
 
+/**
+ * The method signatures used to handle broadcast messages from the native
+ * layer from within the MWENGINE_JAVA_CLASS.
+ *
+ * Make sure code obfuscation leaves these intact in production builds!
+ */
 namespace JavaAPIs
 {
     const javaAPI REGISTRATION_SUCCESS     = { "handleBridgeConnected",         "(I)V"  };
@@ -69,5 +74,7 @@ namespace JavaBridge
 
     std::string getString( jstring aString );
 }
+
+} // E.O namespace MWEngine
 
 #endif

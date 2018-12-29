@@ -23,12 +23,9 @@
 #include <jni/javabridge.h>
 #include <string.h>
 
-static JavaVM*  _vm    = nullptr;
-static jclass   _class = nullptr; // cached reference to Java mediator class
-
 /**
- * called when the Java VM has finished
- * loading this native library
+ * called when the Java VM has finished loading the native library
+ * NOTE: this must remain within the global namespace
  */
 jint JNI_OnLoad( JavaVM* vm, void* reserved )
 {
@@ -37,17 +34,23 @@ jint JNI_OnLoad( JavaVM* vm, void* reserved )
     if ( vm->GetEnv(( void** ) &env, JNI_VERSION_1_6 ) != JNI_OK )
         return -1;
 
-    JavaBridge::registerVM( vm );
+    MWEngine::JavaBridge::registerVM( vm );
 
     return JNI_VERSION_1_6;
 }
+
+namespace MWEngine {
+namespace JavaBridge {
+
+static JavaVM*  _vm    = nullptr;
+static jclass   _class = nullptr; // cached reference to Java mediator class
 
 /**
  * registers the reference to the JAVA_CLASS (and its host environment)
  * where all subsequent calls will be executed upon, the Java class
  * will only expose static methods for its interface with the native code
  */
-void JavaBridge::registerInterface( JNIEnv* env, jobject jobj )
+void registerInterface( JNIEnv* env, jobject jobj )
 {
     JNIEnv* environment = getEnvironment(); // always use stored environment reference!
     jclass localRefCls  = environment->FindClass( MWENGINE_JAVA_CLASS );
@@ -78,12 +81,12 @@ void JavaBridge::registerInterface( JNIEnv* env, jobject jobj )
  * queried for all subsequent JNI communications with the
  * mediator Java class
  */
-void JavaBridge::registerVM( JavaVM* aVM )
+void registerVM( JavaVM* aVM )
 {
     _vm = aVM;
 }
 
-JavaVM* JavaBridge::getVM()
+JavaVM* getVM()
 {
     return _vm;
 }
@@ -94,7 +97,7 @@ JavaVM* JavaBridge::getVM()
  *
  * @param aAPImethod {javaAPI}
  */
-jmethodID JavaBridge::getJavaMethod( javaAPI aAPImethod )
+jmethodID getJavaMethod( javaAPI aAPImethod )
 {
     jmethodID native_method_id = 0;
     jclass    javaClass        = getJavaInterface();
@@ -106,7 +109,7 @@ jmethodID JavaBridge::getJavaMethod( javaAPI aAPImethod )
     return native_method_id;
 }
 
-jclass JavaBridge::getJavaInterface()
+jclass getJavaInterface()
 {
     JNIEnv *environment = getEnvironment();
 
@@ -118,7 +121,7 @@ jclass JavaBridge::getJavaInterface()
     return _class; // we have a cached reference!
 }
 
-JNIEnv* JavaBridge::getEnvironment()
+JNIEnv* getEnvironment()
 {
     if ( _vm == nullptr )
         return nullptr;
@@ -136,11 +139,14 @@ JNIEnv* JavaBridge::getEnvironment()
         return nullptr;
 }
 
-std::string JavaBridge::getString( jstring aString )
+std::string getString( jstring aString )
 {
-    const char* s = JavaBridge::getEnvironment()->GetStringUTFChars( aString, NULL );
+    const char* s = getEnvironment()->GetStringUTFChars( aString, NULL );
     std::string theString = s;
-    JavaBridge::getEnvironment()->ReleaseStringUTFChars( aString, s );
+    getEnvironment()->ReleaseStringUTFChars( aString, s );
 
     return theString;
 }
+
+}
+} // E.O namespace MWEngine

@@ -30,6 +30,7 @@
  * register sample buffers directly into the SampleManager or TablePool
  * without having to use AudioBuffers (these should preferably remain a native layer component)
  */
+namespace MWEngine {
 class JavaUtilities
 {
     public:
@@ -61,5 +62,6 @@ class JavaUtilities
 
         static bool createTableFromFile( jstring tableId, jstring aWAVFilePath );
 };
+} // E.O namespace MWEngine
 
 #endif
