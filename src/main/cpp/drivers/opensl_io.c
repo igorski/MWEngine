@@ -377,7 +377,7 @@ void android_CloseAudioDevice(OPENSL_STREAM *p){
   if (p->outlock != NULL) {
     notifyThreadLock(p->outlock);
     destroyThreadLock(p->outlock);
-    p->inlock = NULL;
+    p->outlock = NULL;
   }
     
   if (p->outputBuffer[0] != NULL) {
@@ -480,10 +480,13 @@ void* createThreadLock(void)
   if (p == NULL)
     return NULL;
   memset(p, 0, sizeof(threadLock));
+  /*
   if (pthread_mutex_init(&(p->m), (pthread_mutexattr_t*) NULL) != 0) {
     free((void*) p);
     return NULL;
   }
+  */
+  p->m = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
   if (pthread_cond_init(&(p->c), (pthread_condattr_t*) NULL) != 0) {
     pthread_mutex_destroy(&(p->m));
     free((void*) p);
@@ -513,9 +516,10 @@ void notifyThreadLock(void *lock)
 {
   threadLock *p;
   p = (threadLock*) lock;
-  if (p == NULL)
-    return;
-  pthread_mutex_lock(&(p->m));
+
+  if (p == NULL || pthread_mutex_lock(&(p->m)) != 0)
+      return; // TODO: initialize p->m inline when lock returns EINVAL?
+
   p->s = (unsigned char) 1;
   pthread_cond_signal(&(p->c));
   pthread_mutex_unlock(&(p->m));
