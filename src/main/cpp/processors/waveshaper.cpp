@@ -23,6 +23,8 @@
 #include "waveshaper.h"
 #include <cmath>
 
+namespace MWEngine {
+
 // constructor
 
 WaveShaper::WaveShaper( float amount, float level )
@@ -87,3 +89,5 @@ void WaveShaper::setLevel( float value )
 {
     _level = value;
 }
+
+} // E.O namespace MWEngine

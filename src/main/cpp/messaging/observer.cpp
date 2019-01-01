@@ -22,6 +22,8 @@
  */
 #include "observer.h"
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 Observer::Observer()
@@ -45,3 +47,5 @@ void Observer::handleNotification( int aNotificationType, int aValue )
 {
     // override in derived class
 }
+
+} // E.O namespace MWEngine

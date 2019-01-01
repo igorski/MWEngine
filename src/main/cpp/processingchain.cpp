@@ -23,6 +23,8 @@
 #include "processingchain.h"
 #include "global.h"
 
+namespace MWEngine {
+
 // constructor
 
 ProcessingChain::ProcessingChain()
@@ -63,3 +65,5 @@ std::vector<BaseProcessor*> ProcessingChain::getActiveProcessors()
 {
     return _activeProcessors;
 }
+
+} // E.O namespace MWEngine

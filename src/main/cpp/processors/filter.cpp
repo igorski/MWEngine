@@ -24,6 +24,8 @@
 #include "../global.h"
 #include <math.h>
 
+namespace MWEngine {
+
 /**
  * @param aCutoffFrequency {float} desired cutoff frequency in Hz
  * @param aResonance {float} resonance
@@ -221,3 +223,5 @@ void Filter::calculateParameters()
     b1 = 2.f * ( 1.f - c * c ) * a1;
     b2 = ( 1.f - _resonance * c + c * c ) * a1;
 }
+
+} // E.O namespace MWEngine

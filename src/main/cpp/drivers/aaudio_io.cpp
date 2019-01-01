@@ -21,6 +21,8 @@
 #include <inttypes.h>
 #include <utilities/debug.h>
 
+namespace MWEngine {
+
 #define CONV16BIT 32768
 #define CONVMYFLT (1./32768.)
 
@@ -426,3 +428,5 @@ double AAudio_IO::getCurrentOutputLatencyMillis() {
 void AAudio_IO::setBufferSizeInBursts(int32_t numBursts) {
   AAudio_IO::bufferSizeSelection_ = numBursts;
 }
+
+} // E.O namespace MWEngine

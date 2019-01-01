@@ -25,6 +25,8 @@
 #include "../sequencer.h"
 #include <algorithm>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 BaseInstrument::BaseInstrument()
@@ -174,3 +176,5 @@ void BaseInstrument::construct()
 
     registerInSequencer();
 }
+
+} // E.O namespace MWEngine

@@ -26,6 +26,8 @@
 #include "limiter.h"
 #include "../global.h"
 
+namespace MWEngine {
+
 // constructors / destructor
 
 Limiter::Limiter()
@@ -47,7 +49,7 @@ Limiter::~Limiter()
 
 float Limiter::getAttack()
 {
-    return pAttack;
+    return ( float ) pAttack;
 }
 
 void Limiter::setAttack( float attackMs )
@@ -58,7 +60,7 @@ void Limiter::setAttack( float attackMs )
 
 float Limiter::getRelease()
 {
-    return pRelease;
+    return ( float ) pRelease;
 }
 
 void Limiter::setRelease( float releaseMs )
@@ -69,7 +71,7 @@ void Limiter::setRelease( float releaseMs )
 
 float Limiter::getThreshold()
 {
-    return pTresh;
+    return ( float ) pTresh;
 }
 
 void Limiter::setThreshold( float thresholdDb )
@@ -102,7 +104,7 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     int bufferSize = sampleBuffer->bufferSize;
 
     SAMPLE_TYPE* leftBuffer  = sampleBuffer->getBufferForChannel( 0 );
-    SAMPLE_TYPE* rightBuffer = !isMonoSource ? sampleBuffer->getBufferForChannel( 1 ) : 0;
+    SAMPLE_TYPE* rightBuffer = !isMonoSource ? sampleBuffer->getBufferForChannel( 1 ) : nullptr;
         
     if ( pKnee > 0.5 )
     {
@@ -188,3 +190,5 @@ void Limiter::recalculate()
     att  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 * pAttack );
     rel  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 - ( 3.0 * pRelease ));
 }
+
+} // E.O namespace MWEngine

@@ -22,6 +22,8 @@
  */
 #include "baseprocessor.h"
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 BaseProcessor::BaseProcessor()
@@ -45,3 +47,5 @@ bool BaseProcessor::isCacheable()
 {
     return false;   // override in subclass
 }
+
+} // E.O namespace MWEngine

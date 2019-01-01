@@ -23,6 +23,8 @@
 #include <modules/arpeggiator.h>
 #include <utilities/utils.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 Arpeggiator::Arpeggiator()
@@ -110,3 +112,5 @@ Arpeggiator* Arpeggiator::clone()
 
     return out;
 }
+
+} // E.O namespace MWEngine

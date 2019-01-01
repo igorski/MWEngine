@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SYNTHESIZER_H_INCLUDED__
-#define __SYNTHESIZER_H_INCLUDED__
+#ifndef __MWENGINE__SYNTHESIZER_H_INCLUDED__
+#define __MWENGINE__SYNTHESIZER_H_INCLUDED__
 
 #include "../audiobuffer.h"
 #include "../ringbuffer.h"
@@ -29,6 +29,7 @@
 #include <modules/arpeggiator.h>
 #include <vector>
 
+namespace MWEngine {
 class SynthInstrument; // forward declaration, see <instruments/synthinstrument.h>
 
 /**
@@ -77,10 +78,7 @@ class Synthesizer
         void createOscillator ( int aOscillatorNum );
         void destroyOscillator( int aOscillatorNum );
         float tuneOscillator  ( int aOscillatorNum, float aFrequency );
-
-        // modules
-
-        void applyModules( SynthInstrument* instrument );
 };
+} // E.O namespace MWEngine
 
 #endif

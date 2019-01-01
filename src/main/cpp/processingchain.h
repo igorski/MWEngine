@@ -20,12 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __PROCESSINGCHAIN_H_INCLUDED__
-#define __PROCESSINGCHAIN_H_INCLUDED__
+#ifndef __MWENGINE__PROCESSINGCHAIN_H_INCLUDED__
+#define __MWENGINE__PROCESSINGCHAIN_H_INCLUDED__
 
 #include <vector>
-#include "processors/baseprocessor.h"
+#include <processors/baseprocessor.h>
 
+using namespace MWEngine; // overcomes SWIG wrapper issue on BaseProcessor usages
+
+namespace MWEngine {
 class ProcessingChain
 {
     public:
@@ -43,5 +46,6 @@ class ProcessingChain
         /* cached chains */
        std::vector<BaseProcessor*> _activeProcessors;
 };
+} // E.O namespace MWEngine
 
 #endif

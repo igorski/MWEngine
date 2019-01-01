@@ -23,13 +23,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LIMITER_H_INCLUDED__
-#define __LIMITER_H_INCLUDED__
+#ifndef __MWENGINE__LIMITER_H_INCLUDED__
+#define __MWENGINE__LIMITER_H_INCLUDED__
 
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
 #include <vector>
 
+namespace MWEngine {
 class Limiter : public BaseProcessor
 {
     public:
@@ -61,5 +62,6 @@ class Limiter : public BaseProcessor
 
         SAMPLE_TYPE thresh, gain, att, rel, trim;
 };
+} // E.O namespace MWEngine
 
 #endif

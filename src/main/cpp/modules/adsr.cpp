@@ -25,6 +25,8 @@
 #include <utilities/utils.h>
 #include <algorithm>
 
+namespace MWEngine {
+
 /* constructors / destructor */
 
 ADSR::ADSR()
@@ -286,3 +288,5 @@ void ADSR::construct()
     _decayDuration   = 0;
     _releaseDuration = 0;
 }
+
+} // E.O namespace MWEngine

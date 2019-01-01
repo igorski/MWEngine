@@ -31,6 +31,8 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 
+namespace MWEngine {
+
 /* SampleManager hooks */
 
 bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
@@ -223,3 +225,5 @@ bool JavaUtilities::createTableFromFile( jstring tableId, jstring aWAVFilePath )
 
     return true;
 }
+
+} // E.O namespace MWEngine

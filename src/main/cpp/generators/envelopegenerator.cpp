@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <math.h>
 
+namespace MWEngine {
 namespace EnvelopeGenerator
 {
     SAMPLE_TYPE* generateLinear( int tableLength, SAMPLE_TYPE startAmplitude, SAMPLE_TYPE endAmplitude )
@@ -64,3 +65,5 @@ namespace EnvelopeGenerator
         return out;
     }
 }
+
+} // E.O namespace MWEngine

@@ -22,12 +22,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __WAVEGENERATOR_H_INCLUDED__
-#define __WAVEGENERATOR_H_INCLUDED__
+#ifndef __MWENGINE__WAVEGENERATOR_H_INCLUDED__
+#define __MWENGINE__WAVEGENERATOR_H_INCLUDED__
 
 #include "../global.h"
 #include "../wavetable.h"
 
+namespace MWEngine {
 namespace WaveGenerator
 {
     // generate a WaveTable for given waveformType
@@ -38,5 +39,6 @@ namespace WaveGenerator
 
     extern void generate( WaveTable* waveTable, int waveformType );
 }
+} // E.O namespace MWEngine
 
 #endif

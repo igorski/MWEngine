@@ -23,6 +23,8 @@
 #include "basecacheableaudioevent.h"
 #include "../sequencer.h"
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 BaseCacheableAudioEvent::BaseCacheableAudioEvent( BaseInstrument* instrument )
@@ -77,3 +79,5 @@ void BaseCacheableAudioEvent::resetCache()
     _cachingCompleted = false;
     _caching          = false;
 }
+
+} // E.O namespace MWEngine

@@ -10,6 +10,7 @@
 #include "../../instruments/baseinstrument.h"
 #include "../../utilities/bufferutility.h"
 #include "../../utilities/samplemanager.h"
+#include "../../utilities/utils.h"
 
 #define NANOS_IN_SECOND 1000000000
 
@@ -29,13 +30,6 @@ int randomInt( int min, int max )
 bool randomBool()
 {
     return 0 == ( rand() % 2 );
-}
-
-// return a random floating point value
-
-float randomFloat()
-{
-    return ( float ) rand() / float( RAND_MAX );
 }
 
 // return a random floating point value between given min - max range

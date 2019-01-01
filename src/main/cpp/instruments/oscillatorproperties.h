@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __OSCILLATOR_PROPERTIES_H_INCLUDED__
-#define __OSCILLATOR_PROPERTIES_H_INCLUDED__
+#ifndef __MWENGINE__OSCILLATOR_PROPERTIES_H_INCLUDED__
+#define __MWENGINE__OSCILLATOR_PROPERTIES_H_INCLUDED__
 
 #include "../wavetable.h"
 #include <string>
 
+namespace MWEngine {
 class OscillatorProperties
 {
     public:
@@ -44,5 +45,6 @@ class OscillatorProperties
     protected:
         int _waveform;
 };
+} // E.O namespace MWEngine
 
 #endif

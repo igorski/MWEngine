@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SYNTHINSTRUMENT_H_INCLUDED__
-#define __SYNTHINSTRUMENT_H_INCLUDED__
+#ifndef __MWENGINE__SYNTHINSTRUMENT_H_INCLUDED__
+#define __MWENGINE__SYNTHINSTRUMENT_H_INCLUDED__
 
 #include "baseinstrument.h"
 #include "../audiochannel.h"
@@ -32,6 +32,7 @@
 #include <modules/arpeggiator.h>
 #include <modules/routeableoscillator.h>
 
+namespace MWEngine {
 class SynthInstrument : public BaseInstrument
 {
     public:
@@ -70,5 +71,6 @@ class SynthInstrument : public BaseInstrument
 
         void init();
 };
+} // E.O namespace MWEngine
 
 #endif

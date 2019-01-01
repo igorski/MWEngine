@@ -26,6 +26,8 @@
 #include "../utilities/samplemanager.h"
 #include <cstdlib>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 /**
@@ -140,3 +142,5 @@ void DrumEvent::updateSample()
     }
     setSample( SampleManager::getSample( smp ));
 }
+
+} // E.O namespace MWEngine

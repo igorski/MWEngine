@@ -23,6 +23,8 @@
 #include "ringbuffer.h"
 #include <utilities/bufferutility.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 RingBuffer::RingBuffer( int capacity )
@@ -60,3 +62,5 @@ bool RingBuffer::isFull()
 {
     return getSize() == _bufferLength;
 }
+
+} // E.O namespace MWEngine

@@ -20,13 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __NOTIFIER_H_INCLUDED__
-#define __NOTIFIER_H_INCLUDED__
+#ifndef __MWENGINE__NOTIFIER_H_INCLUDED__
+#define __MWENGINE__NOTIFIER_H_INCLUDED__
 
 #include "observer.h"
 #include <map>
 #include <vector>
 
+namespace MWEngine {
 namespace Notifier
 {
     extern std::map<int, std::vector<Observer*> > _observerMap;
@@ -36,5 +37,6 @@ namespace Notifier
     extern void broadcast         ( int aNotificationType );
     extern void broadcast         ( int aNotificationType, int aNotificationValue );
 }
+} // E.O namespace MWEngine
 
 #endif

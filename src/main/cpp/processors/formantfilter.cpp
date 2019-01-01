@@ -25,6 +25,8 @@
 #include "../utilities/utils.h"
 #include <cmath>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 /**
@@ -238,3 +240,5 @@ void FormantFilter::calculateCoeffs()
     _coeffs[ VOWEL_U ][ 9 ]  = 8.338655623;
     _coeffs[ VOWEL_U ][ 10 ] = -0.910251753;
 }
+
+} // E.O namespace MWEngine

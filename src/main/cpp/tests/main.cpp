@@ -1,8 +1,16 @@
 #define UNIT_TEST_MODE
 
+#ifndef MOCK_ENGINE
+#define MOCK_ENGINE
+#endif
+
 #include <gtest/gtest.h>
 #include <ctime>
 #include <cstdlib>
+
+#include "../global.h"
+using namespace MWEngine;
+
 #include "helpers/helper.cpp"
 
 #include "audioengine_test.cpp"

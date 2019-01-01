@@ -22,11 +22,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DCOFFSETFILTER_H_INCLUDED__
-#define __DCOFFSETFILTER_H_INCLUDED__
+#ifndef __MWENGINE__DCOFFSETFILTER_H_INCLUDED__
+#define __MWENGINE__DCOFFSETFILTER_H_INCLUDED__
 
 #include "baseprocessor.h"
 
+namespace MWEngine {
 class DCOffsetFilter : public BaseProcessor
 {
     public:
@@ -40,5 +41,6 @@ class DCOffsetFilter : public BaseProcessor
         SAMPLE_TYPE* _lastOutSamples;
         SAMPLE_TYPE  R;
 };
+} // E.O namespace MWEngine
 
 #endif

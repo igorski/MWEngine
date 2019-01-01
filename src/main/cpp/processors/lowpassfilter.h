@@ -20,14 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LOWPASSFILTER_H_INCLUDED__
-#define __LOWPASSFILTER_H_INCLUDED__
+#ifndef __MWENGINE__LOWPASSFILTER_H_INCLUDED__
+#define __MWENGINE__LOWPASSFILTER_H_INCLUDED__
 
 #include "baseprocessor.h"
 
 /**
  * a simple two pole low-pass filter
  */
+namespace MWEngine {
 class LowPassFilter : public BaseProcessor
 {
     public:
@@ -67,5 +68,6 @@ class LowPassFilter : public BaseProcessor
 
         float _cutoff;
 };
+} // E.O namespace MWEngine
 
 #endif

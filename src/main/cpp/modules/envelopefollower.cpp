@@ -23,6 +23,8 @@
 #include <modules/envelopefollower.h>
 #include <cmath>
 
+namespace MWEngine {
+
 // constructor
 
 EnvelopeFollower::EnvelopeFollower( float maxGain, float attackMs, float releaseMs, int sampleRate )
@@ -44,3 +46,5 @@ void EnvelopeFollower::process( SAMPLE_TYPE src )
     else
         envelope = _release * ( envelope - v ) + v;
 }
+
+} // E.O namespace MWEngine

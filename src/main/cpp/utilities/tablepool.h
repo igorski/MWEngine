@@ -20,13 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __TABLEPOOL_H_INCLUDED__
-#define __TABLEPOOL_H_INCLUDED__
+#ifndef __MWENGINE__TABLEPOOL_H_INCLUDED__
+#define __MWENGINE__TABLEPOOL_H_INCLUDED__
 
 #include "../wavetable.h"
 #include <string>
 #include <map>
 
+namespace MWEngine {
 class TablePool
 {
     public:
@@ -55,5 +56,6 @@ class TablePool
 
         static std::map<std::string, WaveTable*> _cachedTables;
 };
+} // E.O namespace MWEngine
 
 #endif

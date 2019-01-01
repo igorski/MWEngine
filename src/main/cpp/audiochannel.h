@@ -20,14 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __AUDIOCHANNEL_H_INCLUDED__
-#define __AUDIOCHANNEL_H_INCLUDED__
+#ifndef __MWENGINE__AUDIOCHANNEL_H_INCLUDED__
+#define __MWENGINE__AUDIOCHANNEL_H_INCLUDED__
 
 #include "audiobuffer.h"
 #include "processingchain.h"
 #include <events/baseaudioevent.h>
 #include <vector>
 
+namespace MWEngine {
 class AudioChannel
 {
     public:
@@ -157,5 +158,6 @@ class AudioChannel
         int _cacheStartOffset;
         int _cacheEndOffset;
 };
+} // E.O namespace MWEngine
 
 #endif

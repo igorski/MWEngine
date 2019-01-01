@@ -20,10 +20,30 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRIVER_H_INCLUDED__
-#define __DRIVER_H_INCLUDED__
+#ifndef __MWENGINE__DRIVER_H_INCLUDED__
+#define __MWENGINE__DRIVER_H_INCLUDED__
 
 #include "../global.h"
+
+// whether to include the OpenSL, AAudio or mocked (unit test mode) driver for audio output
+
+#if DRIVER == 0
+
+// OpenSL
+
+#ifdef MOCK_ENGINE
+// mocking requested, e.g. unit test mode
+#include "../tests/helpers/mock_opensl_io.h"
+
+#else
+// production build for OpenSL
+#include "opensl_io.h"
+#endif
+
+#elif DRIVER == 1
+// production build for AAudio
+#include "aaudio_io.h"
+#endif
 
 /**
  * DriverAdapter acts as a proxy for all the available driver types
@@ -32,6 +52,7 @@
  * DriverAdapter will maintain its own references to the driver instances
  * AudioEngine will operate via the DriverAdapter
  */
+namespace MWEngine {
 namespace DriverAdapter {
 
     bool create();
@@ -52,32 +73,18 @@ namespace DriverAdapter {
     // and write it into given recordBuffer
     // returns integer value of amount of recorded samples
     int getInput( float* recordBuffer );
-}
 
-// whether to include the OpenSL, AAudio or mocked (unit test mode) driver for audio output
 
 #if DRIVER == 0
-
-// OpenSL
-
-#ifdef MOCK_ENGINE
-// mocking requested, e.g. unit test mode
-#include "../tests/helpers/mock_opensl_io.h"
-
-#else
-// production build for OpenSL
-#include "opensl_io.h"
-
-#endif
-
-extern OPENSL_STREAM* driver_openSL;
-
+    // OpenSL
+    extern OPENSL_STREAM* driver_openSL;
 #elif DRIVER == 1
-
-// production build for AAudio
-#include "aaudio_io.h"
-extern AAudio_IO* driver_aAudio;
-
+    // AAudio
+    extern AAudio_IO* driver_aAudio;
 #endif
+
+}
+} // E.O namespace MWEngine
+
 
 #endif

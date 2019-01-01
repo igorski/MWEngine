@@ -139,7 +139,7 @@ public final class MWEngine extends Thread
         if ( Build.FINGERPRINT.startsWith( "generic" ))
             SAMPLE_RATE = 8000;
 
-        MWEngineCore.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
+        AudioEngine.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
 
         // start w/ default of 120 BPM in 4/4 time
 
@@ -172,7 +172,7 @@ public final class MWEngine extends Thread
 
     public ProcessingChain getMasterBusProcessors()
     {
-        return MWEngineCore.getMasterBusProcessors();
+        return AudioEngine.getMasterBus();
     }
 
     /**
@@ -184,7 +184,7 @@ public final class MWEngine extends Thread
      */
     public AudioChannel getInputChannel()
     {
-        return MWEngineCore.getInputChannel();
+        return AudioEngine.getInputChannel();
     }
 
     public void setBouncing( boolean value, String outputDirectory )
@@ -208,7 +208,7 @@ public final class MWEngine extends Thread
      */
     public void recordInput( boolean record )
     {
-        MWEngineCore.recordInput( record );
+        AudioEngine.setRecordDeviceInput( record );
     }
 
     /**
@@ -274,7 +274,7 @@ public final class MWEngine extends Thread
 
     public void reset()
     {
-        MWEngineCore.reset();
+        AudioEngine.reset();
         _nativeEngineRetries = 0;
     }
 
@@ -334,7 +334,7 @@ public final class MWEngine extends Thread
 
         // halt the audio rendering in the native layer of the engine
         if ( _nativeEngineRunning )
-            MWEngineCore.stop();
+            AudioEngine.stop();
     }
 
     /**
@@ -369,7 +369,8 @@ public final class MWEngine extends Thread
                 Log.d( "MWENGINE", "starting native audio rendering thread @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
                 _nativeEngineRunning = true;
-                MWEngineCore.start();
+                MWEngineCore.init();
+                AudioEngine.start();
             }
 
             // the remainder of this function body is blocked

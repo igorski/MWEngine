@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef JAVAUTILITIES_H_INCLUDED
-#define JAVAUTILITIES_H_INCLUDED
+#ifndef __MWENGINE__JAVAUTILITIES_H_INCLUDED
+#define __MWENGINE__JAVAUTILITIES_H_INCLUDED
 
 #include "javabridge.h"
 
@@ -30,6 +30,7 @@
  * register sample buffers directly into the SampleManager or TablePool
  * without having to use AudioBuffers (these should preferably remain a native layer component)
  */
+namespace MWEngine {
 class JavaUtilities
 {
     public:
@@ -61,5 +62,6 @@ class JavaUtilities
 
         static bool createTableFromFile( jstring tableId, jstring aWAVFilePath );
 };
+} // E.O namespace MWEngine
 
 #endif

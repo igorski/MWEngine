@@ -20,9 +20,10 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __WAVEFORMS_H_INCLUDED__
-#define __WAVEFORMS_H_INCLUDED__
+#ifndef __MWENGINE__WAVEFORMS_H_INCLUDED__
+#define __MWENGINE__WAVEFORMS_H_INCLUDED__
 
+namespace MWEngine {
 class WaveForms
 {
     public:
@@ -37,5 +38,6 @@ class WaveForms
             TABLE
         };
 };
+} // E.O namespace MWEngine
 
 #endif

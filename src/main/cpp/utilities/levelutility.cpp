@@ -23,6 +23,8 @@
 #include "levelutility.h"
 #include <math.h>
 
+namespace MWEngine {
+
 /* public methods */
 
 SAMPLE_TYPE LevelUtility::RMS( AudioChannel* audioChannel, int channelNum )
@@ -63,3 +65,5 @@ SAMPLE_TYPE LevelUtility::linear( AudioChannel* audioChannel, int channelNum )
     }
     return out;
 }
+
+} // E.O namespace MWEngine

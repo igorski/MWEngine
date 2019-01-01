@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ENVELOPEFOLLOWER_H_INCLUDED__
-#define __ENVELOPEFOLLOWER_H_INCLUDED__
+#ifndef __MWENGINE__ENVELOPEFOLLOWER_H_INCLUDED__
+#define __MWENGINE__ENVELOPEFOLLOWER_H_INCLUDED__
 
 #include "global.h"
 
+namespace MWEngine {
 class EnvelopeFollower
 {
     public:
@@ -36,5 +37,6 @@ class EnvelopeFollower
         SAMPLE_TYPE _attack;
         SAMPLE_TYPE _release;
 };
+} // E.O namespace MWEngine
 
 #endif

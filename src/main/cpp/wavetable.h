@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __WAVETABLE_H_INCLUDED__
-#define __WAVETABLE_H_INCLUDED__
+#ifndef __MWENGINE__WAVETABLE_H_INCLUDED__
+#define __MWENGINE__WAVETABLE_H_INCLUDED__
 
 #include "global.h"
 
+namespace MWEngine {
 class WaveTable
 {
     public:
@@ -75,5 +76,6 @@ class WaveTable
         SAMPLE_TYPE SR_OVER_LENGTH;
         float       _frequency;     // frequency (in Hz) of waveform cycle when reading
 };
+} // E.O namespace MWEngine
 
 #endif

@@ -25,6 +25,8 @@
 #include "dcoffsetfilter.h"
 #include <math.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 DCOffsetFilter::DCOffsetFilter( int amountOfChannels )
@@ -102,3 +104,5 @@ void DCOffsetFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         }
     }
 }
+
+} // E.O namespace MWEngine

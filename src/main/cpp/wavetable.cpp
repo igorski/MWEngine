@@ -23,6 +23,8 @@
 #include "wavetable.h"
 #include <utilities/bufferutility.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 WaveTable::WaveTable( int aTableLength, float aFrequency )
@@ -105,3 +107,5 @@ WaveTable* WaveTable::clone()
 
     return out;
 }
+
+} // E.O namespace MWEngine

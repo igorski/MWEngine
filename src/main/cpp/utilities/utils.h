@@ -20,13 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __UTILS_H_INCLUDED__
-#define __UTILS_H_INCLUDED__
+#ifndef __MWENGINE__UTILS_H_INCLUDED__
+#define __MWENGINE__UTILS_H_INCLUDED__
 
 #include <math.h>
 #include <vector>
 #include <algorithm>
 #include "global.h"
+
+namespace MWEngine {
 
 /* math operations on audio samples */
 
@@ -56,5 +58,7 @@ unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool li
 
 // numbers to string
 #define SSTR( x ) std::to_string( x )
+
+} // E.O namespace MWEngine
 
 #endif

@@ -27,6 +27,8 @@
 #include <cstddef>
 #include <vector>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 DrumInstrument::DrumInstrument()
@@ -154,3 +156,5 @@ void DrumInstrument::construct()
 
     registerInSequencer(); // auto-register instrument inside the sequencer
 }
+
+} // E.O namespace MWEngine

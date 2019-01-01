@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2016 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,14 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __TREMOLO_H_INCLUDED__
-#define __TREMOLO_H_INCLUDED__
+#ifndef __MWENGINE__TREMOLO_H_INCLUDED__
+#define __MWENGINE__TREMOLO_H_INCLUDED__
 
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
 #include <events/sampleevent.h>
 #include <vector>
 
+namespace MWEngine {
 class Tremolo : public BaseProcessor
 {
     public:
@@ -88,5 +89,6 @@ class Tremolo : public BaseProcessor
         SAMPLE_TYPE _rightAttackIncr;
         SAMPLE_TYPE _rightDecayIncr;
 };
+} // E.O namespace MWEngine
 
 #endif

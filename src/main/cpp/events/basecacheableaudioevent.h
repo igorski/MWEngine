@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BASECACHEABLEAUDIOEVENT_H_INCLUDED__
-#define __BASECACHEABLEAUDIOEVENT_H_INCLUDED__
+#ifndef __MWENGINE__BASECACHEABLEAUDIOEVENT_H_INCLUDED__
+#define __MWENGINE__BASECACHEABLEAUDIOEVENT_H_INCLUDED__
 
 #include "baseaudioevent.h"
 
@@ -33,8 +33,10 @@
  * event can cache its contents once they have fully rendered and
  * read from cache whenever the buffer is requested.
  *
- * NOTE : this consumes more memory though.
+ * NOTE : the trade-off is that this comes at the expense of a
+ * higher memory consumption.
  */
+namespace MWEngine {
 class BaseCacheableAudioEvent : public BaseAudioEvent
 {
     public:
@@ -64,5 +66,6 @@ class BaseCacheableAudioEvent : public BaseAudioEvent
 
             void resetCache();      // resets all for next caching sequence
 };
+} // E.O namespace MWEngine
 
 #endif

@@ -23,6 +23,8 @@
 #include "decimator.h"
 #include <math.h>
 
+namespace MWEngine {
+
 // constructor
 
 /**
@@ -92,3 +94,5 @@ void Decimator::setRate( float value )
 {
     _rate = value;
 }
+
+} // E.O namespace MWEngine

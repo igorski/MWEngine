@@ -25,6 +25,8 @@
 #include <utilities/utils.h>
 #include <math.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 /**
@@ -163,3 +165,5 @@ void Delay::setFeedback( float aValue )
 {
     _feedback = aValue;
 }
+
+} // E.O namespace MWEngine

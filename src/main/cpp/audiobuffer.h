@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __AUDIOBUFFER_H_INCLUDED__
-#define __AUDIOBUFFER_H_INCLUDED__
+#ifndef __MWENGINE__AUDIOBUFFER_H_INCLUDED__
+#define __MWENGINE__AUDIOBUFFER_H_INCLUDED__
 
 #include "global.h"
 #include <vector>
 
+namespace MWEngine {
 class AudioBuffer
 {
     public:
@@ -47,5 +48,6 @@ class AudioBuffer
     protected:
         std::vector<SAMPLE_TYPE*>* _buffers;
 };
+} // E.O namespace MWEngine
 
 #endif

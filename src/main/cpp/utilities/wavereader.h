@@ -24,6 +24,8 @@
 #include "../wavetable.h"
 #include <string>
 
+namespace MWEngine {
+
 typedef struct
 {
    unsigned int sampleRate;
@@ -50,3 +52,4 @@ class WaveReader
 
         static waveFile byteArrayToBuffer( std::vector<char> byteArray );
 };
+} // E.O namespace MWEngine

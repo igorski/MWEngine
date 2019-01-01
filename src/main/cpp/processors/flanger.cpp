@@ -27,6 +27,8 @@
 #include <utilities/bufferutility.h>
 #include <algorithm>
 
+namespace MWEngine {
+
 /* constructors / destructor */
 
 Flanger::Flanger( float rate, float width, float feedback, float delay, float mix )
@@ -263,3 +265,5 @@ void Flanger::init( float rate, float width, float feedback, float delay, float 
     setDelay( delay );
     setMix( mix );
 }
+
+} // E.O namespace MWEngine

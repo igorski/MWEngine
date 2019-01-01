@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ADSR_H_INCLUDED__
-#define __ADSR_H_INCLUDED__
+#ifndef __MWENGINE__ADSR_H_INCLUDED__
+#define __MWENGINE__ADSR_H_INCLUDED__
 
 #include "audiobuffer.h"
 #include "global.h"
@@ -40,6 +40,7 @@
  * TODO:
  * it might be nice to have non-linear envelope functions too !
  */
+namespace MWEngine {
 class ADSR
 {
     public:
@@ -123,5 +124,6 @@ class ADSR
         void setEnvelopesInternal( float attackTime, float decayTime, float sustainLevel, float releaseTime );
         void construct();
 };
+} // E.O namespace MWEngine
 
 #endif

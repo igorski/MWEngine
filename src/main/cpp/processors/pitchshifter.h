@@ -27,8 +27,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __PITCHSHIFTER_H_INCLUDED__
-#define __PITCHSHIFTER_H_INCLUDED__
+#ifndef __MWENGINE__PITCHSHIFTER_H_INCLUDED__
+#define __MWENGINE__PITCHSHIFTER_H_INCLUDED__
 
 #include "baseprocessor.h"
 #include <string.h>
@@ -38,6 +38,7 @@
 #define M_PI 3.14159265358979323846
 #define MAX_FRAME_LENGTH 8192
 
+namespace MWEngine {
 class PitchShifter : public BaseProcessor
 {
     public:
@@ -133,5 +134,6 @@ class PitchShifter : public BaseProcessor
         }
 
 };
+} // E.O namespace MWEngine
 
 #endif

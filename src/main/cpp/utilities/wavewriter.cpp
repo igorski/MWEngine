@@ -25,6 +25,8 @@
 #include "utils.h"
 #include <fstream>
 
+namespace MWEngine {
+
 /* public methods */
 
 size_t WaveWriter::bufferToWAV( std::string outputFile, AudioBuffer* buffer, int sampleRate )
@@ -87,3 +89,5 @@ short int* WaveWriter::bufferToPCM( AudioBuffer* buffer )
     }
     return outputBuffer;
 }
+
+} // E.O namespace MWEngine

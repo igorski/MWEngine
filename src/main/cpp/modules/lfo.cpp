@@ -31,6 +31,8 @@
 #include <utilities/tablepool.h>
 #include <utilities/waveutil.h>
 
+namespace MWEngine {
+
 // constructor / destructor
 
 LFO::LFO()
@@ -144,3 +146,5 @@ void LFO::cacheProperties( float value, float min, float max )
     _max   = std::min( max, value + _range / 2.f );
     _min   = std::max( min, value - _range / 2.f );
 }
+
+} // E.O namespace MWEngine

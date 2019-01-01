@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DELAY_H_INCLUDED__
-#define __DELAY_H_INCLUDED__
+#ifndef __MWENGINE__DELAY_H_INCLUDED__
+#define __MWENGINE__DELAY_H_INCLUDED__
 
 #include "baseprocessor.h"
 
+namespace MWEngine {
 class Delay : public BaseProcessor
 {
     public:
@@ -49,5 +50,6 @@ class Delay : public BaseProcessor
         float _feedback;
         int _amountOfChannels;
 };
+} // E.O namespace MWEngine
 
 #endif

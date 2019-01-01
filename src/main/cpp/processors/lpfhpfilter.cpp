@@ -3,7 +3,7 @@
  *
  * adapted from musicdsp.org-post by mistert@inwind.it
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,8 @@
 #include "lpfhpfilter.h"
 #include "../global.h"
 #include <math.h>
+
+namespace MWEngine {
 
 // constructor
 
@@ -99,3 +101,5 @@ void LPFHPFilter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         }
     }
 }
+
+} // E.O namespace MWEngine

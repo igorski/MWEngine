@@ -20,6 +20,8 @@
 #include <thread>
 #include <mutex>
 
+namespace MWEngine {
+
 #define BUFFER_SIZE_AUTOMATIC 0
 // Time constants
 #define NANOS_PER_SECOND 1000000000L
@@ -85,5 +87,7 @@ private:
 
   aaudio_result_t calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis);
 };
+
+} // E.O namespace MWEngine
 
 #endif

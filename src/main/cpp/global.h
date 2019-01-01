@@ -20,10 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __GLOBAL_H_INCLUDED__
-#define __GLOBAL_H_INCLUDED__
+#ifndef __MWENGINE__GLOBAL_H_INCLUDED__
+#define __MWENGINE__GLOBAL_H_INCLUDED__
 
 #include <cmath>
+
+namespace MWEngine {
 
 // DRIVER defines which driver to use
 // valid options are 0 (OpenSL, works from Android 4.1 up) and 1 (AAudio, Android 8 up)
@@ -85,5 +87,7 @@ const SAMPLE_TYPE TWO_PI  = PI * 2.0;
 const int WAVE_TABLE_PRECISION = 128; // the amount of samples in a wave table
 
 extern void *print_message( void* );
+
+} // E.O namespace MWEngine
 
 #endif

@@ -29,6 +29,7 @@
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 
+namespace MWEngine {
 namespace DiskWriter
 {
     std::string               outputFile;
@@ -299,3 +300,5 @@ namespace DiskWriter
         cachedBuffers.at(( unsigned long ) bufferIndex ) = nullptr;
     }
 }
+
+} // E.O namespace MWEngine

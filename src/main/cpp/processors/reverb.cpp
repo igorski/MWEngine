@@ -22,6 +22,8 @@
 #include <cstring>
 #include <utilities/utils.h>
 
+namespace MWEngine {
+
 /* constructor / destructor */
 
 Reverb::Reverb( float size, float hfDamp, float mix, float output )
@@ -232,3 +234,5 @@ void Reverb::recalculate()
 
     size = tmp;
 }
+
+} // E.O namespace MWEngine

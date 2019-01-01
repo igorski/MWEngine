@@ -20,14 +20,15 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRUMPATTERN_H_INCLUDED__
-#define __DRUMPATTERN_H_INCLUDED__
+#ifndef __MWENGINE__DRUMPATTERN_H_INCLUDED__
+#define __MWENGINE__DRUMPATTERN_H_INCLUDED__
 
 #include <events/baseaudioevent.h>
 #include <events/drumevent.h>
 #include <instruments/baseinstrument.h>
 #include <vector>
 
+namespace MWEngine {
 class DrumPattern
 {
     public:
@@ -69,5 +70,6 @@ class DrumPattern
         BaseInstrument* _instrument;
         void destroyAudioEvents();
 };
+} // E.O namespace MWEngine
 
 #endif

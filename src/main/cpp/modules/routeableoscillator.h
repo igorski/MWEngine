@@ -20,12 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __ROUTEABLEOSCILLATOR_H_INCLUDED__
-#define __ROUTEABLEOSCILLATOR_H_INCLUDED__
+#ifndef __MWENGINE__ROUTEABLEOSCILLATOR_H_INCLUDED__
+#define __MWENGINE__ROUTEABLEOSCILLATOR_H_INCLUDED__
 
 #include <modules/lfo.h>
 #include "processors/baseprocessor.h"
 
+namespace MWEngine {
 class RouteableOscillator
 {
     public:
@@ -44,5 +45,6 @@ class RouteableOscillator
         bool _hasOscillator;
         LFO* _oscillator;
 };
+} // E.O namespace MWEngine
 
 #endif

@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <cstring>
 
+namespace MWEngine {
 waveFile WaveReader::fileToBuffer( std::string inputFile )
 { 
     FILE* fp;
@@ -201,3 +202,5 @@ waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
 
     return out;
 }
+
+} // E.O namespace MWEngine

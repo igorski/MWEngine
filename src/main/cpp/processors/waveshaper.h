@@ -20,11 +20,12 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __WAVESHAPER_H_INCLUDED__
-#define __WAVESHAPER_H_INCLUDED__
+#ifndef __MWENGINE__WAVESHAPER_H_INCLUDED__
+#define __MWENGINE__WAVESHAPER_H_INCLUDED__
 
 #include "baseprocessor.h"
 
+namespace MWEngine {
 class WaveShaper : public BaseProcessor
 {
     public:
@@ -41,5 +42,6 @@ class WaveShaper : public BaseProcessor
         float _level;
         float _multiplier;
 };
+} // E.O namespace MWEngine
 
 #endif

@@ -25,6 +25,8 @@
 #include "../utilities/bufferutility.h"
 #include <math.h>
 
+namespace MWEngine {
+
 // constructor
 
 FrequencyModulator::FrequencyModulator( int aWaveForm, float aRate )
@@ -70,3 +72,5 @@ void FrequencyModulator::process( AudioBuffer* sampleBuffer, bool isMonoSource )
         }
     }
 }
+
+} // E.O namespace MWEngine

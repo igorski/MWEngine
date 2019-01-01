@@ -20,8 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LEVEL_UTILITY_H_INCLUDED__
-#define __LEVEL_UTILITY_H_INCLUDED__
+#ifndef __MWENGINE__LEVEL_UTILITY_H_INCLUDED__
+#define __MWENGINE__LEVEL_UTILITY_H_INCLUDED__
 
 #include "global.h"
 #include "../audiochannel.h"
@@ -30,6 +30,7 @@
  * LevelUtility provides methods to determine the mean level
  * of an AudioBuffer, which can be used for UI representations (e.g. level meters)
  */
+namespace MWEngine {
 class LevelUtility
 {
     public:
@@ -44,5 +45,6 @@ class LevelUtility
         // linear energy of the given AudioChannels signal
         static SAMPLE_TYPE linear( AudioChannel* audioChannel, int channelNum );
 };
+} // E.O namespace MWEngine
 
 #endif

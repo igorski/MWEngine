@@ -30,6 +30,7 @@
 
 #endif
 
+namespace MWEngine {
 namespace Notifier
 {
     std::map<int, std::vector<Observer*> > _observerMap;
@@ -131,3 +132,5 @@ namespace Notifier
 #endif
     }
 }
+
+} // E.O namespace MWEngine

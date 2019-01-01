@@ -20,11 +20,13 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BASESYNTHEVENT_H_INCLUDED__
-#define __BASESYNTHEVENT_H_INCLUDED__
+#ifndef __MWENGINE__BASESYNTHEVENT_H_INCLUDED__
+#define __MWENGINE__BASESYNTHEVENT_H_INCLUDED__
 
 #include "baseaudioevent.h"
 #include "../global.h"
+
+namespace MWEngine {
 
 class SynthInstrument;  // forward declaration, see <instruments/synthinstrument.h>
 
@@ -124,5 +126,6 @@ class BaseSynthEvent : public BaseAudioEvent
         virtual void updateProperties();
         virtual void triggerRelease();
 };
+} // E.O namespace MWEngine
 
 #endif
