@@ -513,6 +513,8 @@ void notifyThreadLock(void *lock)
 {
   threadLock *p;
   p = (threadLock*) lock;
+  if (p == NULL)
+    return;
   pthread_mutex_lock(&(p->m));
   p->s = (unsigned char) 1;
   pthread_cond_signal(&(p->c));
