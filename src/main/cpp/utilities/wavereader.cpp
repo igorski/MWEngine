@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -28,80 +28,113 @@
 #include <cstring>
 
 namespace MWEngine {
+
+/**
+ * structs use to parse WAV file headers
+ * see http://soundfile.sapp.org/doc/WaveFormat/
+ */
+struct wav_header
+{
+    char fileType[4];            // "RIFF" = 0x46464952
+    unsigned long fileSize;      // in bytes
+    char format[4];              // "WAVE" = 0x45564157
+    char formatName[4];          // "fmt " = 0x20746D66
+    unsigned long formatLength;
+    unsigned short formatType;
+    unsigned short amountOfChannels;
+    unsigned long sampleRate;
+    unsigned long bytesPerSecond;
+    unsigned short blockAlign;
+    unsigned short bitsPerSample;
+};
+
+struct wav_header_data_chunk
+{
+    char ID[4];         // "data" = 0x61746164
+    unsigned long size;
+};
+
+/* public methods */
+
 waveFile WaveReader::fileToBuffer( std::string inputFile )
 { 
     FILE* fp;
-    AudioBuffer* buffer = nullptr;
-    char id[ 5 ];
-    unsigned int size;
-    short* sound_buffer;
-    short tag, amountOfChannels, blockAlign, bps;
-    unsigned int format, sampleRate, bytesPerSec, dataSize, i;
+    waveFile out = { ( unsigned int ) AudioEngineProps::SAMPLE_RATE, nullptr };
+    short* temp_buffer;
 
     fp = fopen( inputFile.c_str(), "rb" );
 
-    if ( fp )
-    {
-        // first we'll check the necessary headers identifying the WAV file
-
-        fread( id, sizeof( char ), 4, fp );
-        id[ 4 ] = '\0';
-
-        if ( !strcmp( id, "RIFF" ))
-        {
-            fread( &size, sizeof( unsigned int ),  1, fp );
-            fread( id,    sizeof( unsigned char ), 4, fp );
-            id[ 4 ] = '\0';
-
-            if ( !strcmp( id, "WAVE" ))
-            {
-                // read the header data (see http://soundfile.sapp.org/doc/WaveFormat/)
-
-                fread( id,                sizeof( char ), 4, fp );
-                fread( &format,           sizeof( unsigned int ), 1, fp );
-                fread( &tag,              sizeof( short ), 1, fp );
-                fread( &amountOfChannels, sizeof( short ), 1, fp );
-                fread( &sampleRate,       sizeof( unsigned int ), 1, fp );
-                fread( &bytesPerSec,      sizeof( unsigned int ), 1, fp );
-                fread( &blockAlign,       sizeof( short ), 1, fp );
-                fread( &bps,              sizeof( short ), 1, fp );
-                fread( id,                sizeof( char ), 4, fp );
-                fread( &dataSize,         sizeof( unsigned int ), 1, fp );
-
-                sound_buffer = ( short* ) malloc( dataSize );
-
-                fread( sound_buffer, sizeof( short ), dataSize / sizeof( short ), fp );
-                unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
-
-                buffer = new AudioBuffer( amountOfChannels, bufferSize );
-
-                // convert short values into SAMPLE_TYPE
-
-                SAMPLE_TYPE MAX_VALUE = ( SAMPLE_TYPE ) 32767; // max size for either side of a signed short
-
-                int cb = 0;
-
-                for ( i = 0; i < bufferSize; ++i, cb += amountOfChannels )
-                {
-                    for ( int c = 0; c < amountOfChannels; ++c ) {
-                        buffer->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( sound_buffer[ cb + c ]) / MAX_VALUE;
-                    }
-                }
-                free( sound_buffer );
-            }
-            else
-                Debug::log( "WaveReader::Error not a valid WAVE file" );
-        }
-        else
-            Debug::log( "WaveReader::Error not a valid WAVE file (no RIFF header)" );
-
-        fclose( fp );
-    }
-    else {
+    if ( !fp ) {
         Debug::log( "WaveReader::Error could not open file '%s'", inputFile.c_str() );
+        return out;
     }
 
-    waveFile out = { sampleRate, buffer };
+    // get the WAV file properties
+
+    wav_header header;
+    fread( &header, sizeof( header ), 1, fp );
+
+    // validate the WAV file header data
+
+    if ( !strstr( header.fileType, "RIFF" ) ||
+         !strstr( header.format,   "WAVE" ))
+    {
+        Debug::log( "WaveReader::Error not a valid WAVE file" );
+        return out;
+    }
+
+    // the data chunk can be offset in case the WAV file contains
+    // meta data, seek for the data definition
+
+    wav_header_data_chunk dataChunk;
+
+    while ( true )
+    {
+        fread( &dataChunk, sizeof( dataChunk ), 1, fp );
+
+        if ( *( unsigned int* ) &dataChunk.ID == 0x61746164 )
+            break;
+
+        // skip chunk data bytes
+        fseek( fp, dataChunk.size, SEEK_CUR );
+
+        if ( feof( fp )) {
+            Debug::log( "WaveReader::Error could not find data chunk" );
+            return out;
+        }
+    }
+
+    unsigned int amountOfSamples = dataChunk.size * 8 / header.bitsPerSample;
+    int sampleSize = header.bitsPerSample / 8;
+    int i;
+
+    temp_buffer = ( short* ) malloc( sizeof( short ) * amountOfSamples );
+
+    // Read samples from WAV file
+    for ( i = 0; i < amountOfSamples; ++i )
+        fread( &temp_buffer[ i ], ( size_t ) sampleSize, 1, fp );
+
+    unsigned int bufferSize = amountOfSamples / header.amountOfChannels;
+
+    out.sampleRate = ( unsigned int ) header.sampleRate;
+    out.buffer     = new AudioBuffer( header.amountOfChannels, bufferSize );
+
+    // convert short values into SAMPLE_TYPE
+
+    SAMPLE_TYPE MAX_VALUE = ( SAMPLE_TYPE ) 32767; // max size for either side of a signed short
+
+    int cb = 0;
+    for ( i = 0; i < bufferSize; ++i, cb += header.amountOfChannels )
+    {
+        for ( int c = 0; c < header.amountOfChannels; ++c ) {
+            out.buffer->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( temp_buffer[ cb + c ]) / MAX_VALUE;
+        }
+    }
+
+    // free allocated resources
+    
+    free( temp_buffer );
+    fclose( fp );
 
     return out;
 }
@@ -138,7 +171,7 @@ waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
     // first we'll check the necessary headers identifying the WAV file
 
     char id[ 5 ];
-    short* sound_buffer;
+    short* temp_buffer;
     short amountOfChannels;
     unsigned int format, sampleRate, dataSize, i, l, w;
 
@@ -158,7 +191,7 @@ waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
             amountOfChannels = ( short ) sliceLong( byteArray, 22, true );
             sampleRate       = sliceLong( byteArray, 24, true );
             dataSize         = sliceLong( byteArray, 40, true );
-            sound_buffer     = ( short* ) malloc( dataSize );
+            temp_buffer     = ( short* ) malloc( dataSize );
 
             Debug::log("WaveReader::reading %d channels w/ %d samples @ %d Hz", amountOfChannels, dataSize, sampleRate );
 
@@ -173,7 +206,7 @@ waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
             // 2 is sizeof short
 
             for ( i = 44, l = i + dataSize, w = 0; i < l; i += 2, ++w )
-                sound_buffer[ w ] = ( uint8_t ) byteArray[ i ] | (( uint8_t ) byteArray[ i + 1 ] << 8 );
+                temp_buffer[ w ] = ( uint8_t ) byteArray[ i ] | (( uint8_t ) byteArray[ i + 1 ] << 8 );
 
             unsigned int bufferSize = ( dataSize / sizeof( short )) / amountOfChannels;
 
@@ -188,9 +221,9 @@ waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
             for ( i = 0; i < bufferSize; ++i, cb += amountOfChannels )
             {
                 for ( int c = 0; c < amountOfChannels; ++c )
-                    buffer->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( sound_buffer[ cb + c ]) / MAX_VALUE;
+                    buffer->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( temp_buffer[ cb + c ]) / MAX_VALUE;
             }
-            free( sound_buffer );
+            free( temp_buffer );
         }
         else
             Debug::log( "WaveReader::Error not a valid WAVE file" );
