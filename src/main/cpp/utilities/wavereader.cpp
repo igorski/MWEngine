@@ -30,7 +30,7 @@
 namespace MWEngine {
 
 /**
- * structs use to parse WAV file headers
+ * structs used to parse WAV file headers
  * see http://soundfile.sapp.org/doc/WaveFormat/
  */
 struct wav_header
@@ -57,7 +57,7 @@ struct wav_header_data_chunk
 /* public methods */
 
 waveFile WaveReader::fileToBuffer( std::string inputFile )
-{ 
+{
     FILE* fp;
     waveFile out = { ( unsigned int ) AudioEngineProps::SAMPLE_RATE, nullptr };
     short* temp_buffer;
@@ -76,8 +76,9 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
 
     // validate the WAV file header data
 
-    if ( !strstr( header.fileType, "RIFF" ) ||
-         !strstr( header.format,   "WAVE" ))
+    if ( !strstr( header.fileType,   "RIFF" ) ||
+         !strstr( header.format,     "WAVE" ) ||
+         !strstr( header.formatName, "fmt "))
     {
         Debug::log( "WaveReader::Error not a valid WAVE file" );
         return out;
@@ -96,7 +97,26 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
             break;
 
         // skip chunk data bytes
-        fseek( fp, dataChunk.size, SEEK_CUR );
+
+        if ( dataChunk.size > header.fileSize ) {
+
+            // unless this occurs; when the reported data chunk size exceeds the fileSize reported
+            // by the header, this is a clear indication that we're dealing with a corrupted file
+            // header. "Rewind" fread position and attempt to read file by assuming next chunk
+            // is data (in other words: assume no metadata is present in the header)
+
+            Debug::log( "WaveReader::Warning data chunk parsing failure. Assuming header corruption, attempting to read data as-is" );
+
+            fseek( fp, -( sizeof dataChunk ), SEEK_CUR );
+
+            fread( dataChunk.ID,    sizeof( char ), 4, fp );
+            fread( &dataChunk.size, sizeof( unsigned int ), 1, fp );
+
+            break;
+        }
+        else {
+            fseek( fp, dataChunk.size, SEEK_CUR );
+        }
 
         if ( feof( fp )) {
             Debug::log( "WaveReader::Error could not find data chunk" );
@@ -105,6 +125,13 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
     }
 
     unsigned int amountOfSamples = dataChunk.size * 8 / header.bitsPerSample;
+    unsigned int bufferSize      = amountOfSamples / header.amountOfChannels;
+
+    if ( amountOfSamples <= 0 ) {
+        Debug::log( "WaveReader::Error could not find sample data" );
+        return out;
+    }
+
     int sampleSize = header.bitsPerSample / 8;
     int i;
 
@@ -113,8 +140,6 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
     // Read samples from WAV file
     for ( i = 0; i < amountOfSamples; ++i )
         fread( &temp_buffer[ i ], ( size_t ) sampleSize, 1, fp );
-
-    unsigned int bufferSize = amountOfSamples / header.amountOfChannels;
 
     out.sampleRate = ( unsigned int ) header.sampleRate;
     out.buffer     = new AudioBuffer( header.amountOfChannels, bufferSize );
@@ -132,7 +157,7 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
     }
 
     // free allocated resources
-    
+
     free( temp_buffer );
     fclose( fp );
 
