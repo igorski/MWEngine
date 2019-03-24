@@ -40,7 +40,7 @@ struct wav_header
     char format[4];              // "WAVE" = 0x45564157
     char formatName[4];          // "fmt " = 0x20746D66
     unsigned long formatLength;
-    unsigned short formatType;
+    unsigned short audioFormat;  // 1 == PCM, 3 == IEEE float, 6 = A-law, 7 = µ-law
     unsigned short amountOfChannels;
     unsigned long sampleRate;
     unsigned long bytesPerSecond;
@@ -54,13 +54,27 @@ struct wav_header_data_chunk
     unsigned long size;
 };
 
+/* internal methods */
+
+template <typename T>
+inline void convert( T, AudioBuffer* buffer, FILE* fp, int sampleSize, SAMPLE_TYPE maxValue )
+{
+    T input;
+    for ( int i = 0; i < buffer->bufferSize; ++i )
+    {
+        for ( int c = 0; c < buffer->amountOfChannels; ++c ) {
+            fread( &input, ( size_t ) sampleSize, 1, fp );
+            buffer->getBufferForChannel( c )[ i ] = (( SAMPLE_TYPE ) input ) / maxValue;
+        }
+    }
+}
+
 /* public methods */
 
 waveFile WaveReader::fileToBuffer( std::string inputFile )
 {
     FILE* fp;
     waveFile out = { ( unsigned int ) AudioEngineProps::SAMPLE_RATE, nullptr };
-    short* temp_buffer;
 
     fp = fopen( inputFile.c_str(), "rb" );
 
@@ -78,11 +92,24 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
 
     if ( !strstr( header.fileType,   "RIFF" ) ||
          !strstr( header.format,     "WAVE" ) ||
-         !strstr( header.formatName, "fmt "))
+         !strstr( header.formatName, "fmt " )) // yes, the trailing space belongs in there!
     {
         Debug::log( "WaveReader::Error not a valid WAVE file" );
         return out;
     }
+
+#ifdef DEBUG
+
+    Debug::log( "About to parse data for WAV file '%s'", inputFile.c_str() );
+    Debug::log( "File size        : %d", header.fileSize );
+    Debug::log( "Audio format     : %d", header.audioFormat );
+    Debug::log( "Channel amount   : %d", header.amountOfChannels );
+    Debug::log( "Sample rate      : %d", header.sampleRate );
+    Debug::log( "Bytes per second : %d", header.bytesPerSecond );
+    Debug::log( "Block align      : %d", header.blockAlign );
+    Debug::log( "Bits per sample  : %d", header.bitsPerSample );
+
+#endif
 
     // the data chunk can be offset in case the WAV file contains
     // meta data, seek for the data definition
@@ -135,30 +162,67 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
     int sampleSize = header.bitsPerSample / 8;
     int i;
 
-    temp_buffer = ( short* ) malloc( sizeof( short ) * amountOfSamples );
-
-    // Read samples from WAV file
-    for ( i = 0; i < amountOfSamples; ++i )
-        fread( &temp_buffer[ i ], ( size_t ) sampleSize, 1, fp );
-
     out.sampleRate = ( unsigned int ) header.sampleRate;
     out.buffer     = new AudioBuffer( header.amountOfChannels, bufferSize );
 
-    // convert short values into SAMPLE_TYPE
+    // Read samples from WAV file and convert data into MWEngine AudioBuffer
 
-    SAMPLE_TYPE MAX_VALUE = ( SAMPLE_TYPE ) 32767; // max size for either side of a signed short
+    switch ( header.bitsPerSample ) {
+        // by default we will treat files as 16-bit
+        default:
+            Debug::log( "WaveReader::Warning no support for %s-bit file. Treating as 16-bit", header.bitsPerSample );
+        // 16-bit
+        case 16:
+            convert(
+                ( short ) 0, out.buffer, fp, sampleSize,
+                ( SAMPLE_TYPE ) ( header.audioFormat == 3 ? 1 : 32767 )
+            );
+            break;
 
-    int cb = 0;
-    for ( i = 0; i < bufferSize; ++i, cb += header.amountOfChannels )
-    {
-        for ( int c = 0; c < header.amountOfChannels; ++c ) {
-            out.buffer->getBufferForChannel( c )[ i ] = ( SAMPLE_TYPE )( temp_buffer[ cb + c ]) / MAX_VALUE;
-        }
+        // 24-bit (via char array conversion as there is no 24-bit data type)
+        case 24:
+            unsigned char input[ 3 ];
+            long output;
+            for ( int i = 0; i < bufferSize; ++i )
+            {
+                for ( int c = 0; c < header.amountOfChannels; ++c ) {
+                    fread( &input, sizeof( char ), 3, fp );
+                    // note that RIFF files are little endian
+                    if ( input[ 2 ] & 0x80 ) {
+                        // value is negative
+                        output = ( 0xff << 24 ) | ( input[ 2 ] << 16 ) | ( input[ 1 ] << 8 ) | ( input[ 0 ] << 0 );
+                    } else {
+                        output = ( input[ 2 ] << 16 ) | ( input[ 1 ] << 8 ) | (input[ 0 ] << 0 );
+                    }
+                    out.buffer->getBufferForChannel( c )[ i ] = (( SAMPLE_TYPE ) output ) / 8388607.;
+                }
+            }
+            break;
+
+        // 32-bit
+        case 32:
+            convert(
+                ( float ) 0, out.buffer, fp, sampleSize,
+                ( SAMPLE_TYPE ) ( header.audioFormat == 3 ? 1 : 2147483647 )
+            );
+            break;
+
+        // 64-bit
+        case 64:
+            convert(
+                ( double ) 0, out.buffer, fp, sampleSize,
+                ( SAMPLE_TYPE ) ( header.audioFormat == 3 ? 1 : 9223372036854775807 )
+            );
+            break;
+
+        // 8-bit (note: 8-bit WAV files are unsigned)
+        case 8:
+            convert(( unsigned char ) 0, out.buffer, fp, sampleSize, ( SAMPLE_TYPE ) 255 );
+            break;
     }
 
     // free allocated resources
 
-    free( temp_buffer );
     fclose( fp );
 
     return out;
