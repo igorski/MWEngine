@@ -67,7 +67,7 @@ bool Sequencer::unregisterInstrument( BaseInstrument* instrument )
 }
 
 bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
-                                       int bufferSize, bool addLiveInstruments, bool flushChannels )
+                                int bufferSize, bool addLiveInstruments, bool flushChannels )
 {
     channels->clear();
 

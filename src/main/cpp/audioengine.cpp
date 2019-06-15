@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -81,8 +81,10 @@ namespace MWEngine {
 
     /* buffer read/write pointers */
 
-    int AudioEngine::bufferPosition = 0;
-    int AudioEngine::stepPosition   = 0;
+    int AudioEngine::bufferPosition   = 0;
+    int AudioEngine::stepPosition     = 0;
+    int AudioEngine::bounceRangeStart = 0;
+    int AudioEngine::bounceRangeEnd   = 0;
 
     /* output related */
 
@@ -453,7 +455,7 @@ namespace MWEngine {
 
             // are we bouncing the current sequencer range and have we played through the full range?
 
-            if ( bouncing && ( loopStarted || bufferPosition == 0 ))
+            if ( bouncing && ( loopStarted || bufferPosition == bounceRangeStart || bufferPosition >= bounceRangeEnd ))
             {
                 // write current snippet onto disk and finish recording
                 // (this can be done synchronously as rendering will now halt)
@@ -461,13 +463,14 @@ namespace MWEngine {
                 DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
                 DiskWriter::finish();
 
-                // broadcast update via JNI, pass buffer identifier name to identify last recording
+                // broadcast update via JNI
 
-                Notifier::broadcast( Notifications::BOUNCE_COMPLETE, 1 );
+                Notifier::broadcast( Notifications::BOUNCE_COMPLETE );
 
                 // stops thread, halts rendering
 
                 stop();
+                Sequencer::playing = false;
 
                 bouncing           =
                 recordOutputToDisk = false;

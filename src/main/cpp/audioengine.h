@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -75,6 +75,8 @@ class AudioEngine
 
         static int bufferPosition;      // the current sequence position in samples "playback head" offset ;-)
         static int stepPosition;        // the current sequence bar subdivided position (e.g. 16th note of a bar)
+        static int bounceRangeStart;    // when bouncing, this defines the starting point of the bounce range
+        static int bounceRangeEnd;      // when bouncing, this defines the end point of the bounce range
 
         /* tempo related */
 

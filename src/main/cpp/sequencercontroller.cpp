@@ -236,16 +236,22 @@ BulkCacher* SequencerController::getBulkCacher()
  * when bouncing, the writing of buffers into the hardware is omitted
  * for an increase in bouncing speed (otherwise its real time)
  */
-void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputFile )
+void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputFile, int rangeStart, int rangeEnd )
 {
     AudioEngine::bouncing = aIsBouncing;
 
     if ( AudioEngine::bouncing )
     {
-        AudioEngine::bufferPosition = 0;
-        AudioEngine::stepPosition   = 0;
+        AudioEngine::bounceRangeStart = rangeStart;
+        AudioEngine::bounceRangeEnd   = rangeEnd;
+        AudioEngine::bufferPosition   = rangeStart;
+        AudioEngine::stepPosition     = 0;
     }
     setRecordingState( aIsBouncing, aMaxBuffers, aOutputFile );
+
+    // triggering bounce state should instantly toggle the playback state of the engine
+
+    setPlaying( aIsBouncing );
 }
 
 /**

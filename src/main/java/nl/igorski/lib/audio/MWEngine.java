@@ -187,14 +187,14 @@ public final class MWEngine extends Thread
         return AudioEngine.getInputChannel();
     }
 
-    public void setBouncing( boolean value, String outputDirectory )
+    public void setBouncing( boolean value, String outputFile )
     {
-        setBouncing( value, outputDirectory, calculateRecordingSnippetBufferSize() );
+        setBouncing( value, outputFile, 0, AudioEngine.getAmount_of_bars() * AudioEngine.getSamples_per_bar());
     }
 
-    public void setBouncing( boolean value, String outputFile, int maxRecordBuffers )
+    public void setBouncing( boolean value, String outputFile, int rangeStart, int rangeEnd )
     {
-        _sequencerController.setBounceState( value, maxRecordBuffers, outputFile );
+        _sequencerController.setBounceState( value, calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
     }
 
     /**
@@ -204,11 +204,11 @@ public final class MWEngine extends Thread
      *
      * In order to record the input directly to device storage, @see setRecordFromDeviceInputState()
      *
-     * @param record {boolean}
+     * @param recordingActive {boolean}
      */
-    public void recordInput( boolean record )
+    public void recordInput( boolean recordingActive )
     {
-        AudioEngine.setRecordDeviceInput( record );
+        AudioEngine.setRecordDeviceInput( recordingActive );
     }
 
     /**
@@ -219,19 +219,19 @@ public final class MWEngine extends Thread
      * Requires RECORD_TO_DISK to be enabled in global.h as well as the
      * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
      *
-     * @param value {boolean} toggle the recording state on/off
+     * @param recordingActive {boolean} toggle the recording state on/off
      * @param outputFile {string} name of the WAV file to create and write the recording into
      */
-    public void setRecordingState( boolean value, String outputFile )
+    public void setRecordingState( boolean recordingActive, String outputFile )
     {
         int maxRecordBuffers = 0;
 
         // create / reset the recorded buffer when
         // hitting the record button
-        if ( value )
+        if ( recordingActive )
             maxRecordBuffers = calculateRecordingSnippetBufferSize();
 
-        _sequencerController.setRecordingState( value, maxRecordBuffers, outputFile );
+        _sequencerController.setRecordingState( recordingActive, maxRecordBuffers, outputFile );
     }
 
     /**
@@ -243,21 +243,21 @@ public final class MWEngine extends Thread
      * Requires RECORD_DEVICE_INPUT to be enabled in global.h as well as the
      * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
      *
-     * @param value {boolean} toggle the recording state on/off
+     * @param recordingActive {boolean} toggle the recording state on/off
      * @param outputFile {string} name of the WAV file to create and write the recording into
      * @param maxDurationInMilliSeconds {int} the size (in milliseconds) of each individual written buffer
      */
-    public void setRecordFromDeviceInputState( boolean value, String outputFile, int maxDurationInMilliSeconds )
+    public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds )
     {
         int maxRecordBuffers = 0;
 
         // create / reset the recorded buffer when
         // hitting the record button
 
-        if ( value )
+        if ( recordingActive )
             maxRecordBuffers = BufferUtility.millisecondsToBuffer( maxDurationInMilliSeconds, SAMPLE_RATE );
 
-        _sequencerController.setRecordingFromDeviceState( value, maxRecordBuffers, outputFile );
+        _sequencerController.setRecordingFromDeviceState( recordingActive, maxRecordBuffers, outputFile );
     }
 
     /**
