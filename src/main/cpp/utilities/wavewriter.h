@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  * Based on work by 2010 Kevin Karplus (writing WAV files using streams)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -53,16 +53,16 @@ class WaveWriter
 
             // write the header data
             stream.write( "RIFF", 4 );
-            t_streamwrite<int>( stream, 36 + totalBufSizeToWrite );
+            t_streamwrite<UINT32>( stream, 36 + totalBufSizeToWrite );                   // file size
             stream.write( "WAVE", 4 );
             stream.write( "fmt ", 4 );
-            t_streamwrite<int>  ( stream, 16 );
-            t_streamwrite<short>( stream, 1 );                                          // Format (1 = PCM)
-            t_streamwrite<short>( stream, ( short ) channels );                         // Channels
-            t_streamwrite<int>  ( stream, sampleRate );                                 // Sample rate
-            t_streamwrite<int>  ( stream, sampleRate * channels * sizeof( short int )); // Byte rate
-            t_streamwrite<short>( stream, channels * sizeof( short int ));              // Frame size
-            t_streamwrite<short>( stream, 8 * sizeof( short int ));                     // Bits per sample
+            t_streamwrite<UINT32>  ( stream, 16 );                                       // format length
+            t_streamwrite<short>( stream, 1 );                                           // Format (1 = PCM)
+            t_streamwrite<short>( stream, ( short ) channels );                          // Channels
+            t_streamwrite<UINT32>( stream, sampleRate );                                 // Sample rate
+            t_streamwrite<UINT32>( stream, sampleRate * channels * sizeof( short int )); // Byte rate
+            t_streamwrite<short>( stream, channels * sizeof( short int ));               // Frame size
+            t_streamwrite<short>( stream, 8 * sizeof( short int ));                      // Bits per sample
             stream.write( "data", 4 );
             stream.write(( const char* )&totalBufSizeToWrite, 4 );
 

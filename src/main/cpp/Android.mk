@@ -28,8 +28,8 @@ LOCAL_CPPFLAGS    += $(LOCAL_CFLAGS)
 # source files
 
 LOCAL_SRC_FILES   += \
-jni/javabridge.cpp \
 global.cpp \
+jni/javabridge.cpp \
 drivers/adapter.cpp \
 drivers/opensl_io.c \
 utilities/utils.cpp \

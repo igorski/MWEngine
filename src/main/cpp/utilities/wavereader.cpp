@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "wavereader.h"
+#include "../global.h"
 #include "debug.h"
 #include "utils.h"
 #include <stdio.h>
@@ -36,14 +37,14 @@ namespace MWEngine {
 struct wav_header
 {
     char fileType[4];            // "RIFF" = 0x46464952
-    unsigned long fileSize;      // in bytes
+    UINT32 fileSize;             // in bytes
     char format[4];              // "WAVE" = 0x45564157
     char formatName[4];          // "fmt " = 0x20746D66
-    unsigned long formatLength;
+    UINT32 formatLength;
     unsigned short audioFormat;  // 1 == PCM, 3 == IEEE float, 6 = A-law, 7 = µ-law
     unsigned short amountOfChannels;
-    unsigned long sampleRate;
-    unsigned long bytesPerSecond;
+    UINT32 sampleRate;
+    UINT32 bytesPerSecond;
     unsigned short blockAlign;
     unsigned short bitsPerSample;
 };
@@ -51,7 +52,7 @@ struct wav_header
 struct wav_header_data_chunk
 {
     char ID[4];         // "data" = 0x61746164
-    unsigned long size;
+    UINT32 size;
 };
 
 /* internal methods */

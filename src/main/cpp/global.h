@@ -24,6 +24,8 @@
 #define __MWENGINE__GLOBAL_H_INCLUDED__
 
 #include <cmath>
+#include <limits.h>
+#include <stdint.h>
 
 namespace MWEngine {
 
@@ -72,22 +74,63 @@ namespace AudioEngineProps
 }
 
 // E.O. audio engine configuration
+// --------------------------------------
+// DO NOT CHANGE ANYTHING BELOW THIS LINE
+// ...unless you know what you are doing of course.
+//
+// these define constants used throughout the engine
+// --------------------------------------
 
 #if PRECISION == 1 // float
- #define SAMPLE_TYPE float
+    #define SAMPLE_TYPE float
 #endif
 
 #if PRECISION == 2 // double
- #define SAMPLE_TYPE double
+    #define SAMPLE_TYPE double
 #endif
 
-// global constants used throughout the engine
-const SAMPLE_TYPE PI      = atan( 1 ) * 4;
-const SAMPLE_TYPE TWO_PI  = PI * 2.0;
-const int WAVE_TABLE_PRECISION = 128; // the amount of samples in a wave table
+// math
 
+const SAMPLE_TYPE PI     = atan( 1 ) * 4;
+const SAMPLE_TYPE TWO_PI = PI * 2.0;
+
+// other
+
+const int WAVE_TABLE_PRECISION = 128; // the amount of samples contained within a wave table
 extern void *print_message( void* );
 
 } // E.O namespace MWEngine
 
+// data types
+// here we solve a problem that occurs when reading bytes from
+// external files (e.g. loading audio files) where different
+// CPU architectures have different sizes for each of the types
+// we define integer types by their size in bits in the places where it matters
+
+#if INT_MAX == INT16_MAX
+    // 16-bit Android architectures ? WTF...
+    #define INT16 int
+    #define INT32 long
+    #define INT64 long long
+    #define UINT16 unsigned int
+    #define UINT32 unsigned long
+    #define UINT64 unsigned long long
+#elseif INT_MAX == INT64_MAX
+    // not the case for ARMv8/ARM64 but let's be safe
+    #define INT16 short
+    #define INT32 float
+    #define INT64 int
+    #define UINT16 unsigned short
+    #define UINT32 unsigned float
+    #define UINT64 unsigned int
+#else
+    // expected across most Android CPU architectures
+    #define INT16 short
+    #define INT32 int
+    #define INT64 long
+    #define UINT16 unsigned short
+    #define UINT32 unsigned int
+    #define UINT64 unsigned long
 #endif
+
+#endif // E.O. __MWENGINE__GLOBAL_H_INCLUDED__
