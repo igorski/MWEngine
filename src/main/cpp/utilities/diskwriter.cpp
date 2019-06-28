@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -121,7 +121,7 @@ namespace DiskWriter
                 // convert data to a temporary PCM buffer
                 // TODO: can we just extract the existing PCM data without this
                 // back-and-forth conversion?
-                short int* outputBuffer = WaveWriter::bufferToPCM( tempBuffer );
+                INT16* outputBuffer = WaveWriter::bufferToPCM( tempBuffer );
 
                 delete tempBuffer; // free memory allocated to read WAV file
 

@@ -36,17 +36,17 @@ namespace MWEngine {
  */
 struct wav_header
 {
-    char fileType[4];            // "RIFF" = 0x46464952
-    UINT32 fileSize;             // in bytes
-    char format[4];              // "WAVE" = 0x45564157
-    char formatName[4];          // "fmt " = 0x20746D66
+    char fileType[4];           // "RIFF" = 0x46464952
+    UINT32 fileSize;            // in bytes
+    char format[4];             // "WAVE" = 0x45564157
+    char formatName[4];         // "fmt " = 0x20746D66
     UINT32 formatLength;
-    unsigned short audioFormat;  // 1 == PCM, 3 == IEEE float, 6 = A-law, 7 = µ-law
-    unsigned short amountOfChannels;
+    INT16 audioFormat;          // 1 == PCM, 3 == IEEE float, 6 = A-law, 7 = µ-law
+    INT16 amountOfChannels;
     UINT32 sampleRate;
     UINT32 bytesPerSecond;
-    unsigned short blockAlign;
-    unsigned short bitsPerSample;
+    INT16 blockAlign;
+    INT16 bitsPerSample;
 };
 
 struct wav_header_data_chunk
@@ -293,7 +293,7 @@ waveFile WaveReader::byteArrayToBuffer( std::vector<char> byteArray )
                 return out;
             }
 
-            // 2 is sizeof short
+            // 2 is sizeof short (16-bits, thus 2 bytes)
 
             for ( i = 44, l = i + dataSize, w = 0; i < l; i += 2, ++w )
                 temp_buffer[ w ] = ( uint8_t ) byteArray[ i ] | (( uint8_t ) byteArray[ i + 1 ] << 8 );

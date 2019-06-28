@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -36,9 +36,9 @@ size_t WaveWriter::bufferToWAV( std::string outputFile, AudioBuffer* buffer, int
 
     // convert floating point buffer samples to interleaved shorts (PCM audio)
 
-    short int* outputBuffer = bufferToPCM( buffer );
+    INT16* outputBuffer = bufferToPCM( buffer );
 
-    unsigned int bytes_per_sample = sizeof( short int );
+    unsigned int bytes_per_sample = sizeof( INT16 );
     const char* filename          = outputFile.c_str();
 
     // write converted buffer to file
@@ -57,7 +57,7 @@ size_t WaveWriter::bufferToWAV( std::string outputFile, AudioBuffer* buffer, int
     return outputBufferSize; // return size of written WAV buffer data
 }
 
-short int* WaveWriter::bufferToPCM( AudioBuffer* buffer )
+INT16* WaveWriter::bufferToPCM( AudioBuffer* buffer )
 {
     int writeIndex       = 0;
     int bufferSize       = buffer->bufferSize;
@@ -65,8 +65,8 @@ short int* WaveWriter::bufferToPCM( AudioBuffer* buffer )
 
     // convert floating point buffer samples to interleaved shorts (PCM audio)
 
-    short int* outputBuffer = new short int[ bufferSize * amountOfChannels ];
-    short int MAX_VALUE     = 32767;
+    INT16* outputBuffer = new INT16[ bufferSize * amountOfChannels ];
+    INT16 MAX_VALUE     = 32767;
 
     // write samples into PCM short buffer
 
@@ -74,7 +74,7 @@ short int* WaveWriter::bufferToPCM( AudioBuffer* buffer )
     {
         for ( int c = 0; c < amountOfChannels; ++c )
         {
-            short int sample = ( short int )( buffer->getBufferForChannel( c )[ i ] * MAX_VALUE );
+            INT16 sample = ( INT16 )( buffer->getBufferForChannel( c )[ i ] * MAX_VALUE );
 
             // sanity check to keep converted samples within range
 

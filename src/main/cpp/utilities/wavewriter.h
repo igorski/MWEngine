@@ -53,16 +53,16 @@ class WaveWriter
 
             // write the header data
             stream.write( "RIFF", 4 );
-            t_streamwrite<UINT32>( stream, 36 + totalBufSizeToWrite );                   // file size
+            t_streamwrite<UINT32>( stream, 36 + totalBufSizeToWrite );               // file size
             stream.write( "WAVE", 4 );
             stream.write( "fmt ", 4 );
-            t_streamwrite<UINT32>  ( stream, 16 );                                       // format length
-            t_streamwrite<short>( stream, 1 );                                           // Format (1 = PCM)
-            t_streamwrite<short>( stream, ( short ) channels );                          // Channels
-            t_streamwrite<UINT32>( stream, sampleRate );                                 // Sample rate
-            t_streamwrite<UINT32>( stream, sampleRate * channels * sizeof( short int )); // Byte rate
-            t_streamwrite<short>( stream, channels * sizeof( short int ));               // Frame size
-            t_streamwrite<short>( stream, 8 * sizeof( short int ));                      // Bits per sample
+            t_streamwrite<UINT32>  ( stream, 16 );                                   // format length
+            t_streamwrite<INT16>( stream, 1 );                                       // Format (1 = PCM)
+            t_streamwrite<INT16>( stream, ( INT16 ) channels );                      // Channels
+            t_streamwrite<UINT32>( stream, sampleRate );                             // Sample rate
+            t_streamwrite<UINT32>( stream, sampleRate * channels * sizeof( INT16 )); // Byte rate
+            t_streamwrite<INT16>( stream, channels * sizeof( INT16 ));               // Frame size
+            t_streamwrite<INT16>( stream, 8 * sizeof( INT16 ));                      // Bits per sample
             stream.write( "data", 4 );
             stream.write(( const char* )&totalBufSizeToWrite, 4 );
 
@@ -82,7 +82,7 @@ class WaveWriter
          * Allocates a buffer that contains PCM compliant
          * representation of the samples in given AudioBuffer
          */
-        static short int* bufferToPCM( AudioBuffer* buffer );
+        static INT16* bufferToPCM( AudioBuffer* buffer );
 
     protected:
 
