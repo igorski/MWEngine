@@ -65,7 +65,7 @@ void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
     if ( aInstrument != nullptr &&
         _instrument  != aInstrument )
     {
-        bool wasAddedToSequencer = _addedToSequencer;
+        bool wasAddedToSequencer = isAddedToSequencer();
 
         if ( wasAddedToSequencer )
             removeFromSequencer();
@@ -87,7 +87,7 @@ void BaseAudioEvent::play()
     // move this event to the live events list of the instrument (keep
     // the current sequenced event - if it was added - as is)
 
-    _instrument->getLiveEvents()->push_back( this );
+    _instrument->addEvent( this, true );
     _livePlayback = true;
 }
 
@@ -105,49 +105,36 @@ void BaseAudioEvent::stop()
 
 void BaseAudioEvent::addToSequencer()
 {
-    if ( _addedToSequencer )
+    if ( isAddedToSequencer() )
         return;
 
     // adds the event to the sequencer so it can be heard
 
     if ( isSequenced )
-        _instrument->getEvents()->push_back( this );
+        _instrument->addEvent( this, false );
     else
         play();
-
-    _addedToSequencer = true;
 }
 
 void BaseAudioEvent::removeFromSequencer()
 {
-    if ( !_addedToSequencer || _instrument == nullptr )
+    if ( _instrument == nullptr )
         return;
 
-    if ( !isSequenced )
-    {
+    if ( isSequenced ) {
+        _instrument->removeEvent( this, false );
+    }
+    else {
         stop();
     }
-    else
-    {
-        std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
-
-        if ( events != nullptr ) {
-            std::vector<BaseAudioEvent*>::iterator position = std::find( events->begin(),
-                                                                         events->end(), this );
-            if ( position != events->end() )
-                events->erase( position );
-        }
-    }
-    _addedToSequencer = false;
 }
 
 void BaseAudioEvent::removeLiveEvent()
 {
-    std::vector<BaseAudioEvent*>* liveEvents = _instrument->getLiveEvents();
-    std::vector<BaseAudioEvent*>::iterator position = std::find( liveEvents->begin(), liveEvents->end(), this );
+    if ( _instrument == nullptr )
+        return;
 
-    if ( position != liveEvents->end() )
-        liveEvents->erase( position );
+    _instrument->removeEvent( this, true );
 }
 
 int BaseAudioEvent::getEventLength()
@@ -444,7 +431,6 @@ void BaseAudioEvent::construct()
     _enabled           = true;
     _destroyableBuffer = true;
     _locked            = false;
-    _addedToSequencer  = false;
     _volume            = VolumeUtil::toLog( 1.0 );
     _eventStart        = 0;
     _eventEnd          = 0;
@@ -464,6 +450,17 @@ void BaseAudioEvent::destroyBuffer()
         delete _buffer;
         _buffer = nullptr;
     }
+}
+
+bool BaseAudioEvent::isAddedToSequencer()
+{
+    if ( _instrument != nullptr ) {
+        std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
+        if ( std::find( events->begin(), events->end(), this ) != events->end()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /* TO BE DEPRECATED */

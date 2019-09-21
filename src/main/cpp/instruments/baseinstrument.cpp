@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -113,6 +113,16 @@ void BaseInstrument::clearEvents()
     }
 }
 
+void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent ) {
+    std::lock_guard<std::mutex> guard( _lock );
+
+    if ( isLiveEvent ) {
+        _liveAudioEvents->push_back( audioEvent );
+    } else {
+        _audioEvents->push_back( audioEvent );
+    }
+}
+
 bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
     bool removed = false;
@@ -120,32 +130,32 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
     if ( audioEvent == nullptr )
         return removed;
 
-    if ( !isLiveEvent )
+    std::lock_guard<std::mutex> guard( _lock );
+
+    if ( isLiveEvent )
     {
-        if ( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ) != _audioEvents->end())
+        if ( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ) != _liveAudioEvents->end())
         {
-            _audioEvents->erase( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ));
-            audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
+            _liveAudioEvents->erase( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ));
             removed = true;
         }
     }
-    else if ( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ) != _liveAudioEvents->end())
+    else if ( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ) != _audioEvents->end())
     {
-        _liveAudioEvents->erase( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ));
-        audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
+        _audioEvents->erase( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ));
         removed = true;
     }
-
-#ifndef USE_JNI
-    if ( removed ) {
-
-        // when using JNI, we let SWIG invoke destructors when Java references are finalized
-        // otherwise we delete and dispose the events directly from this instrument
-
-        delete audioEvent;
-        audioEvent = nullptr;
-    }
-#endif
+// let's not do the below as management of event allocation isn't the instruments problem.
+//#ifndef USE_JNI
+//    if ( removed ) {
+//
+//        // when using JNI, we let SWIG invoke destructors when Java references are finalized
+//        // otherwise we delete and dispose the events directly from this instrument
+//
+//        delete audioEvent;
+//        audioEvent = nullptr;
+//    }
+//#endif
     return removed;
 }
 

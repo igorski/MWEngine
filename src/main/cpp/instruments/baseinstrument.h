@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 
 #include "../audiochannel.h"
 #include <events/baseaudioevent.h>
+#include <mutex>
 
 namespace MWEngine {
 class BaseInstrument
@@ -41,6 +42,7 @@ class BaseInstrument
         virtual std::vector<BaseAudioEvent*>* getLiveEvents();
 
         virtual void clearEvents();
+        virtual void addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
         virtual bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
 
         void registerInSequencer();
@@ -56,6 +58,9 @@ class BaseInstrument
         std::vector<BaseAudioEvent*>* _liveAudioEvents;
 
         float _oldTempo; // last known sequencer tempo
+
+        // mutex to lock event vector mutations
+        std::mutex _lock;
 };
 } // E.O namespace MWEngine
 
