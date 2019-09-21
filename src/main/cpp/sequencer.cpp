@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -147,8 +147,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
         }
     }
 
-    int i = 0, amount = ( int ) audioEvents->size();
-    for ( ; i < amount; i++ )
+    int i = 0;
+    for ( ; i < audioEvents->size(); i++ )
     {
         BaseAudioEvent* audioEvent = audioEvents->at( i );
 
@@ -224,9 +224,7 @@ std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvent
     for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
     {
         std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
-        int amount = ( int ) audioEvents->size();
-
-        for ( int j = 0; j < amount; j++ )
+        for ( int j = 0; j < audioEvents->size(); j++ )
         {
             BaseAudioEvent* audioEvent = audioEvents->at( j );
 
