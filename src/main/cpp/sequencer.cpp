@@ -147,8 +147,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
         }
     }
 
-    int i = 0;
-    for ( ; i < audioEvents->size(); i++ )
+    int i = 0, amount = ( int ) audioEvents->size();
+    for ( ; i < amount; i++ )
     {
         BaseAudioEvent* audioEvent = audioEvents->at( i );
 
@@ -224,7 +224,8 @@ std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvent
     for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
     {
         std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
-        for ( int j = 0; j < audioEvents->size(); j++ )
+        int amount = ( int ) audioEvents->size();
+        for ( int j = 0; j < amount; j++ )
         {
             BaseAudioEvent* audioEvent = audioEvents->at( j );
 
