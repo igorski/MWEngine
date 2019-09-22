@@ -78,7 +78,8 @@ void BaseInstrument::updateEvents()
 
     if ( _oldTempo != AudioEngine::tempo ) {
 
-        std::lock_guard<std::mutex> guard( _lock );
+        //std::lock_guard<std::mutex> guard( _lock );
+        toggleReadLock( true );
 
         // when tempo has updated, we update the offsets of all associated events
 
@@ -97,12 +98,15 @@ void BaseInstrument::updateEvents()
             event->setEventEnd   (( orgEnd + 1 ) * ratio ); // add 1 to correct for rounding of float
         }
         _oldTempo = AudioEngine::tempo;
+
+        toggleReadLock( false );
     }
 }
 
 void BaseInstrument::clearEvents()
 {
-    std::lock_guard<std::mutex> guard( _lock );
+    //std::lock_guard<std::mutex> guard( _lock );
+    toggleReadLock( true );
 
     if ( _audioEvents != nullptr )
     {
@@ -115,16 +119,19 @@ void BaseInstrument::clearEvents()
         while ( _liveAudioEvents->size() > 0 )
             removeEvent( _liveAudioEvents->at( 0 ), true );
     }
+    toggleReadLock( false );
 }
 
 void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent ) {
-    std::lock_guard<std::mutex> guard( _lock );
+    //std::lock_guard<std::mutex> guard( _lock );
+    toggleReadLock( true );
 
     if ( isLiveEvent ) {
         _liveAudioEvents->push_back( audioEvent );
     } else {
         _audioEvents->push_back( audioEvent );
     }
+    toggleReadLock( false );
 }
 
 bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
@@ -134,7 +141,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
     if ( audioEvent == nullptr )
         return removed;
 
-    std::lock_guard<std::mutex> guard( _lock );
+    toggleReadLock( true );
 
     if ( isLiveEvent )
     {
@@ -160,6 +167,8 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 //        audioEvent = nullptr;
 //    }
 //#endif
+    toggleReadLock( false );
+
     return removed;
 }
 
