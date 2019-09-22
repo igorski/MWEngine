@@ -57,15 +57,15 @@ class AudioEngine
 
         static int samples_per_beat;      // the amount of samples necessary for a single beat at the current tempo and sample rate
         static int samples_per_bar;       // the amount of samples for a full bar at the current tempo and sample rate
-        static float samples_per_step;    // the amount of samples per sub division (e.g. 16th note)
+        static int samples_per_step;       // the amount of samples within a single status update subdivision
 
         static int amount_of_bars;         // the amount of measures in the current sequencer
-        static int beat_subdivision;       // the amount of sub divisions the engine recognises for a beat (for instance a value of 4 equals sixteenth notes in 4/4 time)
+        static int steps_per_bar;          // the amount of subdivisions in a single measure the engine broadcast a status update for
         static int min_buffer_position;    // the lowest sample offset in the current loop range
         static int max_buffer_position;    // the maximum sample offset in the current loop range
         static int marked_buffer_position; // the buffer position that should launch a notification when playback exceeds this position
         static int min_step_position;      // the lowest step in the current sequence
-        static int max_step_position;      // the maximum step in the current sequence (e.g. 15 for 16 step sequencer - step starts at 0.)
+        static int max_step_position;      // the maximum step in the current sequence (e.g. 15 for single measure using a 16 step sequencer - step starts at 0.)
         static bool recordOutputToDisk;    // whether to record rendered output
         static bool bouncing;              // whether bouncing audio (i.e. rendering in inaudible offline mode without thread lock)
         static bool recordInputToDisk;     // whether to record audio from the Android device input to disk

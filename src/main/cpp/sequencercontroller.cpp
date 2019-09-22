@@ -37,9 +37,13 @@ SequencerController::SequencerController()
 {
     // by default, function as a sixteen step sequencer
 
-    stepsPerBar = 16;
-    AudioEngine::max_step_position = stepsPerBar - 1;
+    updateStepsPerBar( 16 );
 };
+
+SequencerController::SequencerController( int stepsPerBar )
+{
+    updateStepsPerBar( stepsPerBar );
+}
 
 SequencerController::~SequencerController()
 {
@@ -55,7 +59,7 @@ void SequencerController::prepare( float aQueuedTempo, int aTimeSigBeatAmount, i
     {
         setTempo( aQueuedTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
         AudioEngine::handleTempoUpdate( aQueuedTempo, false );   // just to initialize all buffer sizes
-        setLoopRange( 0, ( AudioEngine::amount_of_bars * AudioEngine::samples_per_bar ) - 1, stepsPerBar );
+        setLoopRange( 0, ( AudioEngine::amount_of_bars * AudioEngine::samples_per_bar ) - 1, AudioEngine::steps_per_bar );
     }
 };
 
@@ -75,7 +79,6 @@ void SequencerController::setTempo( float aTempo, int aTimeSigBeatAmount, int aT
 void SequencerController::setTempoNow( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit )
 {
     setTempo( aTempo, aTimeSigBeatAmount, aTimeSigBeatUnit );
-    updateStepsPerBar( stepsPerBar );
     AudioEngine::handleTempoUpdate( AudioEngine::queuedTempo, true );
 }
 
@@ -91,7 +94,7 @@ void SequencerController::setPlaying( bool aIsPlaying )
 
 void SequencerController::setLoopRange( int aStartPosition, int aEndPosition )
 {
-    setLoopRange( aStartPosition, aEndPosition, stepsPerBar );
+    setLoopRange( aStartPosition, aEndPosition, AudioEngine::steps_per_bar );
 }
 
 /**
@@ -147,7 +150,7 @@ void SequencerController::setBufferPosition( int aPosition )
     }
 
     AudioEngine::bufferPosition = aPosition;
-    AudioEngine::stepPosition   = ( aPosition / AudioEngine::samples_per_bar ) * stepsPerBar;
+    AudioEngine::stepPosition   = ( aPosition / AudioEngine::samples_per_bar ) * AudioEngine::steps_per_bar;
 
     Notifier::broadcast( Notifications::SEQUENCER_POSITION_UPDATED );
 }
@@ -179,9 +182,9 @@ int SequencerController::getTimeSigBeatUnit()
 
 void SequencerController::updateStepsPerBar( int aStepsPerBar )
 {
-    stepsPerBar = aStepsPerBar;
-    AudioEngine::max_step_position = ( stepsPerBar * AudioEngine::amount_of_bars ) - 1;
-    AudioEngine::beat_subdivision  = stepsPerBar / AudioEngine::time_sig_beat_amount;
+    AudioEngine::steps_per_bar     = aStepsPerBar;
+    AudioEngine::max_step_position = ( AudioEngine::steps_per_bar * AudioEngine::amount_of_bars ) - 1;
+    AudioEngine::handleTempoUpdate( AudioEngine::tempo, false );
 
     // keep current sequencer step within the new loop range
 

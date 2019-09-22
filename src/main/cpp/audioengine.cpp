@@ -29,6 +29,7 @@
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
+#include <utilities/bufferutility.h>
 #include <utilities/debug.h>
 #include <vector>
 
@@ -64,16 +65,17 @@ namespace MWEngine {
 
     int   AudioEngine::samples_per_beat           = 0;  // strictly speaking sequencer specific, but scoped onto the AudioEngine
     int   AudioEngine::samples_per_bar            = 0;  // for rendering purposes, see SequencerController on how to read and
-    float AudioEngine::samples_per_step         = 0;  // adjust these values
+    int   AudioEngine::samples_per_step           = 0;  // adjust these values
+
     int   AudioEngine::amount_of_bars             = 1;
-    int   AudioEngine::beat_subdivision           = 4;
+    int   AudioEngine::steps_per_bar              = 16; // default to sixteen step sequencing (see SequencerController)
     int   AudioEngine::min_buffer_position        = 0;  // initially 0, but can differ when looping specific measures
     int   AudioEngine::max_buffer_position        = 0;  // calculated when SequencerController is created
     int   AudioEngine::marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
     int   AudioEngine::min_step_position          = 0;
-    int   AudioEngine::max_step_position          = 15; // default to sixteen step sequence (note min step starts at 0)
-    float AudioEngine::tempo                    = 90.0;
-    float AudioEngine::queuedTempo              = 120.0;
+    int   AudioEngine::max_step_position          = ( AudioEngine::amount_of_bars * AudioEngine::steps_per_bar ) - 1; // note steps start at 0 (hence - 1)
+    float AudioEngine::tempo                      = 90.0;
+    float AudioEngine::queuedTempo                = 120.0;
     int   AudioEngine::time_sig_beat_amount       = 4;
     int   AudioEngine::time_sig_beat_unit         = 4;
     int   AudioEngine::queuedTime_sig_beat_amount = time_sig_beat_amount;
@@ -517,15 +519,12 @@ namespace MWEngine {
             tempo = aQueuedTempo;
         };
 
-        time_sig_beat_amount = queuedTime_sig_beat_amount;
-        time_sig_beat_unit   = queuedTime_sig_beat_unit;
+        time_sig_beat_amount = queuedTime_sig_beat_amount; // upper numeral (the "3" in "3/4")
+        time_sig_beat_unit   = queuedTime_sig_beat_unit;   // lower numeral (the "4" in "4/4")
 
-        float tempSamplesPerBar = ((( float ) AudioEngineProps::SAMPLE_RATE * 60 ) / tempo ) * time_sig_beat_amount;
-        samples_per_beat        = ( int ) ( tempSamplesPerBar / ( float ) time_sig_beat_amount );
-
-        // samples per step describes the smallest note size the sequencer acknowledges (i.e. 8ths, 16ths, 32nds, 64ths, etc.)
-        samples_per_step = ( float ) samples_per_beat / ( float ) beat_subdivision;
-        samples_per_bar  = ( int )( samples_per_step * beat_subdivision * time_sig_beat_amount ); // in case of non-equals amount vs. unit
+        samples_per_bar  = BufferUtility::getSamplesPerBar( AudioEngineProps::SAMPLE_RATE, aQueuedTempo, time_sig_beat_amount, time_sig_beat_unit );
+        samples_per_beat = samples_per_bar / time_sig_beat_amount;
+        samples_per_step = samples_per_bar / steps_per_bar;
 
         int loopLength = max_buffer_position - min_buffer_position;
 

@@ -120,7 +120,9 @@ class BaseAudioEvent
         virtual float getEndPosition();
         virtual float getDuration();
 
-        // position the AudioEvent within the Sequencer using musical timing concepts
+        // position the AudioEvent within the Sequencer using musical timing concepts, relative to
+        // the steps per bar defined using the SequencerController
+        //
         // NOTE : this results in strict "on the grid" timing, using buffer samples instead (see setEventStart() and
         // setEventEnd() ) or seconds (see setStartPosition() and setEndPosition() ) allows for more accurate positioning
         // for drifting / swing / early / late events

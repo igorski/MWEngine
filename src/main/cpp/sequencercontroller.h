@@ -36,6 +36,7 @@ class SequencerController
 {
     public:
         SequencerController();
+        SequencerController( int stepsPerBar );
         ~SequencerController();
         
         void prepare    ( float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
@@ -68,9 +69,6 @@ class SequencerController
         void setRecordingFromDeviceState( bool aRecording,  int aMaxBuffers, char* aOutputFile );
 
         void saveRecordedSnippet( int snippetBufferIndex );
-
-    protected:
-        int stepsPerBar;
 };
 } // E.O namespace MWEngine
 

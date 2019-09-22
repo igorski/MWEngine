@@ -320,9 +320,6 @@ TEST( SequencerController, UpdateStepsPerBar )
     EXPECT_EQ( steps - 1, AudioEngine::max_step_position )
         << "expected maximum step position to have been updated";
 
-    EXPECT_EQ( steps / AudioEngine::time_sig_beat_amount, AudioEngine::beat_subdivision )
-        << "expected beat subdivision to have been updated";
-
     EXPECT_EQ( originalStepPosition, AudioEngine::stepPosition )
         << "expected current step position to not have been sanitized (was within range)";
 
