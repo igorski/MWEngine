@@ -62,11 +62,13 @@ bool BaseInstrument::hasLiveEvents()
 
 std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
 {
+    std::lock_guard<std::mutex> guard( _lock );
     return _audioEvents;
 }
 
 std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
 {
+    std::lock_guard<std::mutex> guard( _lock );
     return _liveAudioEvents;
 }
 
@@ -77,6 +79,8 @@ void BaseInstrument::updateEvents()
     // override this function in your derived class for custom implementations
 
     if ( _oldTempo != AudioEngine::tempo ) {
+
+        std::lock_guard<std::mutex> guard( _lock );
 
         // when tempo has updated, we update the offsets of all associated events
 
@@ -100,6 +104,8 @@ void BaseInstrument::updateEvents()
 
 void BaseInstrument::clearEvents()
 {
+    std::lock_guard<std::mutex> guard( _lock );
+
     if ( _audioEvents != nullptr )
     {
         while ( _audioEvents->size() > 0 )
