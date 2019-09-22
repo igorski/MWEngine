@@ -127,7 +127,9 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     if ( !instrument->hasEvents() )
         return;
 
-    AudioChannel* channel                     = instrument->audioChannel;
+    AudioChannel* channel = instrument->audioChannel;
+
+    instrument->toggleReadLock( true ); // lock the events vector while sequencing
     std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
 
     // removal queue
@@ -167,6 +169,9 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
             }
         }
     }
+
+    instrument->toggleReadLock( false ); // release mutex
+
     // removal queue filled ? process it so we can safely
     // remove "deleted" AudioEvents without errors occurring
     if ( removes.size() > 0 )
@@ -181,7 +186,9 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
 
 void Sequencer::collectLiveEvents( BaseInstrument* instrument )
 {
-    AudioChannel* channel                    = instrument->audioChannel;
+    AudioChannel* channel = instrument->audioChannel;
+
+    instrument->toggleReadLock( true ); // lock the events vector while sequencing
     std::vector<BaseAudioEvent*>* liveEvents = instrument->getLiveEvents();
 
     // removal queue
@@ -196,6 +203,9 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
         else
             removes.push_back( audioEvent );
     }
+
+    instrument->toggleReadLock( false ); // release mutex
+
     // removal queue filled ? process it so we can safely
     // remove "deleted" AudioEvents without errors occurring
     if ( removes.size() > 0 )

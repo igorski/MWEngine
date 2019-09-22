@@ -62,13 +62,11 @@ bool BaseInstrument::hasLiveEvents()
 
 std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
 {
-    std::lock_guard<std::mutex> guard( _lock );
     return _audioEvents;
 }
 
 std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
 {
-    std::lock_guard<std::mutex> guard( _lock );
     return _liveAudioEvents;
 }
 
@@ -175,6 +173,15 @@ void BaseInstrument::unregisterFromSequencer()
 {
     Sequencer::unregisterInstrument( this );
     index = -1;
+}
+
+void BaseInstrument::toggleReadLock( bool locked )
+{
+    if ( locked ) {
+        _lock.lock();
+    } else {
+        _lock.unlock();
+    }
 }
 
 /* protected methods */
