@@ -522,7 +522,7 @@ namespace MWEngine {
         time_sig_beat_amount = queuedTime_sig_beat_amount; // upper numeral (the "3" in "3/4")
         time_sig_beat_unit   = queuedTime_sig_beat_unit;   // lower numeral (the "4" in "4/4")
 
-        samples_per_bar  = BufferUtility::getSamplesPerBar( AudioEngineProps::SAMPLE_RATE, aQueuedTempo, time_sig_beat_amount, time_sig_beat_unit );
+        samples_per_bar  = BufferUtility::getSamplesPerBar( AudioEngineProps::SAMPLE_RATE, tempo, time_sig_beat_amount, time_sig_beat_unit );
         samples_per_beat = samples_per_bar / time_sig_beat_amount;
         samples_per_step = samples_per_bar / steps_per_bar;
 

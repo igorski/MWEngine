@@ -107,14 +107,16 @@ void BaseInstrument::clearEvents()
 {
     if ( _audioEvents != nullptr )
     {
-        while ( !_audioEvents->empty() )
+        while ( !_audioEvents->empty() ) {
             removeEvent( _audioEvents->at( 0 ), false );
+        }
     }
 
     if ( _liveAudioEvents != nullptr )
     {
-        while ( !_liveAudioEvents->empty() )
+        while ( !_liveAudioEvents->empty() ) {
             removeEvent( _liveAudioEvents->at( 0 ), true );
+        }
     }
 }
 
@@ -135,23 +137,29 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
     bool removed = false;
 
-    if ( audioEvent == nullptr )
+    if ( audioEvent == nullptr || _liveAudioEvents == nullptr || _audioEvents == nullptr ) {
         return removed;
+    }
 
     //std::lock_guard<std::mutex> guard( _lock );
     toggleReadLock( true );
 
     if ( isLiveEvent )
     {
-        if ( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ) != _liveAudioEvents->end())
+        auto it = std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent );
+        if ( it != _liveAudioEvents->end() )
         {
-            _liveAudioEvents->erase( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ));
+            _liveAudioEvents->erase( it );
+            audioEvent->resetPlayState();
             removed = true;
         }
     }
-    else if ( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ) != _audioEvents->end())
+    else
     {
-        _audioEvents->erase( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ));
+        auto it = std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent );
+        if ( it != _audioEvents->end()) {
+            _audioEvents->erase( it );
+        }
         removed = true;
     }
 // let's not do the below as management of event allocation isn't the instruments problem.
@@ -184,11 +192,15 @@ void BaseInstrument::unregisterFromSequencer()
 
 void BaseInstrument::toggleReadLock( bool locked )
 {
+    // when unit testing, GoogleTest deadlocks on this attempted locking operation. We don't
+    // need to test for mutex behaviour, but it would be nice not to have to wrap this code
+#ifndef MOCK_ENGINE
     if ( locked ) {
         _lock.lock();
     } else {
         _lock.unlock();
     }
+#endif
 }
 
 /* protected methods */

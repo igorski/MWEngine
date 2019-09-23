@@ -61,7 +61,7 @@ class BaseInstrument
         float _oldTempo; // last known sequencer tempo
 
         // mutex to lock event vector mutations
-        std::recursive_mutex _lock;
+        std::mutex _lock;
 };
 } // E.O namespace MWEngine
 

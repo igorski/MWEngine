@@ -86,6 +86,7 @@ class BaseAudioEvent
 
         virtual void play(); // enable the event and play it back immediately (e.g. "noteOn" for instant playback)
         virtual void stop(); // immediately stops playing the live-auditioned event (e.g. "noteOff")
+        virtual void resetPlayState();
 
         /* event sequencing */
 
@@ -182,8 +183,6 @@ class BaseAudioEvent
 
         float _startPosition;
         float _endPosition;
-
-        void removeLiveEvent();
 
         // properties
         bool _enabled;

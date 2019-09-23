@@ -115,7 +115,6 @@ TEST( AudioEngine, TempoUpdate )
     ASSERT_FALSE( AudioEngine::samples_per_step == oldSPStep )
         << "expected engine to have updated its samples per step value after tempo change";
 
-
     EXPECT_EQ( 2, AudioEngine::test_program )
         << "expected program to have incremented";
 

@@ -606,7 +606,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer )
         // the sample length (e.g. played it in its entirety)
 
         if ( !_loopeable )
-            removeLiveEvent();
+            stop();
         else
             _lastPlaybackPosition = std::max( _bufferRangeStart, _lastPlaybackPosition - getBufferRangeLength());
     }

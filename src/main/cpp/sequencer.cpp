@@ -103,14 +103,16 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
 
 void Sequencer::updateEvents()
 {
-    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
+    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i ) {
         instruments.at( i )->updateEvents();
+    }
 }
 
 void Sequencer::clearEvents()
 {
-    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
+    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i ) {
         instruments.at( i )->clearEvents();
+    }
 }
 
 /**
@@ -149,8 +151,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
         }
     }
 
-    int i = 0, amount = ( int ) audioEvents->size();
-    for ( ; i < amount; i++ )
+    int i = 0;
+    for ( ; i < audioEvents->size(); i++ )
     {
         BaseAudioEvent* audioEvent = audioEvents->at( i );
 
@@ -174,7 +176,7 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
 
     // removal queue filled ? process it so we can safely
     // remove "deleted" AudioEvents without errors occurring
-    if ( removes.size() > 0 )
+    if ( !removes.empty() )
     {
         for ( i = 0; i < removes.size(); i++ )
         {
@@ -194,7 +196,8 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     // removal queue
     std::vector<BaseAudioEvent*> removes;
 
-    for ( int i = 0; i < liveEvents->size(); i++ )
+    int i = 0;
+    for ( ; i < liveEvents->size(); i++ )
     {
         BaseAudioEvent* audioEvent = liveEvents->at( i );
 
@@ -208,9 +211,9 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
 
     // removal queue filled ? process it so we can safely
     // remove "deleted" AudioEvents without errors occurring
-    if ( removes.size() > 0 )
+    if ( !removes.empty() )
     {
-        for ( int i = 0; i < removes.size(); i++ )
+        for ( i = 0; i < removes.size(); i++ )
         {
             BaseAudioEvent* audioEvent = removes[ i ];
             instrument->removeEvent( audioEvent, true );
@@ -229,13 +232,12 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
  */
 std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvents( int bufferPosition, int bufferEnd )
 {
-    std::vector<BaseCacheableAudioEvent*>* events = new std::vector<BaseCacheableAudioEvent*>();
+    auto* events = new std::vector<BaseCacheableAudioEvent*>();
 
     for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
     {
         std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
-        int amount = ( int ) audioEvents->size();
-        for ( int j = 0; j < amount; j++ )
+        for ( int j = 0; j < audioEvents->size(); j++ )
         {
             BaseAudioEvent* audioEvent = audioEvents->at( j );
 
