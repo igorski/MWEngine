@@ -102,7 +102,6 @@ bool DrumInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
             if ( it != audioEvents->end())
             {
                 audioEvents->erase( it );
-                audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
                 removed = true;
             }
         }
