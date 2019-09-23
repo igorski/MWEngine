@@ -105,9 +105,6 @@ void BaseInstrument::updateEvents()
 
 void BaseInstrument::clearEvents()
 {
-    //std::lock_guard<std::mutex> guard( _lock );
-    toggleReadLock( true );
-
     if ( _audioEvents != nullptr )
     {
         while ( _audioEvents->size() > 0 )
@@ -119,7 +116,6 @@ void BaseInstrument::clearEvents()
         while ( _liveAudioEvents->size() > 0 )
             removeEvent( _liveAudioEvents->at( 0 ), true );
     }
-    toggleReadLock( false );
 }
 
 void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent ) {
