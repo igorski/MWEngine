@@ -52,12 +52,12 @@ BaseInstrument::~BaseInstrument()
 
 bool BaseInstrument::hasEvents()
 {
-    return _audioEvents->size() > 0;
+    return !_audioEvents->empty();
 }
 
 bool BaseInstrument::hasLiveEvents()
 {
-    return _liveAudioEvents->size() > 0;
+    return !_liveAudioEvents->empty();
 }
 
 std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
@@ -89,9 +89,9 @@ void BaseInstrument::updateEvents()
         {
             BaseAudioEvent* event = _audioEvents->at( i );
 
-            float orgStart  = ( float ) event->getEventStart();
-            float orgEnd    = ( float ) event->getEventEnd();
-            float orgLength = ( float ) event->getEventLength();
+            auto orgStart  = ( float ) event->getEventStart();
+            auto orgEnd    = ( float ) event->getEventEnd();
+            auto orgLength = ( float ) event->getEventLength();
 
             event->setEventStart ( orgStart  * ratio );
             event->setEventLength( orgLength * ratio );
@@ -107,18 +107,19 @@ void BaseInstrument::clearEvents()
 {
     if ( _audioEvents != nullptr )
     {
-        while ( _audioEvents->size() > 0 )
+        while ( !_audioEvents->empty() )
             removeEvent( _audioEvents->at( 0 ), false );
     }
 
     if ( _liveAudioEvents != nullptr )
     {
-        while ( _liveAudioEvents->size() > 0 )
+        while ( !_liveAudioEvents->empty() )
             removeEvent( _liveAudioEvents->at( 0 ), true );
     }
 }
 
-void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent ) {
+void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
+{
     //std::lock_guard<std::mutex> guard( _lock );
     toggleReadLock( true );
 
@@ -137,6 +138,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
     if ( audioEvent == nullptr )
         return removed;
 
+    //std::lock_guard<std::mutex> guard( _lock );
     toggleReadLock( true );
 
     if ( isLiveEvent )

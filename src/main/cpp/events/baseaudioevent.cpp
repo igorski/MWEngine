@@ -84,8 +84,9 @@ void BaseAudioEvent::play()
 
     setDeletable( false );
 
-    // move this event to the live events list of the instrument (keep
-    // the current sequenced event - if it was added - as is)
+    // add this event to the live events list of the instrument (keep
+    // the current sequenced event - if it was added - as is, we should
+    // be able to audition - live play - an event that is part of a sequence)
 
     _instrument->addEvent( this, true );
     _livePlayback = true;
@@ -124,9 +125,7 @@ void BaseAudioEvent::removeFromSequencer()
     if ( isSequenced ) {
         _instrument->removeEvent( this, false );
     }
-    else {
-        stop();
-    }
+    stop(); // event can be both sequenced as well as playing back live
 }
 
 void BaseAudioEvent::removeLiveEvent()
