@@ -74,11 +74,11 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
     int bufferEnd    = bufferPosition + ( bufferSize - 1 );          // the highest SampleEnd value we'll query
     bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
 
-    int i, l;
+    int i;
 
     // note we update the channels mix properties here as they might change during playback
 
-    for ( i = 0, l = ( int ) instruments.size(); i < l; ++i )
+    for ( i = 0; i < instruments.size(); ++i )
     {
         BaseInstrument* instrument      = instruments.at( i );
         AudioChannel* instrumentChannel = instrument->audioChannel;
