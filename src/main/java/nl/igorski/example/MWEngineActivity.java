@@ -526,7 +526,7 @@ public final class MWEngineActivity extends Activity {
     private void createDrumEvent( String sampleName, int position ) {
         final SampleEvent drumEvent = new SampleEvent( _sampler );
         drumEvent.setSample( SampleManager.getSample( sampleName ));
-        drumEvent.positionEvent( 0, STEPS_PER_MEASURE, position );
+        drumEvent.positionEvent( 0, 16, position );
         drumEvent.addToSequencer(); // samples have to be explicitly added for playback
 
         _drumEvents.add( drumEvent );

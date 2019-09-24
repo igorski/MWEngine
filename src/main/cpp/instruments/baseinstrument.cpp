@@ -52,23 +52,21 @@ BaseInstrument::~BaseInstrument()
 
 bool BaseInstrument::hasEvents()
 {
-    return _audioEvents->size() > 0;
+    return !_audioEvents->empty();
 }
 
 bool BaseInstrument::hasLiveEvents()
 {
-    return _liveAudioEvents->size() > 0;
+    return !_liveAudioEvents->empty();
 }
 
 std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
 {
-    std::lock_guard<std::mutex> guard( _lock );
     return _audioEvents;
 }
 
 std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
 {
-    std::lock_guard<std::mutex> guard( _lock );
     return _liveAudioEvents;
 }
 
@@ -80,7 +78,8 @@ void BaseInstrument::updateEvents()
 
     if ( _oldTempo != AudioEngine::tempo ) {
 
-        std::lock_guard<std::mutex> guard( _lock );
+        //std::lock_guard<std::mutex> guard( _lock );
+        toggleReadLock( true );
 
         // when tempo has updated, we update the offsets of all associated events
 
@@ -90,65 +89,77 @@ void BaseInstrument::updateEvents()
         {
             BaseAudioEvent* event = _audioEvents->at( i );
 
-            float orgStart  = ( float ) event->getEventStart();
-            float orgEnd    = ( float ) event->getEventEnd();
-            float orgLength = ( float ) event->getEventLength();
+            auto orgStart  = ( float ) event->getEventStart();
+            auto orgEnd    = ( float ) event->getEventEnd();
+            auto orgLength = ( float ) event->getEventLength();
 
             event->setEventStart ( orgStart  * ratio );
             event->setEventLength( orgLength * ratio );
             event->setEventEnd   (( orgEnd + 1 ) * ratio ); // add 1 to correct for rounding of float
         }
         _oldTempo = AudioEngine::tempo;
+
+        toggleReadLock( false );
     }
 }
 
 void BaseInstrument::clearEvents()
 {
-    std::lock_guard<std::mutex> guard( _lock );
-
     if ( _audioEvents != nullptr )
     {
-        while ( _audioEvents->size() > 0 )
+        while ( !_audioEvents->empty() ) {
             removeEvent( _audioEvents->at( 0 ), false );
+        }
     }
 
     if ( _liveAudioEvents != nullptr )
     {
-        while ( _liveAudioEvents->size() > 0 )
+        while ( !_liveAudioEvents->empty() ) {
             removeEvent( _liveAudioEvents->at( 0 ), true );
+        }
     }
 }
 
-void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent ) {
-    std::lock_guard<std::mutex> guard( _lock );
+void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
+{
+    //std::lock_guard<std::mutex> guard( _lock );
+    toggleReadLock( true );
 
     if ( isLiveEvent ) {
         _liveAudioEvents->push_back( audioEvent );
     } else {
         _audioEvents->push_back( audioEvent );
     }
+    toggleReadLock( false );
 }
 
 bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
     bool removed = false;
 
-    if ( audioEvent == nullptr )
+    if ( audioEvent == nullptr || _liveAudioEvents == nullptr || _audioEvents == nullptr ) {
         return removed;
+    }
 
-    std::lock_guard<std::mutex> guard( _lock );
+    //std::lock_guard<std::mutex> guard( _lock );
+    toggleReadLock( true );
 
     if ( isLiveEvent )
     {
-        if ( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ) != _liveAudioEvents->end())
+        auto it = std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent );
+        if ( it != _liveAudioEvents->end() )
         {
-            _liveAudioEvents->erase( std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent ));
+            _liveAudioEvents->erase( it );
+            audioEvent->resetPlayState();
             removed = true;
         }
     }
-    else if ( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ) != _audioEvents->end())
+    else
     {
-        _audioEvents->erase( std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent ));
+        auto it = std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent );
+        if ( it != _audioEvents->end()) {
+            _audioEvents->erase( it );
+        }
         removed = true;
     }
 // let's not do the below as management of event allocation isn't the instruments problem.
@@ -162,6 +173,8 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 //        audioEvent = nullptr;
 //    }
 //#endif
+    toggleReadLock( false );
+
     return removed;
 }
 
@@ -175,6 +188,19 @@ void BaseInstrument::unregisterFromSequencer()
 {
     Sequencer::unregisterInstrument( this );
     index = -1;
+}
+
+void BaseInstrument::toggleReadLock( bool locked )
+{
+    // when unit testing, GoogleTest deadlocks on this attempted locking operation. We don't
+    // need to test for mutex behaviour, but it would be nice not to have to wrap this code
+#ifndef MOCK_ENGINE
+    if ( locked ) {
+        _lock.lock();
+    } else {
+        _lock.unlock();
+    }
+#endif
 }
 
 /* protected methods */

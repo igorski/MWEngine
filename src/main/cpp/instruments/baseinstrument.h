@@ -45,6 +45,7 @@ class BaseInstrument
         virtual void addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
         virtual bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
 
+        void toggleReadLock( bool locked );
         void registerInSequencer();
         void unregisterFromSequencer();
 

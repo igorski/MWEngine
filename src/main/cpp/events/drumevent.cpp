@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,7 +45,7 @@ DrumEvent::DrumEvent( int aPosition, int aDrumType, int aDrumTimbre, BaseInstrum
     init( aInstrument );
 
     position    = aPosition;
-    _eventStart = position * ( int ) AudioEngine::samples_per_step;
+    _eventStart = position * AudioEngine::samples_per_step;
 
     setType  ( aDrumType );
     setTimbre( aDrumTimbre );

@@ -36,7 +36,7 @@ class SequencerController
 {
     public:
         SequencerController();
-        SequencerController( int stepsPerBar );
+        SequencerController( int amountOfMeasures, int stepsPerBar );
         ~SequencerController();
         
         void prepare    ( float aQueuedTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );

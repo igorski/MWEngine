@@ -79,13 +79,14 @@ void BaseAudioEvent::setInstrument( BaseInstrument* aInstrument )
 
 void BaseAudioEvent::play()
 {
-    if ( _livePlayback || _instrument == nullptr )
+    if ( _livePlayback || _instrument == nullptr ) {
         return;
-
+    }
     setDeletable( false );
 
-    // move this event to the live events list of the instrument (keep
-    // the current sequenced event - if it was added - as is)
+    // add this event to the live events list of the instrument (keep
+    // the current sequenced event - if it was added - as is, we should
+    // be able to audition - live play - an event that is part of a sequence)
 
     _instrument->addEvent( this, true );
     _livePlayback = true;
@@ -93,27 +94,37 @@ void BaseAudioEvent::play()
 
 void BaseAudioEvent::stop()
 {
-    if ( !_livePlayback )
+    if ( !_livePlayback || _instrument == nullptr ) {
         return;
+    }
 
     // remove this event from the live events list of the instrument (keep
     // the current sequenced event - if it was added - as is)
 
-    removeLiveEvent();
+    _instrument->removeEvent( this, true );
+
+    resetPlayState();
+}
+
+void BaseAudioEvent::resetPlayState()
+{
     _livePlayback = false;
 }
 
 void BaseAudioEvent::addToSequencer()
 {
-    if ( isAddedToSequencer() )
+    if ( isAddedToSequencer() ) {
         return;
+    }
 
     // adds the event to the sequencer so it can be heard
 
-    if ( isSequenced )
+    if ( isSequenced ) {
         _instrument->addEvent( this, false );
-    else
+    }
+    else {
         play();
+    }
 }
 
 void BaseAudioEvent::removeFromSequencer()
@@ -124,17 +135,7 @@ void BaseAudioEvent::removeFromSequencer()
     if ( isSequenced ) {
         _instrument->removeEvent( this, false );
     }
-    else {
-        stop();
-    }
-}
-
-void BaseAudioEvent::removeLiveEvent()
-{
-    if ( _instrument == nullptr )
-        return;
-
-    _instrument->removeEvent( this, true );
+    stop(); // event can be both sequenced as well as playing back live
 }
 
 int BaseAudioEvent::getEventLength()
@@ -454,7 +455,8 @@ void BaseAudioEvent::destroyBuffer()
 
 bool BaseAudioEvent::isAddedToSequencer()
 {
-    if ( _instrument != nullptr ) {
+    if ( _instrument != nullptr )
+    {
         std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
         if ( std::find( events->begin(), events->end(), this ) != events->end()) {
             return true;

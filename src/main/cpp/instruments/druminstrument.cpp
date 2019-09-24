@@ -39,10 +39,12 @@ DrumInstrument::DrumInstrument()
 
 DrumInstrument::~DrumInstrument()
 {
+    clearEvents();
+
     delete rOsc;
     delete drumPatterns;
 
-    rOsc = nullptr;
+    rOsc         = nullptr;
     drumPatterns = nullptr;
 }
 
@@ -50,16 +52,18 @@ DrumInstrument::~DrumInstrument()
 
 bool DrumInstrument::hasEvents()
 {
-    if ( drumPatterns->size() > 0 )
-        return getEventsForActivePattern()->size() > 0;
-
+    if ( !drumPatterns->empty() ) {
+        auto activePatternEvents = getEventsForActivePattern();
+        return activePatternEvents != nullptr ? !activePatternEvents->empty() : false;
+    }
     return false;
 }
 
 void DrumInstrument::updateEvents()
 {
-    for ( int i = 0, l = drumPatterns->size(); i < l; ++i )
+    for ( int i = 0, l = drumPatterns->size(); i < l; ++i ) {
         drumPatterns->at( i )->cacheEvents( drumTimbre );
+    }
 }
 
 void DrumInstrument::clearEvents()
@@ -90,10 +94,14 @@ bool DrumInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
             std::vector<BaseAudioEvent*>* audioEvents = getEventsForActivePattern();
 
-            if ( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ) != audioEvents->end())
+            if ( audioEvents == nullptr ) {
+                return removed;
+            }
+            auto it = std::find( audioEvents->begin(), audioEvents->end(), audioEvent );
+
+            if ( it != audioEvents->end())
             {
-                audioEvents->erase( std::find( audioEvents->begin(), audioEvents->end(), audioEvent ));
-                audioEvent->removeFromSequencer(); // updates event state to not-added-to-sequencer
+                audioEvents->erase( it );
                 removed = true;
             }
         }
@@ -116,8 +124,8 @@ std::vector<BaseAudioEvent*>* DrumInstrument::getEvents()
 
 std::vector<BaseAudioEvent*>* DrumInstrument::getEventsForPattern( int patternNum )
 {
-    DrumPattern* pattern = drumPatterns->at( patternNum );
-    return pattern->audioEvents;
+    DrumPattern* pattern = getDrumPattern( patternNum );
+    return pattern != nullptr ? pattern->audioEvents : nullptr;
 }
 
 std::vector<BaseAudioEvent*>* DrumInstrument::getEventsForActivePattern()
@@ -127,6 +135,9 @@ std::vector<BaseAudioEvent*>* DrumInstrument::getEventsForActivePattern()
 
 DrumPattern* DrumInstrument::getDrumPattern( int patternNum )
 {
+    if ( patternNum >= drumPatterns->size() ) {
+        return nullptr;
+    }
     return drumPatterns->at( patternNum );
 }
 
@@ -152,6 +163,10 @@ void DrumInstrument::construct()
 
     activeDrumPattern = 0;
     drumPatterns      = new std::vector<DrumPattern*>();
+
+    // unlike the base instruments, drum instrument events come from the registered patterns
+
+    _audioEvents      = nullptr;
     _liveAudioEvents  = new std::vector<BaseAudioEvent*>();
 
     registerInSequencer(); // auto-register instrument inside the sequencer

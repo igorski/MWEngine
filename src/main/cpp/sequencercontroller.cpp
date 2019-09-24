@@ -37,12 +37,12 @@ SequencerController::SequencerController()
 {
     // by default, function as a sixteen step sequencer
 
-    updateStepsPerBar( 16 );
+    updateMeasures( 1, 16 );
 };
 
-SequencerController::SequencerController( int stepsPerBar )
+SequencerController::SequencerController( int amountOfMeasures, int stepsPerBar )
 {
-    updateStepsPerBar( stepsPerBar );
+    updateMeasures( amountOfMeasures, stepsPerBar );
 }
 
 SequencerController::~SequencerController()
@@ -188,16 +188,16 @@ void SequencerController::updateStepsPerBar( int aStepsPerBar )
 
     // keep current sequencer step within the new loop range
 
-    if ( AudioEngine::stepPosition > AudioEngine::max_step_position )
+    if ( AudioEngine::stepPosition > AudioEngine::max_step_position ) {
         AudioEngine::stepPosition = AudioEngine::min_step_position;
+    }
 }
 
 void SequencerController::updateMeasures( int aValue, int aStepsPerBar )
 {
-    AudioEngine::amount_of_bars      = aValue;
-    AudioEngine::max_buffer_position = ( AudioEngine::samples_per_bar * AudioEngine::amount_of_bars ) - 1;
-
+    AudioEngine::amount_of_bars = aValue;
     updateStepsPerBar( aStepsPerBar );
+    AudioEngine::max_buffer_position = ( AudioEngine::samples_per_bar * AudioEngine::amount_of_bars ) - 1;
 }
 
 void SequencerController::rewind()

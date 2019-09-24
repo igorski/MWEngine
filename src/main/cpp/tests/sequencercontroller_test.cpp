@@ -17,7 +17,7 @@ TEST( SequencerController, Prepare )
 {
     SequencerController* controller = new SequencerController();
 
-    float tempo    = randomFloat( 40.0f, 300.0f );
+    float tempo      = randomFloat( 40.0f, 300.0f );
     int tsBeatAmount = randomInt( 2, 12 );
     int tsBeatUnit   = randomInt( 2, 8 );
 
@@ -345,7 +345,7 @@ TEST( SequencerController, UpdateMeasures )
     AudioEngine::amount_of_bars      = 1;
     AudioEngine::samples_per_bar     = 88200;
     AudioEngine::max_step_position   = 1;
-    AudioEngine::max_buffer_position = 88199;
+    AudioEngine::max_buffer_position = AudioEngine::samples_per_bar - 1;
 
     // update values
 
