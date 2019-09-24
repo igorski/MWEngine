@@ -74,11 +74,11 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
     int bufferEnd    = bufferPosition + ( bufferSize - 1 );          // the highest SampleEnd value we'll query
     bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
 
-    int i;
+    int total = instruments.size();
 
     // note we update the channels mix properties here as they might change during playback
 
-    for ( i = 0; i < instruments.size(); ++i )
+    for ( int i = 0; i < total; ++i )
     {
         BaseInstrument* instrument      = instruments.at( i );
         AudioChannel* instrumentChannel = instrument->audioChannel;
@@ -126,8 +126,9 @@ void Sequencer::clearEvents()
  */
 void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd )
 {
-    if ( !instrument->hasEvents() )
+    if ( !instrument->hasEvents() ) {
         return;
+    }
 
     AudioChannel* channel = instrument->audioChannel;
 
@@ -152,7 +153,9 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     }
 
     int i = 0;
-    for ( ; i < audioEvents->size(); i++ )
+    int total = audioEvents->size();
+
+    for ( ; i < total; i++ )
     {
         BaseAudioEvent* audioEvent = audioEvents->at( i );
 
@@ -178,7 +181,9 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     // remove "deleted" AudioEvents without errors occurring
     if ( !removes.empty() )
     {
-        for ( i = 0; i < removes.size(); i++ )
+        total = removes.size();
+
+        for ( i = 0; i < total; i++ )
         {
             BaseAudioEvent* audioEvent = removes[ i ];
             instrument->removeEvent( audioEvent, false );
@@ -197,7 +202,9 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     std::vector<BaseAudioEvent*> removes;
 
     int i = 0;
-    for ( ; i < liveEvents->size(); i++ )
+    int total = liveEvents->size();
+
+    for ( ; i < total; i++ )
     {
         BaseAudioEvent* audioEvent = liveEvents->at( i );
 
@@ -213,7 +220,9 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     // remove "deleted" AudioEvents without errors occurring
     if ( !removes.empty() )
     {
-        for ( i = 0; i < removes.size(); i++ )
+        total = removes.size();
+
+        for ( i = 0; i < total; i++ )
         {
             BaseAudioEvent* audioEvent = removes[ i ];
             instrument->removeEvent( audioEvent, true );
