@@ -9,15 +9,90 @@
 
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
-
-#include "comb.h"
-#include "allpass.h"
 #include "tuning.h"
 namespace MWEngine {
-class revmodel : public BaseProcessor {
+//all pass
+class allpass
+{
+public:
+					allpass();
+			void	setbuffer(SAMPLE_TYPE *buf, int size);
+	inline  SAMPLE_TYPE	process(SAMPLE_TYPE inp);
+			void	mute();
+			void	setfeedback(SAMPLE_TYPE val);
+			SAMPLE_TYPE	getfeedback();
+// private:
+	SAMPLE_TYPE	feedback;
+	SAMPLE_TYPE	*buffer;
+	int		bufsize;
+	int		bufidx;
+};
+
+// comb
+class comb
+{
+public:
+					comb();
+			void	setbuffer(SAMPLE_TYPE *buf, int size);
+	inline  SAMPLE_TYPE	process(SAMPLE_TYPE inp);
+			void	mute();
+			void	setdamp(SAMPLE_TYPE val);
+			SAMPLE_TYPE	getdamp();
+			void	setfeedback(SAMPLE_TYPE val);
+			SAMPLE_TYPE	getfeedback();
+private:
+	SAMPLE_TYPE	feedback;
+	SAMPLE_TYPE	filterstore;
+	SAMPLE_TYPE	damp1;
+	SAMPLE_TYPE	damp2;
+	SAMPLE_TYPE	*buffer;
+	int		bufsize;
+	int		bufidx;
+};
+
+
+// Big to inline - but crucial for speed
+
+inline SAMPLE_TYPE comb::process(SAMPLE_TYPE input)
+{
+	SAMPLE_TYPE output;
+
+	output = buffer[bufidx];
+    undenormalise(output);
+
+	filterstore = (output*damp2) + (filterstore*damp1);
+    undenormalise(filterstore);
+
+	buffer[bufidx] = input + (filterstore*feedback);
+
+	if(++bufidx>=bufsize) bufidx = 0;
+
+	return output;
+}
+
+// Big to inline - but crucial for speed
+
+inline SAMPLE_TYPE allpass::process(SAMPLE_TYPE input)
+{
+	SAMPLE_TYPE output;
+	SAMPLE_TYPE bufout;
+
+	bufout = buffer[bufidx];
+    undenormalise(bufout);
+
+	output = -input + bufout;
+	buffer[bufidx] = input + (bufout*feedback);
+
+	if(++bufidx>=bufsize) bufidx = 0;
+
+	return output;
+}
+
+// Reverb2
+class Reverb2 : public BaseProcessor {
 
     public:
-					revmodel();
+					Reverb2();
 			void	mute();
 			void	setroomsize(float value);
 			float	getroomsize();

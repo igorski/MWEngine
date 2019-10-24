@@ -4,9 +4,78 @@
 // http://www.dreampoint.co.uk
 // This code is public domain
 
-#include "revmodel.h"
+#include "reverb2.h"
 namespace MWEngine {
-revmodel::revmodel()
+//all pass
+allpass::allpass()
+{
+	bufidx = 0;
+}
+
+void allpass::setbuffer(SAMPLE_TYPE *buf, int size)
+{
+	buffer = buf;
+	bufsize = size;
+}
+
+void allpass::mute()
+{
+	for (int i=0; i<bufsize; i++)
+		buffer[i]=0;
+}
+
+void allpass::setfeedback(SAMPLE_TYPE val)
+{
+	feedback = val;
+}
+
+SAMPLE_TYPE allpass::getfeedback()
+{
+	return feedback;
+}
+
+//comb
+comb::comb()
+{
+	filterstore = 0;
+	bufidx = 0;
+}
+
+void comb::setbuffer(SAMPLE_TYPE *buf, int size)
+{
+	buffer = buf;
+	bufsize = size;
+}
+
+void comb::mute()
+{
+	for (int i=0; i<bufsize; i++)
+		buffer[i]=0;
+}
+
+void comb::setdamp(SAMPLE_TYPE val)
+{
+	damp1 = val;
+	damp2 = 1-val;
+}
+
+SAMPLE_TYPE comb::getdamp()
+{
+	return damp1;
+}
+
+void comb::setfeedback(SAMPLE_TYPE val)
+{
+	feedback = val;
+}
+
+SAMPLE_TYPE comb::getfeedback()
+{
+	return feedback;
+}
+
+//Reverb2
+Reverb2::Reverb2()
 {
 	// Tie the components to their buffers
 	combL[0].setbuffer(bufcombL1,combtuningL1);
@@ -54,7 +123,7 @@ revmodel::revmodel()
 	mute();
 }
 
-void revmodel::mute()
+void Reverb2::mute()
 {
 	if (getmode() >= freezemode)
 		return;
@@ -70,7 +139,7 @@ void revmodel::mute()
 		allpassR[i].mute();
 	}
 }
-void revmodel::process( AudioBuffer* audioBuffer, bool isMonosource )
+void Reverb2::process( AudioBuffer* audioBuffer, bool isMonosource )
 {
     int numsamples = audioBuffer->bufferSize;
     int skip = 1;
@@ -114,11 +183,9 @@ void revmodel::process( AudioBuffer* audioBuffer, bool isMonosource )
 
 }
 
-void revmodel::update()
+void Reverb2::update()
 {
 // Recalculate internal values after parameter change
-
-	int i;
 
 	wet1 = wet*(width/2 + 0.5f);
 	wet2 = wet*((1-width)/2);
@@ -136,13 +203,13 @@ void revmodel::update()
 		gain = fixedgain;
 	}
 
-	for(i=0; i<numcombs; i++)
+	for(int i=0; i<numcombs; i++)
 	{
 		combL[i].setfeedback(roomsize1);
 		combR[i].setfeedback(roomsize1);
 	}
 
-	for(i=0; i<numcombs; i++)
+	for(int i=0; i<numcombs; i++)
 	{
 		combL[i].setdamp(damp1);
 		combR[i].setdamp(damp1);
@@ -154,67 +221,67 @@ void revmodel::update()
 // because as you develop the reverb model, you may
 // wish to take dynamic action when they are called.
 
-void revmodel::setroomsize(float value)
+void Reverb2::setroomsize(float value)
 {
 	roomsize = (value*scaleroom) + offsetroom;
 	update();
 }
 
-float revmodel::getroomsize()
+float Reverb2::getroomsize()
 {
 	return (roomsize-offsetroom)/scaleroom;
 }
 
-void revmodel::setdamp(float value)
+void Reverb2::setdamp(float value)
 {
 	damp = value*scaledamp;
 	update();
 }
 
-float revmodel::getdamp()
+float Reverb2::getdamp()
 {
 	return damp/scaledamp;
 }
 
-void revmodel::setwet(float value)
+void Reverb2::setwet(float value)
 {
 	wet = value*scalewet;
 	update();
 }
 
-float revmodel::getwet()
+float Reverb2::getwet()
 {
 	return wet/scalewet;
 }
 
-void revmodel::setdry(float value)
+void Reverb2::setdry(float value)
 {
 	dry = value*scaledry;
 }
 
-float revmodel::getdry()
+float Reverb2::getdry()
 {
 	return dry/scaledry;
 }
 
-void revmodel::setwidth(float value)
+void Reverb2::setwidth(float value)
 {
 	width = value;
 	update();
 }
 
-float revmodel::getwidth()
+float Reverb2::getwidth()
 {
 	return width;
 }
 
-void revmodel::setmode(float value)
+void Reverb2::setmode(float value)
 {
 	mode = value;
 	update();
 }
 
-float revmodel::getmode()
+float Reverb2::getmode()
 {
 	if (mode >= freezemode)
 		return 1;
