@@ -241,10 +241,13 @@ namespace MWEngine {
 
         int i, c, ci;
         float sample;
-
+        if (inBuffer != nullptr) {
+            inBuffer->silenceBuffers();
+        }
         // erase previous buffer contents
-        inBuffer->silenceBuffers();
-
+        if (channels == nullptr) {
+            return true;
+        }
         // gather the audio events by the buffer range currently being processed
         loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
 
@@ -267,10 +270,11 @@ namespace MWEngine {
                 recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
 
             // apply processing chain onto the input
-
-            std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
-            for ( int k = 0; k < processors.size(); ++k )
-                processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
+            if (inputChannel->processingChain != nullptr) {
+                std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
+                for ( int k = 0; k < processors.size(); ++k )
+                    processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
+            }
 
             // merge recording into current input buffer for instant monitoring
 
@@ -298,7 +302,9 @@ namespace MWEngine {
 
             // get channel output buffer and clear previous contents
             AudioBuffer* channelBuffer = channel->getOutputBuffer();
-            channelBuffer->silenceBuffers();
+            if (channelBuffer != nullptr) {
+                channelBuffer->silenceBuffers();
+            }
 
             bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
             int maxBufferPosition = useChannelRange ? channel->maxBufferPosition : max_buffer_position;
@@ -350,25 +356,27 @@ namespace MWEngine {
 
             // apply the processing chains processors / modulators
             ProcessingChain* chain = channel->processingChain;
-            std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
+            if (chain != nullptr) {
+               std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
 
-            for ( int k = 0; k < processors.size(); k++ )
-            {
-                BaseProcessor* processor = processors[ k ];
-                bool canCacheProcessor   = processor->isCacheable();
+               for ( int k = 0; k < processors.size(); k++ )
+               {
+                   BaseProcessor* processor = processors[ k ];
+                   bool canCacheProcessor   = processor->isCacheable();
 
-                // only apply processor when we're not caching or cannot cache its output
-                if ( !isCached || !canCacheProcessor )
-                {
-                    // cannot cache this processor and we're caching ? write all contents
-                    // of the channelBuffer into the channels cache
-                    if ( mustCache && !canCacheProcessor )
-                        mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
-
-                    processors[ k ]->process( channelBuffer, channel->isMono );
+                    // only apply processor when we're not caching or cannot cache its output
+                    if ( !isCached || !canCacheProcessor )
+                    {
+                        // cannot cache this processor and we're caching ? write all contents
+                        // of the channelBuffer into the channels cache
+                        if ( mustCache && !canCacheProcessor )
+                            mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
+                        if (processors[ k ] != nullptr || channelBuffer != nullptr) {
+                            processors[ k ]->process( channelBuffer, channel->isMono );
+                        }
+                    }
                 }
             }
-
             // write cache if it didn't happen yet ;) (bus processors are (currently) non-cacheable)
             if ( mustCache )
                 mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
@@ -382,10 +390,13 @@ namespace MWEngine {
         }
 
         // apply master bus processors (e.g. high pass filter, limiter, etc.)
-        std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
-
-        for ( int k = 0; k < processors.size(); k++ )
-            processors[ k ]->process( inBuffer, isMono );
+        if (masterBus != nullptr) {
+            std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
+            for ( int k = 0; k < processors.size(); k++ )
+                if (processors[ k ] != nullptr || inBuffer != nullptr) {
+                    processors[ k ]->process( inBuffer, isMono );
+                }
+        }
 
         // write the accumulated buffers into the output buffer
         for ( i = 0, c = 0; i < amountOfSamples; i++, c += outputChannels )
