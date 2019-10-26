@@ -64,9 +64,9 @@ processors/lpfhpfilter.cpp \
 processors/phaser.cpp \
 processors/pitchshifter.cpp \
 processors/reverb.cpp \
+processors/reverbsm.cpp \
 processors/tremolo.cpp \
 processors/waveshaper.cpp \
-processors/Reverb2.cpp \
 generators/envelopegenerator.cpp \
 generators/wavegenerator.cpp \
 generators/synthesizer.cpp \
