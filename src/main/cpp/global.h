@@ -83,10 +83,12 @@ namespace AudioEngineProps
 
 #if PRECISION == 1 // float
     #define SAMPLE_TYPE float
+    #define undenormalise(sample) ((((*(UINT32 *)&(sample))&0x7f800000)==0)&&((sample)!=0.f))
 #endif
 
 #if PRECISION == 2 // double
     #define SAMPLE_TYPE double
+    #define undenormalise(sample) ((((((UINT32 *)&(sample))[1])&0x7fe00000)==0)&&((sample)!=0.f))
 #endif
 
 // math
