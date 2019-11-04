@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,6 +27,8 @@
 #include "../audiobuffer.h"
 
 namespace MWEngine {
+
+class ProcessingChain;  // forward declaration, see <processingchain.h>
 class BaseProcessor
 {
     public:
@@ -34,7 +36,7 @@ class BaseProcessor
         virtual ~BaseProcessor();
 
         /**
-         * @param {audioBuffer*} sampleBuffer the buffer to write into
+         * @param {AudioBuffer*} sampleBuffer the buffer to write into
          * @param {bool} isMonoSource whether the source signal is mono (save CPU cycles
          *               by solely processing a single channel and writing its values into the
          *               remaining channels
@@ -47,6 +49,18 @@ class BaseProcessor
          * consuming unnecessary CPU cycles
          */
         virtual bool isCacheable();
+
+        /**
+         * Store a reference to the processing that contains
+         * this processor. This allows the BaseProcessor to unregister
+         * itself from the chain when it is destroyed.
+         *
+         * @param {processingChain*} processingChain
+         */
+        void setChain( ProcessingChain* processingChain );
+
+    protected:
+        ProcessingChain* chain = nullptr;
 };
 } // E.O namespace MWEngine
 

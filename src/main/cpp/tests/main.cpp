@@ -30,6 +30,7 @@ using namespace MWEngine;
 #include "instruments/sampledinstrument_test.cpp"
 #include "modules/adsr_test.cpp"
 #include "modules/lfo_test.cpp"
+#include "processors/baseprocessor_test.cpp"
 #include "processors/delay_test.cpp"
 #include "processors/filter_test.cpp"
 #include "processors/flanger_test.cpp"
