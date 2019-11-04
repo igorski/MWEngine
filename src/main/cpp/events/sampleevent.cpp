@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -184,13 +184,16 @@ unsigned int SampleEvent::getSampleRate()
     return _sampleRate;
 }
 
-void SampleEvent::setSample( AudioBuffer* sampleBuffer )
+bool SampleEvent::setSample( AudioBuffer* sampleBuffer )
 {
-    setSample( sampleBuffer, AudioEngineProps::SAMPLE_RATE );
+    return setSample( sampleBuffer, AudioEngineProps::SAMPLE_RATE );
 }
 
-void SampleEvent::setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate )
+bool SampleEvent::setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate )
 {
+    if ( sampleBuffer == nullptr )
+        return false;
+
     // make sure we lock read/write operations as setting a sample
     // while the engine is running (thus reading from the current one) is a tad dangerous ;)
 
@@ -240,6 +243,8 @@ void SampleEvent::setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate 
 
     if ( !wasLocked )
         _locked = false;
+
+    return true;
 }
 
 float SampleEvent::getPlaybackRate()

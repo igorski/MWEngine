@@ -298,6 +298,9 @@ namespace MWEngine {
 
             // get channel output buffer and clear previous contents
             AudioBuffer* channelBuffer = channel->getOutputBuffer();
+
+            if ( channelBuffer == nullptr ) continue;
+
             channelBuffer->silenceBuffers();
 
             bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)

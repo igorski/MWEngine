@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -49,12 +49,12 @@ class SampleEvent : public BaseAudioEvent
         // set the sample that this SampleEvent will playback
         // by default the sample will playback at the sampling rate of the engine
 
-        void setSample( AudioBuffer* sampleBuffer );
+        bool setSample( AudioBuffer* sampleBuffer );
 
         // use this method in case your samples are at a different sampling rate
         // than the engine (for instance read from WAV file created externally)
 
-        void setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate );
+        bool setSample( AudioBuffer* sampleBuffer, unsigned int sampleRate );
 
         float getPlaybackRate();
         void setPlaybackRate( float value );
