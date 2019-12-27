@@ -1,19 +1,33 @@
 /**
- * Copyright 2017 The Android Open Source Project
+ * The MIT License (MIT)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Copyright (c) 2017-2019 Igor Zinken - https://www.igorski.nl
+ *
+ * AAudio driver implementation adapted from the Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License" );
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 #include "aaudio_io.h"
 #include "../global.h"
 #include "../audioengine.h"
@@ -63,19 +77,19 @@ const char* FormatToString(aaudio_format_t format) {
 }
 
 int64_t timestamp_to_nanoseconds(timespec ts){
-  return (ts.tv_sec * (int64_t) NANOS_PER_SECOND) + ts.tv_nsec;
+    return (ts.tv_sec * (int64_t) NANOS_PER_SECOND) + ts.tv_nsec;
 }
 
 int64_t get_time_nanoseconds(clockid_t clockid){
-  timespec ts;
-  clock_gettime(clockid, &ts);
-  return timestamp_to_nanoseconds(ts);
+    timespec ts;
+    clock_gettime(clockid, &ts);
+    return timestamp_to_nanoseconds(ts);
 }
 
 /**
  * Every time the playback stream requires data this method will be called.
  *
- * @param stream the audio stream which is requesting data, this is the playStream_ object
+ * @param stream the audio stream which is requesting data, this is the _outputStream object
  * @param userData the context in which the function is being called, in this case it will be the
  * AAudio instance
  * @param audioData an empty buffer into which we can write our audio data
@@ -85,11 +99,10 @@ int64_t get_time_nanoseconds(clockid_t clockid){
  *
  * @see AAudio#dataCallback
  */
-aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
-                                           void *audioData, int32_t numFrames) {
-  assert(userData && audioData);
-  AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>(userData);
-  return audioEngine->dataCallback(stream, audioData, numFrames);
+aaudio_data_callback_result_t dataCallback( AAudioStream* stream, void *userData, void *audioData, int32_t numFrames ) {
+    assert(userData && audioData);
+    AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>( userData );
+    return audioEngine->dataCallback( stream, audioData, numFrames );
 }
 
 /**
@@ -106,33 +119,42 @@ aaudio_data_callback_result_t dataCallback(AAudioStream *stream, void *userData,
  *
  * @see AAudio#errorCallback
  */
-void errorCallback(AAudioStream *stream,
-                   void *userData,
-                   aaudio_result_t error) {
-  assert(userData);
-  AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>(userData);
-  audioEngine->errorCallback(stream, error);
+void errorCallback( AAudioStream* stream, void *userData, aaudio_result_t error ) {
+    assert(userData);
+    AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>(userData);
+    audioEngine->errorCallback(stream, error);
 }
 
-AAudio_IO::AAudio_IO( int amountOfChannels ) {
+AAudio_IO::AAudio_IO( int amountOfInputChannels, int amountOfOutputChannels ) {
 
-  sampleChannels_ = amountOfChannels;
-  sampleFormat_   = AAUDIO_FORMAT_PCM_I16;
+    _inputChannelCount  = amountOfInputChannels;
+    _outputChannelCount = amountOfOutputChannels;
+    _sampleFormat       = AAUDIO_FORMAT_PCM_I16;
 
-  // Create the output stream. By not specifying an audio device id we are telling AAudio that
-  // we want the stream to be created using the default playback audio device.
-  createPlaybackStream();
+    // create the temporary buffers used to write data from and to the AudioEngine during playback and recording
+    _enqueuedOutputBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * _outputChannelCount ]{ 0 };
 
-  // created the buffer the output will be written into
-  _enqueuedBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * sampleChannels_ ]{ 0 };
+    if ( _inputChannelCount > 0 ) {
+        _recordBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * _inputChannelCount ]{ 0 };
+    }
 
-  render = false;
+    createAllStreams();
+
+    render = false;
 }
 
-AAudio_IO::~AAudio_IO(){
+AAudio_IO::~AAudio_IO() {
+    closeAllStreams();
 
-  closeOutputStream();
-  delete _enqueuedBuffer;
+    if ( _enqueuedOutputBuffer != nullptr ) {
+        delete _enqueuedOutputBuffer;
+        _enqueuedOutputBuffer = nullptr;
+    }
+
+    if ( _recordBuffer != nullptr ) {
+        delete _recordBuffer;
+        _recordBuffer = nullptr;
+    }
 }
 
 /**
@@ -143,180 +165,277 @@ AAudio_IO::~AAudio_IO(){
  * @param deviceId the audio device id, can be obtained through an {@link AudioDeviceInfo} object
  * using Java/JNI.
  */
-void AAudio_IO::setDeviceId(int32_t deviceId){
+void AAudio_IO::setDeviceId( int32_t deviceId ) {
 
-  playbackDeviceId_ = deviceId;
+    _outputDeviceId = deviceId;
 
-  // If this is a different device from the one currently in use then restart the stream
-  int32_t currentDeviceId = AAudioStream_getDeviceId(playStream_);
-  if (deviceId != currentDeviceId) restartStream();
+    // If this is a different device from the one currently in use then restart the stream
+    int32_t currentDeviceId = AAudioStream_getDeviceId( _outputStream );
+    if ( _outputDeviceId != currentDeviceId ) {
+        restartStreams();
+    }
+}
+
+void AAudio_IO::setRecordingDeviceId( int32_t deviceId ) {
+
+    _inputDeviceId = deviceId;
+    
+    // If this is a different device from the one currently in use then restart the stream
+    int32_t currentDeviceId = AAudioStream_getDeviceId( _inputStream );
+    if ( _inputDeviceId != currentDeviceId ) {
+        restartStreams();
+    }
 }
 
 /**
- * Creates a stream builder which can be used to construct streams
- * @return a new stream builder object
+ * Creates a stream builder which can be used to construct AAudioStreams
  */
 AAudioStreamBuilder* AAudio_IO::createStreamBuilder() {
-
-  AAudioStreamBuilder *builder = nullptr;
-  aaudio_result_t result = AAudio_createStreamBuilder(&builder);
-  if (result != AAUDIO_OK && !builder) {
-    Debug::log( "AAudio_IO::Error creating stream builder: %s", AAudio_convertResultToText(result));
-  }
-  return builder;
+    AAudioStreamBuilder* builder = nullptr;
+    aaudio_result_t result = AAudio_createStreamBuilder( &builder );
+    if ( result != AAUDIO_OK && !builder ) {
+        Debug::log( "AAudio_IO::Error creating stream builder: %s", AAudio_convertResultToText( result ));
+    }
+    return builder;
 }
 
-/**
- * Creates an audio stream for playback. The audio device used will depend on playbackDeviceId_.
- */
-void AAudio_IO::createPlaybackStream(){
+void AAudio_IO::createAllStreams() {
 
-  AAudioStreamBuilder* builder = createStreamBuilder();
+    // Create the output stream
 
-  if (builder != nullptr){
+    createOutputStream();
 
-    setupPlaybackStreamParameters(builder);
+    // Create the recording stream
+    // Note: The order of stream creation is important. We create the playback stream first,
+    // then use properties from the playback stream (e.g. sample rate) to create the
+    // recording stream. By matching the properties we should get the lowest latency path
 
-    aaudio_result_t result = AAudioStreamBuilder_openStream(builder, &playStream_);
-
-    if (result == AAUDIO_OK && playStream_ != nullptr){
-
-      // check that we got PCM_I16 format
-      if (sampleFormat_ != AAudioStream_getFormat(playStream_)) {
-        Debug::log( "AAudio_IO::Sample format is not PCM_I16");
-      }
-
-      sampleRate_ = AAudioStream_getSampleRate(playStream_);
-      framesPerBurst_ = AAudioStream_getFramesPerBurst(playStream_);
-
-      // Set the buffer size to the burst size - this will give us the minimum possible latency
-      AAudioStream_setBufferSizeInFrames(playStream_, framesPerBurst_);
-      bufSizeInFrames_ = framesPerBurst_;
-
-//      PrintAudioStreamInfo(playStream_);
-
-      // Start the stream - the dataCallback function will start being called
-      result = AAudioStream_requestStart(playStream_);
-      if (result != AAUDIO_OK) {
-        Debug::log( "AAudio_IO::Error starting stream. %s", AAudio_convertResultToText(result));
-      }
-
-      // Store the underrun count so we can tune the latency in the dataCallback
-      playStreamUnderrunCount_ = AAudioStream_getXRunCount(playStream_);
-
-    } else {
-      Debug::log( "AAudio_IO::Failed to create stream. Error: %s", AAudio_convertResultToText(result));
+    if ( _inputChannelCount > 0 ) {
+        createInputStream();
     }
 
-  AAudioStreamBuilder_delete(builder);
+    // Now start the recording stream first so that we can read from it during the playback
+    // stream's dataCallback - which is delegated to the driver adapter using getInput() -
 
-  } else {
-    Debug::log( "AAudio_IO::Unable to obtain an AAudioStreamBuilder object");
-  }
+    if ( _inputStream != nullptr ) {
+        startStream( _inputStream );
+    }
+    if ( _outputStream != nullptr ) {
+        startStream( _outputStream );
+    }
+}
+
+void AAudio_IO::createOutputStream() {
+
+    AAudioStreamBuilder* builder = createStreamBuilder();
+
+    if ( builder == nullptr ) {
+        Debug::log( "AAudio_IO::Unable to obtain an AAudioStreamBuilder object" );
+        return;
+    }
+
+    setupOutputStream( builder );
+
+    aaudio_result_t result = AAudioStreamBuilder_openStream( builder, &_outputStream );
+
+    if ( result == AAUDIO_OK && _outputStream != nullptr ) {
+
+        // check that we got PCM_I16 format
+        if (_sampleFormat != AAudioStream_getFormat( _outputStream )) {
+            Debug::log( "AAudio_IO::Sample format is not PCM_I16" );
+        }
+
+        _sampleRate     = AAudioStream_getSampleRate( _outputStream );
+        _framesPerBurst = AAudioStream_getFramesPerBurst( _outputStream );
+
+        // Set the buffer size to the burst size - this will give us the minimum possible latency
+        AAudioStream_setBufferSizeInFrames( _outputStream, _framesPerBurst );
+        _bufferSizeInFrames = _framesPerBurst;
+
+        // TODO: align AudioEngineProps::BUFFER_SIZE with the frames per burst?
+
+//          PrintAudioStreamInfo(_outputStream);
+
+        // Store the underrun count so we can tune the latency in the dataCallback
+        _underrunCountOutputStream = AAudioStream_getXRunCount( _outputStream );
+
+    } else {
+        Debug::log( "AAudio_IO::Failed to create stream. Error: %s", AAudio_convertResultToText( result ));
+    }
+    AAudioStreamBuilder_delete( builder );
+}
+
+void AAudio_IO::createInputStream() {
+
+    AAudioStreamBuilder* builder = createStreamBuilder();
+
+    if ( builder == nullptr ) {
+        Debug::log( "AAudio_IO::Unable to obtain an AAudioStreamBuilder object" );
+        return;
+    }
+    setupInputStream( builder );
+
+    // Now that the parameters are set up we can open the stream
+    aaudio_result_t result = AAudioStreamBuilder_openStream( builder, &_inputStream );
+    if ( result == AAUDIO_OK && _inputStream != nullptr ) {
+//            warnIfNotLowLatency( _inputStream );
+//            PrintAudioStreamInfo( _inputStream );
+    } else {
+        Debug::log( "Failed to create recording stream. Error: %s", AAudio_convertResultToText( result ));
+    }
+    AAudioStreamBuilder_delete( builder );
 }
 
 /**
  * Sets the stream parameters which are specific to playback, including device id and the
  * dataCallback function, which must be set for low latency playback.
- * @param builder The playback stream builder
  */
-void AAudio_IO::setupPlaybackStreamParameters(AAudioStreamBuilder *builder) {
-  AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);
-  AAudioStreamBuilder_setFormat(builder, sampleFormat_);
-  AAudioStreamBuilder_setChannelCount(builder, sampleChannels_);
+void AAudio_IO::setupOutputStream      ( AAudioStreamBuilder* builder ) {
+    AAudioStreamBuilder_setDeviceId    ( builder, _outputDeviceId );
+    AAudioStreamBuilder_setFormat      ( builder, _sampleFormat );
+    AAudioStreamBuilder_setChannelCount( builder, _outputChannelCount );
 
-  // We request EXCLUSIVE mode since this will give us the lowest possible latency.
-  // If EXCLUSIVE mode isn't available the builder will fall back to SHARED mode.
-  AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_EXCLUSIVE);
-  AAudioStreamBuilder_setPerformanceMode(builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
-  AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);
-  AAudioStreamBuilder_setDataCallback(builder, ::dataCallback, this);
-  AAudioStreamBuilder_setErrorCallback(builder, ::errorCallback, this);
-}
-
-void AAudio_IO::closeOutputStream(){
-
-  if (playStream_ != nullptr){
-    aaudio_result_t result = AAudioStream_requestStop(playStream_);
-    if (result != AAUDIO_OK){
-      Debug::log( "AAudio_IO::Error stopping output stream. %s", AAudio_convertResultToText(result));
-    }
-
-    result = AAudioStream_close(playStream_);
-    if (result != AAUDIO_OK){
-      Debug::log( "AAudio_IO::Error closing output stream. %s", AAudio_convertResultToText(result));
-    }
-  }
+    // We request EXCLUSIVE mode since this will give us the lowest possible latency.
+    // If EXCLUSIVE mode isn't available the builder will fall back to SHARED mode.
+    
+    AAudioStreamBuilder_setSharingMode    ( builder, AAUDIO_SHARING_MODE_EXCLUSIVE );
+    AAudioStreamBuilder_setPerformanceMode( builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY );
+    AAudioStreamBuilder_setDirection      ( builder, AAUDIO_DIRECTION_OUTPUT );
+    AAudioStreamBuilder_setDataCallback   ( builder, ::dataCallback, this );
+    AAudioStreamBuilder_setErrorCallback  ( builder, ::errorCallback, this );
 }
 
 /**
- * @see dataCallback function at top of this file
+ * Sets the stream parameters which are specific to recording, including the sample rate which
+ * is determined from the playback stream.
  */
-aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
-                                                        void *audioData,
-                                                        int32_t numFrames) {
-  assert(stream == playStream_);
+void AAudio_IO::setupInputStream( AAudioStreamBuilder* builder ) {
+    AAudioStreamBuilder_setDeviceId    ( builder, _inputDeviceId );
+    AAudioStreamBuilder_setSampleRate  ( builder, _sampleRate );
+    AAudioStreamBuilder_setChannelCount( builder, _inputChannelCount );
+    AAudioStreamBuilder_setFormat      ( builder, _sampleFormat );
+    
+    // We request EXCLUSIVE mode since this will give us the lowest possible latency.
+    // If EXCLUSIVE mode isn't available the builder will fall back to SHARED mode.
+    
+    AAudioStreamBuilder_setSharingMode    ( builder, AAUDIO_SHARING_MODE_EXCLUSIVE );
+    AAudioStreamBuilder_setPerformanceMode( builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY );
+    AAudioStreamBuilder_setDirection      ( builder, AAUDIO_DIRECTION_INPUT );
+    AAudioStreamBuilder_setErrorCallback  ( builder, ::errorCallback, this );
+}
 
-  int32_t underrunCount = AAudioStream_getXRunCount(playStream_);
-  aaudio_result_t bufferSize = AAudioStream_getBufferSizeInFrames(playStream_);
-  bool hasUnderrunCountIncreased = false;
-  bool shouldChangeBufferSize = false;
-
-  if (underrunCount > playStreamUnderrunCount_){
-    playStreamUnderrunCount_ = underrunCount;
-    hasUnderrunCountIncreased = true;
-  }
-
-  if (hasUnderrunCountIncreased && bufferSizeSelection_ == BUFFER_SIZE_AUTOMATIC){
-
-    /**
-     * This is a buffer size tuning algorithm. If the number of underruns (i.e. instances where
-     * we were unable to supply sufficient data to the stream) has increased since the last callback
-     * we will try to increase the buffer size by the burst size, which will give us more protection
-     * against underruns in future, at the cost of additional latency.
-     */
-    bufferSize += framesPerBurst_; // Increase buffer size by one burst
-    shouldChangeBufferSize = true;
-  } else if (bufferSizeSelection_ > 0 && (bufferSizeSelection_ * framesPerBurst_) != bufferSize){
-
-    // If the buffer size selection has changed then update it here
-    bufferSize = bufferSizeSelection_ * framesPerBurst_;
-    shouldChangeBufferSize = true;
-  }
-
-  if (shouldChangeBufferSize){
-    Debug::log( "AAudio_IO::Setting buffer size to %d", bufferSize);
-    bufferSize = AAudioStream_setBufferSizeInFrames(stream, bufferSize);
-    if (bufferSize > 0) {
-      bufSizeInFrames_ = bufferSize;
-    } else {
-      Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
+void AAudio_IO::startStream( AAudioStream* stream ) {
+    aaudio_result_t result = AAudioStream_requestStart( stream );
+    if ( result != AAUDIO_OK ) {
+        Debug::log( "AAudio_IO::Error starting stream. %s", AAudio_convertResultToText( result ));
     }
-  }
+}
 
-  //Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
+void AAudio_IO::stopStream( AAudioStream* stream ) {
+    if ( stream == nullptr ) {
+        return;
+    }
+    aaudio_result_t result = AAudioStream_requestStop( stream );
+    if ( result != AAUDIO_OK ) {
+        Debug::log( "AAudio_IO::Error stopping stream. %s", AAudio_convertResultToText( result ));
+    }
+}
 
-  // rendering requested ?
+void AAudio_IO::closeStream( AAudioStream* stream ) {
+    if ( stream == nullptr ) {
+        return;
+    }
+    stopStream( stream );
+    aaudio_result_t result = AAudioStream_close( stream );
+    if ( result != AAUDIO_OK ) {
+        Debug::log( "AAudio_IO::Error closing stream. %s", AAudio_convertResultToText( result ));
+    }
+}
 
-  if ( render ) {
+aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, void *audioData, int32_t numFrames ) {
+    assert( stream == _outputStream );
 
-    // invoke the render() method of the engine to collect audio
-    // if it returns false, we can stop this stream (render thread has stopped)
+    int32_t underrunCount = AAudioStream_getXRunCount( _outputStream );
+    aaudio_result_t bufferSize = AAudioStream_getBufferSizeInFrames( _outputStream );
+    bool hasUnderrunCountIncreased = false;
+    bool shouldChangeBufferSize    = false;
 
-    if ( !AudioEngine::render( numFrames ))
-      return AAUDIO_CALLBACK_RESULT_STOP;
-  }
+    if (underrunCount > _underrunCountOutputStream) {
+        _underrunCountOutputStream = underrunCount;
+        hasUnderrunCountIncreased  = true;
+    }
 
-  // write enqueued buffer into the output buffer (both interleaved int16_t)
+    if ( hasUnderrunCountIncreased && _bufferSizeSelection == BUFFER_SIZE_AUTOMATIC ) {
 
-  int16_t* outputBuffer = static_cast<int16_t*>( audioData );
-  for ( int i = 0; i < numFrames; ++i ) {
-    outputBuffer[ i ] = _enqueuedBuffer[ i ];
-  }
+        // This is a buffer size tuning algorithm. If the number of underruns (i.e. instances where
+        // we were unable to supply sufficient data to the stream) has increased since the last callback
+        // we will try to increase the buffer size by the burst size, which will give us more protection
+        // against underruns in future, at the cost of additional latency.
 
-  calculateCurrentOutputLatencyMillis(stream, &currentOutputLatencyMillis_);
+        bufferSize += _framesPerBurst; // Increase buffer size by one burst
+        shouldChangeBufferSize = true;
+    }
+    else if ( _bufferSizeSelection > 0 && ( _bufferSizeSelection * _framesPerBurst ) != bufferSize )
+    {
+        // If the buffer size selection has changed then update it here
+        bufferSize = _bufferSizeSelection * _framesPerBurst;
+        shouldChangeBufferSize = true;
+    }
 
-  return AAUDIO_CALLBACK_RESULT_CONTINUE;
+    if ( shouldChangeBufferSize ) {
+        Debug::log( "AAudio_IO::Setting buffer size to %d", bufferSize);
+        bufferSize = AAudioStream_setBufferSizeInFrames(stream, bufferSize);
+        if ( bufferSize > 0 ) {
+            _bufferSizeInFrames = bufferSize;
+        } else {
+            Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
+        }
+    }
+
+    // Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
+
+    // rendering requested by AudioEngine (through the driver adapter) ?
+
+    if ( render ) {
+
+        if ( _inputStream != nullptr ) {
+
+            // If this is the first data callback we want to drain the recording buffer so we're getting
+            // the most up to date data
+
+            if ( _flushInputOnCallback ) {
+                flushInputStream( audioData, numFrames );
+                _flushInputOnCallback = false;
+            }
+
+            aaudio_result_t frameCount = AAudioStream_read( _inputStream, _recordBuffer,
+                                                            std::min( AudioEngineProps::BUFFER_SIZE, numFrames ),
+                                                            static_cast<int64_t>(0)
+                                        );
+
+            if ( frameCount < 0 ) {
+                Debug::log( "AAudio_IO::AAudioStream_read() returns %s", AAudio_convertResultToText( frameCount ));
+            }
+        }
+
+        // invoke the render() method of the engine to collect audio
+        // if it returns false, we can stop this stream (render thread has stopped)
+
+        if ( !AudioEngine::render( numFrames )) {
+            return AAUDIO_CALLBACK_RESULT_STOP;
+        }
+    }
+
+    // write enqueued buffer into the output buffer (both interleaved int16_t)
+
+    int16_t* outputBuffer = static_cast<int16_t*>( audioData );
+    for ( int i = 0; i < numFrames; ++i ) {
+        outputBuffer[ i ] = _enqueuedOutputBuffer[ i ];
+    }
+
+    calculateCurrentOutputLatencyMillis( stream, &currentOutputLatencyMillis_ );
+
+    return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
 /**
@@ -326,10 +445,23 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback(AAudioStream *stream,
  * buffer already contains interleaved samples, merely need to be converted
  * from floating point values into 16-bit shorts
  */
-void AAudio_IO::enqueueBuffer( float* outputBuffer, int amountOfSamples ) {
+void AAudio_IO::enqueueOutputBuffer( float* outputBuffer, int amountOfSamples ) {
     for ( int i = 0; i < amountOfSamples; ++i ) {
-        _enqueuedBuffer[ i ] = ( int16_t )( outputBuffer[ i ] * CONV16BIT );
+        _enqueuedOutputBuffer[ i ] = ( int16_t )( outputBuffer[ i ] * CONV16BIT );
     }
+}
+
+/**
+ * retrieve the recorded input buffer
+ * this is invoked by AudioEngine::render()
+ *
+ * buffer contains 16-bit shorts, these need to be converted to floating point values
+ */
+int AAudio_IO::getEnqueuedInputBuffer( float* recordBuffer, int amountOfSamples ) {
+    for ( int i = 0; i < amountOfSamples; ++i ) {
+        _recordBuffer[ i ] = ( float )( _recordBuffer[ i ]) * CONVMYFLT;
+    }
+    return amountOfSamples; // TODO: assumption here that the amount read equals the given recordBuffer size
 }
 
 /**
@@ -351,82 +483,102 @@ void AAudio_IO::enqueueBuffer( float* outputBuffer, int amountOfSamples ) {
  * @return AAUDIO_OK or a negative error. It is normal to receive an error soon after a stream
  * has started because the timestamps are not yet available.
  */
-aaudio_result_t
-AAudio_IO::calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis) {
+aaudio_result_t AAudio_IO::calculateCurrentOutputLatencyMillis( AAudioStream* stream, double *latencyMillis ) {
 
-  // Get the time that a known audio frame was presented for playing
-  int64_t existingFrameIndex;
-  int64_t existingFramePresentationTime;
-  aaudio_result_t result = AAudioStream_getTimestamp(stream,
-                                                     CLOCK_MONOTONIC,
-                                                     &existingFrameIndex,
-                                                     &existingFramePresentationTime);
+    // Get the time that a known audio frame was presented for playing
+    int64_t existingFrameIndex;
+    int64_t existingFramePresentationTime;
+    aaudio_result_t result = AAudioStream_getTimestamp( stream,
+                                                        CLOCK_MONOTONIC,
+                                                        &existingFrameIndex,
+                                                        &existingFramePresentationTime );
 
-  if (result == AAUDIO_OK){
+    if ( result == AAUDIO_OK ) {
+        // Get the write index for the next audio frame
+        int64_t writeIndex = AAudioStream_getFramesWritten(stream);
 
-    // Get the write index for the next audio frame
-    int64_t writeIndex = AAudioStream_getFramesWritten(stream);
+        // Calculate the number of frames between our known frame and the write index
+        int64_t frameIndexDelta = writeIndex - existingFrameIndex;
 
-    // Calculate the number of frames between our known frame and the write index
-    int64_t frameIndexDelta = writeIndex - existingFrameIndex;
+        // Calculate the time which the next frame will be presented
+        int64_t frameTimeDelta = (frameIndexDelta * NANOS_PER_SECOND) / _sampleRate;
+        int64_t nextFramePresentationTime = existingFramePresentationTime + frameTimeDelta;
 
-    // Calculate the time which the next frame will be presented
-    int64_t frameTimeDelta = (frameIndexDelta * NANOS_PER_SECOND) / sampleRate_;
-    int64_t nextFramePresentationTime = existingFramePresentationTime + frameTimeDelta;
+        // Assume that the next frame will be written at the current time
+        int64_t nextFrameWriteTime = get_time_nanoseconds(CLOCK_MONOTONIC);
 
-    // Assume that the next frame will be written at the current time
-    int64_t nextFrameWriteTime = get_time_nanoseconds(CLOCK_MONOTONIC);
+        // Calculate the latency
+        *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
+                       / NANOS_PER_MILLISECOND;
+    } else {
+        Debug::log( "AAudio_IO::Error calculating latency: %s", AAudio_convertResultToText( result ));
+    }
+    return result;
+}
 
-    // Calculate the latency
-    *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
-                           / NANOS_PER_MILLISECOND;
-  } else {
-    Debug::log( "AAudio_IO::Error calculating latency: %s", AAudio_convertResultToText(result));
-  }
+void AAudio_IO::errorCallback( AAudioStream* stream, aaudio_result_t error ) {
 
-  return result;
+    assert(stream == _outputStream || stream == _inputStream);
+    Debug::log( "AAudio_IO::errorCallback result: %s", AAudio_convertResultToText( error ));
+
+    aaudio_stream_state_t streamState = AAudioStream_getState( _outputStream );
+    if ( streamState == AAUDIO_STREAM_STATE_DISCONNECTED ) {
+        // Handle stream restart on a separate thread
+        std::function<void(void)> restartStreams = std::bind( &AAudio_IO::restartStreams, this );
+        _streamRestartThread = new std::thread( restartStreams );
+    }
+}
+
+void AAudio_IO::closeAllStreams() {
+    if ( _outputStream != nullptr ) {
+        closeStream( _outputStream );
+        _outputStream = nullptr;
+    }
+    if ( _inputStream != nullptr ) {
+        closeStream( _inputStream );
+        _inputStream = nullptr;
+    }
 }
 
 /**
- * @see errorCallback function at top of this file
+ * Drain the recording stream of any existing data by reading from it until it's empty. This is
+ * usually run to clear out any stale data before performing an actual read operation, thereby
+ * obtaining the most recently recorded data and the best possbile recording latency.
+ *
+ * @param audioData A buffer which the existing data can be read into
+ * @param numFrames The number of frames to read in a single read operation, this is typically the
+ * size of `audioData`.
  */
-void AAudio_IO::errorCallback(AAudioStream *stream,
-                   aaudio_result_t error){
-
-  assert(stream == playStream_);
-  Debug::log( "AAudio_IO::errorCallback result: %s", AAudio_convertResultToText(error));
-
-  aaudio_stream_state_t streamState = AAudioStream_getState(playStream_);
-  if (streamState == AAUDIO_STREAM_STATE_DISCONNECTED){
-
-    // Handle stream restart on a separate thread
-    std::function<void(void)> restartStream = std::bind(&AAudio_IO::restartStream, this);
-    streamRestartThread_ = new std::thread(restartStream);
-  }
+void AAudio_IO::flushInputStream( void *audioData, int32_t numFrames ) {
+    aaudio_result_t clearedFrames = 0;
+    do {
+        clearedFrames = AAudioStream_read( _inputStream, audioData, numFrames, 0 );
+    } while ( clearedFrames > 0 );
 }
 
-void AAudio_IO::restartStream(){
 
-  Debug::log( "AAudio_IO::Restarting stream");
+void AAudio_IO::restartStreams() {
 
-  if (restartingLock_.try_lock()){
-    closeOutputStream();
-    createPlaybackStream();
-    restartingLock_.unlock();
-  } else {
-    Debug::log( "AAudio_IO::Restart stream operation already in progress - ignoring this request");
-    // We were unable to obtain the restarting lock which means the restart operation is currently
-    // active. This is probably because we received successive "stream disconnected" events.
-    // Internal issue b/63087953
-  }
+  Debug::log( "AAudio_IO::Restarting streams" );
+
+    if ( _restartingLock.try_lock() ) {
+        closeAllStreams();
+        createAllStreams();
+        _restartingLock.unlock();
+    } else {
+        Debug::log( "AAudio_IO::Restart stream operation already in progress - ignoring this request" );
+        // We were unable to obtain the restarting lock which means the restart operation is currently
+        // active. This is probably because we received successive "stream disconnected" events.
+        // Internal issue b/63087953
+    }
 }
 
 double AAudio_IO::getCurrentOutputLatencyMillis() {
-  return currentOutputLatencyMillis_;
+    return currentOutputLatencyMillis_;
 }
 
-void AAudio_IO::setBufferSizeInBursts(int32_t numBursts) {
-  AAudio_IO::bufferSizeSelection_ = numBursts;
+void AAudio_IO::setBufferSizeInBursts( int32_t numBursts ) {
+    AAudio_IO::_bufferSizeSelection = numBursts;
 }
 
 } // E.O namespace MWEngine

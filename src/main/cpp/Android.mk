@@ -1,5 +1,5 @@
-# Experimental AAudio support, set to true when building for AAudio (requires NDK target 26)
-BUILD_AAUDIO = false
+# AAudio support, set to true when building for AAudio (requires NDK target 26, see Application.mk)
+BUILD_AAUDIO = true
 
 LOCAL_PATH      := $(call my-dir)
 LOCAL_SRC_FILES := \

@@ -260,11 +260,12 @@ namespace MWEngine {
         // record audio from Android device ?
         if (( recordDeviceInput || recordInputToDisk ) && AudioEngineProps::INPUT_CHANNELS > 0 )
         {
-            int recSamps                  = DriverAdapter::getInput( recbufferIn );
+            int recordedSamples           = DriverAdapter::getInput( recbufferIn, AudioEngineProps::BUFFER_SIZE );
             SAMPLE_TYPE* recBufferChannel = inputChannel->getOutputBuffer()->getBufferForChannel( 0 );
 
-            for ( int j = 0; j < recSamps; ++j )
+            for ( int j = 0; j < recordedSamples; ++j ) {
                 recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
+            }
 
             // apply processing chain onto the input
 

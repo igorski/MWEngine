@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2017-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -72,7 +72,7 @@ namespace DriverAdapter {
     // get the input buffer from the driver (when recording)
     // and write it into given recordBuffer
     // returns integer value of amount of recorded samples
-    int getInput( float* recordBuffer );
+    int getInput( float* recordBuffer, int amountOfSamples );
 
 
 #if DRIVER == 0

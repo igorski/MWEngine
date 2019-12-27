@@ -32,7 +32,7 @@ namespace MWEngine {
 // DRIVER defines which driver to use
 // valid options are 0 (OpenSL, works from Android 4.1 up) and 1 (AAudio, Android 8 up)
 
-#define DRIVER 0
+#define DRIVER 1
 
 // PRECISION defines the floating-point precision used to synthesize the audio samples
 // valid options are 1 (32-bit float) and 2 (64-bit double)
