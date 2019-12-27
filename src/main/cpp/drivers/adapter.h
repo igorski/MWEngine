@@ -25,22 +25,24 @@
 
 #include "../global.h"
 
-// whether to include the OpenSL, AAudio or mocked (unit test mode) driver for audio output
-
-#if DRIVER == 0
-
-// OpenSL
+// whether to include the OpenSL, AAudio or OpenSL mock (used during unit tests) driver for audio output
 
 #ifdef MOCK_ENGINE
 // mocking requested, e.g. unit test mode
 #include "../tests/helpers/mock_opensl_io.h"
-
-#else
-// production build for OpenSL
-#include "opensl_io.h"
+// run as mocked OpenSL driver
+#undef DRIVER
+#define DRIVER 0
 #endif
 
-#elif DRIVER == 1
+#if DRIVER == 0
+// production build for OpenSL
+#ifndef MOCK_ENGINE
+#include "opensl_io.h"
+#endif
+#endif
+
+#if DRIVER == 1
 // production build for AAudio
 #include "aaudio_io.h"
 #endif
