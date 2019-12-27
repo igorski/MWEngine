@@ -141,13 +141,14 @@ sequence going using the library.
 To install the demo: first build the library as described above, and then run the build script to deploy the .APK onto an
 attached device/emulator (note that older emulated devices can only operate at a sample rate of 8 kHz!).
 
-### Note on AAudio
+### Note on OpenSL / AAudio drivers
 
 Currently it is not possible to switch between audio drivers on the fly, rather you must precompile
-the library for use with a specific driver. To use AAudio instead of OpenSL (when your application is targeting Android 8 and up):
- 
- * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
- * update the _Android.mk_ file to include all required adapters and libraries (simply set _BUILD_AAUDIO_ to 'true')
+the library for use with a specific driver. By default, the library will compile for AAudio. If you want
+to use OpenSL instead (or are targeting devices below Android 8) :
+
+ * change the desired driver in _global.h_ from type 1 (AAudio) to 0 (OpenSL)
+ * update the _Android.mk_ file to exclude the AAudio library (simply set _BUILD_AAUDIO_ to 'false')
 
 Should you require support for both driver variants, please file a feature request in the repository's issue tracker.
 

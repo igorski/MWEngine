@@ -33,11 +33,4 @@ namespace AudioEngineProps {
     int OUTPUT_CHANNELS = 1;
 }
 
-/* used for threading */
-
-void *print_message( void* )
-{
-    return 0;
-}
-
 } // E.O namespace MWEngine

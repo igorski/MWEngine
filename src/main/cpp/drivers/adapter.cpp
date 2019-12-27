@@ -58,7 +58,7 @@ namespace DriverAdapter {
         if ( driver_aAudio == nullptr ) {
             return false;
         }
-        // TODO: specify these from outside?
+        // TODO: allow specifying these from the outside?
         // driver_aAudio->setDeviceId();
         // driver_aAudio->setRecordingDeviceId();
         driver_aAudio->setBufferSizeInBursts( 1 ); // Google provides {0, 1, 2, 4, 8} as values

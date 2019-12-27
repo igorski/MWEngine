@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -43,7 +43,7 @@ namespace MWEngine {
 // (note this requires both android.permission.RECORD_AUDIO and android.permission.MODIFY_AUDIO_SETTINGS with a
 // positive value for AudioEngineProps::INPUT_CHANNELS)
 
-//#define RECORD_DEVICE_INPUT
+#define RECORD_DEVICE_INPUT
 
 // if you wish to write the engine output to the devices file system, uncomment the ALLOW_WRITING definition
 // (note this requires android.permission.WRITE_EXTERNAL_STORAGE), like RECORD_AUDIO this requires a Runtime Permission
@@ -99,7 +99,6 @@ const SAMPLE_TYPE TWO_PI = PI * 2.0;
 // other
 
 const int WAVE_TABLE_PRECISION = 128; // the amount of samples contained within a wave table
-extern void *print_message( void* );
 
 } // E.O namespace MWEngine
 

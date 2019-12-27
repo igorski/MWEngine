@@ -130,15 +130,16 @@ AAudio_IO::AAudio_IO( int amountOfInputChannels, int amountOfOutputChannels ) {
     _inputChannelCount  = amountOfInputChannels;
     _outputChannelCount = amountOfOutputChannels;
     _sampleFormat       = AAUDIO_FORMAT_PCM_I16;
-
-    // create the temporary buffers used to write data from and to the AudioEngine during playback and recording
-    _enqueuedOutputBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * _outputChannelCount ]{ 0 };
-
-    if ( _inputChannelCount > 0 ) {
-        _recordBuffer = new int16_t[ AudioEngineProps::BUFFER_SIZE * _inputChannelCount ]{ 0 };
-    }
+    _bufferSizeInFrames = AudioEngineProps::BUFFER_SIZE; // can be updated through stream opening
 
     createAllStreams();
+
+    // create the temporary buffers used to write data from and to the AudioEngine during playback and recording
+    _enqueuedOutputBuffer = new int16_t[ _bufferSizeInFrames * _outputChannelCount ]{ 0 };
+
+    if ( _inputChannelCount > 0 ) {
+        _recordBuffer = new int16_t[ _bufferSizeInFrames * _inputChannelCount ]{ 0 };
+    }
 
     render = false;
 }
@@ -225,6 +226,29 @@ void AAudio_IO::createAllStreams() {
     }
 }
 
+void AAudio_IO::createInputStream() {
+
+    AAudioStreamBuilder* builder = createStreamBuilder();
+
+    if ( builder == nullptr ) {
+        Debug::log( "AAudio_IO::Unable to obtain an AAudioStreamBuilder object" );
+        return;
+    }
+    setupInputStream( builder );
+
+    // Now that the parameters are set up we can open the stream
+    aaudio_result_t result = AAudioStreamBuilder_openStream( builder, &_inputStream );
+    if ( result == AAUDIO_OK && _inputStream != nullptr ) {
+        if ( AAudioStream_getPerformanceMode( _inputStream ) != AAUDIO_PERFORMANCE_MODE_LOW_LATENCY ){
+            Debug::log( "AAudio_IO::Input stream is NOT low latency. Check your requested format, sample rate and channel count" );
+        }
+//            PrintAudioStreamInfo( _inputStream );
+    } else {
+        Debug::log( "Failed to create recording stream. Error: %s", AAudio_convertResultToText( result ));
+    }
+    AAudioStreamBuilder_delete( builder );
+}
+
 void AAudio_IO::createOutputStream() {
 
     AAudioStreamBuilder* builder = createStreamBuilder();
@@ -240,19 +264,24 @@ void AAudio_IO::createOutputStream() {
 
     if ( result == AAUDIO_OK && _outputStream != nullptr ) {
 
-        // check that we got PCM_I16 format
-        if (_sampleFormat != AAudioStream_getFormat( _outputStream )) {
+        if ( AAudioStream_getPerformanceMode( _outputStream ) != AAUDIO_PERFORMANCE_MODE_LOW_LATENCY ){
+            Debug::log( "AAudio_IO::Output stream is NOT low latency. Check your requested format, sample rate and channel count" );
+        }
+
+        // verify PCM_I16 format
+        if ( _sampleFormat != AAudioStream_getFormat( _outputStream )) {
             Debug::log( "AAudio_IO::Sample format is not PCM_I16" );
         }
 
         _sampleRate     = AAudioStream_getSampleRate( _outputStream );
         _framesPerBurst = AAudioStream_getFramesPerBurst( _outputStream );
 
+        AudioEngineProps::SAMPLE_RATE = _sampleRate;
+        AudioEngineProps::BUFFER_SIZE = _framesPerBurst;
+
         // Set the buffer size to the burst size - this will give us the minimum possible latency
         AAudioStream_setBufferSizeInFrames( _outputStream, _framesPerBurst );
         _bufferSizeInFrames = _framesPerBurst;
-
-        // TODO: align AudioEngineProps::BUFFER_SIZE with the frames per burst?
 
 //          PrintAudioStreamInfo(_outputStream);
 
@@ -261,27 +290,6 @@ void AAudio_IO::createOutputStream() {
 
     } else {
         Debug::log( "AAudio_IO::Failed to create stream. Error: %s", AAudio_convertResultToText( result ));
-    }
-    AAudioStreamBuilder_delete( builder );
-}
-
-void AAudio_IO::createInputStream() {
-
-    AAudioStreamBuilder* builder = createStreamBuilder();
-
-    if ( builder == nullptr ) {
-        Debug::log( "AAudio_IO::Unable to obtain an AAudioStreamBuilder object" );
-        return;
-    }
-    setupInputStream( builder );
-
-    // Now that the parameters are set up we can open the stream
-    aaudio_result_t result = AAudioStreamBuilder_openStream( builder, &_inputStream );
-    if ( result == AAUDIO_OK && _inputStream != nullptr ) {
-//            warnIfNotLowLatency( _inputStream );
-//            PrintAudioStreamInfo( _inputStream );
-    } else {
-        Debug::log( "Failed to create recording stream. Error: %s", AAudio_convertResultToText( result ));
     }
     AAudioStreamBuilder_delete( builder );
 }
@@ -384,11 +392,11 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
 
     if ( shouldChangeBufferSize ) {
         Debug::log( "AAudio_IO::Setting buffer size to %d", bufferSize);
-        bufferSize = AAudioStream_setBufferSizeInFrames(stream, bufferSize);
+        bufferSize = AAudioStream_setBufferSizeInFrames( stream, bufferSize );
         if ( bufferSize > 0 ) {
             _bufferSizeInFrames = bufferSize;
         } else {
-            Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText(bufferSize));
+            Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText( bufferSize ));
         }
     }
 
@@ -429,7 +437,8 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
     // write enqueued buffer into the output buffer (both interleaved int16_t)
 
     int16_t* outputBuffer = static_cast<int16_t*>( audioData );
-    for ( int i = 0; i < numFrames; ++i ) {
+    int samplesToWrite = numFrames * _outputChannelCount;
+    for ( int i = 0; i < samplesToWrite; ++i ) {
         outputBuffer[ i ] = _enqueuedOutputBuffer[ i ];
     }
 
@@ -442,7 +451,7 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
  * enqueue a buffer for rendering in the next callback
  * this is invoked by AudioEngine::render()
  *
- * buffer already contains interleaved samples, merely need to be converted
+ * buffer contains interleaved samples, these need to be converted
  * from floating point values into 16-bit shorts
  */
 void AAudio_IO::enqueueOutputBuffer( float* outputBuffer, int amountOfSamples ) {
@@ -459,7 +468,7 @@ void AAudio_IO::enqueueOutputBuffer( float* outputBuffer, int amountOfSamples ) 
  */
 int AAudio_IO::getEnqueuedInputBuffer( float* recordBuffer, int amountOfSamples ) {
     for ( int i = 0; i < amountOfSamples; ++i ) {
-        _recordBuffer[ i ] = ( float )( _recordBuffer[ i ]) * CONVMYFLT;
+        recordBuffer[ i ] = ( float )( _recordBuffer[ i ]) * ( float ) CONVMYFLT;
     }
     return amountOfSamples; // TODO: assumption here that the amount read equals the given recordBuffer size
 }

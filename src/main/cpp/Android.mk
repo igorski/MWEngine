@@ -1,4 +1,5 @@
-# AAudio support, set to true when building for AAudio (requires NDK target 26, see Application.mk)
+# AAudio library inclusion, set to false when building solely for use with OpenSL
+# (allows lowering the application platform target to android-16)
 BUILD_AAUDIO = true
 
 LOCAL_PATH      := $(call my-dir)
