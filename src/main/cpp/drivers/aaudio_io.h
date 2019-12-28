@@ -42,17 +42,6 @@ namespace MWEngine {
 #define NANOS_PER_SECOND 1000000000L
 #define NANOS_PER_MILLISECOND 1000000L
 
-uint16_t SampleFormatToBpp(aaudio_format_t format);
-/*
- * GetSystemTicks(void):  return the time in micro sec
- */
-__inline__ uint64_t GetSystemTicks(void) {
-    struct timeval Time;
-    gettimeofday( &Time, NULL );
-
-    return (static_cast<uint64_t>(1000000) * Time.tv_sec + Time.tv_usec);
-}
-
 void PrintAudioStreamInfo(const AAudioStream * stream);
 
 int64_t timestamp_to_nanoseconds(timespec ts);
@@ -71,8 +60,8 @@ class AAudio_IO
                                                     int32_t numFrames );
         void errorCallback( AAudioStream *stream, aaudio_result_t  __unused error );
         double getCurrentOutputLatencyMillis();
-        int getEnqueuedInputBuffer( float* outputBuffer, int amountOfSamples );
-        void enqueueOutputBuffer  ( float* outputBuffer, int amountOfSamples );
+        int getEnqueuedInputBuffer( float* destinationBuffer, int amountOfSamples );
+        void enqueueOutputBuffer  ( float* sourceBuffer,      int amountOfSamples );
         bool render;
 
     private:
@@ -86,8 +75,9 @@ class AAudio_IO
         int16_t _inputChannelCount;
         int16_t _outputChannelCount;
         aaudio_format_t _sampleFormat;
-        int16_t* _enqueuedOutputBuffer = nullptr;
-        int16_t* _recordBuffer         = nullptr;
+        float*   _enqueuedOutputBuffer = nullptr;
+        float*   _recordBuffer         = nullptr;
+        int16_t* _recordBufferI        = nullptr;
         bool _flushInputOnCallback     = true;
 
         AAudioStream* _inputStream  = nullptr;
@@ -115,6 +105,7 @@ class AAudio_IO
         AAudioStreamBuilder* createStreamBuilder();
         void setupOutputStream( AAudioStreamBuilder* builder );
         void setupInputStream ( AAudioStreamBuilder* builder );
+        void updateBufferSizeInFrames( int bufferSize );
 
         aaudio_result_t calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis);
     };

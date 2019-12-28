@@ -151,8 +151,9 @@ namespace MWEngine {
         // generate the input buffer used for recording from the device's input
         // as well as the temporary buffer used to merge the input into
 
-        recbufferIn  = new float[ AudioEngineProps::BUFFER_SIZE ]();
+        recbufferIn  = new float[ AudioEngineProps::BUFFER_SIZE * AudioEngineProps::INPUT_CHANNELS ]();
         inputChannel->createOutputBuffer();
+
 #endif
         // accumulates all channels ("master strip")
 
@@ -260,7 +261,7 @@ namespace MWEngine {
         // record audio from Android device ?
         if (( recordDeviceInput || recordInputToDisk ) && AudioEngineProps::INPUT_CHANNELS > 0 )
         {
-            int recordedSamples           = DriverAdapter::getInput( recbufferIn, AudioEngineProps::BUFFER_SIZE );
+            int recordedSamples           = DriverAdapter::getInput( recbufferIn, amountOfSamples );
             SAMPLE_TYPE* recBufferChannel = inputChannel->getOutputBuffer()->getBufferForChannel( 0 );
 
             for ( int j = 0; j < recordedSamples; ++j ) {
@@ -270,8 +271,9 @@ namespace MWEngine {
             // apply processing chain onto the input
 
             std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
-            for ( int k = 0; k < processors.size(); ++k )
+            for ( int k = 0; k < processors.size(); ++k ) {
                 processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
+            }
 
             // merge recording into current input buffer for instant monitoring
 
@@ -374,8 +376,9 @@ namespace MWEngine {
             }
 
             // write cache if it didn't happen yet ;) (bus processors are (currently) non-cacheable)
-            if ( mustCache )
+            if ( mustCache ) {
                 mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
+            }
 
             // write the channel buffer into the combined output buffer, apply channel volume
             // note live events are always audible as their volume is relative to the instrument

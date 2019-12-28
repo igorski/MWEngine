@@ -46,35 +46,6 @@ static const int32_t audioFormatEnum[] = {
     AAUDIO_FORMAT_PCM_I16,
     AAUDIO_FORMAT_PCM_FLOAT,
 };
-static const int32_t audioFormatCount = sizeof(audioFormatEnum)/
-                                        sizeof(audioFormatEnum[0]);
-
-static const uint32_t sampleFormatBPP[] = {
-    0xffff,
-    0xffff,
-    16, //I16
-    32, //FLOAT
-};
-uint16_t SampleFormatToBpp(aaudio_format_t format) {
-    for (int32_t i = 0; i < audioFormatCount; ++i) {
-      if (audioFormatEnum[i] == format)
-        return sampleFormatBPP[i];
-    }
-    return 0xffff;
-}
-static const char * audioFormatStr[] = {
-    "AAUDIO_FORMAT_INVALID", // = -1,
-    "AAUDIO_FORMAT_UNSPECIFIED", // = 0,
-    "AAUDIO_FORMAT_PCM_I16",
-    "AAUDIO_FORMAT_PCM_FLOAT",
-};
-const char* FormatToString(aaudio_format_t format) {
-    for (int32_t i = 0; i < audioFormatCount; ++i) {
-        if (audioFormatEnum[i] == format)
-            return audioFormatStr[i];
-    }
-    return "UNKNOW_AUDIO_FORMAT";
-}
 
 int64_t timestamp_to_nanoseconds(timespec ts){
     return (ts.tv_sec * (int64_t) NANOS_PER_SECOND) + ts.tv_nsec;
@@ -90,19 +61,16 @@ int64_t get_time_nanoseconds(clockid_t clockid){
  * Every time the playback stream requires data this method will be called.
  *
  * @param stream the audio stream which is requesting data, this is the _outputStream object
- * @param userData the context in which the function is being called, in this case it will be the
- * AAudio instance
+ * @param userData the context in which the function is being called (AAudio_IO instance)
  * @param audioData an empty buffer into which we can write our audio data
  * @param numFrames the number of audio frames which are required
  * @return Either AAUDIO_CALLBACK_RESULT_CONTINUE if the stream should continue requesting data
- * or AAUDIO_CALLBACK_RESULT_STOP if the stream should stop.
- *
- * @see AAudio#dataCallback
+ *         or AAUDIO_CALLBACK_RESULT_STOP if the stream should stop.
  */
-aaudio_data_callback_result_t dataCallback( AAudioStream* stream, void *userData, void *audioData, int32_t numFrames ) {
+aaudio_data_callback_result_t dataCallback( AAudioStream* stream, void* userData, void* audioData, int32_t numFrames ) {
     assert(userData && audioData);
-    AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>( userData );
-    return audioEngine->dataCallback( stream, audioData, numFrames );
+    AAudio_IO* instance = reinterpret_cast<AAudio_IO*>( userData );
+    return instance->dataCallback( stream, audioData, numFrames );
 }
 
 /**
@@ -112,34 +80,30 @@ aaudio_data_callback_result_t dataCallback( AAudioStream* stream, void *userData
  * recreation and restart.
  *
  * @param stream the stream with the error
- * @param userData the context in which the function is being called, in this case it will be the
- * AAudio instance
+ * @param userData the context in which the function is being called (AAudio_IO instance)
  * @param error the error which occured, a human readable string can be obtained using
  * AAudio_convertResultToText(error);
- *
- * @see AAudio#errorCallback
  */
 void errorCallback( AAudioStream* stream, void *userData, aaudio_result_t error ) {
     assert(userData);
-    AAudio_IO *audioEngine = reinterpret_cast<AAudio_IO *>(userData);
-    audioEngine->errorCallback(stream, error);
+    AAudio_IO* instance = reinterpret_cast<AAudio_IO*>( userData );
+    instance->errorCallback( stream, error );
 }
 
 AAudio_IO::AAudio_IO( int amountOfInputChannels, int amountOfOutputChannels ) {
 
-    _inputChannelCount  = amountOfInputChannels;
-    _outputChannelCount = amountOfOutputChannels;
-    _sampleFormat       = AAUDIO_FORMAT_PCM_I16;
-    _bufferSizeInFrames = AudioEngineProps::BUFFER_SIZE; // can be updated through stream opening
+    _inputChannelCount  = ( int16_t ) amountOfInputChannels;
+    _outputChannelCount = ( int16_t ) amountOfOutputChannels;
+
+    // MWEngine operates internally using floating point resolution
+    // if floating point is supported by the hardware, we'd like to use it so we
+    // can omit converting samples when reading and writing from the streams
+    // sampleFormat can be updated during stream creation, if so, we will convert sample
+    // formats as "AAudio might perform sample conversion on its own" <- nicely vague Google !
+
+    _sampleFormat = AAUDIO_FORMAT_PCM_FLOAT;
 
     createAllStreams();
-
-    // create the temporary buffers used to write data from and to the AudioEngine during playback and recording
-    _enqueuedOutputBuffer = new int16_t[ _bufferSizeInFrames * _outputChannelCount ]{ 0 };
-
-    if ( _inputChannelCount > 0 ) {
-        _recordBuffer = new int16_t[ _bufferSizeInFrames * _inputChannelCount ]{ 0 };
-    }
 
     render = false;
 }
@@ -155,6 +119,11 @@ AAudio_IO::~AAudio_IO() {
     if ( _recordBuffer != nullptr ) {
         delete _recordBuffer;
         _recordBuffer = nullptr;
+    }
+
+    if ( _recordBufferI != nullptr ) {
+        delete _recordBufferI;
+        _recordBufferI = nullptr;
     }
 }
 
@@ -203,6 +172,7 @@ AAudioStreamBuilder* AAudio_IO::createStreamBuilder() {
 void AAudio_IO::createAllStreams() {
 
     // Create the output stream
+    // This will also create the appropriate read and write buffers
 
     createOutputStream();
 
@@ -268,20 +238,23 @@ void AAudio_IO::createOutputStream() {
             Debug::log( "AAudio_IO::Output stream is NOT low latency. Check your requested format, sample rate and channel count" );
         }
 
-        // verify PCM_I16 format
+        // verify requested format and update in case hardware does not support it
+        // ideally we work in floating point across the engine to omit the need to convert samples
+
         if ( _sampleFormat != AAudioStream_getFormat( _outputStream )) {
-            Debug::log( "AAudio_IO::Sample format is not PCM_I16" );
+            Debug::log( "AAudio_IO::Sample format does not match requested format %d", _sampleFormat );
+            _sampleFormat = AAudioStream_getFormat( _outputStream );
         }
 
         _sampleRate     = AAudioStream_getSampleRate( _outputStream );
         _framesPerBurst = AAudioStream_getFramesPerBurst( _outputStream );
 
         AudioEngineProps::SAMPLE_RATE = _sampleRate;
-        AudioEngineProps::BUFFER_SIZE = _framesPerBurst;
 
         // Set the buffer size to the burst size - this will give us the minimum possible latency
-        AAudioStream_setBufferSizeInFrames( _outputStream, _framesPerBurst );
-        _bufferSizeInFrames = _framesPerBurst;
+        // This will also create the temporary read and write buffers
+
+        updateBufferSizeInFrames( AAudioStream_setBufferSizeInFrames( _outputStream, _framesPerBurst ));
 
 //          PrintAudioStreamInfo(_outputStream);
 
@@ -360,15 +333,54 @@ void AAudio_IO::closeStream( AAudioStream* stream ) {
     }
 }
 
+/**
+ * Invoked whenever the AAudio drivers frame buffer size has updated
+ * through AAudioStream_setBufferSizeInFrames (see dataCallback())
+ *
+ * This allows us to synchronize the changes across the engine and ensures we have the
+ * appropriate size for our temporary read/write buffers
+ */
+void AAudio_IO::updateBufferSizeInFrames( int bufferSize ) {
+    bool update = _bufferSizeInFrames != bufferSize || _enqueuedOutputBuffer == nullptr;
+
+    if ( !update ) {
+        return;
+    }
+
+    Debug::log( "AAudio_IO::Setting buffer size to %d", bufferSize );
+
+    _bufferSizeInFrames = bufferSize;
+
+    // sync across engine
+    AudioEngineProps::BUFFER_SIZE = _bufferSizeInFrames;
+
+    // update temporary buffers as their size is now known (this operation should always happen
+    // before or after a read and write ensuring no data loss / null pointer)
+
+    // create the temporary buffers used to write data from and to the AudioEngine during playback and recording
+    delete _enqueuedOutputBuffer;
+    _enqueuedOutputBuffer = new float[ _bufferSizeInFrames * _outputChannelCount ]{ 0 };
+
+    if ( _inputChannelCount > 0 ) {
+        if ( _sampleFormat == AAUDIO_FORMAT_PCM_I16 ) {
+            delete _recordBufferI;
+            _recordBufferI = new int16_t[ _bufferSizeInFrames * _inputChannelCount ]{ 0 };
+        } else {
+            delete _recordBuffer;
+            _recordBuffer = new float[ _bufferSizeInFrames * _inputChannelCount ]{ 0 };
+        }
+    }
+}
+
 aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, void *audioData, int32_t numFrames ) {
     assert( stream == _outputStream );
 
-    int32_t underrunCount = AAudioStream_getXRunCount( _outputStream );
-    aaudio_result_t bufferSize = AAudioStream_getBufferSizeInFrames( _outputStream );
+    int32_t underrunCount          = AAudioStream_getXRunCount( stream );
+    aaudio_result_t bufferSize     = AAudioStream_getBufferSizeInFrames( stream );
     bool hasUnderrunCountIncreased = false;
     bool shouldChangeBufferSize    = false;
 
-    if (underrunCount > _underrunCountOutputStream) {
+    if ( underrunCount > _underrunCountOutputStream ) {
         _underrunCountOutputStream = underrunCount;
         hasUnderrunCountIncreased  = true;
     }
@@ -378,7 +390,7 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
         // This is a buffer size tuning algorithm. If the number of underruns (i.e. instances where
         // we were unable to supply sufficient data to the stream) has increased since the last callback
         // we will try to increase the buffer size by the burst size, which will give us more protection
-        // against underruns in future, at the cost of additional latency.
+        // against underruns in the future, at the cost of additional latency.
 
         bufferSize += _framesPerBurst; // Increase buffer size by one burst
         shouldChangeBufferSize = true;
@@ -390,87 +402,101 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
         shouldChangeBufferSize = true;
     }
 
-    if ( shouldChangeBufferSize ) {
-        Debug::log( "AAudio_IO::Setting buffer size to %d", bufferSize);
-        bufferSize = AAudioStream_setBufferSizeInFrames( stream, bufferSize );
-        if ( bufferSize > 0 ) {
-            _bufferSizeInFrames = bufferSize;
-        } else {
-            Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText( bufferSize ));
-        }
-    }
-
     // Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
 
-    // rendering requested by AudioEngine (through the driver adapter) ?
+    // rendering requested by AudioEngine ? (through the driver adapter)
 
     if ( render ) {
 
-        if ( _inputStream != nullptr ) {
+        // if there is an input stream and recording is active, read the stream contents
 
-            // If this is the first data callback we want to drain the recording buffer so we're getting
-            // the most up to date data
+        if ( _inputStream != nullptr && ( AudioEngine::recordDeviceInput || AudioEngine::recordInputToDisk )) {
+
+            // drain existing buffer contents on first write to make sure no lingering data is present
 
             if ( _flushInputOnCallback ) {
                 flushInputStream( audioData, numFrames );
                 _flushInputOnCallback = false;
             }
 
-            aaudio_result_t frameCount = AAudioStream_read( _inputStream, _recordBuffer,
-                                                            std::min( AudioEngineProps::BUFFER_SIZE, numFrames ),
-                                                            static_cast<int64_t>(0)
-                                        );
+            aaudio_result_t readFrames = AAudioStream_read(
+                _inputStream,
+                _sampleFormat == AAUDIO_FORMAT_PCM_I16 ? ( void* ) _recordBufferI : ( void* ) _recordBuffer,
+                std::min( _bufferSizeInFrames, numFrames ), static_cast<int64_t>( 0 )
+            );
 
-            if ( frameCount < 0 ) {
-                Debug::log( "AAudio_IO::AAudioStream_read() returns %s", AAudio_convertResultToText( frameCount ));
+            if ( readFrames < 0 ) {
+                Debug::log( "AAudio_IO::AAudioStream_read() returns read %s frames", AAudio_convertResultToText( readFrames ));
             }
         }
 
-        // invoke the render() method of the engine to collect audio
+        // invoke the render() method of the engine to collect audio into the enqueued buffer
         // if it returns false, we can stop this stream (render thread has stopped)
 
         if ( !AudioEngine::render( numFrames )) {
             return AAUDIO_CALLBACK_RESULT_STOP;
         }
-    }
 
-    // write enqueued buffer into the output buffer (both interleaved int16_t)
+        // write enqueued buffer into the output buffer (both contain interleaved samples)
 
-    int16_t* outputBuffer = static_cast<int16_t*>( audioData );
-    int samplesToWrite = numFrames * _outputChannelCount;
-    for ( int i = 0; i < samplesToWrite; ++i ) {
-        outputBuffer[ i ] = _enqueuedOutputBuffer[ i ];
+        int samplesToWrite = numFrames * _outputChannelCount;
+
+        if ( _sampleFormat == AAUDIO_FORMAT_PCM_I16 ) {
+
+            // ideally the hardware supports floating point samples, in case it is running
+            // as 16-bit PCM, convert the samples provided by the engine
+
+            auto outputBuffer = static_cast<int16_t*>( audioData );
+            for ( int i = 0; i < samplesToWrite; ++i ) {
+                outputBuffer[ i ] = ( int16_t ) ( _enqueuedOutputBuffer[ i ] * CONV16BIT );
+            }
+        } else {
+
+            // hardware supports floating point operation, copy the buffer contents directly
+
+            memcpy( static_cast<float*>( audioData ), _enqueuedOutputBuffer, samplesToWrite * sizeof( float ));
+        }
     }
 
     calculateCurrentOutputLatencyMillis( stream, &currentOutputLatencyMillis_ );
+
+    if ( shouldChangeBufferSize ) {
+        bufferSize = AAudioStream_setBufferSizeInFrames( stream, bufferSize );
+        if ( bufferSize > 0 ) {
+            updateBufferSizeInFrames( bufferSize );
+        } else {
+            Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText( bufferSize ));
+        }
+    }
 
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
 /**
- * enqueue a buffer for rendering in the next callback
- * this is invoked by AudioEngine::render()
- *
- * buffer contains interleaved samples, these need to be converted
- * from floating point values into 16-bit shorts
+ * enqueue a buffer (of interleaved samples) for rendering
+ * this is invoked by AudioEngine::render() upon request of the dataCallback method
  */
-void AAudio_IO::enqueueOutputBuffer( float* outputBuffer, int amountOfSamples ) {
-    for ( int i = 0; i < amountOfSamples; ++i ) {
-        _enqueuedOutputBuffer[ i ] = ( int16_t )( outputBuffer[ i ] * CONV16BIT );
-    }
+void AAudio_IO::enqueueOutputBuffer( float* sourceBuffer, int amountOfSamples ) {
+    memcpy( _enqueuedOutputBuffer, sourceBuffer, amountOfSamples * sizeof( float ));
 }
 
 /**
- * retrieve the recorded input buffer
+ * retrieve the recorded input buffer populated by the dataCallback method
  * this is invoked by AudioEngine::render()
- *
- * buffer contains 16-bit shorts, these need to be converted to floating point values
  */
-int AAudio_IO::getEnqueuedInputBuffer( float* recordBuffer, int amountOfSamples ) {
-    for ( int i = 0; i < amountOfSamples; ++i ) {
-        recordBuffer[ i ] = ( float )( _recordBuffer[ i ]) * ( float ) CONVMYFLT;
+int AAudio_IO::getEnqueuedInputBuffer( float* destinationBuffer, int amountOfSamples ) {
+    if ( _sampleFormat == AAUDIO_FORMAT_PCM_I16 ) {
+
+        // ideally the hardware supports floating point samples, in case it is running
+        // as 16-bit PCM, convert the samples into floating point for use in the engine
+
+        for ( int i = 0; i < amountOfSamples; ++i ) {
+            destinationBuffer[ i ] = ( float ) _recordBufferI[ i ] * ( float ) CONVMYFLT;
+        }
+    } else {
+        memcpy( destinationBuffer, _recordBuffer, amountOfSamples * sizeof( float ));
     }
-    return amountOfSamples; // TODO: assumption here that the amount read equals the given recordBuffer size
+    return amountOfSamples; // TODO (?) : assumption here that the amount read equals the given recordBuffer size
 }
 
 /**
