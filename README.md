@@ -14,7 +14,7 @@ out-of-the-box possibilities are:
  * effect chains operating on individual input/output channels
  * sample playback with real time pitch shifting
  * bouncing output to WAV files, either live (during a performance) or "offline"
- 
+
 Also note that MWEngine's underlying audio drivers are _the same as Google Oboe uses_, MWEngine and
 Oboe are merely abstraction layers to solve the same problem, only in different ways. Additionally, MWEngine provides a complete audio processing environment.
 
@@ -148,11 +148,11 @@ attached device/emulator (note that older emulated devices can only operate at a
 ### Note on OpenSL / AAudio drivers
 
 Currently it is not possible to switch between audio drivers on the fly, rather you must precompile
-the library for use with a specific driver. By default, the library will compile for AAudio. If you want
-to use OpenSL instead (or are targeting devices below Android 8) :
+the library for use with a specific driver. By default, the library will compile for OpenSL for a
+wider range of supported devices. If you want to use AAudio instead (and thus are targeting solely
+devices running Android 8 and up) :
 
- * change the desired driver in _global.h_ from type 1 (AAudio) to 0 (OpenSL)
- * update the _Android.mk_ file to exclude the AAudio library (simply set _INCLUDE_AAUDIO_ to 'false')
+ * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
 
 Should you require support for both driver variants, please file a feature request in the repository's issue tracker.
 
