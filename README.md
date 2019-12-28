@@ -2,11 +2,13 @@ MWEngine is..
 =============
 
 ...an audio engine for Android, using either OpenSL (compatible with Android 4.1 and up) or AAudio
-(Android 8.0 and up) as the drivers for low latency audio performance. The engine has been written for both
-[MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
+(Android 8.0 and up) as the drivers for low latency audio performance.
+
+The engine has been written for both [MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
 [Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) to provide fast live audio synthesis.
-While developments on those apps are scarce, the engine has been continuously improved and is now also
-in use by third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize).
+
+While developments on those apps are scarce, the engine itself has been continuously improved and is now also
+used by third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize).
 
 MWEngine provides an architecture that allows you to work with audio within a _musical context_. It is easy to
 build upon the base classes and create your own noise generating mayhem. A few keywords describing the
@@ -148,7 +150,7 @@ the library for use with a specific driver. By default, the library will compile
 to use OpenSL instead (or are targeting devices below Android 8) :
 
  * change the desired driver in _global.h_ from type 1 (AAudio) to 0 (OpenSL)
- * update the _Android.mk_ file to exclude the AAudio library (simply set _BUILD_AAUDIO_ to 'false')
+ * update the _Android.mk_ file to exclude the AAudio library (simply set _INCLUDE_AAUDIO_ to 'false')
 
 Should you require support for both driver variants, please file a feature request in the repository's issue tracker.
 

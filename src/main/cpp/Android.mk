@@ -1,6 +1,6 @@
 # AAudio library inclusion, set to false when building solely for use with OpenSL
 # (allows lowering the application platform target to android-16)
-BUILD_AAUDIO = true
+INCLUDE_AAUDIO = true
 
 LOCAL_PATH      := $(call my-dir)
 LOCAL_SRC_FILES := \
@@ -95,7 +95,7 @@ modules/envelopefollower.cpp \
 modules/lfo.cpp \
 modules/routeableoscillator.cpp \
 
-ifeq ($(BUILD_AAUDIO),true)
+ifeq ($(INCLUDE_AAUDIO),true)
     LOCAL_SRC_FILES   += \
     drivers/aaudio_io.cpp \
 
