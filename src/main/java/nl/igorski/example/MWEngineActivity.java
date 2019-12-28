@@ -52,7 +52,7 @@ public final class MWEngineActivity extends Activity {
     private int BUFFER_SIZE;
     private int OUTPUT_CHANNELS = 2; // 1 = mono, 2 = stereo
 
-    private static int STEPS_PER_MEASURE = 16; // amount of subdivisions within a single measure
+    private static int STEPS_PER_MEASURE = 16;  // amount of subdivisions within a single measure
     private static String LOG_TAG = "MWENGINE"; // logcat identifier
 
     /* public methods */
@@ -75,9 +75,7 @@ public final class MWEngineActivity extends Activity {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             };
-
-            // Check if we have all the necessary permissions, if not prompt user
-
+            // Check if we have all the necessary permissions, if not: prompt user
             int permission = checkSelfPermission( Manifest.permission.RECORD_AUDIO );
             if ( permission != PackageManager.PERMISSION_GRANTED )
                 requestPermissions( PERMISSIONS, 8081981 );
@@ -136,32 +134,17 @@ public final class MWEngineActivity extends Activity {
 
         // STEP 4 : attach event handlers to the UI elements (see main.xml layout)
 
-        final Button playPauseButton = ( Button ) findViewById( R.id.PlayPauseButton );
-        playPauseButton.setOnClickListener( new PlayClickHandler() );
+        findViewById( R.id.PlayPauseButton ).setOnClickListener( new PlayClickHandler() );
+        findViewById( R.id.RecordButton ).setOnClickListener( new RecordOutputHandler() );
+        findViewById( R.id.LiveNoteButton ).setOnTouchListener( new LiveNoteHandler() );
+        findViewById( R.id.RecordInputButton ).setOnTouchListener( new RecordInputHandler() );
 
-        final Button liveNoteButton = ( Button ) findViewById( R.id.LiveNoteButton );
-        liveNoteButton.setOnTouchListener( new LiveNoteHandler() );
-
-        final Button recordButton = ( Button ) findViewById( R.id.RecordButton );
-        recordButton.setOnClickListener( new RecordHandler() );
-
-        final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
-        filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
-
-        final SeekBar decaySlider = ( SeekBar ) findViewById( R.id.SynthDecaySlider );
-        decaySlider.setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
-
-        final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
-        feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
-
-        final SeekBar pitchSlider = ( SeekBar ) findViewById( R.id.PitchSlider );
-        pitchSlider.setOnSeekBarChangeListener( new PitchChangeHandler() );
-
-        final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
-        tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
-
-        final SeekBar volumeSlider = ( SeekBar ) findViewById( R.id.VolumeSlider );
-        volumeSlider.setOnSeekBarChangeListener( new VolumeChangeHandler() );
+        (( SeekBar ) findViewById( R.id.FilterCutoffSlider )).setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
+        (( SeekBar ) findViewById( R.id.SynthDecaySlider )).setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
+        (( SeekBar ) findViewById( R.id.MixSlider )).setOnSeekBarChangeListener( new DelayMixChangeHandler() );
+        (( SeekBar ) findViewById( R.id.PitchSlider )).setOnSeekBarChangeListener( new PitchChangeHandler() );
+        (( SeekBar ) findViewById( R.id.TempoSlider )).setOnSeekBarChangeListener( new TempoChangeHandler() );
+        (( SeekBar ) findViewById( R.id.VolumeSlider )).setOnSeekBarChangeListener( new VolumeChangeHandler() );
 
         _inited = true;
     }
@@ -355,18 +338,17 @@ public final class MWEngineActivity extends Activity {
         public boolean onTouch( View v, MotionEvent event ) {
             switch( event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    _liveEvent.play();
+                    _engine.recordInput( true );
                     return true;
-
                 case MotionEvent.ACTION_UP:
-                    _liveEvent.stop();
+                    _engine.recordInput( false );
                     return true;
             }
             return false;
         }
     }
 
-    private class RecordHandler implements View.OnClickListener {
+    private class RecordOutputHandler implements View.OnClickListener {
         @Override
         public void onClick( View v ) {
             _isRecording = !_isRecording;
@@ -374,6 +356,21 @@ public final class MWEngineActivity extends Activity {
                 _isRecording, Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav"
             );
             (( Button ) v ).setText( _isRecording ? R.string.rec_btn_off : R.string.rec_btn_on );
+        }
+    }
+
+    private class RecordInputHandler implements View.OnTouchListener {
+        @Override
+        public boolean onTouch( View v, MotionEvent event ) {
+            switch( event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    _liveEvent.play();
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    _liveEvent.stop();
+                    return true;
+            }
+            return false;
         }
     }
 
@@ -436,7 +433,6 @@ public final class MWEngineActivity extends Activity {
         private final Notifications.ids[] _notificationEnums = Notifications.ids.values(); // cache the enumerations (from native layer) as int Array
         public void handleNotification( final int aNotificationId ) {
             switch ( _notificationEnums[ aNotificationId ]) {
-
                 case ERROR_HARDWARE_UNAVAILABLE:
                     Log.d( LOG_TAG, "ERROR : received Open SL error callback from native layer" );
                     // re-initialize thread
@@ -449,11 +445,9 @@ public final class MWEngineActivity extends Activity {
                         Log.d( LOG_TAG, "exceeded maximum amount of retries. Cannot continue using audio engine" );
                     }
                     break;
-
                 case MARKER_POSITION_REACHED:
                     Log.d( LOG_TAG, "Marker position has been reached" );
                     break;
-
                 case RECORDING_COMPLETED:
                     Log.d( LOG_TAG, "Recording has completed" );
                     break;
@@ -475,8 +469,6 @@ public final class MWEngineActivity extends Activity {
                     Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
                             ", elapsed samples: " + elapsedSamples );
                     break;
-
-
                 case RECORDED_SNIPPET_READY:
                     runOnUiThread( new Runnable() {
                         public void run() {
@@ -485,7 +477,6 @@ public final class MWEngineActivity extends Activity {
                         }
                     });
                     break;
-
                 case RECORDED_SNIPPET_SAVED:
                     Log.d( LOG_TAG, "Recorded snippet " + aNotificationValue + " saved to storage" );
                     break;

@@ -40,12 +40,11 @@ namespace MWEngine {
 #define PRECISION 2
 
 // if you wish to record audio from the Android device input, uncomment the RECORD_DEVICE_INPUT definition
-// (note this requires both android.permission.RECORD_AUDIO and android.permission.MODIFY_AUDIO_SETTINGS with a
-// positive value for AudioEngineProps::INPUT_CHANNELS)
+// (note this requires both android.permission.RECORD_AUDIO and android.permission.MODIFY_AUDIO_SETTINGS)
 
 #define RECORD_DEVICE_INPUT
 
-// if you wish to write the engine output to the devices file system, uncomment the ALLOW_WRITING definition
+// if you wish to write the engine output to the devices file system, uncomment the RECORD_TO_DISK definition
 // (note this requires android.permission.WRITE_EXTERNAL_STORAGE), like RECORD_AUDIO this requires a Runtime Permission
 // grant when compiling for target SDK level 23 (Android M)
 
