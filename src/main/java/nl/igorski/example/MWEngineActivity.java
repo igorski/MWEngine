@@ -333,21 +333,6 @@ public final class MWEngineActivity extends Activity {
         }
     }
 
-    private class LiveNoteHandler implements View.OnTouchListener {
-        @Override
-        public boolean onTouch( View v, MotionEvent event ) {
-            switch( event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    _engine.recordInput( true );
-                    return true;
-                case MotionEvent.ACTION_UP:
-                    _engine.recordInput( false );
-                    return true;
-            }
-            return false;
-        }
-    }
-
     private class RecordOutputHandler implements View.OnClickListener {
         @Override
         public void onClick( View v ) {
@@ -359,7 +344,7 @@ public final class MWEngineActivity extends Activity {
         }
     }
 
-    private class RecordInputHandler implements View.OnTouchListener {
+    private class LiveNoteHandler implements View.OnTouchListener {
         @Override
         public boolean onTouch( View v, MotionEvent event ) {
             switch( event.getAction()) {
@@ -368,6 +353,21 @@ public final class MWEngineActivity extends Activity {
                     return true;
                 case MotionEvent.ACTION_UP:
                     _liveEvent.stop();
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    private class RecordInputHandler implements View.OnTouchListener {
+        @Override
+        public boolean onTouch( View v, MotionEvent event ) {
+            switch( event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    _engine.recordInput( true );
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    _engine.recordInput( false );
                     return true;
             }
             return false;
