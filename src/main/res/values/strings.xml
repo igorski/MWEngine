@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MWEngine example</string>
-    <string name="app_help">Example MW Engine application. Start the sequencer by hitting play!
-        You can alter the properties of the instruments and sequencer by using the sliders below, all
-        in real time! Also note how the engine pauses and picks up where it left off when suspending the app, funky huh?</string>
+    <string name="app_help">Example MWEngine application. Start the sequencer by hitting play! If you like what
+        you hear, toggle the record button to record all audio onto your device\'s storage. Also note how the engine
+        pauses and picks up where it left off when suspending the app, funky huh?</string>
+    <string name="app_fx_help">You can alter the properties of the instruments and sequencer by using the sliders below, all
+        in real time! </string>
+    <string name="app_live_input_help">You can add new audio on the fly too: hold down the first button to play a C
+        note or hold down the second button to record audio from your Android device input (tip: use headphones to prevent
+        feedback occurring when using the microphone on your phone at louder volume settings)</string>
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>
-    <string name="live_btn">C note (hold)</string>
-    <string name="rec_btn_on">Rec start</string>
-    <string name="rec_btn_off">Stop rec</string>
+    <string name="live_btn">C note</string>
+    <string name="rec_input_btn">Record mic input</string>
+    <string name="rec_btn_on">Start recording</string>
+    <string name="rec_btn_off">Stop recording</string>
     <string name="slider_cutoff">Bass filter cutoff</string>
     <string name="slider_decay">Bass synth decay</string>
     <string name="slider_mix">Chord delay mix</string>

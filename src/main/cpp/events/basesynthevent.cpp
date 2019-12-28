@@ -189,7 +189,7 @@ void BaseSynthEvent::calculateBuffers()
 
     if ( isSequenced )
     {
-        setEventStart( position * ( int ) AudioEngine::samples_per_step );
+        setEventStart( position * AudioEngine::samples_per_step );
         setEventLength(( int )( length * AudioEngine::samples_per_step ));
         setEventEnd( _eventStart + _eventLength );
     }

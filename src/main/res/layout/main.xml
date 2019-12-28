@@ -7,39 +7,44 @@
     <!-- intro text -->
 
     <TextView
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:padding="15dip"
-            android:text="@string/app_help"
-            android:layout_marginBottom="5dip" />
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dip"
+        android:text="@string/app_help"
+        android:layout_marginBottom="5dip"
+    />
 
     <!-- play/pause buttons -->
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="15dip"
-        android:paddingLeft="15dip"
-        android:orientation="horizontal">
+        android:layout_marginBottom="1dip"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+    >
+        <Button
+            android:id="@+id/PlayPauseButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/play_btn" />
 
         <Button
-                android:id="@+id/PlayPauseButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/play_btn" />
-
-        <Button
-                android:id="@+id/LiveNoteButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/live_btn" />
-
-        <Button
-                android:id="@+id/RecordButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/rec_btn_on" />
+            android:id="@+id/RecordButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rec_btn_on" />
     </LinearLayout>
+
+    <!-- effects text -->
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dip"
+        android:text="@string/app_fx_help"
+        android:layout_marginBottom="5dip"
+    />
 
     <!-- synth 1 filter cutoff -->
 
@@ -162,6 +167,37 @@
             android:layout_height="wrap_content"
             android:padding="7dip"
             android:text="@string/slider_volume" />
+    </LinearLayout>
+
+    <!-- live input text -->
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dip"
+        android:text="@string/app_live_input_help"
+        android:layout_marginBottom="5dip"
+    />
+
+    <!-- live input buttons -->
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+        >
+        <Button
+            android:id="@+id/LiveNoteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/live_btn" />
+
+        <Button
+            android:id="@+id/RecordInputButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rec_input_btn" />
     </LinearLayout>
 
 </LinearLayout>

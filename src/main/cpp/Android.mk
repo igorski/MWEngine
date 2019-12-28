@@ -1,6 +1,3 @@
-# Experimental AAudio support, set to true when building for AAudio (requires NDK target 26)
-BUILD_AAUDIO = false
-
 LOCAL_PATH      := $(call my-dir)
 LOCAL_SRC_FILES := \
 
@@ -32,6 +29,7 @@ global.cpp \
 jni/javabridge.cpp \
 drivers/adapter.cpp \
 drivers/opensl_io.c \
+drivers/aaudio_io.cpp \
 utilities/utils.cpp \
 audioengine.cpp \
 audiobuffer.cpp \
@@ -94,14 +92,7 @@ modules/envelopefollower.cpp \
 modules/lfo.cpp \
 modules/routeableoscillator.cpp \
 
-ifeq ($(BUILD_AAUDIO),true)
-    LOCAL_SRC_FILES   += \
-    drivers/aaudio_io.cpp \
-
-    LOCAL_LDLIBS := -laaudio
-endif
-
-LOCAL_LDLIBS += -lOpenSLES -landroid -latomic -llog
+LOCAL_LDLIBS += -lOpenSLES -laaudio -landroid -latomic -llog
 
 include $(BUILD_SHARED_LIBRARY)
 

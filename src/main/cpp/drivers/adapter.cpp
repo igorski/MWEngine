@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2017-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -52,13 +52,18 @@ namespace DriverAdapter {
 
         // AAudio
         driver_aAudio = new AAudio_IO(
-            AudioEngineProps::OUTPUT_CHANNELS
+            AudioEngineProps::INPUT_CHANNELS, AudioEngineProps::OUTPUT_CHANNELS
         );
-        // TODO: specify these from outside?
+
+        if ( driver_aAudio == nullptr ) {
+            return false;
+        }
+        // TODO: allow specifying these from the outside?
         // driver_aAudio->setDeviceId();
+        // driver_aAudio->setRecordingDeviceId();
         driver_aAudio->setBufferSizeInBursts( 1 ); // Google provides {0, 1, 2, 4, 8} as values
 
-        return ( driver_aAudio != nullptr );
+        return true;
 #endif
 
     }
@@ -99,18 +104,19 @@ namespace DriverAdapter {
         android_AudioOut( driver_openSL, outputBuffer, amountOfSamples );
 #elif DRIVER == 1
         // AAudio
-        driver_aAudio->enqueueBuffer( outputBuffer, amountOfSamples );
+        driver_aAudio->enqueueOutputBuffer( outputBuffer, amountOfSamples );
 #endif
     }
 
-    int getInput( float* recordBuffer ) {
+    int getInput( float* recordBuffer, int amountOfSamples ) {
 
 #if DRIVER == 0
         // OpenSL
         return android_AudioIn( driver_openSL, recordBuffer, AudioEngineProps::BUFFER_SIZE );
+#elif DRIVER == 1
+        // AAudio
+        return driver_aAudio->getEnqueuedInputBuffer( recordBuffer, amountOfSamples );
 #endif
-        // TODO: no AAudio recording yet
-
         return 0;
     }
 }

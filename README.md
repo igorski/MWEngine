@@ -2,9 +2,7 @@ MWEngine is..
 =============
 
 ...an audio engine for Android, using either OpenSL (compatible with Android 4.1 and up) or AAudio
-(Android 8.0 and up) as the drivers for low latency audio performance. The engine has been written for both
-[MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
-[Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) to provide fast live audio synthesis. MWEngine is also used by [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize).
+(Android 8.0 and up) as the drivers for low latency audio performance.
 
 MWEngine provides an architecture that allows you to work with audio within a _musical context_. It is easy to
 build upon the base classes and create your own noise generating mayhem. A few keywords describing the
@@ -16,9 +14,17 @@ out-of-the-box possibilities are:
  * effect chains operating on individual input/output channels
  * sample playback with real time pitch shifting
  * bouncing output to WAV files, either live (during a performance) or "offline"
- 
+
 Also note that MWEngine's underlying audio drivers are _the same as Google Oboe uses_, MWEngine and
 Oboe are merely abstraction layers to solve the same problem, only in different ways. Additionally, MWEngine provides a complete audio processing environment.
+
+#### Who uses this ?
+
+The engine has been written for both [MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
+[Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) to provide fast live audio synthesis.
+
+While developments on those apps are scarce, the engine itself has been continuously improved and is now also
+used by third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize).
 
 ### The [Issue Tracker](https://github.com/igorski/MWEngine/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) is your point of contact
 
@@ -26,11 +32,11 @@ Bug reports, feature requests, questions and discussions are welcome on the GitH
 
 Please vote on feature requests by using the Thumbs Up/Down reaction on the first post.
 
-### C++ ??? What about Java ?
+### C++ ??? What about Java / Kotlin ?
 
 Though the library is written in C++ (and can be used solely within this context), the library can be built using JNI
 (Java Native Interface) which makes its API expose itself to Java, while still executing in a native layer outside of
-the Dalvik/ART VM. In other words : high performance of the engine is ensured by the native layer operations, while
+the JVM. In other words : high performance of the engine is ensured by the native layer operations, while
 ease of development is ensured by delegating application logic / UI to the realm of the Android Java SDK.
 
 Whether you intend to use MWEngine for its sample based playback or to leverage its built-in synthesizer and
@@ -139,19 +145,16 @@ sequence going using the library.
 To install the demo: first build the library as described above, and then run the build script to deploy the .APK onto an
 attached device/emulator (note that older emulated devices can only operate at a sample rate of 8 kHz!).
 
-### Note on AAudio
+### Note on OpenSL / AAudio drivers
 
-The AAudio implementation has been built using (in Google's words): _"a Preview release of the AAudio library. The API
-might change in backward-incompatible ways in future releases. It is not recommended for production use."_ so use it
-at your own peril. To use AAudio instead of OpenSL:
- 
+Currently it is not possible to switch between audio drivers on the fly, rather you must precompile
+the library for use with a specific driver. By default, the library will compile for OpenSL for a
+wider range of supported devices. If you want to use AAudio instead (and thus are targeting solely
+devices running Android 8 and up) :
+
  * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
- * update the _Android.mk_ file to include all required adapters and libraries (simply set _BUILD_AAUDIO_ to 'true')
- * update target in _project.properties_ to _android-26_
- 
-Once AAudio is a stable library, MWEngine will allow on-the-fly switching between OpenSL and AAudio drivers.
 
-(!) MWEngine does not support recording from the device inputs using AAudio just yet, (https://github.com/igorski/MWEngine/issues/70) references this feature.
+Should you require support for both driver variants, please file a feature request in the repository's issue tracker.
 
 ### Contributors
 
