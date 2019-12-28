@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -31,12 +31,12 @@ class AllPassDelay
 {
     public:
         AllPassDelay();
-        void delay( float aDelay );
-        float update( float aSample );
+        void delay( SAMPLE_TYPE aDelay );
+        SAMPLE_TYPE update( SAMPLE_TYPE aSample );
 
     private:
-        float _a1;
-        float _zm1;
+        SAMPLE_TYPE _a1;
+        SAMPLE_TYPE _zm1;
 };
 
 class Phaser : public BaseProcessor
@@ -59,14 +59,14 @@ class Phaser : public BaseProcessor
 
     private:
         int _amountOfChannels;
-        float _dmin;
-        float _dmax;
-        float _fb;
-        float _depth;
-        float _zm1;
-        float _lfoPhase;
-        float _lfoInc;
-        float _rate;
+        SAMPLE_TYPE _dmin;
+        SAMPLE_TYPE _dmax;
+        SAMPLE_TYPE _fb;
+        SAMPLE_TYPE _depth;
+        SAMPLE_TYPE _zm1;
+        SAMPLE_TYPE _lfoPhase;
+        SAMPLE_TYPE _lfoInc;
+        SAMPLE_TYPE _rate;
 
         std::vector<std::vector<AllPassDelay*>>* _alps;
 

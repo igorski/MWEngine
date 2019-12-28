@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,7 +22,7 @@
  */
 #include "phaser.h"
 #include "../global.h"
-#include <math.h>
+#include <cmath>
 
 namespace MWEngine {
 
@@ -55,10 +55,10 @@ Phaser::Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, floa
 
 Phaser::~Phaser()
 {
-    for ( int i = 0; i < _amountOfChannels; ++i ) {
-        for ( int j = 0; j < STAGES; ++j )
+    for ( size_t i = 0; i < _amountOfChannels; ++i ) {
+        for ( size_t j = 0; j < STAGES; ++j ) {
             delete _alps->at( i ).at( j );
-
+        }
         _alps->erase( _alps->begin() + i );
     }
     delete _alps;
@@ -80,7 +80,7 @@ void Phaser::setRange( float aMin, float aMax )
 
 float Phaser::getRate()
 {
-    return _rate;
+    return ( float )_rate;
 }
 
 /**
@@ -88,28 +88,28 @@ float Phaser::getRate()
  */
 void Phaser::setRate( float aRate )
 {
-    _rate   = aRate;
-    _lfoInc = 2.0 * 3.14159f * ( _rate / AudioEngineProps::SAMPLE_RATE );
+    _rate   = ( SAMPLE_TYPE ) aRate;
+    _lfoInc = ( float ) TWO_PI * ( _rate / AudioEngineProps::SAMPLE_RATE );
 }
 
 float Phaser::getFeedback()
 {
-    return _fb;
+    return ( float )_fb;
 }
 
 void Phaser::setFeedback( float fb )
 {
-    _fb = fb;
+    _fb = ( SAMPLE_TYPE ) fb;
 }
 
 float Phaser::getDepth()
 {
-    return _depth;
+    return ( float ) _depth;
 }
 
 void Phaser::setDepth( float depth )
 {
-    _depth = depth;
+    _depth = ( SAMPLE_TYPE ) depth;
 }
 
 void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
@@ -117,33 +117,49 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     int bufferSize = sampleBuffer->bufferSize;
     int amountOfChannels = std::min( _amountOfChannels, sampleBuffer->amountOfChannels );
 
-    for ( int c = 0; c < amountOfChannels; ++c )
+    SAMPLE_TYPE initialLfoPhase = _lfoPhase;
+    SAMPLE_TYPE initialZm1      = _zm1;
+
+    for ( size_t c = 0; c < amountOfChannels; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
-        int i, j;
-        std::vector<AllPassDelay*> delay = _alps->at( c );
+        auto delays = _alps->at( c );
 
-        for ( i = 0; i < bufferSize; ++i )
+        // when first channel has been processed, restore the stored values
+        // for the next channel iteration
+
+        if ( c > 0 ) {
+            _lfoPhase = initialLfoPhase;
+            _zm1      = initialZm1;
+        }
+
+        for ( size_t i = 0; i < bufferSize; ++i )
         {
             // calculate and update phaser sweep LFO...
-            SAMPLE_TYPE d  = _dmin + ( _dmax - _dmin ) * (( sin( _lfoPhase ) + 1.0 ) / 2.0 );
-            _lfoPhase     += _lfoInc;
 
-            if ( _lfoPhase >= TWO_PI )
+            SAMPLE_TYPE d = _dmin + ( _dmax - _dmin ) * (( sin( _lfoPhase ) + 1.0 ) / 2.0 );
+            _lfoPhase    += _lfoInc;
+
+            if ( _lfoPhase >= TWO_PI ) {
                 _lfoPhase -= TWO_PI;
+            }
 
-            // update filter coefficients
-            for ( j = 0; j < STAGES; ++j )
-                delay.at( j )->delay( d );
+            // update the filter coefficients
 
-            // calculate output
-            float y = delay[ 0 ]->update(
-                      delay[ 1 ]->update(
-                      delay[ 2 ]->update(
-                      delay[ 3 ]->update(
-                      delay[ 4 ]->update(
-                      delay[ 5 ]->update( channelBuffer[ i ] + _zm1 * _fb ))))));
+            for ( size_t j = 0; j < STAGES; ++j ) {
+                delays.at( j )->delay( d );
+            }
+
+            // filter the current sample and feed it to all allpass
+            // delays applying their output in reverse series
+
+            SAMPLE_TYPE y = channelBuffer[ i ] + _zm1 * _fb;
+
+            size_t j = STAGES;
+            while ( --j > 0 ) {
+                y = delays.at( j )->update( y );
+            }
 
             _zm1 = y;
 
@@ -173,10 +189,10 @@ void Phaser::init( float aRate, float aFeedback, float aDepth, float aMinFreq, f
 
     _alps = new std::vector<std::vector<AllPassDelay*>>( amountOfChannels );
 
-    for ( int i = 0; i < _amountOfChannels; ++i ) {
+    for ( size_t i = 0; i < _amountOfChannels; ++i ) {
         _alps->at( i ) = std::vector<AllPassDelay*>( STAGES );
 
-        for ( int j = 0; j < STAGES; ++j )
+        for ( size_t j = 0; j < STAGES; ++j )
             _alps->at( i ).at( j ) = new AllPassDelay();
     }
 }
@@ -192,15 +208,15 @@ AllPassDelay::AllPassDelay()
 /* public methods */
 
 // sample delay time
-void AllPassDelay::delay( float aDelay )
+void AllPassDelay::delay( SAMPLE_TYPE aDelay )
 {
     _a1 = ( 1.0 - aDelay ) / ( 1.0 + aDelay );
 }
 
-float AllPassDelay::update( float aSample )
+SAMPLE_TYPE AllPassDelay::update( SAMPLE_TYPE aSample )
 {
-    float y = aSample * - _a1 + _zm1;
-    _zm1 = y * _a1 + aSample;
+    SAMPLE_TYPE y = aSample * - _a1 + _zm1;
+    _zm1          = y * _a1 + aSample;
 
     return y;
 }
