@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,14 +20,14 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package nl.igorski.lib.audio;
+package nl.igorski.mwengine;
 
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Process;
 import android.util.Log;
-import nl.igorski.lib.audio.mwengine.*;
+import nl.igorski.mwengine.core.*;
 
 public final class MWEngine extends Thread
 {
@@ -451,7 +451,7 @@ public final class MWEngine extends Thread
      * can discover the IDs by building the Java project and running the following
      * command in the output /bin folder:
      *
-     * javap -s -private -classpath classes nl.igorski.lib.audio.MWEngine
+     * javap -s -private -classpath classes nl.igorski.mwengine.MWEngine
      */
     public static void handleBridgeConnected( int aSomething )
     {

@@ -6,7 +6,7 @@
 gradle/
 gradlew*
 .externalNativeBuild
-src/main/java/nl/igorski/lib/audio/mwengine/*
+src/main/java/nl/igorski/mwengine/core/*
 libs/*
 obj
 build

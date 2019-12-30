@@ -11,10 +11,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
-import nl.igorski.lib.audio.MWEngine;
-import nl.igorski.lib.audio.definitions.Pitch;
-import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
-import nl.igorski.lib.audio.mwengine.*;
+import nl.igorski.mwengine.MWEngine;
+import nl.igorski.mwengine.definitions.Pitch;
+import nl.igorski.mwengine.helpers.DevicePropertyCalculator;
+import nl.igorski.mwengine.core.*;
 
 import java.util.Vector;
 

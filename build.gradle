@@ -15,9 +15,11 @@ android {
 
     defaultConfig {
         applicationId "nl.igorski.example"
+
         // NOTE: minSdkVersion can go down to 16 when your application will use solely OpenSL
         // as the audio driver. Note the value of minSdkVersion is used by the native build
-        // as the APP_PLATFORM
+        // as the target APP_PLATFORM
+
         minSdkVersion 26
         targetSdkVersion 28
         versionCode 1
@@ -33,7 +35,7 @@ android {
                 arguments "-DANDROID_TOOLCHAIN=clang",
                           "-DANDROID_STL=c++_static"
 
-//                cFlags   "-O3 -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
+                cFlags   "-O3 -msse4.2 -mpopcnt"
                 cppFlags "-std=c++11 -Werror -fexceptions -frtti"
             }
         }

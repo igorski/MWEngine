@@ -24,8 +24,6 @@ cmake_minimum_required(VERSION 3.4.1)
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-
 # Include a location to the header files
 include_directories(.)
 
@@ -131,22 +129,23 @@ set_property(SOURCE mwengine.i PROPERTY CPLUSPLUS ON)
 
 # Setup SWIG flags and locations
 
-set(CMAKE_SWIG_FLAGS -c++ -lcarrays.i -package nl.igorski.lib.audio.mwengine)
-set(CMAKE_SWIG_OUTDIR ${Project_SOURCE_DIR}/../java/nl/igorski/lib/audio/mwengine)
+set(CMAKE_SWIG_FLAGS -DNO_RTIO -c++ -lcarrays.i -package nl.igorski.mwengine.core)
+set(CMAKE_SWIG_OUTDIR ${Project_SOURCE_DIR}/swig_wrapper)
 
 # Export a wrapper file to Java, and link with the created C++ library
 
 swig_add_module(mwengine_wrapper java mwengine.i)
 swig_link_libraries(mwengine_wrapper mwengine)
 
-# move generated wrapper files into Java source folder (cannot do this directly from SWIG outdir)
-#
-#file(GLOB JAVA_FILES ${Project_SOURCE_DIR}/wrapper/*.java)
-#if (${JAVA_FILES})
-#    file(COPY ${JAVA_FILES}
-#            DESTINATION ${Project_SOURCE_DIR}/../java/nl/igorski/lib/audio/mwengine)
-#    file(remove ${JAVA_FILES})
-#endif()
+# Take all generated .java files (ignoring the temporary cxx wrappers) and move to Java source folder
+
+file(GLOB JAVA_FILES ${Project_SOURCE_DIR}/swig_wrapper/*.java)
+if (${JAVA_FILES})
+    file(COPY ${JAVA_FILES}
+        DESTINATION ${Project_SOURCE_DIR}/../java/nl/igorski/mwengine/core)
+    file(remove ${JAVA_FILES})
+endif()
+file(remove ${CMAKE_SWIG_OUTDIR})
 
 ################
 ## UNIT TESTS ##
