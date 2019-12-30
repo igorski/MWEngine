@@ -66,49 +66,53 @@ You will need [CMake](https://cmake.org) and [Gradle](https://gradle.org) to run
 
 ### Build instructions
 
+The main configuration files are:
+
+ * _build.gradle_ (to bundle native layer code with the example Android application)
+ * _CMakeLists.txt_ (for the native layer code)
+ 
+These define the appropriate tasks for both Gradle and CMake.
+ 
 #### Using Android Studio
 
 If you are using Android Studio, creating a project from the supplied _build.gradle_ file should
 suffice to get you to build both the native and Java code as well as enabling building, debugging and
 packaging directly both from its IDE.
 
-When NDK builds fail, be aware that _ndk-build_ doesn't like it when paths contain spaces (yeah...)
+Upon opening the repository the native layer library should be built automatically, the same when
+running a build configuration after having made changes to the .cpp files. You can build and deploy
+using debug and release configurations as usual.
 
-In case the Java build fails due to missing classes, see below to compile the
-audio engine as a library using CLI.
+Remember that when making changes to the make file, _Build > Refresh Linked C++ Projects_ must be invoked.
+
+NOTE: there is a known issue where Android Studio is not aware Java classes have been generated
+after completing the native library build (e.g. _/nl/igorski/mwengine/core_ containing files but
+the IDE not showing auto complete - and oddly enough compiling just fine -). Restarting AS should suffice.
 
 #### Using CLI
 
 After making sure you have all the correct tools (see _Environment setup_):
 
-##### Compiling the audio engine as a library
+##### Cleaning all generated output
 
-The makefile (_/src/main/cpp/CMakeLists.txt_) will by default compile the library with all available modules. The SWIG interface file
-(_/src/main/cpp/mwengine.i_) includes all the engine's actors that will be exposed to Java.
+```
+gradle clean
+```
 
-Those of a Unix-bent can run the _build.sh_-file in the root folder of the repository whereas Windows users can run the
-_build.bat_-file that resides in the same directory, just make sure "_ndk-build_" and "_swig_" are globally available
-through the PATH settings of your system (or adjust the shell scripts accordingly).
+Will delete the build output as well as the built native code and generated Java wrappers.
 
-After compiling the C++ code, the SWIG wrappers will generate the _nl.igorski.lib.audio.mwengine_-namespace, making the code available to Java.
+```
+gradle externalNativeBuildRelease
+```
 
-##### Compiling and installing the example Activity
+Will create a release build of the native layer code and generate the Java wrappers. If you are
+not packaging the MWEngine library directly into your application but will move these as dependencies
+of another project, you would like to copy these files:
 
-You can create the .APK package and deploy it instantly onto an attached device / emulator by using Gradle e.g. :
-
-    gradle installDebug
-
-To create a signed release build, add the following into the Gradle's properties file inside your
-home folder (_~/.gradle/gradle.properties_) and replace the values accordingly:
-
-    RELEASE_STORE_FILE={path_to_.keystore_file}
-    RELEASE_STORE_PASSWORD={password_for_.keystore}
-    RELEASE_KEY_ALIAS={alias_for_.keystore}
-    RELEASE_KEY_PASSWORD={password_for_.keystore}
-
-You can now build and sign a releasable APK by running:
-
-    gradle build
+ * _build/intermediates/cmake/release/obj/*_ as it contains the native library for all defined architectures.
+  These should go to the _/libs_ (or custom jniLibs)-folder of your Android project.
+ * _/src/main/java/nl/igorski/mwengine/*_ as it contains the interface layer with the library. These
+  should move to the appropriate namespace in your projects Java source folder.
 
 ### FAQ / Troubleshooting
 
@@ -127,14 +131,19 @@ workings of each class.
 
 ### Unit tests
 
-The library comes with unit tests (_/src/main/cpp/tests/_), written using the Googletest C++ testing framework (distributed with NDK 10).
-To run the tests, simply execute the _test.sh_ (sorry Unix-only shell at the moment)-script with a device attached.
-This will also build the library prior to running the tests by calling the build script described above.
-Note: _adb_ must be available in your global path settings.
+The library comes with unit tests (_/src/main/cpp/tests/_), written using the Googletest C++ testing framework.
 
-*Note on unit testing:* To build the application for unit testing observe that there is a separate makefile for the
-unit test mode (see _Application_test.mk_). In short: this file sets the compiler preprocesser MOCK_ENGINE which
-replaces the OpenSL driver with a mocked driver so the engine can be unit tested "offline".
+To run the tests, we temporarily need a [https://github.com/igorski/MWEngine/issues/106](workaround) :
+
+ * update _local.properties_ to include the line: _enable_tests=true_
+ * run _gradle externalNativeBuildDebug_ with a device / emulator attached to your machine.
+ 
+This will build a special version of the library including the test suite and will execute it directly onto the
+attach device. Note: _adb_ must be available in your global path settings.
+
+NOTE: to create a release build of your app (or continuing non-test related development) you must unset
+the added line in _local.properties_. Once issue #106 is addressed it will no longer be necessary to
+update local configuration files and it will be possible to run unit tests next to regular development.
 
 ### Demo
 
@@ -154,7 +163,7 @@ devices running Android 8 and up) :
 
  * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
 
-Should you require support for both driver variants, please file a feature request in the repository's issue tracker.
+A [https://github.com/igorski/MWEngine/issues/106](future iteration) of the engine will allow runtime selection of audio drivers.
 
 ### Contributors
 

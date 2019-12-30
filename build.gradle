@@ -35,14 +35,18 @@ android {
                 arguments "-DANDROID_TOOLCHAIN=clang",
                           "-DANDROID_STL=c++_static"
 
-                cFlags   "-O3 -msse4.2 -mpopcnt"
+                // Tests are disabled by default (issue #106 on GitHub)
+                // To enable tests add line "enable_tests=true" into the local.properties file
+                arguments "-DRUN_TESTS=" + getRunTests()
+
+                cFlags   "-O3" // -msse4.2 -mpopcnt
                 cppFlags "-std=c++11 -Werror -fexceptions -frtti"
             }
         }
     }
     externalNativeBuild {
         cmake {
-            path "src/main/cpp/CMakeLists.txt"
+            path "CMakeLists.txt"
         }
     }
     if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
@@ -66,9 +70,19 @@ android {
     }
 }
 
+clean.doFirst {
+    delete fileTree("src/main/java/nl/igorski/mwengine/core") { include '**/*.java' }
+}
+
 allprojects {
     repositories {
         google()
         jcenter()
     }
+}
+
+def getRunTests() {
+    Properties properties = new Properties()
+    properties.load(new File(rootDir.absolutePath + '/local.properties').newDataInputStream())
+    return properties.getProperty('enable_tests', 'false').toBoolean().toString()
 }

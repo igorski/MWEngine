@@ -563,7 +563,7 @@ namespace MWEngine {
             {
                 JNIEnv* env = JavaBridge::getEnvironment();
 
-                if ( env != 0 )
+                if ( env != nullptr )
                     env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id, AudioEngine::tempo );
             }
 #else
