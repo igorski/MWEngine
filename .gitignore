@@ -3,6 +3,7 @@
 *.iml
 gradle/
 .gradle
+.cxx
 gradlew*
 .externalNativeBuild
 src/main/java/nl/igorski/lib/audio/mwengine/*
