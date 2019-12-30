@@ -24,6 +24,8 @@ cmake_minimum_required(VERSION 3.4.1)
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+
 # Include a location to the header files
 include_directories(.)
 
@@ -104,9 +106,9 @@ set(MWENGINE_PROCESSORS processors/bitcrusher.cpp
 # when using the library solely from C++ you can omit bundling JNI_SOURCES (or SWIG wrapping)
 
 set(JNI_SOURCES jni/javabridge.cpp
-        jni/javautilities.cpp)
+                jni/javautilities.cpp)
 
-add_library(MWEngine SHARED
+add_library(mwengine SHARED
             ${MWENGINE_CORE_SOURCES}
             ${MWENGINE_SYNTH_SOURCES}
             ${MWENGINE_PROCESSORS}
@@ -114,7 +116,7 @@ add_library(MWEngine SHARED
 
 # link all the NDK libraries used by the project
 
-target_link_libraries(MWEngine android atomic log OpenSLES aaudio)
+target_link_libraries(mwengine android atomic log OpenSLES aaudio)
 
 #####################################
 ## SWIG JNI to Java class wrapping ##
@@ -134,8 +136,17 @@ set(CMAKE_SWIG_OUTDIR ${Project_SOURCE_DIR}/../java/nl/igorski/lib/audio/mwengin
 
 # Export a wrapper file to Java, and link with the created C++ library
 
-swig_add_module(MWEngine_Wrapper java mwengine.i)
-swig_link_libraries(MWEngine_Wrapper MWEngine)
+swig_add_module(mwengine_wrapper java mwengine.i)
+swig_link_libraries(mwengine_wrapper mwengine)
+
+# move generated wrapper files into Java source folder (cannot do this directly from SWIG outdir)
+#
+#file(GLOB JAVA_FILES ${Project_SOURCE_DIR}/wrapper/*.java)
+#if (${JAVA_FILES})
+#    file(COPY ${JAVA_FILES}
+#            DESTINATION ${Project_SOURCE_DIR}/../java/nl/igorski/lib/audio/mwengine)
+#    file(remove ${JAVA_FILES})
+#endif()
 
 ################
 ## UNIT TESTS ##
@@ -146,14 +157,14 @@ swig_link_libraries(MWEngine_Wrapper MWEngine)
 #target_include_directories(gtest PRIVATE ${GOOGLETEST_ROOT})
 #target_include_directories(gtest PUBLIC ${GOOGLETEST_ROOT}/include)
 #
-#add_executable(MWEngineTest tests/main.cpp)
-#target_link_libraries(MWEngineTest gtest)
+#add_executable(mwengine_unittest tests/main.cpp)
+#target_link_libraries(mwengine_unittest gtest)
 
 # Automatically launch the unit tests onto an attached device
 
 #find_program(ADB adb)
-#add_custom_command(TARGET MWEngineTest POST_BUILD
+#add_custom_command(TARGET mwengine_unittest POST_BUILD
 #        COMMAND ${ADB} shell mkdir -p /data/local/tmp/${ANDROID_ABI}
 #        COMMAND ${ADB} push $<TARGET_FILE:native-lib> /data/local/tmp/${ANDROID_ABI}/
 #        COMMAND ${ADB} push $<TARGET_FILE:footest> /data/local/tmp/${ANDROID_ABI}/
-#        COMMAND ${ADB} shell \"export LD_LIBRARY_PATH=/data/local/tmp/${ANDROID_ABI}\; /data/local/tmp/${ANDROID_ABI}/MWEngineTest\")
+#        COMMAND ${ADB} shell \"export LD_LIBRARY_PATH=/data/local/tmp/${ANDROID_ABI}\; /data/local/tmp/${ANDROID_ABI}/mwengine_unittest\")

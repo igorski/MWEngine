@@ -62,7 +62,7 @@ For CLI builds:
 You will need both the [Android SDK](https://developer.android.com/studio/index.html) and the [Android NDK](https://developer.android.com/ndk/downloads/index.html).
 Additionally, you will need [SWIG](http://www.swig.org) (available on most package managers like _Brew_ for OS X or _apt-get_ on Linux)
 
-You will need [Gradle](https://gradle.org) to run the build scripts. All aforementioned utilities are available on all major Operating Systems.
+You will need [CMake](https://cmake.org) and [Gradle](https://gradle.org) to run the build scripts. All aforementioned utilities are available on all major Operating Systems.
 
 ### Build instructions
 
@@ -83,7 +83,7 @@ After making sure you have all the correct tools (see _Environment setup_):
 
 ##### Compiling the audio engine as a library
 
-The makefile (_/src/main/cpp/Android.mk_) will by default compile the library with all available modules. The SWIG interface file
+The makefile (_/src/main/cpp/CMakeLists.txt_) will by default compile the library with all available modules. The SWIG interface file
 (_/src/main/cpp/mwengine.i_) includes all the engine's actors that will be exposed to Java.
 
 Those of a Unix-bent can run the _build.sh_-file in the root folder of the repository whereas Windows users can run the

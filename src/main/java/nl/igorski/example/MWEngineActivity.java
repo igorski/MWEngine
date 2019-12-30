@@ -192,8 +192,8 @@ public final class MWEngineActivity extends Activity {
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
 
         _filter = new Filter(
-                maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
-                minFilterCutoff, maxFilterCutoff, OUTPUT_CHANNELS
+            maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
+            minFilterCutoff, maxFilterCutoff, OUTPUT_CHANNELS
         );
         _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
 
