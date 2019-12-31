@@ -20,7 +20,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package nl.igorski.lib.audio.helpers;
+package nl.igorski.mwengine.helpers;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -123,31 +123,5 @@ public final class DevicePropertyCalculator
         return ( BS_CHECK != null ) ? Integer.parseInt( BS_CHECK ) : AudioTrack.getMinBufferSize( getRecommendedSampleRate( aContext ),
                                                                                                   AudioFormat.CHANNEL_OUT_MONO,
                                                                                                   AudioFormat.ENCODING_PCM_16BIT );
-    }
-
-    public static int getMinimumBufferSize( Context aContext )
-    {
-        // minimum buffer size we allow is the recommendation divided by four
-        int min = DevicePropertyCalculator.getRecommendedBufferSize( aContext ) / 4;
-
-        // however, we'd like to supply tha rea of 64 samples per buffer as an option
-        while ( min > 128 ) min /= 2;   // 128 as we do a greater than check
-
-        // but the minimum we allow is 32 samples per buffer
-        if ( min < 32 )
-            min *= 2;
-
-        return min;
-    }
-
-    public static int getMaximumBufferSize( Context aContext )
-    {
-        int max = DevicePropertyCalculator.getRecommendedBufferSize( aContext ) * 8;
-
-        // nothing TOO extravagant... 8192 should be enough...
-        while ( max > 10000 )
-            max /= 2;
-
-        return max;
     }
 }

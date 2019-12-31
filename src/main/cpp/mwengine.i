@@ -66,7 +66,7 @@ using namespace MWEngine;
 %pragma(java) jniclasscode=%{
   static {
     try {
-        java.lang.System.loadLibrary( "mwengine" );
+        java.lang.System.loadLibrary( "mwengine_wrapped" );
     }
     catch ( UnsatisfiedLinkError e ) {
         java.lang.System.err.println( "mwengine native code library failed to load.\n" + e );

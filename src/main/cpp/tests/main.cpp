@@ -1,5 +1,3 @@
-#define UNIT_TEST_MODE
-
 #ifndef MOCK_ENGINE
 #define MOCK_ENGINE
 #endif
@@ -36,7 +34,6 @@ using namespace MWEngine;
 #include "processors/flanger_test.cpp"
 #include "processors/reverb_test.cpp"
 #include "processors/tremolo_test.cpp"
-#include "utilities/fastmath_test.cpp"
 #include "utilities/tablepool_test.cpp"
 #include "utilities/samplemanager_test.cpp"
 #include "utilities/sampleutility_test.cpp"
@@ -48,6 +45,7 @@ using namespace MWEngine;
 //#include "benchmarks/buffer_test.cpp"
 //#include "benchmarks/inline_test.cpp"
 //#include "benchmarks/table_test.cpp"
+//#include "utilities/fastmath_test.cpp"
 
 int main( int argc, char *argv[] )
 {

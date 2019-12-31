@@ -55,7 +55,9 @@ namespace MWEngine {
 #define LOGTAG "MWENGINE" // the logtag used when logging messages to logcat
 
 // if you wish to use the engine without JNI support (e.g. using solely C++/NDK), comment the USE_JNI definition
+#ifndef MOCK_ENGINE
 #define USE_JNI
+#endif
 
 namespace AudioEngineProps
 {

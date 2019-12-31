@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2019 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -77,8 +77,9 @@ namespace Notifier
         {
             JNIEnv* env = JavaBridge::getEnvironment();
 
-            if ( env != 0 )
-            env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id, aNotificationType );
+            if ( env != nullptr ) {
+                env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id, aNotificationType );
+            }
         }
 #else
         // strictly native layer code
@@ -110,9 +111,10 @@ namespace Notifier
         {
             JNIEnv* env = JavaBridge::getEnvironment();
 
-            if ( env != 0 )
-            env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id,
-                                       aNotificationType, aNotificationValue );
+            if ( env != nullptr ) {
+                env->CallStaticVoidMethod( JavaBridge::getJavaInterface(), native_method_id,
+                                           aNotificationType, aNotificationValue );
+            }
         }
 #else
         // strictly native layer code

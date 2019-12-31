@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,15 +20,8 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package nl.igorski.lib.audio.definitions;
+package nl.igorski.mwengine.definitions;
 
-/**
- * Created by IntelliJ IDEA.
- * User: igorzinken
- * Date: 4/12/12
- * Time: 2:53 PM
- * To change this template use File | Settings | File Templates.
- */
 public final class Pitch
 {
     /**
@@ -82,30 +75,26 @@ public final class Pitch
         int i;
         double freq;
         int enharmonic = 0;
-        aNote = aNote.toUpperCase();
+        String note = aNote.substring(0, 1).toUpperCase() + aNote.substring(1);
 
         // detect flat enharmonic
-        i = aNote.indexOf( FLAT );
-        if ( i > -1 )
-        {
-            aNote = aNote.substring( i - 1, 1 );
+        i = note.indexOf( FLAT );
+        if ( i > -1 ) {
+            note = note.substring( i - 1, 1 );
             enharmonic = -1;
         }
         // detect sharp enharmonic
-        i = aNote.indexOf( SHARP );
-        if ( i > -1 )
-        {
-            aNote = aNote.substring( i - 1, 1 );
+        i = note.indexOf( SHARP );
+        if ( i > -1 ) {
+            note = note.substring( i - 1, 1 );
             enharmonic = 1;
         }
-        freq = getOctaveIndex( aNote, enharmonic );
+        freq = getOctaveIndex( note, enharmonic );
 
-        if ( aOctave == 4 )
-        {
+        if ( aOctave == 4 ) {
             return freq;
         }
-        else
-        {
+        else {
             // translate the pitches to the requested octave
             int d = aOctave - 4;
             int j = Math.abs( d );
@@ -119,79 +108,6 @@ public final class Pitch
             }
             return freq;
         }
-    }
-
-    /**
-     * convert a frequency in Hz to the MIDI note number
-     * @param aFrequency {double} the frequency in Hz
-     * @return {int} MIDI note number
-     */
-    public static int frequencyToMIDINote( double aFrequency )
-    {
-        double r       = 1.05946309436;
-        double ref     = 523.251;
-        int    supinf  = 0;
-        int    i       = 0;
-        double hautnb  = 1;
-        double ref1    = 0;
-        double ref2    = 0;
-        double flag    = 0;
-        int    nmidi   = 72;
-
-        while ( aFrequency < ref )
-        {
-            ref    = Math.floor( 1000 * ref / r ) / 1000;
-            i      = i + 1;
-            supinf = -1;
-            flag   = 1;
-            ref1   = ref;
-        }
-
-        while ( aFrequency > ref )
-        {
-            ref    = Math.floor( 1000 * ref * r ) / 1000;
-            i      = i -1;
-            supinf = 1;
-            ref2   = ref;
-        }
-
-        if ( Math.abs( aFrequency - ref1 ) < Math.abs( aFrequency - ref2 ))
-        {
-            supinf = -1;
-            i      = i +1;
-        }
-        else
-        {
-            if ( flag == 1 )
-                supinf = -1;
-        }
-
-        if ( ref1 == 0 )
-        {
-            ref1 = Math.floor( 1000 * ref / r ) / 1000;
-
-            if ( Math.abs( aFrequency - ref1 ) < Math.abs( aFrequency - ref2 ))
-            {
-                i  = i  + 1;
-                supinf = 1;
-            }
-        }
-        i  = Math.abs( i  );
-
-        while ( i-- != 0 )
-        {
-            if (( hautnb == 1 && supinf == -1 ) || ( hautnb == 12 && supinf == 1 ))
-            {
-                if ( supinf == 1 )
-                    hautnb = 0;
-
-                if ( supinf == -1 )
-                    hautnb = 13;
-            }
-            hautnb   = hautnb + supinf;
-            nmidi    = nmidi + supinf;
-        }
-        return nmidi;
     }
 
     /* private */
@@ -210,10 +126,8 @@ public final class Pitch
     {
         int j = OCTAVE.length;
 
-        for ( int i = 0; i < j; ++i )
-        {
-            if ( OCTAVE_SCALE[ i ].equals( note ))
-            {
+        for ( int i = 0; i < j; ++i ) {
+            if ( OCTAVE_SCALE[ i ].equals( note )) {
                 int k = i + enharmonic;
 
                 if ( k > j )

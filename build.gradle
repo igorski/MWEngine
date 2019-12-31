@@ -6,19 +6,48 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.2'
+        classpath 'com.android.tools.build:gradle:3.5.2'
     }
 }
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
         applicationId "nl.igorski.example"
-        minSdkVersion 26 // can go down to 16 when using OpenSL as the audio driver
-        targetSdkVersion 27
+
+        // NOTE: minSdkVersion can go down to 16 when your application will use solely OpenSL
+        // as the audio driver. Note the value of minSdkVersion is used by the native build
+        // as the target APP_PLATFORM
+
+        minSdkVersion 26
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0.0"
+
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+        }
+
+        externalNativeBuild {
+            // List of potential arguments: https://developer.android.com/ndk/guides/cmake.html
+            cmake {
+                arguments "-DANDROID_TOOLCHAIN=clang",
+                          "-DANDROID_STL=c++_static"
+
+                // Tests are disabled by default (issue #106 on GitHub)
+                // To enable tests add line "enable_tests=true" into the local.properties file
+                arguments "-DRUN_TESTS=" + getRunTests()
+
+                cFlags   "-O3" // -msse4.2 -mpopcnt
+                cppFlags "-std=c++11 -Werror -fexceptions -frtti"
+            }
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
     }
     if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
         signingConfigs {
@@ -31,30 +60,29 @@ android {
         }
     }
     buildTypes {
-        if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
-            release {
-                minifyEnabled false
-                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
                 signingConfig signingConfigs.release
             }
         }
     }
-    externalNativeBuild {
-        ndkBuild {
-            path 'src/main/cpp/Android.mk'
-        }
-    }
-    sourceSets {
-        main {
-            java.srcDirs    = [ 'src/main/java' ]
-            jniLibs.srcDirs = []
-        }
+}
+
+clean.doFirst {
+    delete fileTree("src/main/java/nl/igorski/mwengine/core") { include '**/*.java' }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
     }
 }
 
-// Location of where to store the jni wrapped files
-def coreWrapperDir = new File("${projectDir}/src/main/java/nl/igorski/lib/audio/mwengine")
-
-task createCoreWrapperDir {
-    coreWrapperDir.mkdirs()
+def getRunTests() {
+    Properties properties = new Properties()
+    properties.load(new File(rootDir.absolutePath + '/local.properties').newDataInputStream())
+    return properties.getProperty('enable_tests', 'false').toBoolean().toString()
 }
