@@ -13,85 +13,101 @@ out-of-the-box possibilities are:
  * multi-channel audio output
  * effect chains operating on individual input/output channels
  * sample playback with real time pitch shifting
+ * live recording and processing from your device's inputs (e.g. microphone)
  * bouncing output to WAV files, either live (during a performance) or "offline"
 
 Also note that MWEngine's underlying audio drivers are _the same as Google Oboe uses_, MWEngine and
-Oboe are merely abstraction layers to solve the same problem, only in different ways. Additionally, MWEngine provides a complete audio processing environment.
+Oboe are merely abstraction layers to solve the same problem, only in different ways.
+Additionally, MWEngine provides a complete audio processing environment with built-in effects.
 
-#### Who uses this ?
+#### What apps are using MWEngine ?
 
 The engine has been written for both [MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
 [Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) to provide fast live audio synthesis.
 
-While developments on those apps are scarce, the engine itself has been continuously improved and is now also
-used by third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize).
-
-### The [Issue Tracker](https://github.com/igorski/MWEngine/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) is your point of contact
-
-Bug reports, feature requests, questions and discussions are welcome on the GitHub Issue Tracker, please do not send e-mails through the development website. However, please search before posting to avoid duplicates, and limit to one issue per post.
-
-Please vote on feature requests by using the Thumbs Up/Down reaction on the first post.
+While development on aforementioned apps has (practically) been discontinued, the engine itself has over the years been continuously updated
+to be of use to third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize).
 
 ### C++ ??? What about Java / Kotlin ?
 
 Though the library is written in C++ (and can be used solely within this context), the library can be built using JNI
-(Java Native Interface) which makes its API expose itself to Java, while still executing in a native layer outside of
+(Java Native Interface) which makes its API expose itself to Java / Kotlin, while still executing in a native layer outside of
 the JVM. In other words : high performance of the engine is ensured by the native layer operations, while
 ease of development is ensured by delegating application logic / UI to the realm of the Android Java SDK.
 
 Whether you intend to use MWEngine for its sample based playback or to leverage its built-in synthesizer and
 audio processing, you are not required to write any additional C++ code. If you however intend to create your own
-DSP or synthesis routines (which is fun to do!) you must write them in C++, but can rely on SWIG for making them usable in Java.
+DSP or synthesis routines (which is fun to do!) you must [write them in C++](https://github.com/igorski/MWEngine/wiki/Adding-new-components),
+but can rely on SWIG for making them usable in Java.
 
-#### A note on garbage collection and SWIG
+##### A note on garbage collection and SWIG
 
 It is important to note that when a Java object finalizes (i.e. all its references are broken and is garbage collected), the
 destructors of the native objects are invoked, which can lead to unpredictable results if you happen to overlook this!
-As such, audio engine objects such as effects processors or events that are created on the Java side, must also hold
-strong references during their lifecycle. Basically, follow the same principles you'd use in Java, but be
-aware that ignoring these will have a particularly violent result with a very unfriendly stack trace.
+As such, audio engine objects such as effects processors or events that are created on the Java side, must hold
+strong references during their lifecycle.
 
-### Environment setup
+### The [Issue Tracker](https://github.com/igorski/MWEngine/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) is your point of contact
 
-If you intend to use [Android Studio](https://developer.android.com/studio/) you can open the
-_build.gradle_ file to setup the project and its dependencies accordingly by following the on-screen
-steps.
+Bug reports, feature requests, questions and discussions are welcome on the GitHub Issue Tracker, please do not send e-mails through the development website. However, please search before posting to avoid duplicates, and limit to one issue per post.
 
-For CLI builds:
+Vote on existing feature requests by using the Thumbs Up/Down reaction on the first post.
 
-You will need both the [Android SDK](https://developer.android.com/studio/index.html) and the [Android NDK](https://developer.android.com/ndk/downloads/index.html).
-Additionally, you will need [SWIG](http://www.swig.org) (available on most package managers like _Brew_ for OS X or _apt-get_ on Linux)
+### Development setup
 
-You will need [CMake](https://cmake.org) and [Gradle](https://gradle.org) to run the build scripts. All aforementioned utilities are available on all major Operating Systems.
+You will need the following development kits:
 
-### Build instructions
+ * [Android SDK](https://developer.android.com/studio/index.html)
+ * [Android NDK](https://developer.android.com/ndk/downloads/index.html) to build the native layer code
 
-The main configuration files are:
+And the following toolchains:
 
- * _build.gradle_ (to bundle native layer code with the example Android application)
+ * [Gradle](https://gradle.org) to run all build commands
+ * [CMake](https://cmake.org) to build the native layer code
+ * [SWIG](http://www.swig.org) to wrap the native layer code in Java classes
+
+If you use [Android Studio](https://developer.android.com/studio/) you can simply open the project
+folder and sync the project with the _build.gradle_ file, after which you will be prompted in case
+you need to install any of the above (as Android Studio can resolve and install the
+dependencies for you).
+
+Though depending on your platform, you might need to install SWIG
+manually (as well as adding it to your path variables). SWIG is readily available from
+most package managers such as _brew_ on macOS or _apt-get_ on Linux).
+
+#### Build configurations
+
+The build configurations are defined in:
+
+ * _build.gradle_ (the usual setup, build and deploy toolchain for Android)
  * _CMakeLists.txt_ (for the native layer code)
+
+If you are uncomfortable with C development, you can ignore the make file as all build commands
+are executed through Gradle.
  
-These define the appropriate tasks for both Gradle and CMake.
- 
-#### Using Android Studio
+#### Building using Android Studio
 
 If you are using Android Studio, creating a project from the supplied _build.gradle_ file should
 suffice to get you to build both the native and Java code as well as enabling building, debugging and
-packaging directly both from its IDE.
+packaging an Android application directly from the IDE.
 
-Upon opening the repository the native layer library should be built automatically, the same when
-running a build configuration after having made changes to the .cpp files. You can build and deploy
-using debug and release configurations as usual.
+Upon opening the project file, the native layer library should be built automatically (if not,
+run _Build > Make Project_), which will create the wrapper Java classes under the
+_nl.igorski.mwengine.core_-namespace.
 
-Remember that when making changes to the make file, _Build > Refresh Linked C++ Projects_ must be invoked.
+You can build and deploy using debug and release configurations as usual.
 
-NOTE: there is a known issue where Android Studio is not aware Java classes have been generated
-after completing the native library build (e.g. _/nl/igorski/mwengine/core_ containing files but
-the IDE not showing auto complete - and oddly enough compiling just fine -). Restarting AS should suffice.
+**NOTE:** on first run there is a known issue where Android Studio is not aware Java classes have been
+generated after completing the native library build (e.g. the _/nl/igorski/mwengine/core_-folder
+containing files but the IDE not recognizing the files - though oddly enough compiling just fine -).
+Closing and reopening the project window should suffice.
 
-#### Using CLI
+#### Building using CLI
 
-After making sure you have all the correct tools (see _Environment setup_):
+The usual Gradle commands to build and sign a release APK file can be reused. In
+case you require more fine grained control (as in: you're building MWEngine
+solely as a library and not within a standalone application), you can
+execute the following Gradle commands for your CI integration:
 
 ##### Cleaning all generated output
 
@@ -99,25 +115,62 @@ After making sure you have all the correct tools (see _Environment setup_):
 gradle clean
 ```
 
-Will delete the build output as well as the built native code and generated Java wrappers.
+This task will delete the build output as well as previously built native code and generated Java wrappers.
 
 ```
 gradle externalNativeBuildRelease
 ```
 
-Will create a release build of the native layer code and generate the Java wrappers. If you are
-not packaging the MWEngine library directly into your application but will move these as dependencies
-of another project, you would like to copy these files:
+This task will create a release build of the native layer code and generate the Java wrappers. If you are
+not packaging the MWEngine library and wrapped Java code directly into your application and intend to
+move the build output as a dependency of another project, you would like to copy these files
+in an additional build step:
 
- * _build/intermediates/cmake/release/obj/*_ as it contains the native library for all defined architectures.
-  These should go to the _/libs_ (or custom jniLibs)-folder of your Android project.
- * _/src/main/java/nl/igorski/mwengine/*_ as it contains the interface layer with the library. These
-  should move to the appropriate namespace in your projects Java source folder.
+ * _build/intermediates/cmake/release/obj/*_ 
+ * _/src/main/java/nl/igorski/mwengine/*_
+ 
+Where the first contains the native library and its wrapper divided into
+subdirectories (one for each supported CPU architecture) and the latter
+contains the Java code and interface layer. These can be copied to your
+projects source folder, note that native code should go to the _/libs_
+folder (if you haven't specified a custom _jniLibs_ location).
+
+Example structure:
+
+```bash
+├── libs
+│   ├── armeabi-v7a
+│   │   ├── libmwengine.so
+│   │   └── libmwengine_wrapped.so
+│   ├── arm64-v8a
+│   │   ├── libmwengine.so
+│   │   └── libmwengine_wrapped.so
+│   └── x86_64
+│       ├── libmwengine.so
+│       └── libmwengine_wrapped.so
+└── src
+    └── main
+        └── java 
+            └── nl
+                └── igorski
+                    └── mwengine
+                        ├── core
+                        │   └── ...java
+                        ├── definitions
+                        │   └── ...java
+                        ├── helpers
+                        │   └── ....java
+                        └── MWEngine.java
+```
+
+Preferably you would make MWEngine's gradle file a submodule of your
+custom application Gradle file.
 
 ### FAQ / Troubleshooting
 
-The contents of this repository should result in a stable application. If you experience issues with
-the setup, consult the [Troubleshooting Wiki page](https://github.com/igorski/MWEngine/wiki/Troubleshooting-MWEngine).
+The contents of this repository should result in a stable library and example
+application. If you experience issues with the setup, consult the
+[Troubleshooting Wiki page](https://github.com/igorski/MWEngine/wiki/Troubleshooting-MWEngine).
 
 ### Documentation
 
@@ -133,13 +186,13 @@ workings of each class.
 
 The library comes with unit tests (_/src/main/cpp/tests/_), written using the Googletest C++ testing framework.
 
-To run the tests, we temporarily need a [https://github.com/igorski/MWEngine/issues/106](workaround) :
+To run the tests, we temporarily need a [workaround](https://github.com/igorski/MWEngine/issues/106) :
 
  * update _local.properties_ to include the line: _enable_tests=true_
  * run _gradle externalNativeBuildDebug_ with a device / emulator attached to your machine.
  
-This will build a special version of the library including the test suite and will execute it directly onto the
-attach device. Note: _adb_ must be available in your global path settings.
+This will build a special version of the library including the test suite and will execute it directly on the
+attached device. Note: _adb_ must be available in your global path settings.
 
 NOTE: to create a release build of your app (or continuing non-test related development) you must unset
 the added line in _local.properties_. Once issue #106 is addressed it will no longer be necessary to
@@ -163,7 +216,7 @@ devices running Android 8 and up) :
 
  * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
 
-A [https://github.com/igorski/MWEngine/issues/106](future iteration) of the engine will allow runtime selection of audio drivers.
+A [future iteration](https://github.com/igorski/MWEngine/issues/106) of the engine will allow runtime selection of audio drivers.
 
 ### Contributors
 
