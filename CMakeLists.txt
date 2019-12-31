@@ -174,7 +174,6 @@ else()
 
     set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest/${ANDROID_ABI}) # Directory on device to push tests.
 
-    message("ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}") # ANDROID_SDK_ROOT should be passed as variable to this script.
 #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
 
     add_custom_command(
