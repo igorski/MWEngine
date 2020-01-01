@@ -9,8 +9,11 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.Spinner;
+
 import nl.igorski.mwengine.MWEngine;
 import nl.igorski.mwengine.definitions.Pitch;
 import nl.igorski.mwengine.helpers.DevicePropertyCalculator;
@@ -45,12 +48,16 @@ public final class MWEngineActivity extends Activity {
     private boolean _isRecording      = false;
     private boolean _inited           = false;
 
-    private float minFilterCutoff = 50.0f;
-    private float maxFilterCutoff;
+    // AAudio is only supported from Android 8/Oreo onwards.
+    private boolean _supportsAAudio     = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O;
+    private Drivers.types  _audioDriver = _supportsAAudio ? Drivers.types.AAUDIO : Drivers.types.OPENSL;
 
     private int SAMPLE_RATE;
     private int BUFFER_SIZE;
     private int OUTPUT_CHANNELS = 2; // 1 = mono, 2 = stereo
+
+    private float minFilterCutoff = 50.0f;
+    private float maxFilterCutoff;
 
     private static int STEPS_PER_MEASURE = 16;  // amount of subdivisions within a single measure
     private static String LOG_TAG = "MWENGINE"; // logcat identifier
@@ -115,7 +122,7 @@ public final class MWEngineActivity extends Activity {
         BUFFER_SIZE = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
         SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
 
-        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
+        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, _audioDriver );
 
         // STEP 2 : let's create some music !
 
@@ -145,6 +152,12 @@ public final class MWEngineActivity extends Activity {
         (( SeekBar ) findViewById( R.id.PitchSlider )).setOnSeekBarChangeListener( new PitchChangeHandler() );
         (( SeekBar ) findViewById( R.id.TempoSlider )).setOnSeekBarChangeListener( new TempoChangeHandler() );
         (( SeekBar ) findViewById( R.id.VolumeSlider )).setOnSeekBarChangeListener( new VolumeChangeHandler() );
+
+        if ( !_supportsAAudio ) {
+            findViewById( R.id.DriverSelection ).setVisibility( View.GONE );
+        } else {
+            (( Spinner ) findViewById( R.id.DriverSpinner )).setOnItemSelectedListener( new DriverChangeHandler() );
+        }
 
         _inited = true;
     }
@@ -325,6 +338,16 @@ public final class MWEngineActivity extends Activity {
 
     /* event handlers */
 
+    private class DriverChangeHandler implements AdapterView.OnItemSelectedListener {
+        public void onItemSelected(AdapterView<?> parent, View view, int pos,long id) {
+            String selectedValue = parent.getItemAtPosition(pos).toString();
+            _audioDriver = selectedValue.toLowerCase().equals("aaudio") ? Drivers.types.AAUDIO : Drivers.types.OPENSL;
+            _engine.setAudioDriver( _audioDriver );
+        }
+        @Override
+        public void onNothingSelected(AdapterView<?> arg0) {}
+    }
+
     private class PlayClickHandler implements View.OnClickListener {
         public void onClick( View v ) {
             _sequencerPlaying = !_sequencerPlaying;
@@ -434,11 +457,11 @@ public final class MWEngineActivity extends Activity {
         public void handleNotification( final int aNotificationId ) {
             switch ( _notificationEnums[ aNotificationId ]) {
                 case ERROR_HARDWARE_UNAVAILABLE:
-                    Log.d( LOG_TAG, "ERROR : received Open SL error callback from native layer" );
+                    Log.d( LOG_TAG, "ERROR : received driver error callback from native layer" );
                     // re-initialize thread
                     if ( _engine.canRestartEngine() ) {
                         _engine.dispose();
-                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
+                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, _audioDriver );
                         _engine.start();
                     }
                     else {

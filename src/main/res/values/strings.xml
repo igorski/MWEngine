@@ -9,6 +9,7 @@
     <string name="app_live_input_help">You can add new audio on the fly too: hold down the first button to play a C
         note or hold down the second button to record audio from your Android device input (tip: use headphones to prevent
         feedback occurring when using the microphone on your phone at louder volume settings)</string>
+    <string name="driver">Audio driver</string>
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>
     <string name="live_btn">C note</string>
@@ -21,4 +22,9 @@
     <string name="slider_pitch">Drum pitch</string>
     <string name="slider_tempo">Sequencer tempo</string>
     <string name="slider_volume">Output volume</string>
+
+    <string-array name="drivers">
+        <item>AAudio</item>
+        <item>OpenSL</item>
+    </string-array>
 </resources>

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -29,11 +29,6 @@
 
 namespace MWEngine {
 
-// DRIVER defines which driver to use
-// valid options are 0 (OpenSL, works from Android 4.1 up) and 1 (AAudio, Android 8 up)
-
-#define DRIVER 0
-
 // PRECISION defines the floating-point precision used to synthesize the audio samples
 // valid options are 1 (32-bit float) and 2 (64-bit double)
 
@@ -55,9 +50,7 @@ namespace MWEngine {
 #define LOGTAG "MWENGINE" // the logtag used when logging messages to logcat
 
 // if you wish to use the engine without JNI support (e.g. using solely C++/NDK), comment the USE_JNI definition
-#ifndef MOCK_ENGINE
 #define USE_JNI
-#endif
 
 namespace AudioEngineProps
 {

@@ -16,6 +16,7 @@ using namespace MWEngine;
 
 #include "jni/javabridge_api.h"
 #include "jni/javautilities.h"
+#include "definitions/drivers.h"
 #include "definitions/notifications.h"
 #include "definitions/waveforms.h"
 #include "audiochannel.h"
@@ -83,6 +84,7 @@ using namespace MWEngine;
 
 %include "jni/javabridge_api.h"
 %include "jni/javautilities.h"
+%include "definitions/drivers.h"
 %include "definitions/notifications.h"
 %include "definitions/waveforms.h"
 %include "audiochannel.h"

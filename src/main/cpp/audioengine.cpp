@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -116,12 +116,17 @@ namespace MWEngine {
         AudioEngineProps::OUTPUT_CHANNELS = amountOfChannels;
     }
 
+    void AudioEngine::start()
+    {
+        AudioEngine::start( Drivers::types::OPENSL );
+    }
+
     /**
      * starts the render thread
      * NOTE: the render thread is always active, even when the
      * sequencer is paused
      */
-    void AudioEngine::start()
+    void AudioEngine::start( Drivers::types audioDriver )
     {
         if ( thread == 1 )
             return;
@@ -131,7 +136,7 @@ namespace MWEngine {
         // create the output driver using the adapter. If creation failed
         // prevent thread start and trigger JNI callback for error handler
 
-        if ( !DriverAdapter::create() )
+        if ( !DriverAdapter::create( audioDriver ))
         {
             Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
             return;
@@ -507,11 +512,10 @@ namespace MWEngine {
         if ( queuedTempo != tempo )
             handleTempoUpdate( queuedTempo, true );
 
-#if DRIVER == 1
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
-        if ( bouncing && thread == 1 )
+        if ( bouncing && thread == 1 && DriverAdapter::isAAudio() ) {
             render( amountOfSamples );
-#endif
+        }
         return ( thread == 1 );
     }
 
@@ -592,18 +596,6 @@ namespace MWEngine {
 
         return true; // indicates we have written the buffer to the cache
     }
-
-#ifdef MOCK_ENGINE
-
-    /* unit test related */
-
-    bool  AudioEngine::engine_started    = false;
-    int   AudioEngine::test_program      = 0;
-    bool  AudioEngine::test_successful   = false;
-    int   AudioEngine::render_iterations = 0;
-    float AudioEngine::mock_opensl_time  = 0.0f;
-
-#endif
 
 #ifdef USE_JNI
 

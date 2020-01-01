@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
+# Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -41,18 +41,15 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/sequencer.cpp
                           ${CPP_SRC}/sequencercontroller.cpp
                           ${CPP_SRC}/wavetable.cpp
-                          ${CPP_SRC}/drumpattern.cpp
                           ${CPP_SRC}/drivers/adapter.cpp
                           ${CPP_SRC}/drivers/opensl_io.c
                           ${CPP_SRC}/drivers/aaudio_io.cpp
                           ${CPP_SRC}/events/baseaudioevent.cpp
                           ${CPP_SRC}/events/basecacheableaudioevent.cpp
-                          ${CPP_SRC}/events/drumevent.cpp
                           ${CPP_SRC}/events/sampleevent.cpp
                           ${CPP_SRC}/generators/envelopegenerator.cpp
                           ${CPP_SRC}/generators/wavegenerator.cpp
                           ${CPP_SRC}/instruments/baseinstrument.cpp
-                          ${CPP_SRC}/instruments/druminstrument.cpp
                           ${CPP_SRC}/instruments/sampledinstrument.cpp
                           ${CPP_SRC}/messaging/notifier.cpp
                           ${CPP_SRC}/messaging/observer.cpp
@@ -72,6 +69,12 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/utilities/wavereader.cpp
                           ${CPP_SRC}/utilities/wavewriter.cpp
                           ${CPP_SRC}/utilities/utils.cpp)
+
+# Mikrowave specific sources (drum machine specific, you can also create drum machines using sampledinstrument)
+
+set(MWENGINE_MIKROWAVE_SOURCES ${CPP_SRC}/drumpattern.cpp
+                               ${CPP_SRC}/events/drumevent.cpp
+                               ${CPP_SRC}/instruments/druminstrument.cpp)
 
 # synthesis (can be omitted if your use case only concerns sample based playback)
 
@@ -109,77 +112,74 @@ set(MWENGINE_PROCESSORS ${CPP_SRC}/processors/bitcrusher.cpp
 set(JNI_SOURCES ${CPP_SRC}/jni/javabridge.cpp
                 ${CPP_SRC}/jni/javautilities.cpp)
 
-if (NOT ${RUN_TESTS} MATCHES "true")
+# build the mock driver into the library when unit test execution is enabled
 
-    add_library(mwengine STATIC
-                         ${MWENGINE_CORE_SOURCES}
-                         ${MWENGINE_SYNTH_SOURCES}
-                         ${MWENGINE_PROCESSORS}
-                         ${JNI_SOURCES})
-
-    # link all the NDK libraries used by the project
-
-    target_link_libraries(mwengine android atomic log OpenSLES aaudio)
-
-    #####################################
-    ## SWIG JNI to Java class wrapping ##
-    #####################################
-
-    find_package(SWIG REQUIRED)
-    include(${SWIG_USE_FILE})
-
-    # Ensure file recognized as C++ (otherwise, exported as C file)
-
-    set_property(SOURCE ${CPP_SRC}/mwengine.i PROPERTY CPLUSPLUS ON)
-
-    # Setup SWIG flags and locations
-
-    set(CMAKE_SWIG_FLAGS -DNO_RTIO -c++ -lcarrays.i -package nl.igorski.mwengine.core)
-    set(CMAKE_SWIG_OUTDIR ${JAVA_SRC}/nl/igorski/mwengine/core)
-
-    # Export a wrapper file to Java, and link with the created C++ library
-
-    swig_add_module(mwengine_wrapped java ${CPP_SRC}/mwengine.i)
-    swig_link_libraries(mwengine_wrapped mwengine)
-
-else()
-
-    ################
-    ## UNIT TESTS ##
-    ################
-
-    # because the use of the mock engine needs to be defined during compilation
-    # of the mwengine library, this is a separate configuration requiring a complete
-    # rebuild of the engine. TODO: https://github.com/igorski/MWEngine/issues/106
-
+if (${RUN_TESTS} MATCHES "true")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D=MOCK_ENGINE")
+    set(MWENGINE_CORE_SOURCES ${MWENGINE_CORE_SOURCES}
+                              ${CPP_SRC}/drivers/mock_io.cpp)
+endif()
 
-    add_library(mwengine STATIC
-                         ${MWENGINE_CORE_SOURCES}
-                         ${MWENGINE_SYNTH_SOURCES}
-                         ${MWENGINE_PROCESSORS})
+add_library(mwengine SHARED
+                     ${MWENGINE_CORE_SOURCES}
+                     ${MWENGINE_SYNTH_SOURCES}
+                     ${MWENGINE_PROCESSORS}
+                     ${MWENGINE_MIKROWAVE_SOURCES}
+                     ${JNI_SOURCES})
 
-    target_link_libraries(mwengine android atomic log OpenSLES aaudio)
+# link all the NDK libraries used by the project
 
-    set(GTEST_DIR ${ANDROID_NDK}/sources/third_party/googletest)
+target_link_libraries(mwengine android atomic log OpenSLES aaudio)
 
-    add_library(gtest STATIC ${GTEST_DIR}/src/gtest_main.cc ${GTEST_DIR}/src/gtest-all.cc)
-    target_include_directories(gtest PRIVATE ${GTEST_DIR})
-    target_include_directories(gtest PUBLIC ${GTEST_DIR}/include)
+#####################################
+## SWIG JNI to Java class wrapping ##
+#####################################
 
-    add_executable(mwengine_unittest ${CPP_SRC}/tests/main.cpp)
-    target_link_libraries(mwengine_unittest mwengine gtest)
+find_package(SWIG REQUIRED)
+include(${SWIG_USE_FILE})
 
-    # Push and execute tests as post-build event
+set_property(SOURCE ${CPP_SRC}/mwengine.i PROPERTY CPLUSPLUS ON)
 
-    set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest/${ANDROID_ABI}) # Directory on device to push tests.
+set(CMAKE_SWIG_FLAGS -DNO_RTIO -c++ -lcarrays.i -package nl.igorski.mwengine.core)
+set(CMAKE_SWIG_OUTDIR ${JAVA_SRC}/nl/igorski/mwengine/core)
 
-#    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
+# Export a wrapper file to Java, and link with the created C++ library
 
-    add_custom_command(
-        TARGET mwengine_unittest POST_BUILD
-        COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
-        COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
-        COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\")
+swig_add_module(mwengine_wrapped java ${CPP_SRC}/mwengine.i)
+swig_link_libraries(mwengine_wrapped mwengine)
+
+################
+## UNIT TESTS ##
+################
+
+if (${RUN_TESTS} MATCHES "true")
+
+    # only run for a single architecture, assume x86_64 TODO: specify via local.properties?
+
+    if (${ANDROID_ABI} MATCHES "x86_64")
+
+        set(GTEST_DIR ${ANDROID_NDK}/sources/third_party/googletest)
+
+        add_library(gtest STATIC ${GTEST_DIR}/src/gtest_main.cc ${GTEST_DIR}/src/gtest-all.cc)
+        target_include_directories(gtest PRIVATE ${GTEST_DIR})
+        target_include_directories(gtest PUBLIC ${GTEST_DIR}/include)
+
+        add_executable(mwengine_unittest ${CPP_SRC}/tests/main.cpp)
+        target_link_libraries(mwengine_unittest mwengine gtest)
+
+        # Push and execute tests as post-build event
+
+        set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest/${ANDROID_ABI}) # Directory on device to push tests.
+
+    #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
+
+        add_custom_command(
+            TARGET mwengine_unittest POST_BUILD
+            COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
+            COMMAND adb push $<TARGET_FILE:mwengine> ${TARGET_TEST_DIR}/
+            COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
+            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\")
+
+    endif()
 
 endif()
