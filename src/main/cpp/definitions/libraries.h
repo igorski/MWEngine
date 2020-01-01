@@ -153,77 +153,75 @@ namespace MWEngine {
         // remain agnostic as to whether or not AAudio was bundled with MWEngine
         // or loaded at runtime using library_loader
     
-        static Signatures::sig_I_PPB AAudio_createStreamBuilder = nullptr;
+        extern Signatures::sig_I_PPB AAudio_createStreamBuilder = nullptr;
+        extern Signatures::sig_I_PB  AAudioStreamBuilder_delete = nullptr;
 
-        static Signatures::sig_I_PBPPS AAudioStreamBuilder_openStream = nullptr;
+        extern Signatures::sig_I_PBPPS AAudioStreamBuilder_openStream = nullptr;
 
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setBufferCapacityInFrames = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setChannelCount = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setDeviceId = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setDirection = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setFormat = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setFramesPerDataCallback = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setPerformanceMode = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setSampleRate = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setSharingMode = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setBufferCapacityInFrames = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setChannelCount = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setDeviceId = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setDirection = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setFormat = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setFramesPerDataCallback = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setPerformanceMode = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setSampleRate = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setSharingMode = nullptr;
 
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setUsage = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setContentType = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setInputPreset = nullptr;
-        static Signatures::sig_V_PBI AAudioStreamBuilder_setSessionId = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setUsage = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setContentType = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setInputPreset = nullptr;
+        extern Signatures::sig_V_PBI AAudioStreamBuilder_setSessionId = nullptr;
 
-        static Signatures::sig_V_PBPDPV AAudioStreamBuilder_setDataCallback = nullptr;
-        static Signatures::sig_V_PBPEPV AAudioStreamBuilder_setErrorCallback = nullptr;
+        extern Signatures::sig_V_PBPDPV AAudioStreamBuilder_setDataCallback  = nullptr;
+        extern Signatures::sig_V_PBPEPV AAudioStreamBuilder_setErrorCallback = nullptr;
 
-        static Signatures::sig_I_PB AAudioStreamBuilder_delete = nullptr;
 
-        static Signatures::sig_F_PS AAudioStream_getFormat = nullptr;
+        extern Signatures::sig_F_PS AAudioStream_getFormat = nullptr;
 
-        static Signatures::sig_I_PSPVIL AAudioStream_read = nullptr;
-        static Signatures::sig_I_PSCPVIL AAudioStream_write = nullptr;
+        extern Signatures::sig_I_PSPVIL AAudioStream_read = nullptr;
+        extern Signatures::sig_I_PSCPVIL AAudioStream_write = nullptr;
 
-        static Signatures::sig_I_PSTPTL AAudioStream_waitForStateChange = nullptr;
+        extern Signatures::sig_I_PSTPTL AAudioStream_waitForStateChange = nullptr;
 
-        static Signatures::sig_I_PSKPLPL AAudioStream_getTimestamp = nullptr;
+        extern Signatures::sig_I_PSKPLPL AAudioStream_getTimestamp = nullptr;
 
-        static Signatures::sig_B_PS AAudioStream_isMMapUsed = nullptr;
+        extern Signatures::sig_B_PS AAudioStream_isMMapUsed = nullptr;
 
-        static Signatures::sig_I_PS AAudioStream_close = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_close = nullptr;
 
-        static Signatures::sig_I_PS AAudioStream_getChannelCount = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getDeviceId = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getChannelCount = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getDeviceId = nullptr;
 
-        static Signatures::sig_I_PS AAudioStream_getBufferSizeInFrames = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getBufferCapacity = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getFramesPerBurst = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getState = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getPerformanceMode = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getSampleRate = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getSharingMode = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getXRunCount = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getBufferSizeInFrames = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getBufferCapacity = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getFramesPerBurst = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getState = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getPerformanceMode = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getSampleRate = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getSharingMode = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getXRunCount = nullptr;
 
-        static Signatures::sig_I_PSI AAudioStream_setBufferSizeInFrames = nullptr;
-        static Signatures::sig_I_PS AAudioStream_requestStart = nullptr;
-        static Signatures::sig_I_PS AAudioStream_requestPause = nullptr;
-        static Signatures::sig_I_PS AAudioStream_requestFlush = nullptr;
-        static Signatures::sig_I_PS AAudioStream_requestStop = nullptr;
+        extern Signatures::sig_I_PSI AAudioStream_setBufferSizeInFrames = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_requestStart = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_requestPause = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_requestFlush = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_requestStop = nullptr;
 
-        static Signatures::sig_L_PS AAudioStream_getFramesRead = nullptr;
-        static Signatures::sig_L_PS AAudioStream_getFramesWritten = nullptr;
+        extern Signatures::sig_L_PS AAudioStream_getFramesRead = nullptr;
+        extern Signatures::sig_L_PS AAudioStream_getFramesWritten = nullptr;
 
-        static Signatures::sig_CPH_I AAudio_convertResultToText = nullptr;
+        extern Signatures::sig_CPH_I AAudio_convertResultToText = nullptr;
 
-        static Signatures::sig_I_PS AAudioStream_getUsage = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getContentType = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getInputPreset = nullptr;
-        static Signatures::sig_I_PS AAudioStream_getSessionId = nullptr;
-
+        extern Signatures::sig_I_PS AAudioStream_getUsage       = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getContentType = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getInputPreset = nullptr;
+        extern Signatures::sig_I_PS AAudioStream_getSessionId   = nullptr;
     }
 
     // --- runtime linking of AAudio library methods
 
     /*
-    AAudioStream
     AAudioStream_getPerformanceMode
             AAudioStream_getFormat
     AAudioStream_getXRunCount
@@ -238,8 +236,6 @@ namespace MWEngine {
             AAudioStream_getBufferSizeInFrames
     AAudioStream_setBufferSizeInFrames
 
-            AAudioStreamBuilder
-            AAudioStreamBuilder_delete
     AAudioStreamBuilder_setDeviceId
     AAudioStreamBuilder_setFormat
     AAudioStream_getSampleRate

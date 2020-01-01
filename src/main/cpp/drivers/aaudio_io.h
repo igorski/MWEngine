@@ -41,10 +41,6 @@
 
 namespace MWEngine {
 
-#ifndef INCLUDE_AAUDIO_LIBRARY
-using namespace AAudio;
-#endif
-
 #define BUFFER_SIZE_AUTOMATIC 0
 // Time constants
 #define NANOS_PER_SECOND 1000000000L
@@ -52,6 +48,10 @@ using namespace AAudio;
 
 int64_t timestamp_to_nanoseconds(timespec ts);
 int64_t get_time_nanoseconds(clockid_t clockid);
+
+#ifndef INCLUDE_AAUDIO_LIBRARY
+using namespace AAudio;
+#endif
 
 class AAudio_IO
 {
@@ -117,6 +117,11 @@ class AAudio_IO
         void updateBufferSizeInFrames( int bufferSize );
 
         aaudio_result_t calculateCurrentOutputLatencyMillis( AAudioStream *stream, double *latencyMillis );
+
+#ifndef INCLUDE_AAUDIO_LIBRARY
+        static LibraryLoader* libraryLoader;
+#endif
+
     };
 
 } // E.O namespace MWEngine

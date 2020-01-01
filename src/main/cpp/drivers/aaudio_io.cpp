@@ -123,7 +123,8 @@ bool AAudio_IO::isSupported() {
 #ifdef INCLUDE_AAUDIO_LIBRARY
     return true;
 #else
-    return LibraryLoader::getInstance()->loadAAudioLibrary();
+    libraryLoader = LibraryLoader::getInstance();
+    return libraryLoader->loadAAudioLibrary();
 #endif
 }
 
