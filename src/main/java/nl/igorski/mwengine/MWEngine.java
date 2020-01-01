@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -78,9 +78,10 @@ public final class MWEngine extends Thread
 
     /* audio generation related, should be overridden to match device-specific values */
 
-    public static int SAMPLE_RATE     = 44100;
-    public static int BUFFER_SIZE     = 2048;
-    public static int OUTPUT_CHANNELS = 1; // 1 = mono, 2 = stereo
+    public static int SAMPLE_RATE            = 44100;
+    public static int BUFFER_SIZE            = 2048;
+    public static int OUTPUT_CHANNELS        = 2;
+    public static Drivers.types AUDIO_DRIVER = Drivers.types.OPENSL;
 
     private static float _volume = 1.0f;
 
@@ -129,11 +130,12 @@ public final class MWEngine extends Thread
         MWEngineCore.init();
     }
 
-    public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels )
+    public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels, Drivers.types driver )
     {
         SAMPLE_RATE     = aSampleRate;
         BUFFER_SIZE     = aBufferSize;
         OUTPUT_CHANNELS = aOutputChannels;
+        AUDIO_DRIVER    = driver;
 
         // older Android emulators can only work at 8 kHz or crash violently...
         if ( Build.FINGERPRINT.startsWith( "generic" ))
@@ -278,6 +280,20 @@ public final class MWEngine extends Thread
         _nativeEngineRetries = 0;
     }
 
+    public void setAudioDriver( Drivers.types audioDriver ) {
+        if ( AUDIO_DRIVER == audioDriver ) return;
+
+        AUDIO_DRIVER = audioDriver;
+        _nativeEngineRetries = 0;
+
+        if ( !_isRunning || !_nativeEngineRunning ) return;
+
+        // toggling paused state of the thread will stop the
+        // engine and upon restart, initialize it with the new audio driver
+        pause();
+        unpause();
+    }
+
     /**
      * queries whether we can try to restart the engine
      * in case an error has occurred, note this will also
@@ -370,7 +386,7 @@ public final class MWEngine extends Thread
 
                 _nativeEngineRunning = true;
                 MWEngineCore.init();
-                AudioEngine.start();
+                AudioEngine.start( AUDIO_DRIVER );
             }
 
             // the remainder of this function body is blocked

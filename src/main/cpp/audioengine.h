@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,6 +27,7 @@
 #include "audiochannel.h"
 #include "global.h"
 #include "processingchain.h"
+#include <definitions/drivers.h>
 
 namespace MWEngine {
 class AudioEngine
@@ -43,6 +44,7 @@ class AudioEngine
 
         static void setup( int bufferSize, int sampleRate, int amountOfChannels );
         static void start();
+        static void start( Drivers::types audioDriver );
         static void stop();
         static void reset();
 
@@ -95,24 +97,6 @@ class AudioEngine
         /* internal methods */
 
         static void handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate );
-
-#ifdef MOCK_ENGINE
-
-        /* unit test related */
-
-        /**
-         * as the unit tests use the MWEngine as a shared library we need to store
-         * engine test reports inside the engine itself, as the mock_opensl_io.h
-         * driver (which hijacks the opensl_io.h methods) will be built by both libraries
-         * implying the mock_opensl_io would not share memory space between the libraries
-         */
-        static bool  engine_started;
-        static int   test_program;
-        static bool  test_successful;
-        static int   render_iterations;
-        static float mock_opensl_time;
-
-#endif
 
     private:
 

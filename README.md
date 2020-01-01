@@ -26,7 +26,8 @@ The engine has been written for both [MikroWave](https://play.google.com/store/a
 [Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) to provide fast live audio synthesis.
 
 While development on aforementioned apps has (practically) been discontinued, the engine itself has over the years been continuously updated
-to be of use to third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize).
+to be of use to third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize)
+and [Another Flamenco Compás App](https://play.google.com/store/apps/details?id=com.harthorst.compas).
 
 ### C++ ??? What about Java / Kotlin ?
 
@@ -159,7 +160,7 @@ Example structure:
                         ├── definitions
                         │   └── ...java
                         ├── helpers
-                        │   └── ....java
+                        │   └── ...java
                         └── MWEngine.java
 ```
 
@@ -186,17 +187,12 @@ workings of each class.
 
 The library comes with unit tests (_/src/main/cpp/tests/_), written using the Googletest C++ testing framework.
 
-To run the tests, we temporarily need a [workaround](https://github.com/igorski/MWEngine/issues/106) :
+To enable unit testing upon each build / during development:
 
  * update _local.properties_ to include the line: _enable_tests=true_
- * run _gradle externalNativeBuildDebug_ with a device / emulator attached to your machine.
  
-This will build a special version of the library including the test suite and will execute it directly on the
-attached device. Note: _adb_ must be available in your global path settings.
-
-NOTE: to create a release build of your app (or continuing non-test related development) you must unset
-the added line in _local.properties_. Once issue #106 is addressed it will no longer be necessary to
-update local configuration files and it will be possible to run unit tests next to regular development.
+Note: _adb_ must be available in your global path settings and the attached device / emulator
+must have the x86_64 CPU architecture (see _CMakeLists.txt_).
 
 ### Demo
 
@@ -206,17 +202,6 @@ sequence going using the library.
 
 To install the demo: first build the library as described above, and then run the build script to deploy the .APK onto an
 attached device/emulator (note that older emulated devices can only operate at a sample rate of 8 kHz!).
-
-### Note on OpenSL / AAudio drivers
-
-Currently it is not possible to switch between audio drivers on the fly, rather you must precompile
-the library for use with a specific driver. By default, the library will compile for OpenSL for a
-wider range of supported devices. If you want to use AAudio instead (and thus are targeting solely
-devices running Android 8 and up) :
-
- * change the desired driver in _global.h_ from type 0 (OpenSL) to 1 (AAudio)
-
-A [future iteration](https://github.com/igorski/MWEngine/issues/106) of the engine will allow runtime selection of audio drivers.
 
 ### Contributors
 

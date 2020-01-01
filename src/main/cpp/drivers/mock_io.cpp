@@ -1,39 +1,41 @@
-#include "mock_opensl_io.h"
-#include "../../audioengine.h"
-#include "../../sequencer.h"
-#include "../../utilities/debug.h"
+/**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016-2020 Igor Zinken - https://www.igorski.nl
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+#include "mock_io.h"
+#include "../audioengine.h"
+#include "../sequencer.h"
+#include <utilities/debug.h>
 
-inline OPENSL_STREAM* mock_android_OpenAudioDevice( int sr, int inchannels, int outchannels, int bufferframes )
+Mock_IO::Mock_IO()
 {
-    Debug::log( "mocked device opening" );
-
-    OPENSL_STREAM *p = ( OPENSL_STREAM* ) calloc( sizeof( OPENSL_STREAM ), 1 );
-
-    p->inchannels  = inchannels;
-    p->outchannels = outchannels;
-    p->sr = sr;
-
-    AudioEngine::engine_started = true;
-
-    return p;
+    MockData::engine_started = true;
 }
 
-inline void mock_android_CloseAudioDevice( OPENSL_STREAM *p )
+Mock_IO::~Mock_IO()
 {
-    Debug::log( "mocked device closing" );
-
-    if ( p != 0 )
-        free( p );
+    // nowt...
 }
 
-inline int mock_android_AudioIn( OPENSL_STREAM *p, float *buffer, int size )
-{
-    AudioEngine::mock_opensl_time += ( float ) size / ( p->sr * p->inchannels );
-
-    return size;
-}
-
-inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
+int Mock_IO::writeOutput( float *buffer, int size )
 {
     // AudioEngine thread will halt all unit test execution
     // android_AudioOut is called upon each iteration, here
@@ -42,14 +44,14 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
     int outputChannels   = AudioEngineProps::OUTPUT_CHANNELS;
     int singleBufferSize = size / outputChannels;
 
-    Debug::log( "Audio Engine test %d running", AudioEngine::test_program );
+    Debug::log( "Audio Engine test %d running", MockData::test_program );
 
-    switch ( AudioEngine::test_program )
+    switch ( MockData::test_program )
     {
         case 0: // engine start test
         case 1: // engine tempo update test
 
-            ++AudioEngine::test_program;    // advance to next test
+            ++MockData::test_program;    // advance to next test
             AudioEngine::stop();
             break;
 
@@ -62,16 +64,16 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                 // incremented buffer position pointers accordingly), we can thus assume that on
                 // first run the current iteration is 1, not 0 (as it has completed its run)
 
-                int currentIteration = ++AudioEngine::render_iterations;
+                int currentIteration = ++MockData::render_iterations;
                 int maxIterations    = ( AudioEngine::max_buffer_position - AudioEngine::min_buffer_position ) / AudioEngineProps::BUFFER_SIZE;
 
                 int expectedBufferPosition = currentIteration * AudioEngineProps::BUFFER_SIZE;
 
                 if ( currentIteration == 1 )
-                    AudioEngine::test_successful = true; // will be falsified by assertions below
+                    MockData::test_successful = true; // will be falsified by assertions below
 
                 if ( AudioEngine::bufferPosition != expectedBufferPosition )
-                    AudioEngine::test_successful = false;
+                    MockData::test_successful = false;
 
                 // test 2. evaluate buffer contents
 
@@ -135,7 +137,7 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                     else {
                         continue;
                     }
-                    AudioEngine::test_successful = false;
+                    MockData::test_successful = false;
                     AudioEngine::stop();
                     break;
                 }
@@ -144,9 +146,9 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                 if ( currentIteration == maxIterations )
                 {
-                    Debug::log( "Audio Engine test %d done", AudioEngine::test_program );
+                    Debug::log( "Audio Engine test %d done", MockData::test_program );
 
-                    ++AudioEngine::test_program;    // advance to next test
+                    ++MockData::test_program;    // advance to next test
                     AudioEngine::stop();
                 }
             }
@@ -156,7 +158,7 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
             if ( Sequencer::playing )
             {
-                AudioEngine::test_successful = true; // will be falsified by assertions below
+                MockData::test_successful = true; // will be falsified by assertions below
 
                 // test 3. ensure the buffers of both the event at the end of the loop and
                 // at the start of the Sequencers loop have been mixed into the output buffer
@@ -174,7 +176,7 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
                     {
                         Debug::log( "TEST 3 expected %f, got %f at iteration %d (buffer pos %d)", expected, sample, i, bufferPosition );
 
-                        AudioEngine::test_successful = false;
+                        MockData::test_successful = false;
                         AudioEngine::stop();
                         break;
                     }
@@ -185,7 +187,7 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
 
                 // stop the engine
 
-                ++AudioEngine::test_program;    // advance to next test
+                ++MockData::test_program;    // advance to next test
                 AudioEngine::stop();
             }
 
@@ -194,7 +196,7 @@ inline int mock_android_AudioOut( OPENSL_STREAM *p, float *buffer, int size )
     return size;
 }
 
-inline float mock_android_GetTimestamp( OPENSL_STREAM *p )
-{
-    return AudioEngine::mock_opensl_time;
-}
+bool  MockData::engine_started    = false;
+int   MockData::test_program      = 0;
+bool  MockData::test_successful   = false;
+int   MockData::render_iterations = 0;

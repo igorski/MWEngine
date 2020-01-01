@@ -2,12 +2,14 @@
 #include "../audiobuffer.h"
 #include "../sequencer.h"
 #include "../sequencercontroller.h"
+#include "../definitions/drivers.h"
+#include "../drivers/mock_io.h"
 #include "../events/baseaudioevent.h"
 #include "../instruments/baseinstrument.h"
 
 TEST( AudioEngine, Start )
 {
-    AudioEngine::test_program = 0; // help mocked OpenSL IO identify which test is running
+    MockData::test_program = 0; // help mocked IO identify which test is running
 
     // prepare engine environment
     SequencerController* controller = new SequencerController();
@@ -18,14 +20,14 @@ TEST( AudioEngine, Start )
     // mono output with 48 kHz sample rate and buffer size of 240 samples
     AudioEngine::setup( 240, 48000, 1 );
 
-    AudioEngine::engine_started = false;
+    MockData::engine_started = false;
 
-    AudioEngine::start();
+    AudioEngine::start( Drivers::types::MOCKED );
 
-    EXPECT_EQ( 1, AudioEngine::test_program )
+    EXPECT_EQ( 1, MockData::test_program )
         << "expected program to have incremented";
 
-    ASSERT_TRUE( AudioEngine::engine_started )
+    ASSERT_TRUE( MockData::engine_started )
         << "expected engine to have started";
 
     delete controller;
@@ -33,7 +35,7 @@ TEST( AudioEngine, Start )
 
 TEST( AudioEngine, TempoUpdate )
 {
-    AudioEngine::test_program = 1; // help mocked OpenSL IO identify which test is running
+    MockData::test_program = 1; // help mocked IO identify which test is running
 
     // prepare engine environment
 
@@ -83,7 +85,7 @@ TEST( AudioEngine, TempoUpdate )
     EXPECT_EQ( 4, controller->getTimeSigBeatUnit() )
         << "expected time signature to be at the old value prior to the engine start";
 
-    AudioEngine::start();
+    AudioEngine::start( Drivers::types::MOCKED );
     //usleep( 50 ); // tempo update is executed after the engine is halted by the OpenSL mock
 
     // assert results
@@ -115,7 +117,7 @@ TEST( AudioEngine, TempoUpdate )
     ASSERT_FALSE( AudioEngine::samples_per_step == oldSPStep )
         << "expected engine to have updated its samples per step value after tempo change";
 
-    EXPECT_EQ( 2, AudioEngine::test_program )
+    EXPECT_EQ( 2, MockData::test_program )
         << "expected program to have incremented";
 
     delete controller;
@@ -123,8 +125,8 @@ TEST( AudioEngine, TempoUpdate )
 
 TEST( AudioEngine, Output )
 {
-    AudioEngine::test_program    = 2;   // help mocked OpenSL IO identify which test is running
-    AudioEngine::test_successful = false;
+    MockData::test_program    = 2;   // help mocked IO identify which test is running
+    MockData::test_successful = false;
 
     // prepare engine environment
 
@@ -197,20 +199,20 @@ TEST( AudioEngine, Output )
     // start the engine
 
     controller->setPlaying( true );
-    AudioEngine::start();
+    AudioEngine::start( Drivers::types::MOCKED );
 
     // evaluate results (assertions are made in mock_opensl_io.cpp)
 
-    ASSERT_TRUE( AudioEngine::test_successful )
+    ASSERT_TRUE( MockData::test_successful )
         << "expected test to be successful";
 
-    EXPECT_EQ( 3, AudioEngine::test_program )
+    EXPECT_EQ( 3, MockData::test_program )
         << "expected test program to have incremented";
 
     // clean up
 
     controller->setPlaying( false );
-    AudioEngine::render_iterations = 0;
+    MockData::render_iterations = 0;
 
     delete controller;
     delete instrument;
@@ -224,8 +226,8 @@ TEST( AudioEngine, Output )
 
 TEST( AudioEngine, OutputAtLoopStart )
 {
-    AudioEngine::test_program    = 3;   // help mocked OpenSL IO identify which test is running
-    AudioEngine::test_successful = false;
+    MockData::test_program    = 3;   // help mocked IO identify which test is running
+    MockData::test_successful = false;
 
     // setup sequencer
 
@@ -289,20 +291,20 @@ TEST( AudioEngine, OutputAtLoopStart )
     AudioEngine::bufferPosition = 88100;
     AudioEngine::volume         = 1;
     controller->setPlaying( true );
-    AudioEngine::start();
+    AudioEngine::start( Drivers::types::MOCKED );
 
     // evaluate results (assertions are made in mock_opensl_io.cpp)
 
-    ASSERT_TRUE( AudioEngine::test_successful )
+    ASSERT_TRUE( MockData::test_successful )
         << "expected test to be successful";
 
-    EXPECT_EQ( 4, AudioEngine::test_program )
+    EXPECT_EQ( 4, MockData::test_program )
         << "expected test program to have incremented";
 
     // clean up
 
     controller->setPlaying( false );
-    AudioEngine::render_iterations = 0;
+    MockData::render_iterations = 0;
 
     delete channels;
     delete controller;

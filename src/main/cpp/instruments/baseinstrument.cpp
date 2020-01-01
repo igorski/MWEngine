@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,6 +23,7 @@
 #include "baseinstrument.h"
 #include "../audioengine.h"
 #include "../sequencer.h"
+#include <drivers/adapter.h>
 #include <algorithm>
 
 namespace MWEngine {
@@ -194,13 +195,16 @@ void BaseInstrument::toggleReadLock( bool locked )
 {
     // when unit testing, GoogleTest deadlocks on this attempted locking operation. We don't
     // need to test for mutex behaviour, but it would be nice not to have to wrap this code
-#ifndef MOCK_ENGINE
+
+    if ( DriverAdapter::isMocked() ) {
+        return;
+    }
+
     if ( locked ) {
         _lock.lock();
     } else {
         _lock.unlock();
     }
-#endif
 }
 
 /* protected methods */

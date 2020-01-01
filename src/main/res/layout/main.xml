@@ -1,204 +1,232 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+>
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="fill_parent"
+                  android:layout_height="fill_parent">
 
-    <!-- intro text -->
+        <!-- intro text -->
 
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:padding="15dip"
-        android:text="@string/app_help"
-        android:layout_marginBottom="5dip"
-    />
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:padding="15dip"
+            android:text="@string/app_help"
+            android:layout_marginBottom="5dip"
+        />
 
-    <!-- play/pause buttons -->
+        <!-- auio driver selection -->
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="1dip"
-        android:layout_gravity="center"
-        android:orientation="horizontal"
-    >
-        <Button
-            android:id="@+id/PlayPauseButton"
+        <LinearLayout
+            android:id="@+id/DriverSelection"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/play_btn" />
-
-        <Button
-            android:id="@+id/RecordButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/rec_btn_on" />
-    </LinearLayout>
-
-    <!-- effects text -->
-
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:padding="15dip"
-        android:text="@string/app_fx_help"
-        android:layout_marginBottom="5dip"
-    />
-
-    <!-- synth 1 filter cutoff -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <SeekBar android:id="@+id/FilterCutoffSlider"
-                 android:progress="50"
-                 android:layout_marginLeft="5dip"
-                 android:layout_marginRight="5dip"
-                 android:layout_marginBottom="5dip"
-                 android:layout_width="200dip"
-                 android:layout_height="wrap_content" />
-
-        <TextView android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="7dip"
-            android:text="@string/slider_cutoff" />
-    </LinearLayout>
-
-    <!-- synth 1 decay -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <SeekBar android:id="@+id/SynthDecaySlider"
-                 android:progress="10"
-                 android:layout_marginLeft="5dip"
-                 android:layout_marginRight="5dip"
-                 android:layout_marginBottom="5dip"
-                 android:layout_width="200dip"
-                 android:layout_height="wrap_content" />
-
-        <TextView android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="7dip"
-            android:text="@string/slider_decay" />
-    </LinearLayout>
-
-    <!-- synth 2 delay mix -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <SeekBar android:id="@+id/MixSlider"
-                 android:progress="50"
-                 android:layout_marginLeft="5dip"
-                 android:layout_marginRight="5dip"
-                 android:layout_marginBottom="5dip"
-                 android:layout_width="200dip"
-                 android:layout_height="wrap_content" />
-
-        <TextView android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="7dip"
-            android:text="@string/slider_mix" />
-    </LinearLayout>
-
-    <!-- drum pitch -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <SeekBar android:id="@+id/PitchSlider"
-                 android:progress="50"
-                 android:layout_marginLeft="5dip"
-                 android:layout_marginRight="5dip"
-                 android:layout_width="200dip"
-                 android:layout_height="wrap_content" />
-
-        <TextView android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="7dip"
-            android:text="@string/slider_pitch" />
-    </LinearLayout>
-
-    <!-- sequencer tempo -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <SeekBar android:id="@+id/TempoSlider"
-                 android:progress="50"
-                 android:layout_marginLeft="5dip"
-                 android:layout_marginRight="5dip"
-                 android:layout_width="200dip"
-                 android:layout_height="wrap_content" />
-
-        <TextView android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="7dip"
-            android:text="@string/slider_tempo" />
-    </LinearLayout>
-
-    <!-- output volume -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <SeekBar android:id="@+id/VolumeSlider"
-                 android:progress="100"
-                 android:layout_marginLeft="5dip"
-                 android:layout_marginRight="5dip"
-                 android:layout_width="200dip"
-                 android:layout_height="wrap_content" />
-
-        <TextView android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="7dip"
-            android:text="@string/slider_volume" />
-    </LinearLayout>
-
-    <!-- live input text -->
-
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:padding="15dip"
-        android:text="@string/app_live_input_help"
-        android:layout_marginBottom="5dip"
-    />
-
-    <!-- live input buttons -->
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
         >
-        <Button
-            android:id="@+id/LiveNoteButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/live_btn" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/driver"
+                android:paddingRight="15dip"
+            />
+            <Spinner
+                android:id="@+id/DriverSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/btn_dropdown"
+                android:spinnerMode="dropdown"
+                android:entries="@array/drivers"
+            />
+        </LinearLayout>
 
-        <Button
-            android:id="@+id/RecordInputButton"
+        <!-- play/pause buttons -->
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/rec_input_btn" />
+            android:layout_marginBottom="1dip"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+        >
+            <Button
+                android:id="@+id/PlayPauseButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/play_btn" />
+
+            <Button
+                android:id="@+id/RecordButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/rec_btn_on" />
+        </LinearLayout>
+
+        <!-- effects text -->
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:padding="15dip"
+            android:text="@string/app_fx_help"
+            android:layout_marginBottom="5dip"
+        />
+
+        <!-- synth 1 filter cutoff -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <SeekBar android:id="@+id/FilterCutoffSlider"
+                     android:progress="50"
+                     android:layout_marginLeft="5dip"
+                     android:layout_marginRight="5dip"
+                     android:layout_marginBottom="5dip"
+                     android:layout_width="200dip"
+                     android:layout_height="wrap_content" />
+
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="7dip"
+                android:text="@string/slider_cutoff" />
+        </LinearLayout>
+
+        <!-- synth 1 decay -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <SeekBar android:id="@+id/SynthDecaySlider"
+                     android:progress="10"
+                     android:layout_marginLeft="5dip"
+                     android:layout_marginRight="5dip"
+                     android:layout_marginBottom="5dip"
+                     android:layout_width="200dip"
+                     android:layout_height="wrap_content" />
+
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="7dip"
+                android:text="@string/slider_decay" />
+        </LinearLayout>
+
+        <!-- synth 2 delay mix -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <SeekBar android:id="@+id/MixSlider"
+                     android:progress="50"
+                     android:layout_marginLeft="5dip"
+                     android:layout_marginRight="5dip"
+                     android:layout_marginBottom="5dip"
+                     android:layout_width="200dip"
+                     android:layout_height="wrap_content" />
+
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="7dip"
+                android:text="@string/slider_mix" />
+        </LinearLayout>
+
+        <!-- drum pitch -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <SeekBar android:id="@+id/PitchSlider"
+                     android:progress="50"
+                     android:layout_marginLeft="5dip"
+                     android:layout_marginRight="5dip"
+                     android:layout_width="200dip"
+                     android:layout_height="wrap_content" />
+
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="7dip"
+                android:text="@string/slider_pitch" />
+        </LinearLayout>
+
+        <!-- sequencer tempo -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <SeekBar android:id="@+id/TempoSlider"
+                     android:progress="50"
+                     android:layout_marginLeft="5dip"
+                     android:layout_marginRight="5dip"
+                     android:layout_width="200dip"
+                     android:layout_height="wrap_content" />
+
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="7dip"
+                android:text="@string/slider_tempo" />
+        </LinearLayout>
+
+        <!-- output volume -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <SeekBar android:id="@+id/VolumeSlider"
+                     android:progress="100"
+                     android:layout_marginLeft="5dip"
+                     android:layout_marginRight="5dip"
+                     android:layout_width="200dip"
+                     android:layout_height="wrap_content" />
+
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="7dip"
+                android:text="@string/slider_volume" />
+        </LinearLayout>
+
+        <!-- live input text -->
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:padding="15dip"
+            android:text="@string/app_live_input_help"
+            android:layout_marginBottom="5dip"
+        />
+
+        <!-- live input buttons -->
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:id="@+id/LiveNoteButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/live_btn" />
+
+            <Button
+                android:id="@+id/RecordInputButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/rec_input_btn" />
+        </LinearLayout>
+
     </LinearLayout>
-
-</LinearLayout>
-
+</ScrollView>

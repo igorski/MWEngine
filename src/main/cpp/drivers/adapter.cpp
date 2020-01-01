@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2017-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,97 +27,130 @@
 namespace MWEngine {
 namespace DriverAdapter {
 
-#if DRIVER == 0
-    OPENSL_STREAM* driver_openSL = nullptr; // OpenSL
-#elif DRIVER == 1
-    AAudio_IO* driver_aAudio = nullptr;     // AAudio
+    Drivers::types _driver       = Drivers::types::OPENSL;
+
+    AAudio_IO* driver_aAudio     = nullptr;
+    OPENSL_STREAM* driver_openSL = nullptr;
+#ifdef MOCK_ENGINE
+    Mock_IO*       driver_mocked = nullptr;
 #endif
 
-    bool create() {
+    MWEngine_renderCallback render      = nullptr;
+    MWEngine_writeCallback  writeOutput = nullptr;
+    MWEngine_readCallback   getInput    = nullptr;
 
-#if DRIVER == 0
+    bool create( Drivers::types driver ) {
 
-        Debug::log( "DriverAdapter::initializing OpenSL driver");
+        destroy(); // destroy existing drivers
 
-        // OpenSL
-        driver_openSL = android_OpenAudioDevice(
-            AudioEngineProps::SAMPLE_RATE, AudioEngineProps::INPUT_CHANNELS,
-            AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE
-        );
-        return ( driver_openSL != NULL );
+        _driver = driver;
 
-#elif DRIVER == 1
+        switch ( _driver ) {
+            default:
+                return false;
 
-        Debug::log( "DriverAdapter::initializing AAudio driver");
+            case Drivers::OPENSL:
 
-        // AAudio
-        driver_aAudio = new AAudio_IO(
-            AudioEngineProps::INPUT_CHANNELS, AudioEngineProps::OUTPUT_CHANNELS
-        );
+                Debug::log( "DriverAdapter::initializing OpenSL driver" );
 
-        if ( driver_aAudio == nullptr ) {
-            return false;
+                driver_openSL = android_OpenAudioDevice(
+                    AudioEngineProps::SAMPLE_RATE,     AudioEngineProps::INPUT_CHANNELS,
+                    AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE
+                );
+                if ( driver_openSL == nullptr ) {
+                    return false;
+                }
+                render = []() {
+                    // OpenSL maintains its own locking mechanism, we can invoke
+                    // the render cycle directly from the audio engine thread loop
+                    AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
+                };
+                writeOutput = []( float* outputBuffer, int amountOfSamples ) {
+                    android_AudioOut( driver_openSL, outputBuffer, amountOfSamples );
+                };
+                getInput = []( float* recordBuffer, int amountOfSamples ) {
+                    return android_AudioIn( driver_openSL, recordBuffer, AudioEngineProps::BUFFER_SIZE );
+                };
+                return true;
+
+            case Drivers::AAUDIO:
+
+                Debug::log( "DriverAdapter::initializing AAudio driver");
+
+                driver_aAudio = new AAudio_IO(
+                    AudioEngineProps::INPUT_CHANNELS, AudioEngineProps::OUTPUT_CHANNELS
+                );
+
+                if ( driver_aAudio == nullptr ) {
+                    return false;
+                }
+                // TODO: allow specifying these from the outside?
+                // driver_aAudio->setDeviceId();
+                // driver_aAudio->setRecordingDeviceId();
+                driver_aAudio->setBufferSizeInBursts( 1 ); // Google provides {0, 1, 2, 4, 8} as values
+
+                render = []() {
+                    // AAudio triggers its callback internally when ready
+                    // AAudio driver will request render() on its own
+                    driver_aAudio->render = true;
+                };
+                writeOutput = []( float* outputBuffer, int amountOfSamples ) {
+                    driver_aAudio->enqueueOutputBuffer( outputBuffer, amountOfSamples );
+                };
+                getInput = []( float* recordBuffer, int amountOfSamples ) {
+                    return driver_aAudio->getEnqueuedInputBuffer( recordBuffer, amountOfSamples );
+                };
+
+                return true;
+
+#ifdef MOCK_ENGINE
+
+            case Drivers::MOCKED:
+
+                Debug::log( "DriverAdapter::initializing mocked driver");
+
+                driver_mocked = new Mock_IO();
+
+                render = []() {
+                    AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
+                };
+                writeOutput = []( float* outputBuffer, int amountOfSamples ) {
+                    driver_mocked->writeOutput( outputBuffer, amountOfSamples );
+                };
+                getInput = []( float* recordBuffer, int amountOfSamples ) {
+                    return 0;
+                };
+
+                return true;
+#endif
         }
-        // TODO: allow specifying these from the outside?
-        // driver_aAudio->setDeviceId();
-        // driver_aAudio->setRecordingDeviceId();
-        driver_aAudio->setBufferSizeInBursts( 1 ); // Google provides {0, 1, 2, 4, 8} as values
-
-        return true;
-#endif
-
     }
 
     void destroy() {
 
-#if DRIVER == 0
-        // OpenSL
         if ( driver_openSL != nullptr ) {
             android_CloseAudioDevice( driver_openSL );
         }
         driver_openSL = nullptr;
-#elif DRIVER == 1
-        // AAudio
+
         delete driver_aAudio;
         driver_aAudio = nullptr;
-#endif
 
+#ifdef MOCK_ENGINE
+        delete driver_mocked;
+        driver_mocked = nullptr;
+#endif
+        render      = nullptr;
+        writeOutput = nullptr;
+        getInput    = nullptr;
     }
 
-    void render() {
-
-#if DRIVER == 0
-        // OpenSL maintains its own locking mechanism, we can invoke
-        // the render cycle directly from the audio engine thread loop
-        AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
-#elif DRIVER == 1
-        // AAudio triggers its callback internally when ready
-        // AAudio driver will request render() on its own
-        driver_aAudio->render = true;
-#endif
+    bool isAAudio() {
+        return _driver == Drivers::types::AAUDIO;
     }
 
-    void writeOutput( float* outputBuffer, int amountOfSamples ) {
-
-#if DRIVER == 0
-        // OpenSL
-        android_AudioOut( driver_openSL, outputBuffer, amountOfSamples );
-#elif DRIVER == 1
-        // AAudio
-        driver_aAudio->enqueueOutputBuffer( outputBuffer, amountOfSamples );
-#endif
-    }
-
-    int getInput( float* recordBuffer, int amountOfSamples ) {
-
-#if DRIVER == 0
-        // OpenSL
-        return android_AudioIn( driver_openSL, recordBuffer, AudioEngineProps::BUFFER_SIZE );
-#elif DRIVER == 1
-        // AAudio
-        return driver_aAudio->getEnqueuedInputBuffer( recordBuffer, amountOfSamples );
-#endif
-        return 0;
+    bool isMocked() {
+        return _driver == Drivers::types::MOCKED;
     }
 }
 
