@@ -176,6 +176,7 @@ if (${RUN_TESTS} MATCHES "true")
         add_custom_command(
             TARGET mwengine_unittest POST_BUILD
             COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
+            COMMAND adb push $<TARGET_FILE:mwengine> ${TARGET_TEST_DIR}/
             COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
             COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\")
 
