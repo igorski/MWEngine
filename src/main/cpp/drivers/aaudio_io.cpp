@@ -103,9 +103,9 @@ AAudio_IO::AAudio_IO( int amountOfInputChannels, int amountOfOutputChannels ) {
 
     _sampleFormat = AAUDIO_FORMAT_PCM_FLOAT;
 
-    createAllStreams();
-
     render = false;
+
+    createAllStreams();
 }
 
 AAudio_IO::~AAudio_IO() {

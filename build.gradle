@@ -35,9 +35,9 @@ android {
                 arguments "-DANDROID_TOOLCHAIN=clang",
                           "-DANDROID_STL=c++_static"
 
-                // Tests are disabled by default, o enable tests add the line
+                // Tests are disabled by default, to enable tests add the
+                // following line to the local.properties file:
                 // enable_tests=true
-                // to the local.properties file
 
                 arguments "-DRUN_TESTS=" + getRunTests()
 

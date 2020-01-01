@@ -43,7 +43,7 @@ class AudioEngine
     public:
 
         static void setup( int bufferSize, int sampleRate, int amountOfChannels );
-        static void start();
+        static void start(); // will default to OpenSL for widest support across Android versions
         static void start( Drivers::types audioDriver );
         static void stop();
         static void reset();

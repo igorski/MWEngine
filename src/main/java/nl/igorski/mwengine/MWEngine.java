@@ -78,10 +78,10 @@ public final class MWEngine extends Thread
 
     /* audio generation related, should be overridden to match device-specific values */
 
-    public static int SAMPLE_RATE            = 44100;
-    public static int BUFFER_SIZE            = 2048;
-    public static int OUTPUT_CHANNELS        = 2;
-    public static Drivers.types AUDIO_DRIVER = Drivers.types.OPENSL;
+    public static int SAMPLE_RATE             = 44100;
+    public static int BUFFER_SIZE             = 2048;
+    public static int OUTPUT_CHANNELS         = 2;
+    private static Drivers.types AUDIO_DRIVER = Drivers.types.OPENSL;
 
     private static float _volume = 1.0f;
 
@@ -138,8 +138,7 @@ public final class MWEngine extends Thread
         AUDIO_DRIVER    = driver;
 
         // older Android emulators can only work at 8 kHz or crash violently...
-        if ( Build.FINGERPRINT.startsWith( "generic" ))
-            SAMPLE_RATE = 8000;
+        if ( Build.FINGERPRINT.startsWith( "generic" )) SAMPLE_RATE = 8000;
 
         AudioEngine.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
 
