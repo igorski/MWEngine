@@ -16,11 +16,11 @@ android {
     defaultConfig {
         applicationId "nl.igorski.example"
 
-        // NOTE: the value of minSdkVersion is used by the native build as the target APP_PLATFORM.
-        // The app will not run on devices with an older Android version! The minimum supported SDK
-        // version for MWEngine is 16 (Jelly Bean). Support of AAudio was only added in version 26 (Oreo).
-        // We can still use AAudio by loading it at runtime when the device supports it, so you can
-        // set the value of minSdkVersion to whatever fits your use case.
+        // NOTE: the value of minSdkVersion is used by the native build as the target APP_PLATFORM
+        // meaning the app will not run on devices with an older Android version! The minimum supported SDK
+        // version for MWEngine is 16 (Jelly Bean). While support of AAudio was only added in version 26 (Oreo),
+        // we can still provide AAudio by loading it at runtime when the device supports it. You can
+        // thus set the value of minSdkVersion to whatever fits your use case.
 
         minSdkVersion 16
         targetSdkVersion 28

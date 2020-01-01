@@ -121,7 +121,7 @@ if (${RUN_TESTS} MATCHES "true")
                               ${CPP_SRC}/drivers/mock_io.cpp)
 endif()
 
-# include the AAudio library into the compilation when the APP_PLATFORM supports it
+# include the AAudio library into the MWEngine compilation when configured
 
 if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D=INCLUDE_AAUDIO_LIBRARY")
