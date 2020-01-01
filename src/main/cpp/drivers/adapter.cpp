@@ -43,6 +43,10 @@ namespace DriverAdapter {
 
         destroy(); // destroy existing drivers
 
+        if ( driver == Drivers::AAUDIO && !AAudio_IO::isSupported() ) {
+            driver = Drivers::OPENSL; // fall back to OpenSL when AAudio isn't supported
+        }
+
         _driver = driver;
 
         switch ( _driver ) {

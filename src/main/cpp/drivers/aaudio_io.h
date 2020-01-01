@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017-2019 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2017-2020 Igor Zinken - https://www.igorski.nl
  *
  * AAudio driver implementation adapted from the Android Open Source Project
  *
@@ -31,18 +31,24 @@
 #ifndef __MWENGINE__AAUDIO_DRIVER_INCLUDED__
 #define __MWENGINE__AAUDIO_DRIVER_INCLUDED__
 
+#ifdef INCLUDE_AAUDIO_LIBRARY
 #include <aaudio/AAudio.h>
+#else
+#include <services/library_loader.h>
+#endif
 #include <thread>
 #include <mutex>
 
 namespace MWEngine {
 
+#ifndef INCLUDE_AAUDIO_LIBRARY
+using namespace AAudio;
+#endif
+
 #define BUFFER_SIZE_AUTOMATIC 0
 // Time constants
 #define NANOS_PER_SECOND 1000000000L
 #define NANOS_PER_MILLISECOND 1000000L
-
-void PrintAudioStreamInfo(const AAudioStream * stream);
 
 int64_t timestamp_to_nanoseconds(timespec ts);
 int64_t get_time_nanoseconds(clockid_t clockid);
@@ -52,6 +58,9 @@ class AAudio_IO
     public:
         AAudio_IO( int amountOfInputChannels, int amountOfOutputChannels );
         ~AAudio_IO();
+
+        static bool isSupported();
+
         void setDeviceId          ( int32_t deviceId );
         void setRecordingDeviceId ( int32_t recordingDeviceId );
         void setBufferSizeInBursts( int32_t numBursts );
@@ -67,7 +76,7 @@ class AAudio_IO
     private:
 
         // By not specifying an audio device id we are telling AAudio that
-       // we want the stream to be created using the default playback audio device.
+        // we want the stream to be created using the default playback audio device.
         int32_t _outputDeviceId  = AAUDIO_UNSPECIFIED;
         int32_t _inputDeviceId   = AAUDIO_UNSPECIFIED;
         
@@ -107,7 +116,7 @@ class AAudio_IO
         void setupInputStream ( AAudioStreamBuilder* builder );
         void updateBufferSizeInFrames( int bufferSize );
 
-        aaudio_result_t calculateCurrentOutputLatencyMillis(AAudioStream *stream, double *latencyMillis);
+        aaudio_result_t calculateCurrentOutputLatencyMillis( AAudioStream *stream, double *latencyMillis );
     };
 
 } // E.O namespace MWEngine

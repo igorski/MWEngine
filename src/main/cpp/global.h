@@ -85,6 +85,9 @@ namespace AudioEngineProps
     #define undenormalise(sample) ((((((UINT32 *)&(sample))[1])&0x7fe00000)==0)&&((sample)!=0.f))
 #endif
 
+#define CONV16BIT 32768       // multiplier to convert floating point to signed 16-bit value
+#define CONVMYFLT (1./32768.) // multplier to convert signed 16-bit values to floating point
+
 // math
 
 const SAMPLE_TYPE PI     = atan( 1 ) * 4;

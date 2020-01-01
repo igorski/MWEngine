@@ -16,11 +16,13 @@ android {
     defaultConfig {
         applicationId "nl.igorski.example"
 
-        // NOTE: minSdkVersion can go down to 16 when your application will use solely OpenSL
-        // as the audio driver. Note the value of minSdkVersion is used by the native build
-        // as the target APP_PLATFORM
+        // NOTE: the value of minSdkVersion is used by the native build as the target APP_PLATFORM.
+        // The app will not run on devices with an older Android version! The minimum supported SDK
+        // version for MWEngine is 16 (Jelly Bean). Support of AAudio was only added in version 26 (Oreo).
+        // We can still use AAudio by loading it at runtime when the device supports it, so you can
+        // set the value of minSdkVersion to whatever fits your use case.
 
-        minSdkVersion 26
+        minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
         versionName "1.0.0"
@@ -30,10 +32,18 @@ android {
         }
 
         externalNativeBuild {
+
             // List of potential arguments: https://developer.android.com/ndk/guides/cmake.html
+
             cmake {
                 arguments "-DANDROID_TOOLCHAIN=clang",
                           "-DANDROID_STL=c++_static"
+
+                // AAudio support requires minSdkVersion 26 onwards. We can load libaaudio.so
+                // at runtime on devices that support it. If minSdkVersion is equal to or above
+                // version 26, we can include the library at compilation and omit runtime loading.
+
+                arguments "-DINCLUDE_AAUDIO_LIBRARY=" + ( minSdkVersion.getApiLevel() >= 26 ).toString()
 
                 // Tests are disabled by default, to enable tests add the
                 // following line to the local.properties file:

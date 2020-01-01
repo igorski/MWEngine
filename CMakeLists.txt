@@ -42,8 +42,8 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/sequencercontroller.cpp
                           ${CPP_SRC}/wavetable.cpp
                           ${CPP_SRC}/drivers/adapter.cpp
-                          ${CPP_SRC}/drivers/opensl_io.c
                           ${CPP_SRC}/drivers/aaudio_io.cpp
+                          ${CPP_SRC}/drivers/opensl_io.c
                           ${CPP_SRC}/events/baseaudioevent.cpp
                           ${CPP_SRC}/events/basecacheableaudioevent.cpp
                           ${CPP_SRC}/events/sampleevent.cpp
@@ -57,6 +57,7 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/modules/lfo.cpp
                           ${CPP_SRC}/modules/routeableoscillator.cpp
                           ${CPP_SRC}/processors/baseprocessor.cpp
+                          ${CPP_SRC}/services/library_loader.cpp
                           ${CPP_SRC}/utilities/bufferutility.cpp
                           ${CPP_SRC}/utilities/levelutility.cpp
                           ${CPP_SRC}/utilities/bulkcacher.cpp
@@ -120,6 +121,12 @@ if (${RUN_TESTS} MATCHES "true")
                               ${CPP_SRC}/drivers/mock_io.cpp)
 endif()
 
+# include the AAudio library into the compilation when the APP_PLATFORM supports it
+
+if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D=INCLUDE_AAUDIO_LIBRARY")
+endif()
+
 add_library(mwengine SHARED
                      ${MWENGINE_CORE_SOURCES}
                      ${MWENGINE_SYNTH_SOURCES}
@@ -129,7 +136,14 @@ add_library(mwengine SHARED
 
 # link all the NDK libraries used by the project
 
-target_link_libraries(mwengine android atomic log OpenSLES aaudio)
+target_link_libraries(mwengine android atomic log OpenSLES)
+
+# if AAudio library inclusion is configured in the build, link it here
+# (otherwise AAudio will be resolved by loading libaaudio.so at runtime)
+
+if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
+    target_link_libraries(mwengine aaudio)
+endif()
 
 #####################################
 ## SWIG JNI to Java class wrapping ##
