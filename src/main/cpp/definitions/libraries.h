@@ -3,6 +3,14 @@
  *
  * Copyright (c) 2020 Igor Zinken - https://www.igorski.nl
  *
+ * AAudio library loader implementation adapted from the Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -26,14 +34,22 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#pragma once
-
+/**
+ * Libraries describes methods provided by runtime loaded libraries (such as
+ * AAudio on builds with an APP_PLATFORM lower than 26).
+ * 
+ * The methods use the same naming and signature as the library originals, to
+ * omit the need for MWEngine to use wrapper functions and to remain agnostic
+ * with regards to dependencies.
+ *
+ * @see <library_loader.h>
+ */
 namespace MWEngine {
 
 #ifndef INCLUDE_AAUDIO_LIBRARY
 
     // --- runtime linking of AAudio library methods
-    // --- this allows us to build the engine at a lower minSdkVersion
+    // --- allows us to build the engine at a lower minSdkVersion
     // --- while allowing usage of AAudio on devices with a newer OS
 
     namespace AAudio {
@@ -89,16 +105,13 @@ namespace MWEngine {
         typedef struct AAudioStreamStruct         AAudioStream;
         typedef struct AAudioStreamBuilderStruct  AAudioStreamBuilder;
 
-        typedef aaudio_data_callback_result_t (*AAudioStream_dataCallback)(
-                AAudioStream *stream,
-                void *userData,
-                void *audioData,
-                int32_t numFrames);
+        typedef aaudio_data_callback_result_t( *AAudioStream_dataCallback )(
+            AAudioStream *stream, void* userData, void* audioData, int32_t numFrames
+        );
 
-        typedef void (*AAudioStream_errorCallback)(
-                AAudioStream *stream,
-                void *userData,
-                aaudio_result_t error);
+        typedef void( *AAudioStream_errorCallback )(
+            AAudioStream *stream, void* userData, aaudio_result_t error
+        );
 
         // method signatures provided by the AAudio API (this is used by library_loader to
         // map the methods in the loaded library to this mediating layer). The abbreviations are:
@@ -107,145 +120,72 @@ namespace MWEngine {
 
         namespace Signatures {
 
-            typedef int32_t  (*sig_I_PPB)(AAudioStreamBuilder **builder);
+            typedef int32_t         ( *I_PPB )    ( AAudioStreamBuilder** builder );
+            typedef const char*     ( *CPH_I )    ( int32_t );
+            typedef int32_t         ( *I_PBPPS )  ( AAudioStreamBuilder*, AAudioStream **stream );
+            typedef int32_t         ( *I_PB )     ( AAudioStreamBuilder* );
+            typedef void            ( *V_PBI )    ( AAudioStreamBuilder*, int32_t );
+            typedef int32_t         ( *I_PS )     ( AAudioStream* );
+            typedef int64_t         ( *L_PS )     ( AAudioStream* );
+            typedef int32_t         ( *I_PSI )    ( AAudioStream *, int32_t );
+            typedef void            ( *V_PBPDPV ) ( AAudioStreamBuilder*, AAudioStream_dataCallback,  void* );
+            typedef void            ( *V_PBPEPV ) ( AAudioStreamBuilder*, AAudioStream_errorCallback, void* );
+            typedef aaudio_format_t ( *F_PS )     ( AAudioStream *stream );
+            typedef int32_t         ( *I_PSPVIL ) ( AAudioStream*, void*, int32_t, int64_t );
+            typedef int32_t         ( *I_PSCPVIL )( AAudioStream*, const void*, int32_t, int64_t );
+            typedef int32_t         ( *I_PSTPTL ) ( AAudioStream*, aaudio_stream_state_t, aaudio_stream_state_t*, int64_t );
+            typedef int32_t         ( *I_PSKPLPL )( AAudioStream*, clockid_t, int64_t *, int64_t* );
+            typedef bool            ( *B_PS )     ( AAudioStream* );
     
-            typedef const char *(*sig_CPH_I)(int32_t);
-    
-            typedef int32_t (*sig_I_PBPPS)(AAudioStreamBuilder *,
-                                                 AAudioStream **stream);  // AAudioStreamBuilder_open()
-    
-            typedef int32_t (*sig_I_PB)(AAudioStreamBuilder *);  // AAudioStreamBuilder_delete()
-            // AAudioStreamBuilder_setSampleRate()
-            typedef void    (*sig_V_PBI)(AAudioStreamBuilder *, int32_t);
-    
-            typedef int32_t (*sig_I_PS)(AAudioStream *);  // AAudioStream_getSampleRate()
-            typedef int64_t (*sig_L_PS)(AAudioStream *);  // AAudioStream_getFramesRead()
-            // AAudioStream_setBufferSizeInFrames()
-            typedef int32_t (*sig_I_PSI)(AAudioStream *, int32_t);
-    
-            typedef void    (*sig_V_PBPDPV)(AAudioStreamBuilder *,
-                                                  AAudioStream_dataCallback,
-                                                  void *);
-    
-            typedef void    (*sig_V_PBPEPV)(AAudioStreamBuilder *,
-                                                  AAudioStream_errorCallback,
-                                                  void *);
-    
-            typedef aaudio_format_t (*sig_F_PS)(AAudioStream *stream);
-    
-            typedef int32_t (*sig_I_PSPVIL)(AAudioStream *, void *, int32_t, int64_t);
-    
-            typedef int32_t (*sig_I_PSCPVIL)(AAudioStream *, const void *, int32_t, int64_t);
-    
-            typedef int32_t (*sig_I_PSTPTL)(AAudioStream *,
-                                            aaudio_stream_state_t,
-                                            aaudio_stream_state_t *,
-                                            int64_t);
-    
-            typedef int32_t (*sig_I_PSKPLPL)(AAudioStream *, clockid_t, int64_t *, int64_t *);
-    
-            typedef bool    (*sig_B_PS)(AAudioStream *);
-    
-        }    // E.O. TODO name
+        }
 
         // methods provided by the AAudio API
         // Note we use the same names as the in the library so aaudio_io can
         // remain agnostic as to whether or not AAudio was bundled with MWEngine
         // or loaded at runtime using library_loader
 
-        extern Signatures::sig_I_PPB AAudio_createStreamBuilder;
-        extern Signatures::sig_I_PB  AAudioStreamBuilder_delete;
+        extern Signatures::I_PPB    AAudio_createStreamBuilder;
+        extern Signatures::I_PB     AAudioStreamBuilder_delete;
+        extern Signatures::I_PBPPS  AAudioStreamBuilder_openStream;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setBufferCapacityInFrames;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setChannelCount;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setDeviceId;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setDirection;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setFormat;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setFramesPerDataCallback;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setPerformanceMode;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setSampleRate;
+        extern Signatures::V_PBI    AAudioStreamBuilder_setSharingMode;
+        extern Signatures::V_PBPDPV AAudioStreamBuilder_setDataCallback ;
+        extern Signatures::V_PBPEPV AAudioStreamBuilder_setErrorCallback;
 
-        extern Signatures::sig_I_PBPPS AAudioStreamBuilder_openStream;
+        extern Signatures::F_PS      AAudioStream_getFormat;
+        extern Signatures::I_PSPVIL  AAudioStream_read;
+        extern Signatures::I_PSCPVIL AAudioStream_write;
+        extern Signatures::I_PSTPTL  AAudioStream_waitForStateChange;
+        extern Signatures::I_PSKPLPL AAudioStream_getTimestamp;
+        extern Signatures::B_PS      AAudioStream_isMMapUsed;
+        extern Signatures::I_PS      AAudioStream_close;
+        extern Signatures::I_PS      AAudioStream_getChannelCount;
+        extern Signatures::I_PS      AAudioStream_getDeviceId;
+        extern Signatures::I_PS      AAudioStream_getBufferSizeInFrames;
+        extern Signatures::I_PS      AAudioStream_getBufferCapacity;
+        extern Signatures::I_PS      AAudioStream_getFramesPerBurst;
+        extern Signatures::I_PS      AAudioStream_getState;
+        extern Signatures::I_PS      AAudioStream_getPerformanceMode;
+        extern Signatures::I_PS      AAudioStream_getSampleRate;
+        extern Signatures::I_PS      AAudioStream_getSharingMode;
+        extern Signatures::I_PS      AAudioStream_getXRunCount;
+        extern Signatures::I_PSI     AAudioStream_setBufferSizeInFrames;
+        extern Signatures::I_PS      AAudioStream_requestStart;
+        extern Signatures::I_PS      AAudioStream_requestPause;
+        extern Signatures::I_PS      AAudioStream_requestFlush;
+        extern Signatures::I_PS      AAudioStream_requestStop;
+        extern Signatures::L_PS      AAudioStream_getFramesRead;
+        extern Signatures::L_PS      AAudioStream_getFramesWritten;
 
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setBufferCapacityInFrames;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setChannelCount;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setDeviceId;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setDirection;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setFormat;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setFramesPerDataCallback;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setPerformanceMode;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setSampleRate;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setSharingMode;
-
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setUsage;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setContentType;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setInputPreset;
-        extern Signatures::sig_V_PBI AAudioStreamBuilder_setSessionId;
-
-        extern Signatures::sig_V_PBPDPV AAudioStreamBuilder_setDataCallback ;
-        extern Signatures::sig_V_PBPEPV AAudioStreamBuilder_setErrorCallback;
-
-
-        extern Signatures::sig_F_PS AAudioStream_getFormat;
-
-        extern Signatures::sig_I_PSPVIL AAudioStream_read;
-        extern Signatures::sig_I_PSCPVIL AAudioStream_write;
-
-        extern Signatures::sig_I_PSTPTL AAudioStream_waitForStateChange;
-
-        extern Signatures::sig_I_PSKPLPL AAudioStream_getTimestamp;
-
-        extern Signatures::sig_B_PS AAudioStream_isMMapUsed;
-
-        extern Signatures::sig_I_PS AAudioStream_close;
-
-        extern Signatures::sig_I_PS AAudioStream_getChannelCount;
-        extern Signatures::sig_I_PS AAudioStream_getDeviceId;
-
-        extern Signatures::sig_I_PS AAudioStream_getBufferSizeInFrames;
-        extern Signatures::sig_I_PS AAudioStream_getBufferCapacity;
-        extern Signatures::sig_I_PS AAudioStream_getFramesPerBurst;
-        extern Signatures::sig_I_PS AAudioStream_getState;
-        extern Signatures::sig_I_PS AAudioStream_getPerformanceMode;
-        extern Signatures::sig_I_PS AAudioStream_getSampleRate;
-        extern Signatures::sig_I_PS AAudioStream_getSharingMode;
-        extern Signatures::sig_I_PS AAudioStream_getXRunCount;
-
-        extern Signatures::sig_I_PSI AAudioStream_setBufferSizeInFrames;
-        extern Signatures::sig_I_PS AAudioStream_requestStart;
-        extern Signatures::sig_I_PS AAudioStream_requestPause;
-        extern Signatures::sig_I_PS AAudioStream_requestFlush;
-        extern Signatures::sig_I_PS AAudioStream_requestStop;
-
-        extern Signatures::sig_L_PS AAudioStream_getFramesRead;
-        extern Signatures::sig_L_PS AAudioStream_getFramesWritten;
-
-        extern Signatures::sig_CPH_I AAudio_convertResultToText;
-
-        extern Signatures::sig_I_PS AAudioStream_getUsage;
-        extern Signatures::sig_I_PS AAudioStream_getContentType;
-        extern Signatures::sig_I_PS AAudioStream_getInputPreset;
-        extern Signatures::sig_I_PS AAudioStream_getSessionId;
+        extern Signatures::CPH_I AAudio_convertResultToText;
    }
-
-    // --- runtime linking of AAudio library methods
-
-    /*
-    AAudioStream_getPerformanceMode
-            AAudioStream_getFormat
-    AAudioStream_getXRunCount
-            AAudioStream_requestStart
-    AAudioStream_requestStop
-            AAudioStream_close
-    AAudioStream_read
-            AAudioStream_getTimestamp
-    AAudioStream_getFramesWritten
-            AAudioStream_getState
-    AAudioStream_getFramesPerBurst
-            AAudioStream_getBufferSizeInFrames
-    AAudioStream_setBufferSizeInFrames
-
-    AAudioStreamBuilder_setDeviceId
-    AAudioStreamBuilder_setFormat
-    AAudioStream_getSampleRate
-            AAudioStreamBuilder_setSampleRate
-    AAudioStreamBuilder_setDirection
-            AAudioStreamBuilder_setDataCallback
-    AAudioStreamBuilder_setErrorCallback
-            AAudioStreamBuilder_setSharingMode
-    AAudio_convertResultToText
-    */
 
 #endif
 

@@ -18,7 +18,7 @@ android {
 
         // NOTE: the value of minSdkVersion is used by the native build as the target APP_PLATFORM
         // meaning the app will not run on devices with an older Android version! The minimum supported SDK
-        // version for MWEngine is 16 (Jelly Bean). While support of AAudio was only added in version 26 (Oreo),
+        // version for MWEngine is 16 (Jelly Bean/4.1). While support of AAudio was only added in version 26 (Oreo/8),
         // we can still provide AAudio by loading it at runtime when the device supports it. You can
         // thus set the value of minSdkVersion to whatever fits your use case.
 

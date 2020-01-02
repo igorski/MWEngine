@@ -50,9 +50,8 @@ int64_t timestamp_to_nanoseconds(timespec ts);
 int64_t get_time_nanoseconds(clockid_t clockid);
 
 #ifndef INCLUDE_AAUDIO_LIBRARY
-// defined in libraries.h
-// this ensures we can use the same naming conventions
-// to the methods otherwise provided by AAudio.h
+// defined in libraries.h, this ensures we can reuse the
+// same method names and signature as provided by AAudio.h
 using namespace AAudio;
 #endif
 

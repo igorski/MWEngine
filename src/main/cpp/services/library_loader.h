@@ -3,16 +3,8 @@
  *
  * Copyright (c) 2020 Igor Zinken - https://www.igorski.nl
  *
- * Implementation adapted from the Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
+ * this software and associated documentation files (the "Software" ), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
@@ -56,7 +48,7 @@ class LibraryLoader {
 
     private:
 
-        // singleton usage
+        // singleton usage, hence private constructor/destructor
 
         LibraryLoader() {}
         ~LibraryLoader();
@@ -64,6 +56,11 @@ class LibraryLoader {
 #ifndef INCLUDE_AAUDIO_LIBRARY
         void* _aaudioLib = nullptr;
 #endif
+
+        /**
+         * Retrieve a pointer to a method described by given functionName
+         * from a library at given libraryHandle
+         */
         void* mapMethod( void* libraryHandle, const char* functionName ) {
             return dlsym( libraryHandle, functionName );
         }
