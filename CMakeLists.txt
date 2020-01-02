@@ -163,10 +163,6 @@ set(CMAKE_SWIG_OUTDIR ${JAVA_SRC}/nl/igorski/mwengine/core)
 swig_add_module(mwengine_wrapped java ${CPP_SRC}/mwengine.i)
 swig_link_libraries(mwengine_wrapped mwengine)
 
-install(TARGETS mwengine
-        LIBRARY DESTINATION lib/${ANDROID_ABI}
-        ARCHIVE DESTINATION lib/${ANDROID_ABI})
-
 ################
 ## UNIT TESTS ##
 ################

@@ -1,8 +1,8 @@
 MWEngine is..
 =============
 
-...an audio engine for Android, using either OpenSL (compatible with Android 4.1 and up) or AAudio
-(Android 8.0 and up) as the drivers for low latency audio performance.
+...an audio engine for Android, compatible with Android 4.1 and up, using either OpenSL or AAudio
+(when available) as the drivers for low latency audio performance.
 
 MWEngine provides an architecture that allows you to work with audio within a _musical context_. It is easy to
 build upon the base classes and create your own noise generating mayhem. A few keywords describing the

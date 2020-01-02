@@ -83,48 +83,42 @@ bool LibraryLoader::loadAAudioLibrary() {
     AAudioStreamBuilder_delete             = MAP_AND_CAST( _aaudioLib, sig_I_PB, "AAudioStreamBuilder_delete");
 
 
-    AAudioStreamBuilder_setDataCallback    = MAP_AND_CAST( _aaudioLib, sig_V_PBPDPV, "AAudioStream_setDataCallback");
-    AAudioStreamBuilder_setErrorCallback   = MAP_AND_CAST( _aaudioLib, sig_V_PBPEPV, "AAudioStream_setErrorCallback");
+    AAudioStreamBuilder_setDataCallback    = MAP_AND_CAST( _aaudioLib, sig_V_PBPDPV, "AAudioStreamBuilder_setDataCallback");
+    AAudioStreamBuilder_setErrorCallback   = MAP_AND_CAST( _aaudioLib, sig_V_PBPEPV, "AAudioStreamBuilder_setErrorCallback");
 
     AAudioStream_read                = MAP_AND_CAST( _aaudioLib, sig_I_PSPVIL, "AAudioStream_read");
-
     AAudioStream_write               = MAP_AND_CAST( _aaudioLib, sig_I_PSCPVIL, "AAudioStream_write");
-
     AAudioStream_waitForStateChange  = MAP_AND_CAST( _aaudioLib, sig_I_PSTPTL, "AAudioStream_waitForStateChange");
-
     AAudioStream_getTimestamp        = MAP_AND_CAST( _aaudioLib, sig_I_PSKPLPL, "AAudioStream_getTimestamp");
-
     AAudioStream_isMMapUsed          = MAP_AND_CAST( _aaudioLib, sig_B_PS, "AAudioStream_isMMapUsed");
-
     AAudioStream_getChannelCount     = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getChannelCount");
     if (AAudioStream_getChannelCount == nullptr) {
         // Use old alias if needed.
         AAudioStream_getChannelCount    = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getSamplesPerFrame");
     }
 
-    AAudioStream_close               = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_close");
+    AAudioStream_close                 = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_close");
+    AAudioStream_getBufferSizeInFrames = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getBufferSizeInFrames");
+    AAudioStream_getDeviceId           = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getDeviceId");
+    AAudioStream_getBufferCapacity     = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getBufferCapacityInFrames");
+    AAudioStream_getFormat             = MAP_AND_CAST( _aaudioLib, sig_F_PS, "AAudioStream_getFormat");
+    AAudioStream_getFramesPerBurst     = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getFramesPerBurst");
+    AAudioStream_getFramesRead         = MAP_AND_CAST( _aaudioLib, sig_L_PS, "AAudioStream_getFramesRead");
+    AAudioStream_getFramesWritten      = MAP_AND_CAST( _aaudioLib, sig_L_PS, "AAudioStream_getFramesWritten");
+    AAudioStream_getPerformanceMode    = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getPerformanceMode");
+    AAudioStream_getSampleRate         = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getSampleRate");
+    AAudioStream_getSharingMode        = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getSharingMode");
+    AAudioStream_getState              = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getState");
+    AAudioStream_getXRunCount          = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getXRunCount");
 
-    AAudioStream_getBufferSizeInFrames       = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getBufferSizeInFrames");
-    AAudioStream_getDeviceId   = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getDeviceId");
-    AAudioStream_getBufferCapacity   = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getBufferCapacityInFrames");
-    AAudioStream_getFormat           = MAP_AND_CAST( _aaudioLib, sig_F_PS, "AAudioStream_getFormat");
-    AAudioStream_getFramesPerBurst   = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getFramesPerBurst");
-    AAudioStream_getFramesRead       = MAP_AND_CAST( _aaudioLib, sig_L_PS, "AAudioStream_getFramesRead");
-    AAudioStream_getFramesWritten    = MAP_AND_CAST( _aaudioLib, sig_L_PS, "AAudioStream_getFramesWritten");
-    AAudioStream_getPerformanceMode  = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getPerformanceMode");
-    AAudioStream_getSampleRate       = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getSampleRate");
-    AAudioStream_getSharingMode      = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getSharingMode");
-    AAudioStream_getState            = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getState");
-    AAudioStream_getXRunCount        = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_getXRunCount");
+    AAudioStream_requestStart          = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestStart");
+    AAudioStream_requestPause          = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestPause");
+    AAudioStream_requestFlush          = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestFlush");
+    AAudioStream_requestStop           = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestStop");
 
-    AAudioStream_requestStart        = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestStart");
-    AAudioStream_requestPause        = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestPause");
-    AAudioStream_requestFlush        = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestFlush");
-    AAudioStream_requestStop         = MAP_AND_CAST( _aaudioLib, sig_I_PS, "AAudioStream_requestStop");
+    AAudioStream_setBufferSizeInFrames = MAP_AND_CAST( _aaudioLib, sig_I_PSI, "AAudioStream_setBufferSizeInFrames");
 
-    AAudioStream_setBufferSizeInFrames       = MAP_AND_CAST( _aaudioLib, sig_I_PSI, "AAudioStream_setBufferSizeInFrames");
-
-    AAudio_convertResultToText        = MAP_AND_CAST( _aaudioLib, sig_CPH_I, "AAudio_convertResultToText");
+    AAudio_convertResultToText         = MAP_AND_CAST( _aaudioLib, sig_CPH_I, "AAudio_convertResultToText");
 
     return true;
 }

@@ -238,7 +238,7 @@ void AAudio_IO::createOutputStream() {
 
     if ( result == AAUDIO_OK && _outputStream != nullptr ) {
 
-        if ( AAudioStream_getPerformanceMode( _outputStream ) != AAUDIO_PERFORMANCE_MODE_LOW_LATENCY ){
+        if ( AAudioStream_getPerformanceMode( _outputStream ) != AAUDIO_PERFORMANCE_MODE_LOW_LATENCY ) {
             Debug::log( "AAudio_IO::Output stream is NOT low latency. Check your requested format, sample rate and channel count" );
         }
 
@@ -275,7 +275,7 @@ void AAudio_IO::createOutputStream() {
  * Sets the stream parameters which are specific to playback, including device id and the
  * dataCallback function, which must be set for low latency playback.
  */
-void AAudio_IO::setupOutputStream      ( AAudioStreamBuilder* builder ) {
+void AAudio_IO::setupOutputStream( AAudioStreamBuilder* builder ) {
     AAudioStreamBuilder_setDeviceId    ( builder, _outputDeviceId );
     AAudioStreamBuilder_setFormat      ( builder, _sampleFormat );
     AAudioStreamBuilder_setChannelCount( builder, _outputChannelCount );
