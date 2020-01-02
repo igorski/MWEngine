@@ -41,6 +41,7 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/sequencer.cpp
                           ${CPP_SRC}/sequencercontroller.cpp
                           ${CPP_SRC}/wavetable.cpp
+                          ${CPP_SRC}/definitions/libraries.cpp
                           ${CPP_SRC}/drivers/adapter.cpp
                           ${CPP_SRC}/drivers/aaudio_io.cpp
                           ${CPP_SRC}/drivers/opensl_io.c
@@ -136,13 +137,13 @@ add_library(mwengine SHARED
 
 # link all the NDK libraries used by the project
 
-target_link_libraries(mwengine android atomic log OpenSLES)
+target_link_libraries(mwengine PRIVATE android atomic log OpenSLES)
 
 # if AAudio library inclusion is configured in the build, link it here
 # (otherwise AAudio will be resolved by loading libaaudio.so at runtime)
 
 if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
-    target_link_libraries(mwengine aaudio)
+    target_link_libraries(mwengine PRIVATE aaudio)
 endif()
 
 #####################################
@@ -161,6 +162,10 @@ set(CMAKE_SWIG_OUTDIR ${JAVA_SRC}/nl/igorski/mwengine/core)
 
 swig_add_module(mwengine_wrapped java ${CPP_SRC}/mwengine.i)
 swig_link_libraries(mwengine_wrapped mwengine)
+
+install(TARGETS mwengine
+        LIBRARY DESTINATION lib/${ANDROID_ABI}
+        ARCHIVE DESTINATION lib/${ANDROID_ABI})
 
 ################
 ## UNIT TESTS ##

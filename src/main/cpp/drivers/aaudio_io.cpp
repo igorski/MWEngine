@@ -37,6 +37,10 @@
 
 namespace MWEngine {
 
+#ifndef INCLUDE_AAUDIO_LIBRARY
+    LibraryLoader* AAudio_IO::libraryLoader = nullptr;
+#endif
+
 int64_t timestamp_to_nanoseconds(timespec ts){
     return (ts.tv_sec * (int64_t) NANOS_PER_SECOND) + ts.tv_nsec;
 }
