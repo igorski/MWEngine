@@ -18,7 +18,7 @@ out-of-the-box possibilities are:
 
 Also note that MWEngine's underlying audio drivers are _the same as Google Oboe uses_, MWEngine and
 Oboe are merely abstraction layers to solve the same problem, only in different ways.
-Additionally, MWEngine provides a complete audio processing environment with built-in effects.
+Additionally, MWEngine provides a complete audio processing environment with built-in effects, heck, you _don't even need to know C(++) to use it_.
 
 #### What apps are using MWEngine ?
 
