@@ -101,7 +101,7 @@ You can build and deploy using debug and release configurations as usual.
 **NOTE:** on first run there is a known issue where Android Studio is not aware Java classes have been
 generated after completing the native library build (e.g. the _/nl/igorski/mwengine/core_-folder
 containing files but the IDE not recognizing the files - though oddly enough compiling just fine -).
-Closing and reopening the project window should suffice.
+Closing and reopening the project window should suffice. If that should _still_ fail, navigate to the _/java/nl/igorski/mwengine/core/_-folder in the Project panel, right click the folder and _Unmark this directory as sources root_ using the "_Mark directory as_"-submenu.
 
 #### Building using CLI
 
