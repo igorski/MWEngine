@@ -128,7 +128,7 @@ if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D=INCLUDE_AAUDIO_LIBRARY")
 endif()
 
-add_library(mwengine SHARED
+add_library(mwengine STATIC
                      ${MWENGINE_CORE_SOURCES}
                      ${MWENGINE_SYNTH_SOURCES}
                      ${MWENGINE_PROCESSORS}
@@ -137,7 +137,7 @@ add_library(mwengine SHARED
 
 # link all the NDK libraries used by the project
 
-target_link_libraries(mwengine PRIVATE android atomic log OpenSLES)
+target_link_libraries(mwengine android atomic log OpenSLES)
 
 # if AAudio library inclusion is configured in the build, link it here
 # (otherwise AAudio will be resolved by loading libaaudio.so at runtime)
