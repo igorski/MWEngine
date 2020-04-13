@@ -260,7 +260,9 @@ namespace MWEngine {
         loopAmount = amountOfSamples - loopOffset;                 // the amount of samples to write after looping starts
 
         // collect all audio events that are eligible for playback for this iteration
-        Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
+        if ( loopAmount > 0 ) {
+            Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
+        }
 
 #ifdef RECORD_DEVICE_INPUT
         // record audio from Android device ?

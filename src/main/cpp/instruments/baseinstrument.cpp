@@ -24,6 +24,7 @@
 #include "../audioengine.h"
 #include "../sequencer.h"
 #include <drivers/adapter.h>
+#include <utilities/eventutility.h>
 #include <algorithm>
 
 namespace MWEngine {
@@ -39,6 +40,7 @@ BaseInstrument::~BaseInstrument()
 {
     unregisterFromSequencer();
     clearEvents();
+    clearMeasureCache();
 
     delete audioChannel;
     delete _audioEvents;
@@ -66,6 +68,11 @@ std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
     return _audioEvents;
 }
 
+std::vector<BaseAudioEvent*>* BaseInstrument::getEventsForMeasure( int measureNum )
+{
+    return _audioEventsPerMeasure.size() <= measureNum ? nullptr : _audioEventsPerMeasure.at( measureNum );
+}
+
 std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
 {
     return _liveAudioEvents;
@@ -83,6 +90,8 @@ void BaseInstrument::updateEvents()
         toggleReadLock( true );
 
         // when tempo has updated, we update the offsets of all associated events
+        // note the measure cache remains untouched (nothing changes with regards to
+        // measure separation)
 
         float ratio = _oldTempo / AudioEngine::tempo;
 
@@ -130,6 +139,7 @@ void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
         _liveAudioEvents->push_back( audioEvent );
     } else {
         _audioEvents->push_back( audioEvent );
+        addEventToMeasureCache( audioEvent );
     }
     toggleReadLock( false );
 }
@@ -161,19 +171,9 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
         if ( it != _audioEvents->end()) {
             _audioEvents->erase( it );
         }
+        removeEventFromMeasureCache( audioEvent );
         removed = true;
     }
-// let's not do the below as management of event allocation isn't the instruments problem.
-//#ifndef USE_JNI
-//    if ( removed ) {
-//
-//        // when using JNI, we let SWIG invoke destructors when Java references are finalized
-//        // otherwise we delete and dispose the events directly from this instrument
-//
-//        delete audioEvent;
-//        audioEvent = nullptr;
-//    }
-//#endif
     toggleReadLock( false );
 
     return removed;
@@ -221,6 +221,43 @@ void BaseInstrument::construct()
     // register instrument inside the sequencer
 
     registerInSequencer();
+}
+
+void BaseInstrument::addEventToMeasureCache( BaseAudioEvent* audioEvent )
+{
+    int startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
+    int endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
+
+    for ( size_t i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
+        while ( _audioEventsPerMeasure.size() <= i ) {
+            _audioEventsPerMeasure.push_back( new std::vector<BaseAudioEvent*>() );
+        }
+        _audioEventsPerMeasure.at( i )->push_back( audioEvent );
+    }
+}
+
+void BaseInstrument::removeEventFromMeasureCache( BaseAudioEvent* audioEvent )
+{
+    int startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
+    int endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
+
+    for ( size_t i = startMeasureForEvent; i < endMeasureForEvent; ++i ) {
+        auto eventVector = _audioEventsPerMeasure.at( i );
+        auto it = std::find( eventVector->begin(), eventVector->end(), audioEvent );
+        if ( it != eventVector->end()) {
+            eventVector->erase( it );
+        }
+    }
+}
+
+void BaseInstrument::clearMeasureCache()
+{
+    for ( size_t i = 0; i < _audioEventsPerMeasure.size(); ++i ) {
+        auto eventVector = _audioEventsPerMeasure.at( i );
+        eventVector->clear();
+        delete eventVector;
+    }
+    _audioEventsPerMeasure.clear();
 }
 
 } // E.O namespace MWEngine

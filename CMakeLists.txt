@@ -60,6 +60,7 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/processors/baseprocessor.cpp
                           ${CPP_SRC}/services/library_loader.cpp
                           ${CPP_SRC}/utilities/bufferutility.cpp
+                          ${CPP_SRC}/utilities/eventutility.cpp
                           ${CPP_SRC}/utilities/levelutility.cpp
                           ${CPP_SRC}/utilities/bulkcacher.cpp
                           ${CPP_SRC}/utilities/diskwriter.cpp

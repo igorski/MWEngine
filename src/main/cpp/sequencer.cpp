@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -74,23 +74,34 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
     int bufferEnd    = bufferPosition + ( bufferSize - 1 );          // the highest SampleEnd value we'll query
     bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
 
-    int total = instruments.size();
+    size_t total = instruments.size();
 
     // note we update the channels mix properties here as they might change during playback
 
-    for ( int i = 0; i < total; ++i )
+    for ( size_t i = 0; i < total; ++i )
     {
         BaseInstrument* instrument      = instruments.at( i );
         AudioChannel* instrumentChannel = instrument->audioChannel;
 
         // clear previous channel contents when requested
-        if ( flushChannels )
+        if ( flushChannels ) {
             instrumentChannel->reset();
+        }
 
         if ( !instrumentChannel->muted )
         {
             if ( playing )
-                collectSequencedEvents( instrument, bufferPosition, bufferEnd );
+            {
+                int firstMeasure = ( int ) floor(( float ) bufferPosition / ( float ) AudioEngine::samples_per_bar );
+                int lastMeasure  = ( int ) floor(( float ) bufferEnd / ( float ) AudioEngine::samples_per_bar );
+
+                collectSequencedEvents( instrument, bufferPosition, bufferEnd, firstMeasure );
+
+                if ( lastMeasure != firstMeasure ) {
+                    // TODO ensure we don't add duplicates (see audiochannel.cpp)
+                    collectSequencedEvents( instrument, bufferPosition, bufferEnd, lastMeasure );
+                }
+            }
 
             if ( addLiveInstruments && instrument->hasLiveEvents() )
                 collectLiveEvents( instrument );
@@ -123,8 +134,9 @@ void Sequencer::clearEvents()
  * @param instrument     {BaseInstrument*} instrument to gather events from
  * @param bufferPosition {int} the current buffers start pointer
  * @param bufferEnd      {int} the current buffers end pointer
+ * @param measure        {int} the current measure to look up events for
  */
-void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd )
+void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd, int measure )
 {
     if ( !instrument->hasEvents() ) {
         return;
@@ -133,14 +145,19 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     AudioChannel* channel = instrument->audioChannel;
 
     instrument->toggleReadLock( true ); // lock the events vector while sequencing
-    std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
+
+    auto audioEvents = instrument->getEventsForMeasure( measure );
+
+    if ( audioEvents == nullptr ) {
+        return;
+    }
 
     // removal queue
     std::vector<BaseAudioEvent*> removes;
 
     // channel has an internal loop (e.g. drum machine) ? recalculate requested
     // buffer position by subtracting all measures above the first
-    
+
     if ( channel->maxBufferPosition > 0 )
     {
         int samplesPerBar = AudioEngine::samples_per_bar;
@@ -152,8 +169,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
         }
     }
 
-    int i = 0;
-    int total = audioEvents->size();
+    size_t i = 0;
+    size_t total = audioEvents->size();
 
     for ( ; i < total; i++ )
     {
@@ -201,8 +218,8 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     // removal queue
     std::vector<BaseAudioEvent*> removes;
 
-    int i = 0;
-    int total = liveEvents->size();
+    size_t i = 0;
+    size_t total = liveEvents->size();
 
     for ( ; i < total; i++ )
     {
