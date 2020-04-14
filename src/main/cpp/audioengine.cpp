@@ -268,6 +268,7 @@ namespace MWEngine {
 
         // erase previous buffer contents
         inBuffer->silenceBuffers();
+        channels->clear();
 
         // gather the audio events by the buffer range currently being processed
         loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
@@ -319,7 +320,7 @@ namespace MWEngine {
             int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
-            int amount = audioEvents.size();
+            unsigned long amount = audioEvents.size();
 
             // divide the channels volume by the amount of channels to provide extra headroom
             SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic() / ( SAMPLE_TYPE ) channelAmount;
@@ -520,7 +521,7 @@ namespace MWEngine {
                 stop();
                 Sequencer::playing = false;
 
-                bouncing           =
+                bouncing           = false;
                 recordOutputToDisk = false;
 
                 return false;

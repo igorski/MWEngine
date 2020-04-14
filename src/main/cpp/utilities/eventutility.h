@@ -23,13 +23,19 @@
 #ifndef __MWENGINE_EVENUTILITY_H_INCLUDED__
 #define __MWENGINE_EVENUTILITY_H_INCLUDED__
 
-#include "../events/baseaudioevent.h"
+#include <audioengine.h>
+#include <events/baseaudioevent.h>
 
 namespace MWEngine {
 namespace EventUtility
 {
-    extern int getStartMeasureForEvent( BaseAudioEvent* event );
-    extern int getEndMeasureForEvent( BaseAudioEvent* event );
+    inline unsigned long getStartMeasureForEvent( BaseAudioEvent* event ) {
+        return ( unsigned long ) floor(( float ) event->getSampleStart() / ( float ) AudioEngine::samples_per_bar );
+    }
+
+    inline unsigned long getEndMeasureForEvent( BaseAudioEvent* event ) {
+        return ( unsigned long ) floor(( float ) event->getSampleEnd() / ( float ) AudioEngine::samples_per_bar );
+    }
 }
 } // E.O namespace MWEngine
 

@@ -227,10 +227,10 @@ void BaseInstrument::construct()
 
 void BaseInstrument::addEventToMeasureCache( BaseAudioEvent* audioEvent )
 {
-    int startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
-    int endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
+    unsigned long startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
+    unsigned long endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
 
-    for ( size_t i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
+    for ( unsigned long i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
         while ( _audioEventsPerMeasure.size() <= i ) {
             _audioEventsPerMeasure.push_back( new std::vector<BaseAudioEvent*>() );
         }
@@ -240,10 +240,10 @@ void BaseInstrument::addEventToMeasureCache( BaseAudioEvent* audioEvent )
 
 void BaseInstrument::removeEventFromMeasureCache( BaseAudioEvent* audioEvent )
 {
-    int startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
-    int endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
+    unsigned long startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
+    unsigned long endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
 
-    for ( size_t i = startMeasureForEvent; i < endMeasureForEvent; ++i ) {
+    for ( unsigned long i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
         auto eventVector = _audioEventsPerMeasure.at( i );
         auto it = std::find( eventVector->begin(), eventVector->end(), audioEvent );
         if ( it != eventVector->end()) {

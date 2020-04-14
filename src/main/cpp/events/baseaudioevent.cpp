@@ -145,6 +145,14 @@ int BaseAudioEvent::getEventLength()
 
 void BaseAudioEvent::setEventLength( int value )
 {
+    if ( _eventLength == value ) return;
+
+    // if the events playback range is about to change, remove/add the event after the update
+    // operation to ensure the instruments measure cache spans the correct range
+
+    bool mustSyncWithInstrument = isAddedToSequencer();
+    if ( mustSyncWithInstrument ) _instrument->removeEvent( this, false );
+
     _eventLength = value;
 
     // the existing event end must not be smaller than (or equal to)
@@ -160,6 +168,8 @@ void BaseAudioEvent::setEventLength( int value )
 
     // update end position in seconds
     _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
+
+    if ( mustSyncWithInstrument ) _instrument->addEvent( this, false );
 }
 
 int BaseAudioEvent::getEventStart()
@@ -169,6 +179,14 @@ int BaseAudioEvent::getEventStart()
 
 void BaseAudioEvent::setEventStart( int value )
 {
+    if ( _eventStart == value ) return;
+
+    // if the events playback range is about to change, remove/add the event after the update
+    // operation to ensure the instruments measure cache spans the correct range
+
+    bool mustSyncWithInstrument = isAddedToSequencer();
+    if ( mustSyncWithInstrument ) _instrument->removeEvent( this, false );
+
     _eventStart = value;
 
     if ( _eventEnd <= _eventStart )
@@ -183,6 +201,8 @@ void BaseAudioEvent::setEventStart( int value )
     }
     // update start position in seconds
     _startPosition = BufferUtility::bufferToSeconds( _eventStart, AudioEngineProps::SAMPLE_RATE );
+
+    if ( mustSyncWithInstrument ) _instrument->addEvent( this, false );
 }
 
 int BaseAudioEvent::getEventEnd()
@@ -192,6 +212,14 @@ int BaseAudioEvent::getEventEnd()
 
 void BaseAudioEvent::setEventEnd( int value )
 {
+    if ( _eventEnd == value ) return;
+
+    // if the events playback range is about to change, remove/add the event after the update
+    // operation to ensure the instruments measure cache spans the correct range
+
+    bool mustSyncWithInstrument = isAddedToSequencer();
+    if ( mustSyncWithInstrument ) _instrument->removeEvent( this, false );
+
     // the event end cannot exceed beyond the start and the total
     // event length (it can be smaller though for a cut-off playback)
 
@@ -203,7 +231,7 @@ void BaseAudioEvent::setEventEnd( int value )
     // update end position in seconds
     _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
 
-    // TODO : update sequencer lookup table for measures !!
+    if ( mustSyncWithInstrument ) _instrument->addEvent( this, false );
 }
 
 void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offset )
@@ -434,12 +462,12 @@ void BaseAudioEvent::construct()
     _enabled           = true;
     _destroyableBuffer = true;
     _locked            = false;
-    _volume            = VolumeUtil::toLog( 1.0 );
+    _volume            = VolumeUtil::toLog( 1.F );
     _eventStart        = 0;
     _eventEnd          = 0;
     _eventLength       = 0;
-    _startPosition     = 0.f;
-    _endPosition       = 0.f;
+    _startPosition     = 0.F;
+    _endPosition       = 0.F;
     _instrument        = nullptr;
     _deleteMe          = false;
     _livePlayback      = false;

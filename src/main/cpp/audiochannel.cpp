@@ -75,10 +75,7 @@ void AudioChannel::setVolume( float value )
 
 void AudioChannel::addEvent( BaseAudioEvent* aEvent )
 {
-    // omit duplicates TODO: make the Sequencer smarter instead.
-    if ( std::find( audioEvents.begin(), audioEvents.end(), aEvent ) == audioEvents.end() ) {
-        audioEvents.push_back(aEvent);
-    }
+    audioEvents.push_back( aEvent );
 }
 
 void AudioChannel::addLiveEvent( BaseAudioEvent* aLiveEvent )
