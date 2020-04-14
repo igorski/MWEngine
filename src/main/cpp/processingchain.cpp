@@ -70,7 +70,7 @@ std::vector<BaseProcessor*> ProcessingChain::getActiveProcessors()
 
 bool ProcessingChain::hasProcessors()
 {
-    return _activeProcessors.empty();
+    return !_activeProcessors.empty();
 }
 
 } // E.O namespace MWEngine

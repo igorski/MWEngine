@@ -32,7 +32,17 @@ class ChannelGroup
 {
     public:
         ChannelGroup();
+        ChannelGroup( float volume );
         ~ChannelGroup();
+
+        /**
+         * volume is given in a percentile (0 - 1) range
+         * this will internally be scaled against a logarithmic
+         * scale for more natural sounding results
+         */
+        float getVolume();
+        float getVolumeLogarithmic();
+        void setVolume( float value );
 
         ProcessingChain* getProcessingChain();
 
@@ -43,9 +53,12 @@ class ChannelGroup
         bool applyEffectsToChannels( AudioBuffer* bufferToMixInto );
 
     protected:
+        float _volume = 1.F;
         std::vector<AudioChannel*> _audioChannels;
         ProcessingChain* _processingChain = nullptr;
         AudioBuffer* _mixBuffer = nullptr;
+
+        void construct();
 };
 } // E.O namespace MWEngine
 

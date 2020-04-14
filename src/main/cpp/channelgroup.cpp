@@ -21,6 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "channelgroup.h"
+#include <utilities/volumeutil.h>
 
 namespace MWEngine {
 
@@ -28,8 +29,13 @@ namespace MWEngine {
 
 ChannelGroup::ChannelGroup()
 {
-    _processingChain = new ProcessingChain();
-    _mixBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
+    construct();
+}
+
+ChannelGroup::ChannelGroup( float volume )
+{
+    construct();
+    setVolume( volume );
 }
 
 ChannelGroup::~ChannelGroup()
@@ -39,6 +45,21 @@ ChannelGroup::~ChannelGroup()
 }
 
 /* public methods */
+
+float ChannelGroup::getVolume()
+{
+    return VolumeUtil::toLinear( _volume );
+}
+
+float ChannelGroup::getVolumeLogarithmic()
+{
+    return _volume;
+}
+
+void ChannelGroup::setVolume( float value )
+{
+    _volume = VolumeUtil::toLog( value );
+}
 
 ProcessingChain* ChannelGroup::getProcessingChain()
 {
@@ -106,9 +127,15 @@ bool ChannelGroup::applyEffectsToChannels( AudioBuffer* bufferToMixInto )
 
     // write the processed mix buffer into the output
 
-    bufferToMixInto->mergeBuffers( _mixBuffer, 0, 0, 1.0F );
+    bufferToMixInto->mergeBuffers( _mixBuffer, 0, 0, getVolumeLogarithmic() );
 
     return true;
+}
+
+void ChannelGroup::construct()
+{
+    _processingChain = new ProcessingChain();
+    _mixBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 }
 
 
