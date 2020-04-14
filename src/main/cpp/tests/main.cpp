@@ -32,6 +32,7 @@ using namespace MWEngine;
 #include "audioengine_test.cpp"
 #include "audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
+#include "channelgroup_test.cpp"
 #include "processingchain_test.cpp"
 #include "ringbuffer_test.cpp"
 #include "sequencer_test.cpp"

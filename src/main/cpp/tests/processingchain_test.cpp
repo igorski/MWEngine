@@ -106,3 +106,23 @@ TEST( ProcessingChain, Reset )
     delete processor2;
     delete chain;
 }
+
+TEST( ProcessingChain, hasProcessors )
+{
+    BaseProcessor* processor = new BaseProcessor();
+
+    ProcessingChain* chain = new ProcessingChain();
+
+    ASSERT_FALSE( chain->hasProcessors() ) << "expected chain to have no processor upon construction";
+
+    chain->addProcessor( processor );
+
+    ASSERT_TRUE( chain->hasProcessors() ) << "expected chain to have processors after addition";
+
+    chain->reset();
+
+    ASSERT_FALSE( chain->hasProcessors() ) << "expected chain to have no processors after reset";
+
+    delete processor;
+    delete chain;
+}

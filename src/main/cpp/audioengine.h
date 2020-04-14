@@ -27,6 +27,7 @@
 #include "audiochannel.h"
 #include "global.h"
 #include "processingchain.h"
+#include "channelgroup.h"
 #include <definitions/drivers.h>
 
 namespace MWEngine {
@@ -94,6 +95,9 @@ class AudioEngine
         static float volume;                // master volume
         static ProcessingChain* masterBus;  // processing chain for the master bus
 
+        static void addChannelGroup( ChannelGroup* group );
+        static void removeChannelGroup( ChannelGroup* group );
+
         /* internal methods */
 
         static void handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate );
@@ -108,6 +112,7 @@ class AudioEngine
         static int  outputChannels;
         static bool isMono;
         static std::vector<AudioChannel*>* channels;
+        static std::vector<ChannelGroup*> groups;
         static AudioBuffer* inBuffer;
         static float*       outBuffer;
 
