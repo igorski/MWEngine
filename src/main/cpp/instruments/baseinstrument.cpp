@@ -21,8 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "baseinstrument.h"
-#include "../audioengine.h"
-#include "../sequencer.h"
+#include <audioengine.h>
+#include <sequencer.h>
 #include <drivers/adapter.h>
 #include <utilities/eventutility.h>
 #include <algorithm>

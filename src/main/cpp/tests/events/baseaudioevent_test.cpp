@@ -626,3 +626,50 @@ TEST( BaseAudioEvent, Instrument )
     delete audioEvent;
     delete instrument;
 }
+
+TEST( BaseAudioEvent, SyncWithMeasureCacheOnPositionUpdate )
+{
+    BaseInstrument* instrument = new BaseInstrument();
+    BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
+
+    audioEvent->addToSequencer();
+
+    AudioEngine::samples_per_bar = 512;
+
+    // expect event to span from 512 - 1024 which spans measures 1 - 2
+    audioEvent->setEventStart(512);
+    audioEvent->setEventLength(512);
+
+    ASSERT_TRUE( instrument->getEventsForMeasure(0) == nullptr ) << "expected no events for this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(2)->size(), 1 ) << "expected event to be added to this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(3) == nullptr ) << "expected no events for this measure";
+
+    // expect event to span from 0 - 512 which spans measures 0 - 1
+    audioEvent->setEventStart(0);
+
+    EXPECT_EQ( instrument->getEventsForMeasure(0)->size(), 1 ) << "expected event to be added to this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(2) == nullptr ) << "expected no events for this measure";
+
+    // expect event to span from 0 - 1024 which spans measures 0 - 2
+    audioEvent->setEventLength(1024);
+
+    EXPECT_EQ( instrument->getEventsForMeasure(0)->size(), 1 ) << "expected event to be added to this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(2)->size(), 1 ) << "expected event to be added to this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(3) == nullptr ) << "expected no events for this measure";
+
+    // expect event to span from 512 - 2048 which spans measures 1 - 4
+    audioEvent->setEventStart(512);
+    audioEvent->setEventLength(1536);
+
+    ASSERT_TRUE( instrument->getEventsForMeasure(0) == nullptr ) << "expected no events for this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(2)->size(), 1 ) << "expected event to be added to this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(3)->size(), 1 ) << "expected event to be added to this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(4) == nullptr ) << "expected no events for this measure";
+
+    delete audioEvent;
+    delete instrument;
+}

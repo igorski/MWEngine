@@ -1,5 +1,6 @@
 #include "../../instruments/baseinstrument.h"
 #include "../../events/baseaudioevent.h"
+#include "../../utilities/eventutility.h"
 #include "../../sequencer.h"
 
 TEST( BaseInstrument, Constructor )
@@ -266,5 +267,81 @@ TEST( BaseInstrument, UpdateEvents )
         << "expected event length to have updated after tempo change and invocation of updateEvents()";
 
     delete event;
+    delete instrument;
+}
+
+TEST( BaseInstrument, MeasureCache )
+{
+    BaseInstrument* instrument  = new BaseInstrument();
+    BaseAudioEvent* audioEvent1 = new BaseAudioEvent( instrument );
+    BaseAudioEvent* audioEvent2 = new BaseAudioEvent( instrument );
+    BaseAudioEvent* audioEvent3 = new BaseAudioEvent( instrument );
+
+    ASSERT_TRUE( nullptr == instrument->getEventsForMeasure( 0 )) << "expected no events yet";
+
+    AudioEngine::samples_per_bar = 512;
+
+    // expected to be present in measure 0 only
+    audioEvent1->setEventStart(0);
+    audioEvent1->setEventEnd(512);
+
+    // expected to be present in measures 0 and 1
+    audioEvent2->setEventStart(0);
+    audioEvent2->setEventEnd(1024);
+
+    // expected to be present in measures 1, 2 and 3
+    audioEvent3->setEventStart(512);
+    audioEvent3->setEventEnd(1536);
+
+    // add events to sequencer
+    instrument->addEvent( audioEvent1, true );
+    instrument->addEvent( audioEvent2, true );
+    instrument->addEvent( audioEvent3, true );
+    
+    // assert
+
+    auto measure0events = instrument->getEventsForMeasure( 0 );
+    
+    ASSERT_FALSE( nullptr == measure0events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure0events->size(), 2 ) << "expected two events in vector";
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure0events, audioEvent1 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure0events, audioEvent2 ));
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure0events, audioEvent3 ));
+    
+    auto measure1events = instrument->getEventsForMeasure( 1 );
+    
+    ASSERT_FALSE( nullptr == measure1events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure1events->size(), 2 ) << "expected two events in vector";
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure1events, audioEvent1 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure1events, audioEvent2 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure1events, audioEvent3 ));
+
+    auto measure2events = instrument->getEventsForMeasure( 2 );
+    
+    ASSERT_FALSE( nullptr == measure2events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure2events->size(), 1 ) << "expected one event in vector";
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure2events, audioEvent1 ));
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure2events, audioEvent2 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure2events, audioEvent3 ));
+
+    auto measure3events = instrument->getEventsForMeasure( 3 );
+    
+    ASSERT_FALSE( nullptr == measure3events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure3events->size(), 1 ) << "expected one event in vector";
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure3events, audioEvent1 ));
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure3events, audioEvent2 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure3events, audioEvent3 ));
+
+    instrument->removeEvent( audioEvent3, true );
+
+    measure3events = instrument->getEventsForMeasure( 3 );
+    EXPECT_EQ( measure3events->size(), 0 ) << "expected no events left in vector";
+    EXPECT_EQ( measure2events->size(), 0 ) << "expected no events left in vector";
+    EXPECT_EQ( measure1events->size(), 1 ) << "expected one event left in vector";
+    EXPECT_EQ( measure0events->size(), 2 ) << "expected two events left in vector";
+
+    delete audioEvent1;
+    delete audioEvent2;
+    delete audioEvent3;
     delete instrument;
 }

@@ -25,6 +25,7 @@
 
 #include <audioengine.h>
 #include <events/baseaudioevent.h>
+#include <vector>
 
 namespace MWEngine {
 namespace EventUtility
@@ -35,6 +36,12 @@ namespace EventUtility
 
     inline unsigned long getEndMeasureForEvent( BaseAudioEvent* event ) {
         return ( unsigned long ) floor(( float ) event->getSampleEnd() / ( float ) AudioEngine::samples_per_bar );
+    }
+
+    inline bool vectorContainsEvent( std::vector<BaseAudioEvent*>* eventVector, BaseAudioEvent* event )
+    {
+        auto it = std::find( eventVector->begin(), eventVector->end(), event );
+        return it != eventVector->end();
     }
 }
 } // E.O namespace MWEngine

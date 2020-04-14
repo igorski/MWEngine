@@ -53,6 +53,7 @@ using namespace MWEngine;
 #include "processors/flanger_test.cpp"
 #include "processors/reverb_test.cpp"
 #include "processors/tremolo_test.cpp"
+#include "utilities/eventutility_test.cpp"
 #include "utilities/tablepool_test.cpp"
 #include "utilities/samplemanager_test.cpp"
 #include "utilities/sampleutility_test.cpp"
