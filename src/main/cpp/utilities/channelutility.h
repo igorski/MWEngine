@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,57 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "processingchain.h"
-#include "global.h"
+#ifndef __MWENGINE__CHANNELUTILITY_H_INCLUDED__
+#define __MWENGINE__CHANNELUTILITY_H_INCLUDED__
+
+#include <vector>
+#include "../audiochannel.h"
+#include "../channelgroup.h"
 
 namespace MWEngine {
-
-// constructor
-
-ProcessingChain::ProcessingChain()
+class ChannelUtility
 {
+    public:
 
-}
-
-ProcessingChain::~ProcessingChain()
-{
-    _activeProcessors.clear();
-}
-
-/* public methods */
-
-void ProcessingChain::addProcessor( BaseProcessor* aProcessor )
-{
-    _activeProcessors.push_back( aProcessor );
-    aProcessor->setChain( this );
-}
-
-void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
-{
-    for ( int i = 0; i < _activeProcessors.size(); i++ )
-    {
-        if ( _activeProcessors.at( i ) == aProcessor )
+        static inline bool channelBelongsToGroup( AudioChannel *channel, std::vector<ChannelGroup*> groups )
         {
-            _activeProcessors.erase( _activeProcessors.begin() + i );
-            aProcessor->setChain( nullptr );
-            break;
+            for ( size_t i = 0, totalGroups = groups.size(); i < totalGroups; ++i )
+            {
+                if ( groups.at( i )->containsAudioChannel( channel )) {
+                    return true;
+                }
+            }
+            return false;
         }
-    }
-}
+};
+}; // E.O. namespace MWEngine
 
-void ProcessingChain::reset()
-{
-    _activeProcessors.clear();
-}
-
-std::vector<BaseProcessor*> ProcessingChain::getActiveProcessors()
-{
-    return _activeProcessors;
-}
-
-bool ProcessingChain::hasProcessors()
-{
-    return _activeProcessors.empty();
-}
-
-} // E.O namespace MWEngine
+#endif

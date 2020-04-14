@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,57 +20,33 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#ifndef __MWENGINE__CHANNELGROUP_H_INCLUDED__
+#define __MWENGINE__CHANNELGROUP_H_INCLUDED__
+
 #include "processingchain.h"
-#include "global.h"
+#include "audiochannel.h"
+#include <vector>
 
 namespace MWEngine {
-
-// constructor
-
-ProcessingChain::ProcessingChain()
+class ChannelGroup
 {
+    public:
+        ChannelGroup();
+        ~ChannelGroup();
 
-}
+        ProcessingChain* getProcessingChain();
 
-ProcessingChain::~ProcessingChain()
-{
-    _activeProcessors.clear();
-}
+        bool addAudioChannel( AudioChannel* audioChannel );
+        bool removeAudioChannel( AudioChannel* audioChannel );
+        bool containsAudioChannel( AudioChannel* audioChannel );
 
-/* public methods */
+        bool applyEffectsToChannels( AudioBuffer* bufferToMixInto );
 
-void ProcessingChain::addProcessor( BaseProcessor* aProcessor )
-{
-    _activeProcessors.push_back( aProcessor );
-    aProcessor->setChain( this );
-}
-
-void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
-{
-    for ( int i = 0; i < _activeProcessors.size(); i++ )
-    {
-        if ( _activeProcessors.at( i ) == aProcessor )
-        {
-            _activeProcessors.erase( _activeProcessors.begin() + i );
-            aProcessor->setChain( nullptr );
-            break;
-        }
-    }
-}
-
-void ProcessingChain::reset()
-{
-    _activeProcessors.clear();
-}
-
-std::vector<BaseProcessor*> ProcessingChain::getActiveProcessors()
-{
-    return _activeProcessors;
-}
-
-bool ProcessingChain::hasProcessors()
-{
-    return _activeProcessors.empty();
-}
-
+    protected:
+        std::vector<AudioChannel*> _audioChannels;
+        ProcessingChain* _processingChain = nullptr;
+        AudioBuffer* _mixBuffer = nullptr;
+};
 } // E.O namespace MWEngine
+
+#endif
