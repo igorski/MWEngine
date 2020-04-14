@@ -110,33 +110,12 @@ public final class MWEngine extends Thread
         _context   = aContext;
         _observer  = aObserver;
 
-        initJNI();
-    }
-
-    /* public methods */
-
-    // (re-)registers interface to match current/updated JNI environment
-
-    /**
-     * (re)-register the interface between this Java class and the
-     * native layer audio engine. This is recommended to synchronise
-     * changes in the JNI environments (for instance: when suspending
-     * the application or starting new Threads)
-     */
-    public void initJNI() {
-        MWEngineCore.init();
+        MWEngineCore.init(); // registers the interface between this Java class and the native code
     }
 
     public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels, Drivers.types driver ) {
-        SAMPLE_RATE     = aSampleRate;
-        BUFFER_SIZE     = aBufferSize;
-        OUTPUT_CHANNELS = aOutputChannels;
-        AUDIO_DRIVER    = driver;
-
-        // older Android emulators can only work at 8 kHz or crash violently...
-        if ( Build.FINGERPRINT.startsWith( "generic" )) SAMPLE_RATE = 8000;
-
-        AudioEngine.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
+        setup( aSampleRate, aBufferSize, aOutputChannels );
+        setAudioDriver( driver );
 
         // start w/ default of 120 BPM in 4/4 time
 
@@ -144,6 +123,20 @@ public final class MWEngine extends Thread
         _sequencerController.prepare( 120.0f, 4, 4 );
 
         _disposed = false;
+    }
+
+    public void setup( int aSampleRate, int aBufferSize, int aOutputChannels ) {
+        SAMPLE_RATE     = Build.FINGERPRINT.startsWith( "generic" ) ? 8000 : aSampleRate; // older emulators only work at 8 kHz
+        BUFFER_SIZE     = aBufferSize;
+        OUTPUT_CHANNELS = aOutputChannels;
+
+        AudioEngine.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
+
+        if ( !_isRunning || !_nativeEngineRunning ) return;
+
+        // TODO: synchronize native layer class instances that cached above values??
+        pause();   // toggling paused state of the thread will stop the engine
+        unpause(); // and upon restart, initialize it with the new settings
     }
 
     public static MWEngine getInstance() {
@@ -274,10 +267,8 @@ public final class MWEngine extends Thread
 
         if ( !_isRunning || !_nativeEngineRunning ) return;
 
-        // toggling paused state of the thread will stop the
-        // engine and upon restart, initialize it with the new audio driver
-        pause();
-        unpause();
+        pause();   // toggling paused state of the thread will stop the engine
+        unpause(); // and upon restart, initialize it with the new settings
     }
 
     /**
@@ -344,10 +335,6 @@ public final class MWEngine extends Thread
         }
     }
 
-    public boolean isPaused() {
-        return _paused;
-    }
-
     public void run() {
         Log.d( "MWENGINE", "starting MWEngine render thread" );
 
@@ -360,7 +347,7 @@ public final class MWEngine extends Thread
                 Log.d( "MWENGINE", "starting native audio rendering thread @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
                 _nativeEngineRunning = true;
-                MWEngineCore.init();
+                MWEngineCore.init(); // (re-)register JNI interface to match current/updated JNI environment (e.g. after app suspend/focus change)
                 AudioEngine.start( AUDIO_DRIVER );
             }
 
@@ -374,16 +361,12 @@ public final class MWEngine extends Thread
             Log.d( "MWENGINE", "native audio rendering thread halted" );
 
             if ( _paused && !_disposed ) {
-
-                // slight timeout to avoid deadlocks when attempting to lock
-
                 try {
-                    Thread.sleep(50L);
+                    Thread.sleep( 50L ); // slight timeout to avoid deadlocks when attempting to lock
                 }
                 catch ( Exception e ) {}
 
                 // obtain lock and wait until it is released by unpause()
-
                 synchronized ( _pauseLock ) {
                     while ( _paused ) {
                         try {
@@ -414,27 +397,21 @@ public final class MWEngine extends Thread
      * message from the native layer after a short timeout
      */
     private void handleThreadStartTimeout() {
-        if ( !_nativeEngineRunning )
-        {
-            final Handler handler = new Handler( _context.getMainLooper() );
-            handler.postDelayed( new Runnable()
-            {
-                public void run()
-                {
-                    if ( !_disposed && !_nativeEngineRunning)
-                        _observer.handleNotification( Notifications.ids.ERROR_THREAD_START.ordinal() );
-                }
-
-            }, 2000 );
-        }
+        if ( _nativeEngineRunning ) return;
+        final Handler handler = new Handler( _context.getMainLooper() );
+        handler.postDelayed( new Runnable() {
+            public void run() {
+                if ( !_disposed && !_nativeEngineRunning)
+                    _observer.handleNotification( Notifications.ids.ERROR_THREAD_START.ordinal() );
+            }
+        }, 2000 );
     }
 
     /* native bridge methods */
 
     /**
-     * all these methods are static and provide a bridge from C++ back into Java
-     * these methods are used by the native audio engine for updating states and
-     * requesting data
+     * All these methods are static and provide a bridge from the C++ layer code into Java. As such,
+     * these methods are used by the native audio engine for updating states and requesting data.
      *
      * Java method IDs need to be supplied to C++ in order te make the callbacks, you
      * can discover the IDs by building the Java project and running the following
@@ -443,27 +420,22 @@ public final class MWEngine extends Thread
      * javap -s -private -classpath classes nl.igorski.mwengine.MWEngine
      */
     public static void handleBridgeConnected( int aSomething ) {
-        if ( INSTANCE._observer != null )
-            INSTANCE._observer.handleNotification( Notifications.ids.STATUS_BRIDGE_CONNECTED.ordinal() );
+        if ( INSTANCE._observer != null ) INSTANCE._observer.handleNotification( Notifications.ids.STATUS_BRIDGE_CONNECTED.ordinal() );
     }
 
     public static void handleNotification( int aNotificationId ) {
-        if ( INSTANCE._observer != null )
-            INSTANCE._observer.handleNotification( aNotificationId );
+        if ( INSTANCE._observer != null ) INSTANCE._observer.handleNotification( aNotificationId );
     }
 
     public static void handleNotificationWithData( int aNotificationId, int aNotificationData ) {
-        if ( INSTANCE._observer != null )
-            INSTANCE._observer.handleNotification( aNotificationId, aNotificationData );
+        if ( INSTANCE._observer != null ) INSTANCE._observer.handleNotification( aNotificationId, aNotificationData );
     }
 
     public static void handleTempoUpdated( float aNewTempo ) {
         // weird bug where on initial start the sequencer would not know the step range...
         if ( INSTANCE._initialCreation ) {
             INSTANCE._initialCreation = false;
-            INSTANCE.getSequencerController().setLoopRange(
-                    0, INSTANCE.getSequencerController().getSamplesPerBar() - 1
-            );
+            INSTANCE.getSequencerController().setLoopRange( 0, INSTANCE.getSequencerController().getSamplesPerBar() - 1 );
         }
     }
 }
