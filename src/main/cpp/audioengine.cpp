@@ -43,6 +43,7 @@
 
 #include <jni.h>
 #include <jni/javabridge.h>
+#include <utilities/channelutility.h>
 
 #endif
 
@@ -56,7 +57,7 @@ namespace MWEngine {
 
 #ifdef RECORD_DEVICE_INPUT
     float*        AudioEngine::recbufferIn  = nullptr;
-    AudioChannel* AudioEngine::inputChannel = new AudioChannel( 1.0f );
+    AudioChannel* AudioEngine::inputChannel = new AudioChannel( 1.0F );
 #endif
 
     bool  AudioEngine::recordDeviceInput = false;
@@ -74,8 +75,8 @@ namespace MWEngine {
     int   AudioEngine::marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
     int   AudioEngine::min_step_position          = 0;
     int   AudioEngine::max_step_position          = ( AudioEngine::amount_of_bars * AudioEngine::steps_per_bar ) - 1; // note steps start at 0 (hence - 1)
-    float AudioEngine::tempo                      = 90.0;
-    float AudioEngine::queuedTempo                = 120.0;
+    float AudioEngine::tempo                      = 90.0F;
+    float AudioEngine::queuedTempo                = 120.0F;
     int   AudioEngine::time_sig_beat_amount       = 4;
     int   AudioEngine::time_sig_beat_unit         = 4;
     int   AudioEngine::queuedTime_sig_beat_amount = time_sig_beat_amount;
@@ -90,8 +91,9 @@ namespace MWEngine {
 
     /* output related */
 
-    float            AudioEngine::volume    = 1.0f;
+    float            AudioEngine::volume    = 1.0F;
     ProcessingChain* AudioEngine::masterBus = new ProcessingChain();
+    std::vector<ChannelGroup*> AudioEngine::groups;
 
     /* private properties */
 
@@ -169,7 +171,7 @@ namespace MWEngine {
 
         std::vector<BaseInstrument*> instruments = Sequencer::instruments;
 
-        for ( int i = 0; i < instruments.size(); ++i )
+        for ( size_t i = 0; i < instruments.size(); ++i )
             instruments.at( i )->audioChannel->createOutputBuffer();
 
         // start thread and request first render (gets render loop going)
@@ -231,6 +233,22 @@ namespace MWEngine {
         bouncing           = false;
     }
 
+    void AudioEngine::addChannelGroup( ChannelGroup* group )
+    {
+        auto it = std::find( groups.begin(), groups.end(), group );
+        if ( it == groups.end() ) {
+            groups.push_back( group );
+        }
+    }
+
+    void AudioEngine::removeChannelGroup( ChannelGroup* group )
+    {
+        auto it = std::find( groups.begin(), groups.end(), group );
+        if ( it != groups.end() ) {
+            groups.erase( it );
+        }
+    }
+
     AudioChannel* AudioEngine::getInputChannel()
     {
 #ifdef RECORD_DEVICE_INPUT
@@ -245,7 +263,7 @@ namespace MWEngine {
         if ( thread == 0 )
             return false;
 
-        int i, c, ci;
+        size_t i, j, k, c, ci;
         float sample;
 
         // erase previous buffer contents
@@ -269,29 +287,29 @@ namespace MWEngine {
             int recordedSamples           = DriverAdapter::getInput( recbufferIn, amountOfSamples );
             SAMPLE_TYPE* recBufferChannel = inputChannel->getOutputBuffer()->getBufferForChannel( 0 );
 
-            for ( int j = 0; j < recordedSamples; ++j ) {
+            for ( j = 0; j < recordedSamples; ++j ) {
                 recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
             }
 
             // apply processing chain onto the input
 
             std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
-            for ( int k = 0; k < processors.size(); ++k ) {
-                processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
+            for ( k = 0; k < processors.size(); ++k ) {
+                processors.at( k )->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
             }
 
             // merge recording into current input buffer for instant monitoring
 
-            if ( inputChannel->getVolume() > 0.f ) {
+            if ( inputChannel->getVolume() > 0.F ) {
                 inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
             }
         }
 #endif
         // channel loop
-        int j = 0;
-        int channelAmount = channels->size();
+        size_t channelAmount = channels->size();
+        size_t groupAmount   = groups.size();
 
-        for ( ; j < channelAmount; ++j )
+        for ( j = 0; j < channelAmount; ++j )
         {
             AudioChannel* channel = channels->at( j );
             bool isCached         = channel->hasCache;                // whether this channel has a fully cached buffer
@@ -330,9 +348,9 @@ namespace MWEngine {
                 if ( !isCached )
                 {
                     // write the audioEvent buffers into the main output buffer
-                    for ( int k = 0; k < amount; ++k )
+                    for ( k = 0; k < amount; ++k )
                     {
-                        BaseAudioEvent* audioEvent = audioEvents[ k ];
+                        BaseAudioEvent* audioEvent = audioEvents.at( k );
 
                         if ( audioEvent != nullptr && !audioEvent->isLocked()) // make sure we're allowed to query the contents
                         {
@@ -341,8 +359,7 @@ namespace MWEngine {
                         }
                     }
                 }
-                else
-                {
+                else {
                     channel->readCachedBuffer( channelBuffer, bufferPos );
                 }
             }
@@ -352,9 +369,9 @@ namespace MWEngine {
             {
                 int lAmount = channel->liveEvents.size();
 
-                for ( int k = 0; k < lAmount; ++k )
+                for ( k = 0; k < lAmount; ++k )
                 {
-                    BaseAudioEvent* vo = channel->liveEvents[ k ];
+                    BaseAudioEvent* vo = channel->liveEvents.at( k );
                     vo->mixBuffer( channelBuffer );
                 }
             }
@@ -363,9 +380,9 @@ namespace MWEngine {
             ProcessingChain* chain = channel->processingChain;
             std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
 
-            for ( int k = 0; k < processors.size(); k++ )
+            for ( k = 0; k < processors.size(); k++ )
             {
-                BaseProcessor* processor = processors[ k ];
+                BaseProcessor* processor = processors.at( k );
                 bool canCacheProcessor   = processor->isCacheable();
 
                 // only apply processor when we're not caching or cannot cache its output
@@ -376,7 +393,7 @@ namespace MWEngine {
                     if ( mustCache && !canCacheProcessor )
                         mustCache = !writeChannelCache( channel, channelBuffer, cacheReadPos );
 
-                    processors[ k ]->process( channelBuffer, channel->isMono );
+                    processor->process( channelBuffer, channel->isMono );
                 }
             }
 
@@ -386,20 +403,35 @@ namespace MWEngine {
             }
 
             // write the channel buffer into the combined output buffer, apply channel volume
-            // note live events are always audible as their volume is relative to the instrument
-            if ( channel->hasLiveEvents && channelVolume == 0.0 )
+            // (note live events are always audible as their volume is relative to the instrument)
+            if ( channel->hasLiveEvents && channelVolume == 0.0 ) {
                 channelVolume = 1.0;
+            }
 
-            channel->mixBuffer( inBuffer, channelVolume );
+            // note we don't mix the channel if it belongs to a group (group will sum into the output)
+            if ( groupAmount == 0 || !ChannelUtility::channelBelongsToGroup( channel, groups )) {
+                channel->mixBuffer( inBuffer, channelVolume );
+            }
         }
 
-        // apply master bus processors (e.g. high pass filter, limiter, etc.)
+        // apply group effects onto the mix buffer
+
+        for ( j = 0; j < groupAmount; ++j )
+        {
+            groups.at( j )->applyEffectsToChannels( inBuffer );
+        }
+
+        // apply master bus processors (e.g. high/low pass filters, limiter, etc.) onto the mix buffer
+
         std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
 
-        for ( int k = 0; k < processors.size(); k++ )
-            processors[ k ]->process( inBuffer, isMono );
+        for ( j = 0; j < processors.size(); ++j )
+        {
+            processors.at( j )->process( inBuffer, isMono );
+        }
 
         // write the accumulated buffers into the output buffer
+
         for ( i = 0, c = 0; i < amountOfSamples; i++, c += outputChannels )
         {
             for ( ci = 0; ci < outputChannels; ci++ )
@@ -410,10 +442,10 @@ namespace MWEngine {
                 // and perform a fail-safe check in case we're exceeding the headroom ceiling
 
                 if ( sample < -1.0 )
-                    sample = -1.0f;
+                    sample = -1.0F;
 
                 else if ( sample > +1.0 )
-                    sample = +1.0f;
+                    sample = +1.0F;
 
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
@@ -424,14 +456,14 @@ namespace MWEngine {
             // update the buffer pointers and sequencer position
             if ( Sequencer::playing )
             {
-                if ( bufferPosition % ( int ) samples_per_step == 0 )
+                if ( bufferPosition % samples_per_step == 0 )
                 {
                     // for higher accuracy we must calculate using floating point precision, it
                     // is a more expensive calculation than using integer modulo though, so we check
                     // only when the integer modulo operation check has passed
                     // TODO : this attempted fmod calculation is inaccurate.
                     //if ( std::fmod(( float ) bufferPosition, samples_per_step ) == 0 )
-                        handleSequencerPositionUpdate( i );
+                        handleSequencerPositionUpdate(( int ) i );
                 }
                 if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position )
                      Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );

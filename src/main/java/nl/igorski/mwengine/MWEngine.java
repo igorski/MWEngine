@@ -103,10 +103,8 @@ public final class MWEngine extends Thread
      * @param aContext {Context} current application context
      * @param aObserver {MWEngine.IObserver} observer that will monitor engine states
      */
-    public MWEngine( Context aContext, IObserver aObserver )
-    {
-        if ( INSTANCE != null )
-            throw new Error( "MWEngine already instantiated" );
+    public MWEngine( Context aContext, IObserver aObserver ) {
+        if ( INSTANCE != null ) throw new Error( "MWEngine already instantiated" );
 
         INSTANCE   = this;
         _context   = aContext;
@@ -125,13 +123,11 @@ public final class MWEngine extends Thread
      * changes in the JNI environments (for instance: when suspending
      * the application or starting new Threads)
      */
-    public void initJNI()
-    {
+    public void initJNI() {
         MWEngineCore.init();
     }
 
-    public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels, Drivers.types driver )
-    {
+    public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels, Drivers.types driver ) {
         SAMPLE_RATE     = aSampleRate;
         BUFFER_SIZE     = aBufferSize;
         OUTPUT_CHANNELS = aOutputChannels;
@@ -150,30 +146,33 @@ public final class MWEngine extends Thread
         _disposed = false;
     }
 
-    public static MWEngine getInstance()
-    {
+    public static MWEngine getInstance() {
         return INSTANCE;
     }
 
-    public float getVolume()
-    {
+    public float getVolume() {
         return _volume;
     }
 
-    public void setVolume( float aValue )
-    {
+    public void setVolume( float aValue ) {
         _volume = aValue;
         _sequencerController.setVolume( _volume );
     }
 
-    public SequencerController getSequencerController()
-    {
+    public SequencerController getSequencerController() {
         return _sequencerController;
     }
 
-    public ProcessingChain getMasterBusProcessors()
-    {
+    public ProcessingChain getMasterBusProcessors() {
         return AudioEngine.getMasterBus();
+    }
+
+    public void addChannelGroup( ChannelGroup group ) {
+        AudioEngine.addChannelGroup( group );
+    }
+
+    public void removeChannelGroup( ChannelGroup group ) {
+        AudioEngine.removeChannelGroup( group );
     }
 
     /**
@@ -183,18 +182,15 @@ public final class MWEngine extends Thread
      *
      * @return {AudioChannel}
      */
-    public AudioChannel getInputChannel()
-    {
+    public AudioChannel getInputChannel() {
         return AudioEngine.getInputChannel();
     }
 
-    public void setBouncing( boolean value, String outputFile )
-    {
+    public void setBouncing( boolean value, String outputFile ) {
         setBouncing( value, outputFile, 0, AudioEngine.getAmount_of_bars() * AudioEngine.getSamples_per_bar());
     }
 
-    public void setBouncing( boolean value, String outputFile, int rangeStart, int rangeEnd )
-    {
+    public void setBouncing( boolean value, String outputFile, int rangeStart, int rangeEnd ) {
         _sequencerController.setBounceState( value, calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
     }
 
@@ -204,11 +200,8 @@ public final class MWEngine extends Thread
      * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
      *
      * In order to record the input directly to device storage, @see setRecordFromDeviceInputState()
-     *
-     * @param recordingActive {boolean}
      */
-    public void recordInput( boolean recordingActive )
-    {
+    public void recordInput( boolean recordingActive ) {
         AudioEngine.setRecordDeviceInput( recordingActive );
     }
 
@@ -223,8 +216,7 @@ public final class MWEngine extends Thread
      * @param recordingActive {boolean} toggle the recording state on/off
      * @param outputFile {string} name of the WAV file to create and write the recording into
      */
-    public void setRecordingState( boolean recordingActive, String outputFile )
-    {
+    public void setRecordingState( boolean recordingActive, String outputFile ) {
         int maxRecordBuffers = 0;
 
         // create / reset the recorded buffer when
@@ -248,8 +240,7 @@ public final class MWEngine extends Thread
      * @param outputFile {string} name of the WAV file to create and write the recording into
      * @param maxDurationInMilliSeconds {int} the size (in milliseconds) of each individual written buffer
      */
-    public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds )
-    {
+    public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds ) {
         int maxRecordBuffers = 0;
 
         // create / reset the recorded buffer when
@@ -265,16 +256,12 @@ public final class MWEngine extends Thread
      * Invoke when RECORDED_SNIPPET_READY fires. This will write an in-memory audio recording
      * snippet onto device storage. Execute as soon as notification as fired for continuous recording,
      * invoke from a different thread than the audio rendering thread to prevent buffer under runs.
-     *
-     * @param snippetBufferIndex {int}
      */
-    public void saveRecordedSnippet( int snippetBufferIndex )
-    {
+    public void saveRecordedSnippet( int snippetBufferIndex ) {
         _sequencerController.saveRecordedSnippet( snippetBufferIndex );
     }
 
-    public void reset()
-    {
+    public void reset() {
         AudioEngine.reset();
         _nativeEngineRetries = 0;
     }
@@ -300,8 +287,7 @@ public final class MWEngine extends Thread
      *
      * @return {boolean}
      */
-    public boolean canRestartEngine()
-    {
+    public boolean canRestartEngine() {
         return ++_nativeEngineRetries < 5;
     }
 
@@ -309,8 +295,7 @@ public final class MWEngine extends Thread
      * Invoke whenever you want to destroy MWEngine
      * This halts the audio rendering and stops the Thread
      */
-    public void dispose()
-    {
+    public void dispose() {
         _disposed  = true;
         _isRunning = false;
 
@@ -323,10 +308,8 @@ public final class MWEngine extends Thread
     /* threading */
 
     @Override
-    public void start()
-    {
-        if ( !_isRunning )
-        {
+    public void start() {
+        if ( !_isRunning ) {
             if ( !_threadStarted )
                 super.start();
 
@@ -343,20 +326,17 @@ public final class MWEngine extends Thread
      * halts the execution of the audio rendering and causes the
      * Thread to free CPU resources
      */
-    public void pause()
-    {
+    public void pause() {
         _paused = true;
 
         // halt the audio rendering in the native layer of the engine
-        if ( _nativeEngineRunning )
-            AudioEngine.stop();
+        if ( _nativeEngineRunning ) AudioEngine.stop();
     }
 
     /**
      * invoke when the application regains focus
      */
-    public void unpause()
-    {
+    public void unpause() {
         _paused = false;
 
         synchronized ( _pauseLock ) {
@@ -364,23 +344,19 @@ public final class MWEngine extends Thread
         }
     }
 
-    public boolean isPaused()
-    {
+    public boolean isPaused() {
         return _paused;
     }
 
-    public void run()
-    {
+    public void run() {
         Log.d( "MWENGINE", "starting MWEngine render thread" );
 
         android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
         handleThreadStartTimeout();
 
-        while ( _isRunning )
-        {
+        while ( _isRunning ) {
             // start the native rendering thread
-            if ( !_paused && !_nativeEngineRunning )
-            {
+            if ( !_paused && !_nativeEngineRunning ) {
                 Log.d( "MWENGINE", "starting native audio rendering thread @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
                 _nativeEngineRunning = true;
@@ -422,8 +398,7 @@ public final class MWEngine extends Thread
 
     /* helper functions */
 
-    private int calculateRecordingSnippetBufferSize()
-    {
+    private int calculateRecordingSnippetBufferSize() {
         // we divide a recording into 15 second snippets (these are combined when recording finishes)
         final double amountOfMinutes = .25;
 
@@ -438,8 +413,7 @@ public final class MWEngine extends Thread
      * this poor man's check checks whether the bridge has submitted its connection
      * message from the native layer after a short timeout
      */
-    private void handleThreadStartTimeout()
-    {
+    private void handleThreadStartTimeout() {
         if ( !_nativeEngineRunning )
         {
             final Handler handler = new Handler( _context.getMainLooper() );
@@ -468,30 +442,24 @@ public final class MWEngine extends Thread
      *
      * javap -s -private -classpath classes nl.igorski.mwengine.MWEngine
      */
-    public static void handleBridgeConnected( int aSomething )
-    {
+    public static void handleBridgeConnected( int aSomething ) {
         if ( INSTANCE._observer != null )
             INSTANCE._observer.handleNotification( Notifications.ids.STATUS_BRIDGE_CONNECTED.ordinal() );
     }
 
-    public static void handleNotification( int aNotificationId )
-    {
+    public static void handleNotification( int aNotificationId ) {
         if ( INSTANCE._observer != null )
             INSTANCE._observer.handleNotification( aNotificationId );
     }
 
-    public static void handleNotificationWithData( int aNotificationId, int aNotificationData )
-    {
+    public static void handleNotificationWithData( int aNotificationId, int aNotificationData ) {
         if ( INSTANCE._observer != null )
             INSTANCE._observer.handleNotification( aNotificationId, aNotificationData );
     }
 
-    public static void handleTempoUpdated( float aNewTempo )
-    {
+    public static void handleTempoUpdated( float aNewTempo ) {
         // weird bug where on initial start the sequencer would not know the step range...
-
-        if ( INSTANCE._initialCreation )
-        {
+        if ( INSTANCE._initialCreation ) {
             INSTANCE._initialCreation = false;
             INSTANCE.getSequencerController().setLoopRange(
                     0, INSTANCE.getSequencerController().getSamplesPerBar() - 1
