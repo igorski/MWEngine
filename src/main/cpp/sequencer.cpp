@@ -94,9 +94,12 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
                 int firstMeasure = ( int ) floor(( float ) bufferPosition / ( float ) AudioEngine::samples_per_bar );
                 int lastMeasure  = ( int ) floor(( float ) bufferEnd / ( float ) AudioEngine::samples_per_bar );
 
-                collectSequencedEvents( instrument, bufferPosition, bufferEnd, firstMeasure, false );
+                // note we deduplicate eligible events if flushChannels is false
+
+                collectSequencedEvents( instrument, bufferPosition, bufferEnd, firstMeasure, !flushChannels );
 
                 // when the current range spans 2 measures, collect for the second measure as well
+                // here we always deduplicate as events can overlap from first to last measure
 
                 if ( lastMeasure != firstMeasure ) {
                     collectSequencedEvents( instrument, bufferPosition, bufferEnd, lastMeasure, true );
