@@ -196,9 +196,11 @@ void BaseInstrument::toggleReadLock( bool locked )
     // when unit testing, GoogleTest deadlocks on this attempted locking operation. We don't
     // need to test for mutex behaviour, but it would be nice not to have to wrap this code
 
+#ifdef MOCK_ENGINE
     if ( DriverAdapter::isMocked() ) {
         return;
     }
+#endif
 
     if ( locked ) {
         _lock.lock();

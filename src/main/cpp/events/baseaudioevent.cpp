@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -202,6 +202,8 @@ void BaseAudioEvent::setEventEnd( int value )
 
     // update end position in seconds
     _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
+
+    // TODO : update sequencer lookup table for measures !!
 }
 
 void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offset )
