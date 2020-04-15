@@ -126,7 +126,7 @@ namespace DriverAdapter {
 #endif
                 // OpenSL maintains its own locking mechanism, we can invoke
                 // the render cycle directly from the audio engine thread loop
-                AudioEngine::render(AudioEngineProps::BUFFER_SIZE);
+                AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
                 break;
             case Drivers::AAUDIO:
                 // AAudio triggers its callback internally when ready

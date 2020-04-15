@@ -30,18 +30,30 @@
 namespace MWEngine {
 namespace EventUtility
 {
-    inline unsigned long getStartMeasureForEvent( BaseAudioEvent* event ) {
-        return ( unsigned long ) floor(( float ) event->getSampleStart() / ( float ) AudioEngine::samples_per_bar );
+    inline unsigned long getStartMeasureForEvent( BaseAudioEvent* event )
+    {
+        return ( unsigned long ) floor( event->getEventStart() / AudioEngine::samples_per_bar );
     }
 
-    inline unsigned long getEndMeasureForEvent( BaseAudioEvent* event ) {
-        return ( unsigned long ) floor(( float ) event->getSampleEnd() / ( float ) AudioEngine::samples_per_bar );
+    inline unsigned long getEndMeasureForEvent( BaseAudioEvent* event )
+    {
+        return ( unsigned long ) floor( event->getEventEnd() / AudioEngine::samples_per_bar );
     }
 
     inline bool vectorContainsEvent( std::vector<BaseAudioEvent*>* eventVector, BaseAudioEvent* event )
     {
         auto it = std::find( eventVector->begin(), eventVector->end(), event );
         return it != eventVector->end();
+    }
+
+    inline bool removeEventFromVector( std::vector<BaseAudioEvent*>* eventVector, BaseAudioEvent* event )
+    {
+        auto it = std::find( eventVector->begin(), eventVector->end(), event );
+        if ( it != eventVector->end() ) {
+            eventVector->erase( it );
+            return true;
+        }
+        return false;
     }
 }
 } // E.O namespace MWEngine

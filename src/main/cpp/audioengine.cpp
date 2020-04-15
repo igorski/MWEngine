@@ -64,9 +64,9 @@ namespace MWEngine {
 
     /* tempo / sequencer position related */
 
-    int   AudioEngine::samples_per_beat           = 0;  // strictly speaking sequencer specific, but scoped onto the AudioEngine
-    int   AudioEngine::samples_per_bar            = 0;  // for rendering purposes, see SequencerController on how to read and
-    int   AudioEngine::samples_per_step           = 0;  // adjust these values
+    int   AudioEngine::samples_per_beat           = 4;  // strictly speaking sequencer specific, but scoped onto the AudioEngine
+    int   AudioEngine::samples_per_bar            = 16; // for rendering purposes, see SequencerController on how these
+    int   AudioEngine::samples_per_step           = 1;  // values are calculated
 
     int   AudioEngine::amount_of_bars             = 1;
     int   AudioEngine::steps_per_bar              = 16; // default to sixteen step sequencing (see SequencerController)

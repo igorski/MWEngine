@@ -157,22 +157,17 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
     if ( isLiveEvent )
     {
-        auto it = std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent );
-        if ( it != _liveAudioEvents->end() )
-        {
-            _liveAudioEvents->erase( it );
+        removed = EventUtility::removeEventFromVector( _liveAudioEvents, audioEvent );
+        if ( removed ) {
             audioEvent->resetPlayState();
-            removed = true;
         }
     }
     else
     {
-        auto it = std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent );
-        if ( it != _audioEvents->end()) {
-            _audioEvents->erase( it );
+        removed = EventUtility::removeEventFromVector( _audioEvents, audioEvent );
+        if ( removed ) {
+            removeEventFromMeasureCache(audioEvent);
         }
-        removeEventFromMeasureCache( audioEvent );
-        removed = true;
     }
     toggleReadLock( false );
 
@@ -245,19 +240,16 @@ void BaseInstrument::removeEventFromMeasureCache( BaseAudioEvent* audioEvent )
 
     for ( unsigned long i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
         auto eventVector = _audioEventsPerMeasure.at( i );
-        auto it = std::find( eventVector->begin(), eventVector->end(), audioEvent );
-        if ( it != eventVector->end()) {
-            eventVector->erase( it );
-        }
+        EventUtility::removeEventFromVector( eventVector, audioEvent );
     }
 }
 
 void BaseInstrument::clearMeasureCache()
 {
-    for ( size_t i = 0; i < _audioEventsPerMeasure.size(); ++i ) {
-        auto eventVector = _audioEventsPerMeasure.at( i );
+    for ( auto it = _audioEventsPerMeasure.begin(); it != _audioEventsPerMeasure.end(); ++it ) {
+        auto eventVector = *it;
         eventVector->clear();
-        delete eventVector;
+      //  delete eventVector; // TODO
     }
     _audioEventsPerMeasure.clear();
 }

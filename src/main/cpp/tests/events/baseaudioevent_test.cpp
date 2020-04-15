@@ -1,5 +1,7 @@
 #include "../../events/baseaudioevent.h"
 #include "../../utilities/bufferutility.h"
+#include "../../utilities/eventutility.h"
+#include "../../utilities/volumeutil.h"
 #include "../../instruments/baseinstrument.h"
 #include "../../audioengine.h"
 
@@ -45,50 +47,22 @@ TEST( BaseAudioEvent, PlayStop )
 
     // expect AudioEvent not be in any of the event queues of the instrument after construction
 
-    bool found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ))
+        << "expected event not to be present in the sequenced event list after construction";
 
-    ASSERT_FALSE( found )
-        << "expected event not to be present in the event list after construction";
-
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected event not to be present in the live event list after construction";
 
     // 1. activate play-state
 
     audioEvent->play();
 
-    // expect event to be present in live events list
+    // expect event to only be present in live events list
 
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ) )
         << "expected event not to be present in the sequenced event list after invocation of play()";
 
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_TRUE( found )
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ) )
         << "expected event to be present in the live event list after invocation of play()";
 
     ASSERT_TRUE( audioEvent->isEnabled() )
@@ -100,24 +74,10 @@ TEST( BaseAudioEvent, PlayStop )
 
     // expect event not be in the event lists anymore
 
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ) )
+        << "expected event not to be present in the sequenced event list after invocation of stop()";
 
-    ASSERT_FALSE( found )
-        << "expected event not to be present in the event list after invocation of stop()";
-
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ) )
         << "expected event not to be present in the live event list after invocation of stop()";
 
     delete audioEvent;
@@ -181,29 +141,17 @@ TEST( BaseAudioEvent, DeletableState )
 
 TEST( BaseAudioEvent, AddRemoveSequencer )
 {
+    AudioEngine::samples_per_bar = 512;
+
     BaseInstrument* instrument = new BaseInstrument();
     BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
 
     // expect AudioEvent not be in any of the event queues of the instrument after construction
 
-    bool found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ))
+        << "expected event not to be present in the sequenced event list after construction";
 
-    ASSERT_FALSE( found )
-        << "expected event not to be present in the event list after construction";
-
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected event not to be present in the live event list after construction";
 
     // 1. add the event to the sequencer
@@ -212,24 +160,10 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
 
     // expect AudioEvent to be in the sequenced event list, not the live list
 
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ))
+        << "expected event to be present in the sequenced event list after addition";
 
-    ASSERT_TRUE( found )
-        << "expected event to be present in the event list after addition";
-
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected event not to be present in the live event list after addition";
 
     // 2. remove the event from the sequencer
@@ -238,15 +172,8 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
 
     // expect AudioEvent not to be in the sequenced event list anymore
 
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
-        << "expected event not to be present in the event list after removal";
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ))
+        << "expected event not to be present in the sequenced event list after removal";
 
     // 3. add live event to the sequencer
 
@@ -255,24 +182,10 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
 
     // expect AudioEvent to be in the live event list, not the sequenced list
 
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ))
         << "expected live event not to be present in the sequenced event list after addition";
 
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_TRUE( found )
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected live event to be present in the live event list after addition";
 
     // 4. remove live event from sequencer
@@ -281,24 +194,10 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
 
     // expect AudioEvent not be in any of the event queues of the instrument after removal
 
-    found = false;
-    for ( int i = 0; i < instrument->getEvents()->size(); ++i )
-    {
-        if ( instrument->getEvents()->at( i ) == audioEvent )
-            found = true;
-    }
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ))
+        << "expected event not to be present in the sequenced event list after removal";
 
-    ASSERT_FALSE( found )
-        << "expected event not to be present in the event list after removal";
-
-    found = false;
-    for ( int i = 0; i < instrument->getLiveEvents()->size(); ++i )
-    {
-        if ( instrument->getLiveEvents()->at( i ) == audioEvent )
-            found = true;
-    }
-
-    ASSERT_FALSE( found )
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected event not to be present in the live event list after removal";
 
     delete audioEvent;
@@ -348,6 +247,24 @@ TEST( BaseAudioEvent, PositionInSamples )
 
     EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
         << "expected event end not to exceed the range set by the event start and updated length properties";
+
+    // test moving event forwards
+
+    expectedEnd += eventStart;
+    eventStart *= 2;
+    audioEvent->setEventStart( eventStart );
+
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
+        << "expected event end to have moved back upon adjusting the event start";
+
+    // test moving event backwards
+    eventStart /= 2;
+    expectedEnd -= eventStart;
+    audioEvent->setEventStart( eventStart );
+
+    EXPECT_EQ( expectedEnd, audioEvent->getEventEnd() )
+        << "expected event end to have moved forwards upon adjusting the event start";
+
 
     delete audioEvent;
 }
@@ -632,44 +549,42 @@ TEST( BaseAudioEvent, SyncWithMeasureCacheOnPositionUpdate )
     BaseInstrument* instrument = new BaseInstrument();
     BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
 
-    audioEvent->addToSequencer();
-
     AudioEngine::samples_per_bar = 512;
 
-    // expect event to span from 512 - 1024 which spans measures 1 - 2
-    audioEvent->setEventStart(512);
+    // expect event to span from 512 - 1023 which spans measure 1
     audioEvent->setEventLength(512);
+    audioEvent->setEventStart(512);
 
-    ASSERT_TRUE( instrument->getEventsForMeasure(0) == nullptr ) << "expected no events for this measure";
+    audioEvent->addToSequencer();
+
+    EXPECT_EQ( instrument->getEventsForMeasure(0)->size(), 0 ) << "expected no events for this measure";
     EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
-    EXPECT_EQ( instrument->getEventsForMeasure(2)->size(), 1 ) << "expected event to be added to this measure";
-    ASSERT_TRUE( instrument->getEventsForMeasure(3) == nullptr ) << "expected no events for this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(2) == nullptr ) << "expected null pointer for out-of-range measure";
 
-    // expect event to span from 0 - 512 which spans measures 0 - 1
+    // expect event to span from 0 - 512 which spans measure 0
     audioEvent->setEventStart(0);
 
     EXPECT_EQ( instrument->getEventsForMeasure(0)->size(), 1 ) << "expected event to be added to this measure";
-    EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
-    ASSERT_TRUE( instrument->getEventsForMeasure(2) == nullptr ) << "expected no events for this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 0 ) << "expected no events for this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(2) == nullptr ) << "expected null pointer for out-of-range measure";
 
-    // expect event to span from 0 - 1024 which spans measures 0 - 2
+    // expect event to span from 0 - 1023 which spans measures 0 - 1
     audioEvent->setEventLength(1024);
 
     EXPECT_EQ( instrument->getEventsForMeasure(0)->size(), 1 ) << "expected event to be added to this measure";
     EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
-    EXPECT_EQ( instrument->getEventsForMeasure(2)->size(), 1 ) << "expected event to be added to this measure";
-    ASSERT_TRUE( instrument->getEventsForMeasure(3) == nullptr ) << "expected no events for this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(2) == nullptr ) << "expected null pointer for out-of-range measure";
 
-    // expect event to span from 512 - 2048 which spans measures 1 - 4
+    // expect event to span from 512 - 2047 which spans measures 1 - 3
     audioEvent->setEventStart(512);
     audioEvent->setEventLength(1536);
 
-    ASSERT_TRUE( instrument->getEventsForMeasure(0) == nullptr ) << "expected no events for this measure";
+    EXPECT_EQ( instrument->getEventsForMeasure(0)->size(), 0 ) << "expected no events for this measure";
     EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
     EXPECT_EQ( instrument->getEventsForMeasure(2)->size(), 1 ) << "expected event to be added to this measure";
     EXPECT_EQ( instrument->getEventsForMeasure(3)->size(), 1 ) << "expected event to be added to this measure";
-    ASSERT_TRUE( instrument->getEventsForMeasure(4) == nullptr ) << "expected no events for this measure";
+    ASSERT_TRUE( instrument->getEventsForMeasure(4) == nullptr ) << "expected null pointer for out-of-range measure";
 
-    delete audioEvent;
     delete instrument;
+    delete audioEvent;
 }

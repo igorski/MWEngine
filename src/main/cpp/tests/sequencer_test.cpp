@@ -94,6 +94,7 @@ TEST( Sequencer, GetAudioEvents )
     // at the end of the previous requested buffer range)
 
     startOffset = bufferSize;
+    channels->clear();
     Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
 
     EXPECT_EQ( 3, channels->size() )
@@ -118,6 +119,7 @@ TEST( Sequencer, GetAudioEvents )
     // 2nd event sampleEnd is still within range, 3rd event is outside of range)
 
     startOffset = bufferSize * 2;
+    channels->clear();
     Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
 
     EXPECT_EQ( 3, channels->size() )
@@ -139,6 +141,7 @@ TEST( Sequencer, GetAudioEvents )
     // 2nd event sampleEnd is still within range)
 
     startOffset = bufferSize * 3;
+    channels->clear();
     Sequencer::getAudioEvents( channels, startOffset, bufferSize, true, true );
 
     EXPECT_EQ( 3, channels->size() )
@@ -353,6 +356,7 @@ TEST( Sequencer, GetEventsFlushChannel )
     ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 0 ) == audioEvent2 )
         << "expected to have retrieved the second AudioEvent";
 
+    channels->clear();
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
 
     EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
@@ -373,6 +377,7 @@ TEST( Sequencer, GetEventsFlushChannel )
     ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 0 ) == audioEvent2 )
         << "expected to have retrieved the second AudioEvent";
 
+    channels->clear();
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, false );
 
     EXPECT_EQ( 2, channels->at( 0 )->audioEvents.size() )
@@ -385,6 +390,7 @@ TEST( Sequencer, GetEventsFlushChannel )
         << "expected to have retrieved the first AudioEvent by merging new request into non flushed channel";
 
     // add audioEvent1 to the non flushed channel
+    channels->clear();
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, false );
 
     EXPECT_EQ( 3, channels->at( 0 )->audioEvents.size() )
@@ -446,6 +452,7 @@ TEST( Sequencer, RemoveDeletableEvents )
     ASSERT_TRUE( instrument2->hasEvents() )
         << "expected instrument 2 to have events as event is marked as deletable, but hasn't been deleted yet";
 
+    channels->clear();
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
 
     EXPECT_EQ( 1, channels->at( 0 )->audioEvents.size() )
@@ -464,6 +471,7 @@ TEST( Sequencer, RemoveDeletableEvents )
     ASSERT_TRUE( instrument1->hasEvents() )
         << "expected instrument 1 to have events as event is marked as deletable, but hasn't been deleted yet";
 
+    channels->clear();
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
 
     EXPECT_EQ( 0, channels->at( 0 )->audioEvents.size() )
@@ -567,6 +575,7 @@ TEST( Sequencer, IgnoreEventsForMutedChannels )
     // mute instrument 2 channel
 
     instrument2->audioChannel->muted = true;
+    channels->clear();
     Sequencer::getAudioEvents( channels, 0, audioEvent1->getEventLength(), true, true );
 
     EXPECT_EQ( 1, channels->size() )
@@ -578,6 +587,7 @@ TEST( Sequencer, IgnoreEventsForMutedChannels )
     // mute instrument 1 channel too
 
     instrument1->audioChannel->muted = true;
+    channels->clear();
     Sequencer::getAudioEvents( channels, 0, audioEvent1->getEventLength(), true, true );
 
     EXPECT_EQ( 0, channels->size() )

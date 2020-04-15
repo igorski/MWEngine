@@ -189,16 +189,14 @@ void BaseAudioEvent::setEventStart( int value )
 
     _eventStart = value;
 
-    if ( _eventEnd <= _eventStart )
-    {
-        if ( _eventLength > 0 )
-            _eventEnd = _eventStart + ( _eventLength - 1 );
-        else
-            _eventEnd = _eventStart;
+    if ( _eventLength > 0 )
+        _eventEnd = _eventStart + ( _eventLength - 1 );
+    else if ( _eventEnd <= _eventStart )
+        _eventEnd = _eventStart;
 
-        // update end position in seconds
-        _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
-    }
+    // update end position in seconds
+    _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
+
     // update start position in seconds
     _startPosition = BufferUtility::bufferToSeconds( _eventStart, AudioEngineProps::SAMPLE_RATE );
 
@@ -257,6 +255,8 @@ void BaseAudioEvent::setStartPosition( float value )
     // update position in buffer samples
     _eventStart  = BufferUtility::secondsToBuffer( _startPosition, AudioEngineProps::SAMPLE_RATE );
     _eventLength = std::max( 0, ( _eventEnd - 1 ) - _eventStart );
+
+    // TODO sync with instrument
 }
 
 void BaseAudioEvent::setEndPosition( float value )
@@ -270,6 +270,8 @@ void BaseAudioEvent::setEndPosition( float value )
     // update position in buffer samples
     _eventEnd    = BufferUtility::secondsToBuffer( _endPosition, AudioEngineProps::SAMPLE_RATE );
     _eventLength = std::max( 0, ( _eventEnd - 1 ) - _eventStart );
+
+    // TODO sync with instrument
 }
 
 void BaseAudioEvent::setDuration( float value )

@@ -2,6 +2,7 @@
 #include "../../events/baseaudioevent.h"
 #include "../../utilities/eventutility.h"
 #include "../../sequencer.h"
+#include "../../audioengine.h"
 
 TEST( BaseInstrument, Constructor )
 {
@@ -74,6 +75,7 @@ TEST( BaseInstrument, SequencerRegistration )
 
 TEST( BaseInstrument, Events )
 {
+    AudioEngine::samples_per_bar = 512;
     BaseInstrument* instrument = new BaseInstrument();
 
     ASSERT_FALSE( instrument->hasEvents() )
@@ -294,9 +296,9 @@ TEST( BaseInstrument, MeasureCache )
     audioEvent3->setEventEnd(1536);
 
     // add events to sequencer
-    instrument->addEvent( audioEvent1, true );
-    instrument->addEvent( audioEvent2, true );
-    instrument->addEvent( audioEvent3, true );
+    instrument->addEvent( audioEvent1, false );
+    instrument->addEvent( audioEvent2, false );
+    instrument->addEvent( audioEvent3, false );
     
     // assert
 
@@ -332,13 +334,16 @@ TEST( BaseInstrument, MeasureCache )
     ASSERT_FALSE( EventUtility::vectorContainsEvent( measure3events, audioEvent2 ));
     ASSERT_TRUE( EventUtility::vectorContainsEvent( measure3events, audioEvent3 ));
 
-    instrument->removeEvent( audioEvent3, true );
+    instrument->removeEvent( audioEvent3, false );
 
     measure3events = instrument->getEventsForMeasure( 3 );
     EXPECT_EQ( measure3events->size(), 0 ) << "expected no events left in vector";
     EXPECT_EQ( measure2events->size(), 0 ) << "expected no events left in vector";
     EXPECT_EQ( measure1events->size(), 1 ) << "expected one event left in vector";
     EXPECT_EQ( measure0events->size(), 2 ) << "expected two events left in vector";
+
+    ASSERT_TRUE( nullptr == instrument->getEventsForMeasure( 4 ))
+        << "expected to retrieve a null pointer when requesting an out-of-range measure";
 
     delete audioEvent1;
     delete audioEvent2;
