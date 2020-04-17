@@ -515,3 +515,59 @@ TEST( BaseSynthEvent, GetEventEnd )
     delete audioEvent;
     delete instrument;
 }
+
+TEST( BaseSynthEvent, RepositionToTempoChange )
+{
+    SynthInstrument* instrument = new SynthInstrument();
+    instrument->adsr->setReleaseTime( 0.F ); // ensure we have no release envelope extending the event end!
+
+    BaseSynthEvent* event = new BaseSynthEvent( 440.F, instrument );
+    event->isSequenced    = true;
+
+    // sequenced SynthEvents determine their position and length via constructor relative
+    // to the sequence. For this test we want to verify directly at the sample level.
+
+    int eventStart  = 1000;
+    int eventLength = 500;
+    int eventEnd    = eventStart + ( eventLength - 1 );
+    
+    event->setEventStart ( eventStart );
+    event->setEventLength( eventLength );
+    event->addToSequencer();
+
+    EXPECT_EQ( eventEnd, event->getEventEnd() )
+        << "expected the event end to match when no release envelope is present in the synthesizers ADSR module";
+    
+    // adjust tempo by given factor
+    
+    float factor = 0.5F; // increases speed
+    
+    event->repositionToTempoChange( factor );
+    
+    EXPECT_EQ(( int )( eventStart * factor ), event->getEventStart() )
+        << "expected event start offset to have updated after tempo change";
+
+    EXPECT_EQ(( int )( eventLength * factor ), event->getEventLength() )
+        << "expected event length to have updated after tempo change (contrary to non-synth events)";
+
+    EXPECT_EQ(( int )( eventEnd * factor ), event->getEventEnd() )
+        << "expected event end offset to have updated after tempo change";
+
+    // adjust tempo again by given factor
+    
+    factor = 2.0F;  // decreases speed (back to original)
+
+    event->repositionToTempoChange( factor );
+    
+    EXPECT_EQ( eventStart, event->getEventStart() )
+        << "expected event start offset to have updated after tempo change";
+    
+    EXPECT_EQ( eventEnd, event->getEventEnd() )
+        << "expected event end offset to have updated after tempo change";
+    
+    EXPECT_EQ( eventLength, event->getEventLength() )
+        << "expected event length to have updated after tempo change";
+    
+    delete instrument;
+    delete event;
+}

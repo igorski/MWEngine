@@ -224,13 +224,13 @@ TEST( BaseInstrument, UpdateEvents )
     BaseInstrument* instrument = new BaseInstrument();
     BaseAudioEvent* event      = new BaseAudioEvent( instrument );
 
-    int sampleStart  = 1000;
-    int sampleLength = 500;
-    int sampleEnd    = sampleStart + sampleLength;
+    int eventStart  = 1000;
+    int eventLength = 500;
+    int eventEnd    = eventStart + eventLength;
 
-    event->setEventStart ( sampleStart );
-    event->setEventEnd   ( sampleEnd );
-    event->setEventLength( sampleLength );
+    event->setEventStart ( eventStart );
+    event->setEventEnd   ( eventEnd );
+    event->setEventLength( eventLength );
     event->addToSequencer();
 
     // increase tempo by given factor
@@ -243,14 +243,14 @@ TEST( BaseInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ(( int )( sampleStart / factor ), event->getEventStart() )
+    int expectedEventStart = ( int ) ( eventStart / factor );
+    int expectedEventEnd   = expectedEventStart + ( eventLength - 1 );
+
+    EXPECT_EQ( expectedEventStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( int )(( sampleEnd - 1 ) / factor ), event->getEventEnd() )
+    EXPECT_EQ( expectedEventEnd, event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
-
-    EXPECT_EQ(( int )( sampleLength / factor ), event->getEventLength() )
-        << "expected event length to have updated after tempo change and invocation of updateEvents()";
 
     // decrease tempo again by given factor
 
@@ -259,14 +259,11 @@ TEST( BaseInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ( sampleStart, event->getEventStart() )
+    EXPECT_EQ( eventStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( sampleEnd - 1 ), event->getEventEnd() )
+    EXPECT_EQ(( eventEnd - 1 ), event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
-
-    EXPECT_EQ( sampleLength, event->getEventLength() )
-        << "expected event length to have updated after tempo change and invocation of updateEvents()";
 
     delete event;
     delete instrument;
@@ -283,17 +280,17 @@ TEST( BaseInstrument, MeasureCache )
 
     AudioEngine::samples_per_bar = 512;
 
-    // expected to be present in measure 0 only
+    // expect event to span from 0 - 511 which spans measure 0
     audioEvent1->setEventStart(0);
-    audioEvent1->setEventEnd(512);
+    audioEvent1->setEventLength(512);
 
-    // expected to be present in measures 0 and 1
+    // expect event to span from 0 - 1023 which spans measures 0 and 1
     audioEvent2->setEventStart(0);
-    audioEvent2->setEventEnd(1024);
+    audioEvent2->setEventLength(1024);
 
-    // expected to be present in measures 1, 2 and 3
+    // expect event to span from 512 - 1535 which spans measure 1, 2 and 3
     audioEvent3->setEventStart(512);
-    audioEvent3->setEventEnd(1536);
+    audioEvent3->setEventLength(1536);
 
     // add events to sequencer
     instrument->addEvent( audioEvent1, false );

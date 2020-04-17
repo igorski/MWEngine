@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -63,9 +63,9 @@ void SampleEvent::play()
 
 void SampleEvent::setEventLength( int value )
 {
-    _eventLength = value;
-
     if ( _loopeable ) {
+
+        _eventLength = value;
 
         // loopeable-events differ from non-loopable events in that
         // we allow the events end to exceed the range of its start
@@ -84,18 +84,6 @@ void SampleEvent::setEventLength( int value )
     else {
         BaseAudioEvent::setEventLength( value );
     }
-}
-
-void SampleEvent::setEventStart( int value )
-{
-    _eventStart = value;
-
-    // assume length remains unchanged (e.g. play full sample)
-    _eventEnd = _eventStart + _eventLength;
-
-    // update start and end positions in seconds
-    _startPosition = BufferUtility::bufferToSeconds( _eventStart, AudioEngineProps::SAMPLE_RATE );
-    _endPosition   = BufferUtility::bufferToSeconds( _eventEnd,   AudioEngineProps::SAMPLE_RATE );
 }
 
 void SampleEvent::setEventEnd( int value )

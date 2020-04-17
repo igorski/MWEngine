@@ -72,8 +72,6 @@ namespace DriverAdapter {
     extern OPENSL_STREAM* driver_openSL;
     extern AAudio_IO*     driver_aAudio;
 
-
-
 #ifdef MOCK_ENGINE
     extern Mock_IO*       driver_mocked;
 #endif

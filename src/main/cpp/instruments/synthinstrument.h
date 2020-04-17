@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -59,10 +59,6 @@ class SynthInstrument : public BaseInstrument
 
         RouteableOscillator *rOsc;
         ADSR* adsr;
-
-        // overrides
-
-        void updateEvents();  // updates all events after changing synth properties
 
     protected:
 

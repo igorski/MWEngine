@@ -243,6 +243,12 @@ void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offs
     setEventEnd  (( startOffset + _eventLength ) - 1 );
 }
 
+void BaseAudioEvent::repositionToTempoChange( float ratio )
+{
+    // updating the start offset should automatically adjust the eventEnd accordingly
+    setEventStart(( int )( _eventStart  * ratio ));
+}
+
 void BaseAudioEvent::setStartPosition( float value )
 {
     _startPosition = value;

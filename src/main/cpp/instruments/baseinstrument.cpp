@@ -23,7 +23,6 @@
 #include "baseinstrument.h"
 #include <audioengine.h>
 #include <sequencer.h>
-#include <drivers/adapter.h>
 #include <utilities/eventutility.h>
 #include <algorithm>
 
@@ -49,6 +48,9 @@ BaseInstrument::~BaseInstrument()
     audioChannel     = nullptr;
     _audioEvents     = nullptr;
     _liveAudioEvents = nullptr;
+
+    delete _lock;
+    _lock = nullptr;
 }
 
 /* public methods */
@@ -84,33 +86,26 @@ void BaseInstrument::updateEvents()
     // or to update event properties responding to tempo changes
     // override this function in your derived class for custom implementations
 
-    if ( _oldTempo != AudioEngine::tempo ) {
-
-        //std::lock_guard<std::mutex> guard( _lock );
-        toggleReadLock( true );
-
-        // when tempo has updated, we update the offsets of all associated events
-        // note the measure cache remains untouched (nothing changes with regards to
-        // measure separation)
-
-        float ratio = _oldTempo / AudioEngine::tempo;
-
-        for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
-        {
-            BaseAudioEvent* event = _audioEvents->at( i );
-
-            auto orgStart  = ( float ) event->getEventStart();
-            auto orgEnd    = ( float ) event->getEventEnd();
-            auto orgLength = ( float ) event->getEventLength();
-
-            event->setEventStart ( orgStart  * ratio );
-            event->setEventLength( orgLength * ratio );
-            event->setEventEnd   (( orgEnd + 1 ) * ratio ); // add 1 to correct for rounding of float
-        }
-        _oldTempo = AudioEngine::tempo;
-
-        toggleReadLock( false );
+    if ( _oldTempo == AudioEngine::tempo ) {
+        return;
     }
+
+    //std::lock_guard<std::mutex> guard( _lock );
+    toggleReadLock( true );
+
+    // when tempo has updated, we update the offsets of all associated events
+    // note the measure cache remains untouched (nothing changes with regards to
+    // measure separation)
+
+    float ratio = _oldTempo / AudioEngine::tempo;
+
+    for ( size_t i = 0, l = _audioEvents->size(); i < l; ++i )
+    {
+        _audioEvents->at( i )->repositionToTempoChange( ratio );
+    }
+    _oldTempo = AudioEngine::tempo;
+
+    toggleReadLock( false );
 }
 
 void BaseInstrument::clearEvents()
@@ -166,7 +161,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
     {
         removed = EventUtility::removeEventFromVector( _audioEvents, audioEvent );
         if ( removed ) {
-            removeEventFromMeasureCache(audioEvent);
+            removeEventFromMeasureCache( audioEvent );
         }
     }
     toggleReadLock( false );
@@ -186,21 +181,14 @@ void BaseInstrument::unregisterFromSequencer()
     index = -1;
 }
 
-void BaseInstrument::toggleReadLock( bool locked )
+void BaseInstrument::toggleReadLock( bool lock )
 {
-    // when unit testing, GoogleTest deadlocks on this attempted locking operation. We don't
-    // need to test for mutex behaviour, but it would be nice not to have to wrap this code
-
-#ifdef MOCK_ENGINE
-    if ( DriverAdapter::isMocked() ) {
-        return;
-    }
-#endif
-
-    if ( locked ) {
-        _lock.lock();
-    } else {
-        _lock.unlock();
+    if ( lock && !_locked ) {
+        _lock->lock();
+        _locked = true;
+    } else if ( !lock && _locked ){
+        _lock->unlock();
+        _locked = false;
     }
 }
 
@@ -208,7 +196,9 @@ void BaseInstrument::toggleReadLock( bool locked )
 
 void BaseInstrument::construct()
 {
-    audioChannel = new AudioChannel( 1.0 );
+    audioChannel = new AudioChannel( 1.F );
+    _lock        = new std::mutex();
+    _locked      = false;
 
     // events
 
@@ -235,10 +225,14 @@ void BaseInstrument::addEventToMeasureCache( BaseAudioEvent* audioEvent )
 
 void BaseInstrument::removeEventFromMeasureCache( BaseAudioEvent* audioEvent )
 {
-    unsigned long startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
-    unsigned long endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
+    unsigned long startMeasureForEvent     = EventUtility::getStartMeasureForEvent( audioEvent );
+    unsigned long endMeasureForEvent       = EventUtility::getEndMeasureForEvent( audioEvent );
+    unsigned long audioEventPerMeasureSize = _audioEventsPerMeasure.size();
 
-    for ( unsigned long i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
+    for ( size_t i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
+        if ( i >= audioEventPerMeasureSize ) {
+            return;
+        }
         auto eventVector = _audioEventsPerMeasure.at( i );
         EventUtility::removeEventFromVector( eventVector, audioEvent );
     }

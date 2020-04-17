@@ -561,7 +561,7 @@ TEST( BaseAudioEvent, SyncWithMeasureCacheOnPositionUpdate )
     EXPECT_EQ( instrument->getEventsForMeasure(1)->size(), 1 ) << "expected event to be added to this measure";
     ASSERT_TRUE( instrument->getEventsForMeasure(2) == nullptr ) << "expected null pointer for out-of-range measure";
 
-    // expect event to span from 0 - 512 which spans measure 0
+    // expect event to span from 0 - 511 which spans measure 0
     audioEvent->setEventStart(0);
 
     EXPECT_EQ( instrument->getEventsForMeasure(0)->size(), 1 ) << "expected event to be added to this measure";
@@ -587,4 +587,54 @@ TEST( BaseAudioEvent, SyncWithMeasureCacheOnPositionUpdate )
 
     delete instrument;
     delete audioEvent;
+}
+
+TEST( BaseAudioEvent, RepositionToTempoChange )
+{
+    BaseInstrument* instrument = new BaseInstrument();
+    BaseAudioEvent* event = new BaseAudioEvent( instrument );
+    
+    int eventStart  = 1000;
+    int eventLength = 500;
+    int eventEnd    = eventStart + ( eventLength - 1 );
+    
+    event->setEventStart ( eventStart );
+    event->setEventLength( eventLength );
+    event->addToSequencer();
+    
+    // adjust tempo by given factor
+    
+    float factor = 0.5F; // increases speed
+
+    event->repositionToTempoChange( factor );
+
+    int expectedEventStart = ( int )( eventStart * factor );
+    int expectedEventEnd   = expectedEventStart + ( eventLength - 1 );
+    
+    EXPECT_EQ(( int )( eventStart * factor ), event->getEventStart() )
+        << "expected event start offset to have updated after tempo change";
+    
+    EXPECT_EQ(( int ) expectedEventEnd, event->getEventEnd() )
+        << "expected event end offset to have updated after tempo change";
+    
+    EXPECT_EQ( eventLength, event->getEventLength() )
+        << "expected event length to have remained the same after tempo change";
+    
+    // adjust tempo again by given factor
+    
+    factor = 2.0F;  // decreases speed (back to original)
+    
+    event->repositionToTempoChange( factor );
+    
+    EXPECT_EQ( eventStart, event->getEventStart() )
+        << "expected event start offset to have updated after tempo change";
+    
+    EXPECT_EQ( eventEnd, event->getEventEnd() )
+        << "expected event end offset to have updated after tempo change";
+    
+    EXPECT_EQ( eventLength, event->getEventLength() )
+        << "expected event length to have remained the same after tempo change";
+    
+    delete instrument;
+    delete event;
 }

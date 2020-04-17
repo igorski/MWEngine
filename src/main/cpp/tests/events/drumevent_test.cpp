@@ -2,10 +2,16 @@
 #include "../../instruments/druminstrument.h"
 #include "../../utilities/samplemanager.h"
 #include "../../utilities/utils.h"
+#include "../../audioengine.h"
 
 TEST( DrumEvent, Constructor )
 {
     int MAX_TYPE = 3;
+
+    AudioEngineProps::SAMPLE_RATE = 44100;
+    AudioEngine::samples_per_bar  = AudioEngineProps::SAMPLE_RATE * 2;
+    AudioEngine::steps_per_bar    = 16;
+    AudioEngine::samples_per_step = AudioEngine::samples_per_bar / AudioEngine::steps_per_bar;
 
     prepareSampleManager();
 

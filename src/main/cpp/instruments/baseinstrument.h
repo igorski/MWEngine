@@ -46,7 +46,7 @@ class BaseInstrument
         virtual void addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
         virtual bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
 
-        void toggleReadLock( bool locked );
+        void toggleReadLock( bool lock );
         void registerInSequencer();
         void unregisterFromSequencer();
 
@@ -65,7 +65,8 @@ class BaseInstrument
         float _oldTempo; // last known sequencer tempo
 
         // mutex to lock event vector mutations
-        std::mutex _lock;
+        std::mutex* _lock;
+        bool _locked;
 
         void clearMeasureCache();
         void addEventToMeasureCache( BaseAudioEvent* audioEvent );

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,6 +27,7 @@
 #include <events/basesynthevent.h>
 #include <utilities/utils.h>
 #include <cstddef>
+#include <audioengine.h>
 
 namespace MWEngine {
 
@@ -49,25 +50,6 @@ SynthInstrument::~SynthInstrument()
 }
 
 /* public methods */
-
-void SynthInstrument::updateEvents()
-{
-    // SynthEvents are mapped to position relative to the measure's subdivisions
-    // as such we don't require to invoke the BaseInstrument::updateEvents() method
-    // to resync the offsets on a tempo change
-
-    for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
-    {
-        BaseSynthEvent* event = ( BaseSynthEvent* ) ( _audioEvents->at( i ) );
-        event->invalidateProperties( event->position, event->length, this );
-    }
-    for ( int i = 0, l = _liveAudioEvents->size(); i < l; ++i )
-    {
-        BaseSynthEvent* event = ( BaseSynthEvent* ) ( _liveAudioEvents->at( i ) );
-        event->invalidateProperties( event->position, event->length, this );
-    }
-    synthesizer->updateProperties();
-}
 
 int SynthInstrument::getOscillatorAmount()
 {
