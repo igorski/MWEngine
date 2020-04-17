@@ -76,7 +76,7 @@ class AudioEngine
 
         /* buffer read/write pointers */
 
-        static int bufferPosition;      // the current sequence position in samples "playback head" offset ;-)
+        static int bufferPosition;      // the current sequence position in samples ("playback head" offset)
         static int stepPosition;        // the current sequence bar subdivided position (e.g. 16th note of a bar)
         static int bounceRangeStart;    // when bouncing, this defines the starting point of the bounce range
         static int bounceRangeEnd;      // when bouncing, this defines the end point of the bounce range

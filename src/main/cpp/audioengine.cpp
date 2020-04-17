@@ -64,14 +64,14 @@ namespace MWEngine {
 
     /* tempo / sequencer position related */
 
-    int   AudioEngine::samples_per_beat           = 4;  // strictly speaking sequencer specific, but scoped onto the AudioEngine
-    int   AudioEngine::samples_per_bar            = 16; // for rendering purposes, see SequencerController on how these
-    int   AudioEngine::samples_per_step           = 1;  // values are calculated
+    int   AudioEngine::samples_per_beat           = 4;  // strictly speaking these values are sequencer specific, but scoped onto the
+    int   AudioEngine::samples_per_bar            = 16; // AudioEngine for rendering purposes, see SequencerController on how these
+    int   AudioEngine::samples_per_step           = 1;  // values are calculated relative to the buffer size, time signature and step amount.
+    int   AudioEngine::min_buffer_position        = 0;
+    int   AudioEngine::max_buffer_position        = 16;
 
     int   AudioEngine::amount_of_bars             = 1;
     int   AudioEngine::steps_per_bar              = 16; // default to sixteen step sequencing (see SequencerController)
-    int   AudioEngine::min_buffer_position        = 0;  // initially 0, but can differ when looping specific measures
-    int   AudioEngine::max_buffer_position        = 0;  // calculated when SequencerController is created
     int   AudioEngine::marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
     int   AudioEngine::min_step_position          = 0;
     int   AudioEngine::max_step_position          = ( AudioEngine::amount_of_bars * AudioEngine::steps_per_bar ) - 1; // note steps start at 0 (hence - 1)
@@ -268,9 +268,8 @@ namespace MWEngine {
 
         // erase previous buffer contents
         inBuffer->silenceBuffers();
-        channels->clear();
 
-        // gather the audio events by the buffer range currently being processed
+        // gather the audio events by the sequencer range currently being processed
         loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
 
         // read pointer exceeds maximum allowed offset (max_buffer_position) ? => sequencer has started its loop
@@ -278,7 +277,7 @@ namespace MWEngine {
         loopOffset = ( max_buffer_position - bufferPosition ) + 1; // buffer iterator index at which the loop will occur
         loopAmount = amountOfSamples - loopOffset;                 // the amount of samples to write after looping starts
 
-        // collect all audio events that are eligible for playback for this iteration
+        // collect all audio events at the start of the loop offset that are also eligible for playback in this iteration
         if ( loopAmount > 0 ) {
             Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
         }

@@ -24,6 +24,7 @@
 #include "audioengine.h"
 #include <utilities/utils.h>
 #include <vector>
+#include <utilities/eventutility.h>
 
 namespace MWEngine {
 
@@ -74,6 +75,11 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
     bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
 
     size_t total = instruments.size();
+
+    if ( flushChannels ) {
+        // clears the audio events gathered in a previous iteration
+        channels->clear();
+    }
 
     // note we update the channels mix properties here as they might change during playback
 
@@ -176,12 +182,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
                 ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
             {
                 if ( !audioEvent->isDeletable()) {
-                    if ( checkForDuplicates ) {
-                        auto eventVector = channel->audioEvents;
-                        auto it = std::find( eventVector.begin(), eventVector.end(), audioEvent );
-                        if ( it != eventVector.end() ) {
-                            continue;
-                        }
+                    if ( checkForDuplicates && EventUtility::vectorContainsEvent( channel->audioEvents, audioEvent )) {
+                        continue;
                     }
                     channel->addEvent( audioEvent );
                 }
