@@ -31,7 +31,7 @@
 #include <vector>
 
 /**
- * Sequencer is the "brain" that collects AudioEvents (for each AudioChannel) for the
+ * Sequencer is the "brain" that collects AudioEvents (for each Instrument) for the
  * AudioEngine to play at the given "playback head" offset. As such Sequencer is an internal tool
  * and shouldn't be used directly for song position / length / tempo manipulations.
  *

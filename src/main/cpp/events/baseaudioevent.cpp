@@ -21,10 +21,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "baseaudioevent.h"
-#include "../global.h"
-#include "../audioengine.h"
+#include <global.h>
+#include <audioengine.h>
 #include <instruments/baseinstrument.h>
 #include <utilities/bufferutility.h>
+#include <utilities/eventutility.h>
 #include <utilities/volumeutil.h>
 #include <algorithm>
 
@@ -218,17 +219,25 @@ void BaseAudioEvent::setEventEnd( int value )
     bool mustSyncWithInstrument = isAddedToSequencer();
     if ( mustSyncWithInstrument ) _instrument->removeEvent( this, false );
 
-    // the event end cannot exceed beyond the start and the total
-    // event length (it can be smaller though for a cut-off playback)
+    // the event end cannot come before the start position
+    _eventEnd = std::max( _eventStart, value );
 
-    if ( value >= ( _eventStart + _eventLength ))
-        _eventEnd = _eventStart + ( _eventLength - 1 );
-    else
-        _eventEnd = value;
+    // it also cannot exceed beyond the start-plus-length
+    // of the event (it can be smaller though for a cut-off playback)
+
+    if ( _eventLength > 0 ) {
+        _eventEnd = std::min( _eventEnd, _eventStart + ( _eventLength - 1 ));
+    }
 
     // update end position in seconds
     _endPosition = BufferUtility::bufferToSeconds( _eventEnd, AudioEngineProps::SAMPLE_RATE );
 
+    // this updates the length in case given end position is shorter than start + length
+    int expectedLength = ( _eventEnd - _eventStart ) + 1;
+
+    if ( _eventLength != expectedLength ) {
+        _eventLength = expectedLength;
+    }
     if ( mustSyncWithInstrument ) _instrument->addEvent( this, false );
 }
 
@@ -240,49 +249,13 @@ void BaseAudioEvent::positionEvent( int startMeasure, int subdivisions, int offs
     startOffset    += offset * samplesPerBar / subdivisions;
 
     setEventStart( startOffset );
-    setEventEnd  (( startOffset + _eventLength ) - 1 );
 }
 
 void BaseAudioEvent::repositionToTempoChange( float ratio )
 {
     // updating the start offset should automatically adjust the eventEnd accordingly
+    // observe we keep the event length equal (BaseSynthEvent does adjust the length to the tempo)
     setEventStart(( int )( _eventStart  * ratio ));
-}
-
-void BaseAudioEvent::setStartPosition( float value )
-{
-    _startPosition = value;
-
-    if ( _endPosition < _startPosition ) {
-        float duration = getDuration();
-        setEndPosition(( duration > 0 ) ? value + duration : value );
-    }
-
-    // update position in buffer samples
-    _eventStart  = BufferUtility::secondsToBuffer( _startPosition, AudioEngineProps::SAMPLE_RATE );
-    _eventLength = std::max( 0, ( _eventEnd - 1 ) - _eventStart );
-
-    // TODO sync with instrument
-}
-
-void BaseAudioEvent::setEndPosition( float value )
-{
-    _endPosition = value;
-
-    if ( _endPosition < _startPosition ) {
-        _endPosition = _startPosition;
-    }
-
-    // update position in buffer samples
-    _eventEnd    = BufferUtility::secondsToBuffer( _endPosition, AudioEngineProps::SAMPLE_RATE );
-    _eventLength = std::max( 0, ( _eventEnd - 1 ) - _eventStart );
-
-    // TODO sync with instrument
-}
-
-void BaseAudioEvent::setDuration( float value )
-{
-    setEndPosition( _startPosition + value );
 }
 
 float BaseAudioEvent::getStartPosition()
@@ -290,14 +263,35 @@ float BaseAudioEvent::getStartPosition()
     return _startPosition;
 }
 
+void BaseAudioEvent::setStartPosition( float value )
+{
+    if ( _startPosition == value ) return;
+
+    // update position in buffer samples (will assign given value to _startPosition)
+    setEventStart( BufferUtility::secondsToBuffer( value, AudioEngineProps::SAMPLE_RATE ));
+}
+
 float BaseAudioEvent::getEndPosition()
 {
     return _endPosition;
 }
 
+void BaseAudioEvent::setEndPosition( float value )
+{
+    if ( _endPosition == value ) return;
+
+    // update position in buffer samples (will assign given value to _endPosition)
+    setEventEnd( BufferUtility::secondsToBuffer( value, AudioEngineProps::SAMPLE_RATE ));
+}
+
 float BaseAudioEvent::getDuration()
 {
     return _endPosition - _startPosition;
+}
+
+void BaseAudioEvent::setDuration( float value )
+{
+    setEndPosition( _startPosition + value );
 }
 
 bool BaseAudioEvent::isDeletable()
@@ -495,16 +489,14 @@ bool BaseAudioEvent::isAddedToSequencer()
 {
     if ( _instrument != nullptr )
     {
-        std::vector<BaseAudioEvent*>* events = _instrument->getEvents();
-        if ( std::find( events->begin(), events->end(), this ) != events->end()) {
-            return true;
-        }
+        return EventUtility::vectorContainsEvent( _instrument->getEvents(), this );
     }
     return false;
 }
 
 /* TO BE DEPRECATED */
 
+#ifndef SWIG
 void BaseAudioEvent::setSampleLength( int value ) {
     setEventLength( value );
 }
@@ -528,7 +520,7 @@ int BaseAudioEvent::getSampleStart() {
 int BaseAudioEvent::getSampleEnd() {
     return getEventEnd();
 }
-
+#endif
 /* E.O. DEPRECATION */
 
 } // E.O namespace MWEngine

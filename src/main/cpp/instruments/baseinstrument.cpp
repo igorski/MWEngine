@@ -243,7 +243,7 @@ void BaseInstrument::clearMeasureCache()
     for ( auto it = _audioEventsPerMeasure.begin(); it != _audioEventsPerMeasure.end(); ++it ) {
         auto eventVector = *it;
         eventVector->clear();
-      //  delete eventVector; // TODO
+        // delete eventVector; // TODO strange segmentation fault in unit tests
     }
     _audioEventsPerMeasure.clear();
 }
