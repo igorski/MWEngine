@@ -46,6 +46,12 @@ namespace EventUtility
         return it != eventVector->end();
     }
 
+    inline bool vectorContainsEvent( std::vector<BaseAudioEvent*> eventVector, BaseAudioEvent* event )
+    {
+        auto it = std::find( eventVector.begin(), eventVector.end(), event );
+        return it != eventVector.end();
+    }
+
     inline bool removeEventFromVector( std::vector<BaseAudioEvent*>* eventVector, BaseAudioEvent* event )
     {
         auto it = std::find( eventVector->begin(), eventVector->end(), event );
