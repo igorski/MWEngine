@@ -111,7 +111,7 @@ namespace MWEngine {
 
     /* public methods */
 
-    void AudioEngine::setup( int bufferSize, int sampleRate, int amountOfChannels )
+    void AudioEngine::setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int amountOfChannels )
     {
         AudioEngineProps::BUFFER_SIZE     = bufferSize;
         AudioEngineProps::SAMPLE_RATE     = sampleRate;
