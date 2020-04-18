@@ -47,7 +47,7 @@ using namespace MWEngine;
 #include "events/sampleevent_test.cpp"
 #include "generators/envelopegenerator_test.cpp"
 #include "instruments/baseinstrument_test.cpp"
-#include "instruments/sampledinstrument_test.cpp"
+#include "instruments/synthinstrument_test.cpp"
 #include "modules/adsr_test.cpp"
 #include "modules/lfo_test.cpp"
 #include "processors/baseprocessor_test.cpp"

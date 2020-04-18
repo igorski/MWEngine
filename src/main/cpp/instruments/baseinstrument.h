@@ -66,7 +66,8 @@ class BaseInstrument
 
         // mutex to lock event vector mutations
         std::mutex* _lock;
-        bool _locked;
+        bool _locked       = false;
+        bool _freezeEvents = false;
 
         void clearMeasureCache();
         void addEventToMeasureCache( BaseAudioEvent* audioEvent );

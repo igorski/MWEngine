@@ -294,12 +294,12 @@ TEST( BaseAudioEvent, PositionInSeconds )
     // note when asserting, there may be a tiny loss in precision due to floating point rounding so we limit the resolution
 
     EXPECT_FLOAT_EQ(
-        floatRounding( startPosition, 4 ),
-        floatRounding( audioEvent->getStartPosition(), 4 )
+        floatRounding( startPosition, 3 ),
+        floatRounding( audioEvent->getStartPosition(), 3 )
     );
     EXPECT_FLOAT_EQ(
-        floatRounding( startPosition, 4 ),
-        floatRounding( audioEvent->getEndPosition(), 4 )
+        floatRounding( startPosition, 3 ),
+        floatRounding( audioEvent->getEndPosition(), 3 )
     ) << "expected end position to equal start position (hasn't been explicitly set yet)";
 
     EXPECT_FLOAT_EQ( 0, audioEvent->getDuration())
@@ -312,16 +312,16 @@ TEST( BaseAudioEvent, PositionInSeconds )
     audioEvent->setEndPosition( endPosition );
 
     EXPECT_FLOAT_EQ(
-        floatRounding( startPosition, 4 ),
-        floatRounding( audioEvent->getStartPosition(), 4 )
+        floatRounding( startPosition, 3 ),
+        floatRounding( audioEvent->getStartPosition(), 3 )
     );
     EXPECT_FLOAT_EQ(
-        floatRounding( endPosition, 4 ),
-        floatRounding( audioEvent->getEndPosition(), 4 )
+        floatRounding( endPosition, 3 ),
+        floatRounding( audioEvent->getEndPosition(), 3 )
     );
     EXPECT_FLOAT_EQ(
-        floatRounding( expectedDuration, 4 ),
-        floatRounding( audioEvent->getDuration(), 4 )
+        floatRounding( expectedDuration, 3 ),
+        floatRounding( audioEvent->getDuration(), 3 )
     );
     EXPECT_EQ( expectedEventEnd, audioEvent->getEventEnd())
         << "expected event end to have been updated after setting end position";
@@ -333,13 +333,13 @@ TEST( BaseAudioEvent, PositionInSeconds )
     audioEvent->setDuration( expectedDuration );
 
     EXPECT_FLOAT_EQ(
-        floatRounding( expectedDuration, 4 ),
-        floatRounding( audioEvent->getDuration(), 4 )
+        floatRounding( expectedDuration, 3 ),
+        floatRounding( audioEvent->getDuration(), 3 )
     );
 
     EXPECT_FLOAT_EQ(
-        floatRounding( expectedEndPosition, 4 ),
-        floatRounding( audioEvent->getEndPosition(), 4 )
+        floatRounding( expectedEndPosition, 3 ),
+        floatRounding( audioEvent->getEndPosition(), 3 )
     ) << "expected end position to have corrected after updating of duration";
 
     delete audioEvent;

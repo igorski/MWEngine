@@ -252,6 +252,9 @@ TEST( BaseInstrument, UpdateEvents )
     EXPECT_EQ( expectedEventEnd, event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
+    EXPECT_EQ( eventLength, event->getEventLength() )
+        << "expected event length not to have updated after tempo change and invocation of updateEvents()";
+
     // decrease tempo again by given factor
 
     factor = 0.5f;  // restores to original
@@ -264,6 +267,9 @@ TEST( BaseInstrument, UpdateEvents )
 
     EXPECT_EQ(( eventEnd - 1 ), event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
+
+    EXPECT_EQ( eventLength, event->getEventLength() )
+        << "expected event length not to have updated after tempo change and invocation of updateEvents()";
 
     delete event;
     delete instrument;

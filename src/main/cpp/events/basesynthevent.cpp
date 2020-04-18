@@ -183,14 +183,12 @@ void BaseSynthEvent::repositionToTempoChange( float ratio )
 {
     auto orgStart  = ( float ) _eventStart;
     auto orgLength = ( float ) _eventLength;
-    auto orgEnd    = ( float ) _eventEnd;
 
-    setEventStart (( int )( orgStart  * ratio ));
+    setEventStart(( int )( orgStart  * ratio ));
 
     // for synthesized events, we adjust the event duration in relation to the tempo change
 
     setEventLength(( int )( orgLength * ratio ));
-    setEventEnd(( int )(( orgEnd + 1 ) * ratio )); // correct for floating point conversion by adding 1
 }
 
 void BaseSynthEvent::calculateBuffers()

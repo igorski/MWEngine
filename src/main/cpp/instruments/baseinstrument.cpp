@@ -98,13 +98,28 @@ void BaseInstrument::updateEvents()
     // measure separation)
 
     float ratio = _oldTempo / AudioEngine::tempo;
+    _oldTempo   = AudioEngine::tempo;
 
-    for ( size_t i = 0, l = _audioEvents->size(); i < l; ++i )
-    {
+    // TODO: there is an issue that creeps in with regards to maintaining an accurate measure
+    // cache, get(Start|End)MeasureForEvent relies on AudioEngine::samples_per_bar so the removal is
+    // calculating for the new start/end measure range, therefor possibly missing the old (prior to
+    // tempo change) range values. Additionally, we might risk undefined behaviour on the read locks
+    // for an already locked mutex. We set a flog to prevent event add/remove changes (triggered by their
+    // repositioning) and invoke a manual flush and recache after all sequenced events have been repositioned.
+
+    _freezeEvents = true;
+
+    size_t i = 0, total = _audioEvents->size();
+    for ( ; i < total; ++i ) {
         _audioEvents->at( i )->repositionToTempoChange( ratio );
     }
-    _oldTempo = AudioEngine::tempo;
 
+    _freezeEvents = false;
+    clearMeasureCache();
+
+    for ( i = 0; i < total; ++i ) {
+        addEventToMeasureCache( _audioEvents->at( i ));
+    };
     toggleReadLock( false );
 }
 
@@ -127,6 +142,8 @@ void BaseInstrument::clearEvents()
 
 void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
+    if ( _freezeEvents ) return;
+
     //std::lock_guard<std::mutex> guard( _lock );
     toggleReadLock( true );
 
@@ -141,6 +158,8 @@ void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
 bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
+    if ( _freezeEvents ) return false;
+
     bool removed = false;
 
     if ( audioEvent == nullptr || _liveAudioEvents == nullptr || _audioEvents == nullptr ) {
@@ -198,7 +217,6 @@ void BaseInstrument::construct()
 {
     audioChannel = new AudioChannel( 1.F );
     _lock        = new std::mutex();
-    _locked      = false;
 
     // events
 

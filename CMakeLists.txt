@@ -185,7 +185,7 @@ if (${RUN_TESTS} MATCHES "true")
 
         # Push and execute tests as post-build event
 
-        set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest/${ANDROID_ABI}) # Directory on device to push tests.
+        set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest_${ANDROID_ABI}) # Directory on device to push tests.
 
     #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
 
