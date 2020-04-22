@@ -124,6 +124,10 @@ namespace DriverAdapter {
 #ifdef MOCK_ENGINE
             case Drivers::MOCKED:
 #endif
+                // Advice from a certain Google I/O 17 video on audio performance. Use a no operation assembly call
+                // within the render callback to keep the CPU busy as to not introduce scaling.
+                __asm__("NOP");
+
                 // OpenSL maintains its own locking mechanism, we can invoke
                 // the render cycle directly from the audio engine thread loop
                 AudioEngine::render( AudioEngineProps::BUFFER_SIZE );

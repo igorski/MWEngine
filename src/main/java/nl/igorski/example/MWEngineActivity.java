@@ -109,6 +109,8 @@ public final class MWEngineActivity extends Activity {
 
         Log.d( LOG_TAG, "initing MWEngineActivity" );
 
+        DevicePropertyCalculator.setSustainedPerformanceMode( this );
+
         // STEP 1 : preparing the native audio engine
 
         _engine = new MWEngine( getApplicationContext(), new StateObserver() );
