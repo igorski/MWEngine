@@ -41,94 +41,94 @@ include_directories(${CPP_SRC}/)
 # core engine
 
 set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
-        ${CPP_SRC}/audioengine.cpp
-        ${CPP_SRC}/audiobuffer.cpp
-        ${CPP_SRC}/audiochannel.cpp
-        ${CPP_SRC}/channelgroup.cpp
-        ${CPP_SRC}/processingchain.cpp
-        ${CPP_SRC}/ringbuffer.cpp
-        ${CPP_SRC}/sequencer.cpp
-        ${CPP_SRC}/sequencercontroller.cpp
-        ${CPP_SRC}/wavetable.cpp
-        ${CPP_SRC}/definitions/libraries.cpp
-        ${CPP_SRC}/drivers/adapter.cpp
-        ${CPP_SRC}/drivers/aaudio_io.cpp
-        ${CPP_SRC}/drivers/opensl_io.c
-        ${CPP_SRC}/events/baseaudioevent.cpp
-        ${CPP_SRC}/events/basecacheableaudioevent.cpp
-        ${CPP_SRC}/events/sampleevent.cpp
-        ${CPP_SRC}/generators/envelopegenerator.cpp
-        ${CPP_SRC}/generators/wavegenerator.cpp
-        ${CPP_SRC}/instruments/baseinstrument.cpp
-        ${CPP_SRC}/instruments/sampledinstrument.cpp
-        ${CPP_SRC}/messaging/notifier.cpp
-        ${CPP_SRC}/messaging/observer.cpp
-        ${CPP_SRC}/modules/envelopefollower.cpp
-        ${CPP_SRC}/modules/lfo.cpp
-        ${CPP_SRC}/modules/routeableoscillator.cpp
-        ${CPP_SRC}/processors/baseprocessor.cpp
-        ${CPP_SRC}/services/library_loader.cpp
-        ${CPP_SRC}/utilities/bufferutility.cpp
-        ${CPP_SRC}/utilities/levelutility.cpp
-        ${CPP_SRC}/utilities/bulkcacher.cpp
-        ${CPP_SRC}/utilities/diskwriter.cpp
-        ${CPP_SRC}/utilities/debug.cpp
-        ${CPP_SRC}/utilities/samplemanager.cpp
-        ${CPP_SRC}/utilities/bufferpool.cpp
-        ${CPP_SRC}/utilities/tablepool.cpp
-        ${CPP_SRC}/utilities/fastmath.cpp
-        ${CPP_SRC}/utilities/wavereader.cpp
-        ${CPP_SRC}/utilities/wavewriter.cpp
-        ${CPP_SRC}/utilities/utils.cpp)
+                          ${CPP_SRC}/audioengine.cpp
+                          ${CPP_SRC}/audiobuffer.cpp
+                          ${CPP_SRC}/audiochannel.cpp
+                          ${CPP_SRC}/channelgroup.cpp
+                          ${CPP_SRC}/processingchain.cpp
+                          ${CPP_SRC}/ringbuffer.cpp
+                          ${CPP_SRC}/sequencer.cpp
+                          ${CPP_SRC}/sequencercontroller.cpp
+                          ${CPP_SRC}/wavetable.cpp
+                          ${CPP_SRC}/definitions/libraries.cpp
+                          ${CPP_SRC}/drivers/adapter.cpp
+                          ${CPP_SRC}/drivers/aaudio_io.cpp
+                          ${CPP_SRC}/drivers/opensl_io.c
+                          ${CPP_SRC}/events/baseaudioevent.cpp
+                          ${CPP_SRC}/events/basecacheableaudioevent.cpp
+                          ${CPP_SRC}/events/sampleevent.cpp
+                          ${CPP_SRC}/generators/envelopegenerator.cpp
+                          ${CPP_SRC}/generators/wavegenerator.cpp
+                          ${CPP_SRC}/instruments/baseinstrument.cpp
+                          ${CPP_SRC}/instruments/sampledinstrument.cpp
+                          ${CPP_SRC}/messaging/notifier.cpp
+                          ${CPP_SRC}/messaging/observer.cpp
+                          ${CPP_SRC}/modules/envelopefollower.cpp
+                          ${CPP_SRC}/modules/lfo.cpp
+                          ${CPP_SRC}/modules/routeableoscillator.cpp
+                          ${CPP_SRC}/processors/baseprocessor.cpp
+                          ${CPP_SRC}/services/library_loader.cpp
+                          ${CPP_SRC}/utilities/bufferutility.cpp
+                          ${CPP_SRC}/utilities/levelutility.cpp
+                          ${CPP_SRC}/utilities/bulkcacher.cpp
+                          ${CPP_SRC}/utilities/diskwriter.cpp
+                          ${CPP_SRC}/utilities/debug.cpp
+                          ${CPP_SRC}/utilities/samplemanager.cpp
+                          ${CPP_SRC}/utilities/bufferpool.cpp
+                          ${CPP_SRC}/utilities/tablepool.cpp
+                          ${CPP_SRC}/utilities/fastmath.cpp
+                          ${CPP_SRC}/utilities/wavereader.cpp
+                          ${CPP_SRC}/utilities/wavewriter.cpp
+                          ${CPP_SRC}/utilities/utils.cpp)
 
 # Mikrowave specific sources (drum machine specific, you can also create drum machines using sampledinstrument)
 
 set(MWENGINE_MIKROWAVE_SOURCES ${CPP_SRC}/drumpattern.cpp
-        ${CPP_SRC}/events/drumevent.cpp
-        ${CPP_SRC}/instruments/druminstrument.cpp)
+                               ${CPP_SRC}/events/drumevent.cpp
+                               ${CPP_SRC}/instruments/druminstrument.cpp)
 
 # synthesis (can be omitted if your use case only concerns sample based playback)
 
 set(MWENGINE_SYNTH_SOURCES ${CPP_SRC}/events/basesynthevent.cpp
-        ${CPP_SRC}/events/synthevent.cpp
-        ${CPP_SRC}/modules/adsr.cpp
-        ${CPP_SRC}/modules/arpeggiator.cpp
-        ${CPP_SRC}/instruments/oscillatorproperties.cpp
-        ${CPP_SRC}/instruments/synthinstrument.cpp
-        ${CPP_SRC}/generators/synthesizer.cpp)
+                           ${CPP_SRC}/events/synthevent.cpp
+                           ${CPP_SRC}/modules/adsr.cpp
+                           ${CPP_SRC}/modules/arpeggiator.cpp
+                           ${CPP_SRC}/instruments/oscillatorproperties.cpp
+                           ${CPP_SRC}/instruments/synthinstrument.cpp
+                           ${CPP_SRC}/generators/synthesizer.cpp)
 
 # effects processors (can be omitted if your use case only concerns raw audio)
 
 set(MWENGINE_PROCESSORS ${CPP_SRC}/processors/bitcrusher.cpp
-        ${CPP_SRC}/processors/dcoffsetfilter.cpp
-        ${CPP_SRC}/processors/decimator.cpp
-        ${CPP_SRC}/processors/delay.cpp
-        ${CPP_SRC}/processors/filter.cpp
-        ${CPP_SRC}/processors/flanger.cpp
-        ${CPP_SRC}/processors/fm.cpp
-        ${CPP_SRC}/processors/formantfilter.cpp
-        ${CPP_SRC}/processors/glitcher.cpp
-        ${CPP_SRC}/processors/limiter.cpp
-        ${CPP_SRC}/processors/lowpassfilter.cpp
-        ${CPP_SRC}/processors/lpfhpfilter.cpp
-        ${CPP_SRC}/processors/phaser.cpp
-        ${CPP_SRC}/processors/pitchshifter.cpp
-        ${CPP_SRC}/processors/reverb.cpp
-        ${CPP_SRC}/processors/reverbsm.cpp
-        ${CPP_SRC}/processors/tremolo.cpp
-        ${CPP_SRC}/processors/waveshaper.cpp)
+                        ${CPP_SRC}/processors/dcoffsetfilter.cpp
+                        ${CPP_SRC}/processors/decimator.cpp
+                        ${CPP_SRC}/processors/delay.cpp
+                        ${CPP_SRC}/processors/filter.cpp
+                        ${CPP_SRC}/processors/flanger.cpp
+                        ${CPP_SRC}/processors/fm.cpp
+                        ${CPP_SRC}/processors/formantfilter.cpp
+                        ${CPP_SRC}/processors/glitcher.cpp
+                        ${CPP_SRC}/processors/limiter.cpp
+                        ${CPP_SRC}/processors/lowpassfilter.cpp
+                        ${CPP_SRC}/processors/lpfhpfilter.cpp
+                        ${CPP_SRC}/processors/phaser.cpp
+                        ${CPP_SRC}/processors/pitchshifter.cpp
+                        ${CPP_SRC}/processors/reverb.cpp
+                        ${CPP_SRC}/processors/reverbsm.cpp
+                        ${CPP_SRC}/processors/tremolo.cpp
+                        ${CPP_SRC}/processors/waveshaper.cpp)
 
 # when using the library solely from C++ you can omit bundling JNI_SOURCES (or SWIG wrapping)
 
 set(JNI_SOURCES ${CPP_SRC}/jni/javabridge.cpp
-        ${CPP_SRC}/jni/javautilities.cpp)
+                ${CPP_SRC}/jni/javautilities.cpp)
 
 # build the mock driver into the library when unit test execution is enabled
 
 if (${RUN_TESTS} MATCHES "true")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D=MOCK_ENGINE")
     set(MWENGINE_CORE_SOURCES ${MWENGINE_CORE_SOURCES}
-            ${CPP_SRC}/drivers/mock_io.cpp)
+                              ${CPP_SRC}/drivers/mock_io.cpp)
 endif()
 
 # include the AAudio library into the MWEngine compilation when configured
@@ -138,11 +138,11 @@ if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
 endif()
 
 add_library(mwengine STATIC
-        ${MWENGINE_CORE_SOURCES}
-        ${MWENGINE_SYNTH_SOURCES}
-        ${MWENGINE_PROCESSORS}
-        ${MWENGINE_MIKROWAVE_SOURCES}
-        ${JNI_SOURCES})
+                     ${MWENGINE_CORE_SOURCES}
+                     ${MWENGINE_SYNTH_SOURCES}
+                     ${MWENGINE_PROCESSORS}
+                     ${MWENGINE_MIKROWAVE_SOURCES}
+                     ${JNI_SOURCES})
 
 # link all the NDK libraries used by the project
 
@@ -198,11 +198,12 @@ if (${RUN_TESTS} MATCHES "true")
         #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
 
         add_custom_command(
-                TARGET mwengine_unittest POST_BUILD
-                COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
-                COMMAND adb push $<TARGET_FILE:mwengine> ${TARGET_TEST_DIR}/
-                COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
-                COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\")
+            TARGET mwengine_unittest POST_BUILD
+            COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
+            COMMAND adb push $<TARGET_FILE:mwengine> ${TARGET_TEST_DIR}/
+            COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
+            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\"
+        )
 
     endif()
 
