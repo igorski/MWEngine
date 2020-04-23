@@ -26,6 +26,7 @@
 #include <cmath>
 #include <limits.h>
 #include <stdint.h>
+#include <vector>
 
 namespace MWEngine {
 
@@ -52,13 +53,21 @@ namespace MWEngine {
 // if you wish to use the engine without JNI support (e.g. using solely C++/NDK), comment the USE_JNI definition
 #define USE_JNI
 
+// Performance improvement suggested at Google I/O 17.
+// Prevent CPU frequency scaling by adding a stabilizing load in the callback routine. This load
+// essentially keeps invoking a no operation assembly call to keep the CPU busy. By preventing
+// scaling the performance should remain consistent throughout. Hopefully this nonsense can
+// be removed in a future world of wonderful things.
+#define PREVENT_CPU_FREQUENCY_SCALING
+
 namespace AudioEngineProps
 {
-    const bool CHANNEL_CACHING = false; // whether to cache AudioChannels and their FX module output in their ProcessingChain
+    const bool CHANNEL_CACHING = false;      // whether to cache AudioChannels and their FX module output in their ProcessingChain
 
-    extern unsigned int SAMPLE_RATE;     // initialized on engine start == device specific
-    extern unsigned int BUFFER_SIZE;     // initialized on engine start == device specific
-    extern unsigned int OUTPUT_CHANNELS; // initialized on engine start, valid options are 1 (mono) and 2 (stereo)
+    extern unsigned int     SAMPLE_RATE;     // initialized on engine start == device specific
+    extern unsigned int     BUFFER_SIZE;     // initialized on engine start == device specific
+    extern unsigned int     OUTPUT_CHANNELS; // initialized on engine start, valid options are 1 (mono) and 2 (stereo)
+    extern std::vector<int> CPU_CORES;       // on Android N this can be retrieved from the Activity
 
 #ifdef RECORD_DEVICE_INPUT
     const unsigned int INPUT_CHANNELS = 1;
@@ -87,6 +96,8 @@ namespace AudioEngineProps
 
 #define CONV16BIT 32768       // multiplier to convert floating point to signed 16-bit value
 #define CONVMYFLT (1./32768.) // multplier to convert signed 16-bit values to floating point
+
+#define MAX_OUTPUT 0.98F
 
 // math
 

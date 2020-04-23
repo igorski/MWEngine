@@ -44,7 +44,6 @@ class AudioEngine
     public:
 
         static void setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int amountOfChannels );
-        static void start(); // will default to OpenSL for widest support across Android versions
         static void start( Drivers::types audioDriver );
         static void stop();
         static void reset();
@@ -110,17 +109,40 @@ class AudioEngine
         static int  loopOffset;   // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
         static int  loopAmount;   // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
         static int  outputChannels;
+        static int  thread;
         static bool isMono;
         static std::vector<AudioChannel*>* channels;
         static std::vector<ChannelGroup*> groups;
         static AudioBuffer* inBuffer;
         static float*       outBuffer;
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+
+        /* time */
+
+        static double  mOpsPerNano;
+        static int64_t mFrameCount;
+        static int64_t mEpochTimeNanos;
+
+#if defined(__i386__) || defined(__x86_64__)
+#define noop() asm volatile("rep; nop" ::: "memory");
+#elif defined(__arm__) || defined(__mips__)
+#define noop() asm volatile("":::"memory");
+#elif defined(__aarch64__)
+#define noop() asm volatile("yield" ::: "memory");
+#else
+#error "noop cannot be defined for this architecture"
+#endif
+
+        #define MAX_CPU_PER_RENDER_ITERATION 0.8F
+#endif
+
+        /* recording */
+
 #ifdef RECORD_DEVICE_INPUT
         static float* recbufferIn;
         static AudioChannel* inputChannel;
 #endif
-        static int thread;
 
         /* internal render methods */
 

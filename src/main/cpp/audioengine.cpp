@@ -30,6 +30,7 @@
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
 #include <utilities/bufferutility.h>
+#include <utilities/perfutility.h>
 #include <utilities/debug.h>
 #include <vector>
 
@@ -109,6 +110,12 @@ namespace MWEngine {
 
     int AudioEngine::thread = 0;
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+    double  AudioEngine::mOpsPerNano;
+    int64_t AudioEngine::mFrameCount;
+    int64_t AudioEngine::mEpochTimeNanos;
+#endif
+
     /* public methods */
 
     void AudioEngine::setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int amountOfChannels )
@@ -116,11 +123,6 @@ namespace MWEngine {
         AudioEngineProps::BUFFER_SIZE     = bufferSize;
         AudioEngineProps::SAMPLE_RATE     = sampleRate;
         AudioEngineProps::OUTPUT_CHANNELS = amountOfChannels;
-    }
-
-    void AudioEngine::start()
-    {
-        AudioEngine::start( Drivers::types::OPENSL );
     }
 
     /**
@@ -135,6 +137,8 @@ namespace MWEngine {
 
         Debug::log( "STARTING engine" );
 
+        PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
+
         // create the output driver using the adapter. If creation failed
         // prevent thread start and trigger JNI callback for error handler
 
@@ -144,6 +148,11 @@ namespace MWEngine {
             return;
         }
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+        mOpsPerNano = 1;
+        mFrameCount = 0;
+        mEpochTimeNanos = 0;
+#endif
         Debug::log( "STARTED engine" );
 
         // audio hardware available, prepare environment
@@ -266,6 +275,28 @@ namespace MWEngine {
         size_t i, j, k, c, ci;
         float sample;
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+
+        int64_t startTime = PerfUtility::now();
+
+        if ( mFrameCount == 0 ) {
+            mEpochTimeNanos = startTime;
+        }
+        int64_t durationSinceEpochNanos = startTime - mEpochTimeNanos;
+
+        int64_t idealStartTimeNanos = ( mFrameCount * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
+        int64_t lateStartNanos = durationSinceEpochNanos - idealStartTimeNanos;
+
+        if ( lateStartNanos < 0 ) {
+            // This was an early start which indicates that our previous epoch was a late callback.
+            // Update our epoch to this more accurate time.
+            mEpochTimeNanos = startTime;
+            mFrameCount = 0;
+        }
+
+        int64_t numFramesAsNanos = ( amountOfSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
+        int64_t targetDurationNanos = static_cast<int64_t>(( numFramesAsNanos * MAX_CPU_PER_RENDER_ITERATION ) - lateStartNanos);
+#endif
         // erase previous buffer contents
         inBuffer->silenceBuffers();
 
@@ -369,7 +400,7 @@ namespace MWEngine {
             // perform live rendering for this channels instrument
             if ( channel->hasLiveEvents )
             {
-                int lAmount = channel->liveEvents.size();
+                size_t lAmount = channel->liveEvents.size();
 
                 for ( k = 0; k < lAmount; ++k )
                 {
@@ -443,11 +474,11 @@ namespace MWEngine {
 
                 // and perform a fail-safe check in case we're exceeding the headroom ceiling
 
-                if ( sample < -1.0 )
-                    sample = -1.0F;
+                if ( sample < -MAX_OUTPUT )
+                    sample = -MAX_OUTPUT;
 
-                else if ( sample > +1.0 )
-                    sample = +1.0F;
+                else if ( sample > +MAX_OUTPUT )
+                    sample = +MAX_OUTPUT;
 
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
@@ -543,8 +574,20 @@ namespace MWEngine {
         }
 #endif
         // tempo update queued ?
-        if ( queuedTempo != tempo )
+        if ( queuedTempo != tempo ) {
             handleTempoUpdate( queuedTempo, true );
+        }
+
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+
+        int64_t now = PerfUtility::now();
+        int64_t renderTime = now - startTime;
+        int64_t stabilizingLoadDurationNanos = targetDurationNanos - renderTime;
+
+        mOpsPerNano  = PerfUtility::applyCPUStabilizingLoad( now + stabilizingLoadDurationNanos, mOpsPerNano );
+        mFrameCount += amountOfSamples;
+
+#endif
 
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
         if ( bouncing && thread == 1 && DriverAdapter::isAAudio() ) {

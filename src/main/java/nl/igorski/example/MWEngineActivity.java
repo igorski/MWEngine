@@ -16,7 +16,6 @@ import android.widget.Spinner;
 
 import nl.igorski.mwengine.MWEngine;
 import nl.igorski.mwengine.definitions.Pitch;
-import nl.igorski.mwengine.helpers.DevicePropertyCalculator;
 import nl.igorski.mwengine.core.*;
 
 import java.util.Vector;
@@ -109,7 +108,7 @@ public final class MWEngineActivity extends Activity {
 
         Log.d( LOG_TAG, "initing MWEngineActivity" );
 
-        DevicePropertyCalculator.setSustainedPerformanceMode( this );
+        MWEngine.optimizePerformance( this );
 
         // STEP 1 : preparing the native audio engine
 
@@ -121,8 +120,8 @@ public final class MWEngineActivity extends Activity {
         // getting the correct sample rate upfront will omit having audio going past the system
         // resampler reducing overall latency
 
-        BUFFER_SIZE = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
-        SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
+        BUFFER_SIZE = MWEngine.getRecommendedBufferSize( getApplicationContext() );
+        SAMPLE_RATE = MWEngine.getRecommendedSampleRate( getApplicationContext() );
 
         _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, _audioDriver );
 

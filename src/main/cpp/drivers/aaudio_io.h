@@ -42,12 +42,6 @@
 namespace MWEngine {
 
 #define BUFFER_SIZE_AUTOMATIC 0
-// Time constants
-#define NANOS_PER_SECOND 1000000000L
-#define NANOS_PER_MILLISECOND 1000000L
-
-int64_t timestamp_to_nanoseconds(timespec ts);
-int64_t get_time_nanoseconds(clockid_t clockid);
 
 #ifndef INCLUDE_AAUDIO_LIBRARY
 // defined in libraries.h, this ensures we can reuse the
