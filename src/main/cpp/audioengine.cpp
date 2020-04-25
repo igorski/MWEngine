@@ -111,9 +111,9 @@ namespace MWEngine {
     int AudioEngine::thread = 0;
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
-    double  AudioEngine::mOpsPerNano;
-    int64_t AudioEngine::mFrameCount;
-    int64_t AudioEngine::mEpochTimeNanos;
+    double  AudioEngine::_noopsPerTick;
+    int64_t AudioEngine::_renderedSamples;
+    int64_t AudioEngine::_firstRenderStartTime;
 #endif
 
     /* public methods */
@@ -137,8 +137,9 @@ namespace MWEngine {
 
         Debug::log( "STARTING engine" );
 
-        PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
-
+        if ( audioDriver != Drivers::types::MOCKED ) {
+            PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
+        }
         // create the output driver using the adapter. If creation failed
         // prevent thread start and trigger JNI callback for error handler
 
@@ -149,9 +150,9 @@ namespace MWEngine {
         }
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
-        mOpsPerNano = 1;
-        mFrameCount = 0;
-        mEpochTimeNanos = 0;
+        _noopsPerTick         = 1;
+        _renderedSamples      = 0;
+        _firstRenderStartTime = 0;
 #endif
         Debug::log( "STARTED engine" );
 
@@ -277,25 +278,23 @@ namespace MWEngine {
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
-        int64_t startTime = PerfUtility::now();
+        int64_t renderStart = PerfUtility::now(); // for this iteration
 
-        if ( mFrameCount == 0 ) {
-            mEpochTimeNanos = startTime;
+        if ( _renderedSamples == 0 ) {
+            _firstRenderStartTime = renderStart; // this is the first render, record its start time
         }
-        int64_t durationSinceEpochNanos = startTime - mEpochTimeNanos;
+        int64_t timeSinceFirstRender = renderStart - _firstRenderStartTime;
+        int64_t expectedRenderStart  = ( _renderedSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
+        int64_t actualRenderStart    = timeSinceFirstRender - expectedRenderStart;
 
-        int64_t idealStartTimeNanos = ( mFrameCount * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
-        int64_t lateStartNanos = durationSinceEpochNanos - idealStartTimeNanos;
-
-        if ( lateStartNanos < 0 ) {
-            // This was an early start which indicates that our previous epoch was a late callback.
-            // Update our epoch to this more accurate time.
-            mEpochTimeNanos = startTime;
-            mFrameCount = 0;
+        if ( actualRenderStart < 0 ) {
+            // This implies the previous render was invoked from a delayed callback
+            _firstRenderStartTime = renderStart;
+            _renderedSamples      = 0;
         }
+        int64_t amountOfSamplesTime    = ( amountOfSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
+        int64_t expectedRenderDuration = static_cast<int64_t>(( amountOfSamplesTime * MAX_CPU_PER_RENDER_TIME ) - actualRenderStart );
 
-        int64_t numFramesAsNanos = ( amountOfSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
-        int64_t targetDurationNanos = static_cast<int64_t>(( numFramesAsNanos * MAX_CPU_PER_RENDER_ITERATION ) - lateStartNanos);
 #endif
         // erase previous buffer contents
         inBuffer->silenceBuffers();
@@ -580,12 +579,12 @@ namespace MWEngine {
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
-        int64_t now = PerfUtility::now();
-        int64_t renderTime = now - startTime;
-        int64_t stabilizingLoadDurationNanos = targetDurationNanos - renderTime;
+        int64_t renderEnd      = PerfUtility::now();
+        int64_t renderDuration = renderEnd - renderStart;
+        int64_t loadDuration   = expectedRenderDuration - renderDuration; // total time to apply stabilizing load
 
-        mOpsPerNano  = PerfUtility::applyCPUStabilizingLoad( now + stabilizingLoadDurationNanos, mOpsPerNano );
-        mFrameCount += amountOfSamples;
+        _noopsPerTick     = PerfUtility::applyCPUStabilizingLoad( renderEnd + loadDuration, _noopsPerTick );
+        _renderedSamples += amountOfSamples;
 
 #endif
 

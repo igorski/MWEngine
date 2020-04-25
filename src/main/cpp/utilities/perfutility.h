@@ -25,6 +25,9 @@
 
 #include <ctime>
 #include <utilities/debug.h>
+#ifdef MOCK_ENGINE
+#include <drivers/adapter.h>
+#endif
 
 const int64_t NANOS_PER_SECOND      = 1000000000;
 const int64_t NANOS_PER_MILLISECOND = 1000000;
@@ -82,35 +85,42 @@ namespace PerfUtility
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
+    #define OPERATIONS_PER_STEP 20000
+    
     /**
      * Apply a load (via repeated assembly noop calls) until given deadline
      * to prevent the CPU from scaling its frequency, which can impact performance
+     *
+     * Adapted from The Android Open Source Project
      */
-    inline double applyCPUStabilizingLoad( int64_t deadlineTimeNanos, double mOpsPerNano )
+    inline double applyCPUStabilizingLoad( int64_t stabilizationEndTime, double noopsPerTick )
     {
+#ifdef MOCK_ENGINE
+        if ( DriverAdapter::isMocked() ) {
+            return noopsPerTick;
+        }
+#endif
         int64_t now = PerfUtility::now();
 
-        int opsPerStep = ( int ) mOpsPerNano * 20000;
-        int64_t stepDurationNanos = 0;
-        int64_t previousTimeNanos = 0;
+        int totalNoopsToExecute   = ( int ) noopsPerTick * OPERATIONS_PER_STEP;
+        int64_t iterationDuration = 0;
+        int64_t lastIterationTime = 0;
 
-        while ( now <= deadlineTimeNanos )
+        while ( now <= stabilizationEndTime )
         {
-            for ( size_t i = 0; i < opsPerStep; i++ ) {
+            for ( size_t i = 0; i < totalNoopsToExecute; i++ ) {
                 noop();
             }
-            previousTimeNanos = now;
-            now = PerfUtility::now();
-            stepDurationNanos = now - previousTimeNanos;
+            lastIterationTime = now;
+            now               = PerfUtility::now();
+            iterationDuration = now - lastIterationTime;
 
-            // Calculate exponential moving average to smooth out values, this acts as a low pass filter.
-            // @see https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
-            static const float kFilterCoefficient = 0.1;
-            auto measuredOpsPerNano = (double) opsPerStep / stepDurationNanos;
-            mOpsPerNano = kFilterCoefficient * measuredOpsPerNano + ( 1.0 - kFilterCoefficient ) * mOpsPerNano;
-            opsPerStep = (int) ( mOpsPerNano * 20000 );
+            // smoothing values by calculating exponential moving average and applying as a low pass filter
+            double totalOperationsTick = ( double ) totalNoopsToExecute / iterationDuration;
+            noopsPerTick               = 0.1F * totalOperationsTick + ( 1.0 - 0.1F ) * noopsPerTick;
+            totalNoopsToExecute        = ( int ) ( noopsPerTick * OPERATIONS_PER_STEP );
         }
-        return mOpsPerNano;
+        return noopsPerTick;
     }
 
 #endif

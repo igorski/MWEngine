@@ -67,7 +67,7 @@ namespace AudioEngineProps
     extern unsigned int     SAMPLE_RATE;     // initialized on engine start == device specific
     extern unsigned int     BUFFER_SIZE;     // initialized on engine start == device specific
     extern unsigned int     OUTPUT_CHANNELS; // initialized on engine start, valid options are 1 (mono) and 2 (stereo)
-    extern std::vector<int> CPU_CORES;       // on Android N this can be retrieved from the Activity
+    extern std::vector<int> CPU_CORES;       // on Android N this can be retrieved from the Activity, see JavaUtilities
 
 #ifdef RECORD_DEVICE_INPUT
     const unsigned int INPUT_CHANNELS = 1;
@@ -97,6 +97,7 @@ namespace AudioEngineProps
 #define CONV16BIT 32768       // multiplier to convert floating point to signed 16-bit value
 #define CONVMYFLT (1./32768.) // multplier to convert signed 16-bit values to floating point
 
+// maximum volume output of the engine (prevents clipping of extremely hot signals)
 #define MAX_OUTPUT 0.98F
 
 // math
@@ -107,6 +108,25 @@ const SAMPLE_TYPE TWO_PI = PI * 2.0;
 // other
 
 const int WAVE_TABLE_PRECISION = 128; // the amount of samples contained within a wave table
+
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+
+// noops used to keep the CPU seemingly busy on less intensive render iterations
+// this allows us to maintain a consistent thread performance across render iterations (see PerfUtility)
+
+#if defined(__i386__) || defined(__x86_64__)
+#define noop() asm volatile("rep; nop" ::: "memory");
+#elif defined(__arm__) || defined(__mips__)
+#define noop() asm volatile("":::"memory");
+#elif defined(__aarch64__)
+#define noop() asm volatile("yield" ::: "memory");
+#else
+#error "no noop assembly instruction can be defined for this architecture"
+#endif
+
+// the maximum percentage of CPU usage we deem acceptable for a single render iteration
+#define MAX_CPU_PER_RENDER_TIME 0.8F
+#endif
 
 } // E.O namespace MWEngine
 

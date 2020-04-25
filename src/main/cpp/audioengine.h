@@ -118,23 +118,12 @@ class AudioEngine
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
-        /* time */
+        /* CPU stabilization related */
 
-        static double  mOpsPerNano;
-        static int64_t mFrameCount;
-        static int64_t mEpochTimeNanos;
+        static int64_t _firstRenderStartTime;
+        static int64_t _renderedSamples;
+        static double  _noopsPerTick;
 
-#if defined(__i386__) || defined(__x86_64__)
-#define noop() asm volatile("rep; nop" ::: "memory");
-#elif defined(__arm__) || defined(__mips__)
-#define noop() asm volatile("":::"memory");
-#elif defined(__aarch64__)
-#define noop() asm volatile("yield" ::: "memory");
-#else
-#error "noop cannot be defined for this architecture"
-#endif
-
-        #define MAX_CPU_PER_RENDER_ITERATION 0.8F
 #endif
 
         /* recording */
