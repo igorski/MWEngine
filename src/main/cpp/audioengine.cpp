@@ -285,15 +285,15 @@ namespace MWEngine {
         }
         int64_t timeSinceFirstRender = renderStart - _firstRenderStartTime;
         int64_t expectedRenderStart  = ( _renderedSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
-        int64_t actualRenderStart    = timeSinceFirstRender - expectedRenderStart;
+        int64_t totalExpectedDelta   = timeSinceFirstRender - expectedRenderStart;
 
-        if ( actualRenderStart < 0 ) {
+        if ( totalExpectedDelta < 0 ) {
             // This implies the previous render was invoked from a delayed callback
             _firstRenderStartTime = renderStart;
             _renderedSamples      = 0;
         }
         int64_t amountOfSamplesTime    = ( amountOfSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
-        int64_t expectedRenderDuration = static_cast<int64_t>(( amountOfSamplesTime * MAX_CPU_PER_RENDER_TIME ) - actualRenderStart );
+        int64_t expectedRenderDuration = static_cast<int64_t>(( amountOfSamplesTime * MAX_CPU_PER_RENDER_TIME ) - totalExpectedDelta );
 
 #endif
         // erase previous buffer contents
