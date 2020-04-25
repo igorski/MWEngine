@@ -104,7 +104,7 @@ void BaseInstrument::updateEvents()
     // cache, get(Start|End)MeasureForEvent relies on AudioEngine::samples_per_bar so the removal is
     // calculating for the new start/end measure range, therefor possibly missing the old (prior to
     // tempo change) range values. Additionally, we might risk undefined behaviour on the read locks
-    // for an already locked mutex. We set a flog to prevent event add/remove changes (triggered by their
+    // for an already locked mutex. We set a flag to prevent event add/remove changes (triggered by their
     // repositioning) and invoke a manual flush and recache after all sequenced events have been repositioned.
 
     _freezeEvents = true;
