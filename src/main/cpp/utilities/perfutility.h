@@ -49,7 +49,7 @@ namespace PerfUtility
      * Optimizes the performance of the calling thread by setting the thread affinity. On
      * Android N the exclusive CPU cores will be used.
      */
-    inline void optimizeThreadPerformance( std::vector<int> cpuIds )
+    inline void optimizeThreadPerformance( const std::vector<int>& cpuIds )
     {
 //        nice( -20 );
 //        int policy = 0;

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -69,32 +69,14 @@ float randomFloat()
 }
 
 /**
- * get the current time (since the epoch) in
- * milliseconds, can be used for benchmarking purposes
- */
-unsigned long long now_ms()
-{
-    struct timeval tv;
-
-    gettimeofday( &tv, NULL );
-
-    unsigned long long ret = tv.tv_usec;
-
-    ret /= 1000;                 // micro seconds to milliseconds
-    ret += ( tv.tv_sec * 1000 ); // add the seconds after millisecond conversion
-
-    return ret;
-}
-
-/**
  * slice the contents of given inputBuffer in the range defined by startOffset to
  * startOffset + length and append it to given outputBuffer
  */
-char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startOffset, int length )
+char* sliceString( const std::vector<char>& inputBuffer, char* outputBuffer, int startOffset, int length )
 {
-    for ( int i = startOffset, l = startOffset + length, w = 0; i < l; ++i, ++w )
+    for ( int i = startOffset, l = startOffset + length, w = 0; i < l; ++i, ++w ) {
         outputBuffer[ w ] = inputBuffer[ i ];
-
+    }
     return outputBuffer;
 }
 
@@ -103,7 +85,7 @@ char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startO
  * given startOffset to calculate the corresponding unsigned long value
  * littleEndian defines in what order the bytes are arranged
  */
-unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool littleEndian )
+unsigned long sliceLong( const std::vector<char>& inputBuffer, int startOffset, bool littleEndian )
 {
     if ( littleEndian ) {
         return inputBuffer[ startOffset + 0 ] |

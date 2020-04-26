@@ -32,11 +32,11 @@ class ChannelUtility
 {
     public:
 
-        static inline bool channelBelongsToGroup( AudioChannel *channel, std::vector<ChannelGroup*> groups )
+        static inline bool channelBelongsToGroup( AudioChannel *channel, const std::vector<ChannelGroup*>& groups )
         {
             for ( size_t i = 0, totalGroups = groups.size(); i < totalGroups; ++i )
             {
-                if ( groups.at( i )->containsAudioChannel( channel )) {
+                if ( groups[ i ]->containsAudioChannel( channel )) {
                     return true;
                 }
             }

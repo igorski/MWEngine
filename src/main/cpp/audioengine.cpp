@@ -404,8 +404,8 @@ namespace MWEngine {
 
                 for ( k = 0; k < lAmount; ++k )
                 {
-                    BaseAudioEvent* vo = channel->liveEvents[ k ];
-                    vo->mixBuffer( channelBuffer );
+                    BaseAudioEvent* liveEvent = channel->liveEvents[ k ];
+                    liveEvent->mixBuffer( channelBuffer );
                 }
             }
 

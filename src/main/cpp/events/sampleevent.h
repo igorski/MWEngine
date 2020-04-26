@@ -125,8 +125,6 @@ class SampleEvent : public BaseAudioEvent
         float _readPointerF;
 
         unsigned int _sampleRate;
-
-        AudioBuffer* _liveBuffer;
         int _lastPlaybackPosition;
 
         void init( BaseInstrument* aInstrument );

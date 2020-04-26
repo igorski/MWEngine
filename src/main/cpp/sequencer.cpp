@@ -85,7 +85,7 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
 
     for ( size_t i = 0; i < total; ++i )
     {
-        BaseInstrument* instrument      = instruments.at( i );
+        BaseInstrument* instrument      = instruments[ i ];
         AudioChannel* instrumentChannel = instrument->audioChannel;
 
         // clear previous channel contents when requested
@@ -206,7 +206,7 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
 
         for ( i = 0; i < total; i++ )
         {
-            BaseAudioEvent* audioEvent = removes.at ( i );
+            BaseAudioEvent* audioEvent = removes[ i ];
             instrument->removeEvent( audioEvent, false );
         }
         removes.clear();
@@ -256,7 +256,7 @@ std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvent
 
     for ( size_t i = 0, l = instruments.size(); i < l; ++i )
     {
-        std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
+        std::vector<BaseAudioEvent*>* audioEvents = instruments[ i ]->getEvents();
         for ( size_t j = 0; j < audioEvents->size(); j++ )
         {
             BaseAudioEvent* audioEvent = audioEvents->at( j );

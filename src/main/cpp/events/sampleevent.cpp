@@ -413,7 +413,7 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     // at custom playback rate we require floating point precision for these properties
     // also we translate the values relative to the playback speed
-    // note that we still rely on maxReadPos for determing the maximum allowed source buffer read
+    // note that we still rely on maxReadPos for determining the maximum allowed source buffer read
     // offset as due to rounding of floating point increments, we rely on integer comparison
     // to ensure we remain in range to prevent overflowing of allocated memory ranges
 

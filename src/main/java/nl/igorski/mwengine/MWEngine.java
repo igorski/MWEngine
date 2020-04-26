@@ -162,20 +162,9 @@ public final class MWEngine extends Thread
     }
 
     /**
-     * retrieve the recommended buffer size for the device running the application
-     * you can increase / decrease the buffer size for lower latency or higher stability, but
-     * note you must use multiples of this recommendation !! Otherwise the buffer callback will
-     * occasionally get two calls per timeslice which can cause glitching unless CPU usage is
-     * really light
-     *
-     * some measurements ( combined w/ recommended sample rate above ):
-     *
-     * Samsung Galaxy S Plus on 2.3 Gingerbread : 4800 samples per buffer ( 44.1 kHz ) ADEQUATE   ( 75 samples == SOMEWHAT STABLE
-     *                                                                                            ( unless under heavy stress ), 150 == PERFECT )
-     * Samsung Galaxy Nexus 4.2.1 Jelly Bean    : 144 samples per buffer  ( 44.1 kHz ) INADEQUATE ( 288 samples == OK )
-     * Samsung Galaxy S3 4.1.2 Jelly Bean       : 2048 samples per buffer ( ---- kHz ) ADEQUATE   ( 512 samples == OK )
-     * Asus Nexus 7 on 4.2.2 Jelly Bean         : 512 samples per buffer  ( 44.1 kHz ) ACCURATE!  ( perhaps 384 ?? )
-     * HTC One V 4.0.3 Ice Cream Sandwich       : 4800 samples per buffer ( 44.1 kHz ) ADEQUATE   ( 300 samples == OK )
+     * retrieve the recommended buffer size for the device running the application you can increase / decrease the buffer size
+     * for lower latency or higher stability, but note you must use multiples of this recommendation !! Otherwise the
+     * buffer callback will occasionally get two calls per timeslice which can cause glitching.
      */
     public static int getRecommendedBufferSize( Context context ) {
         String BS_CHECK = null;
