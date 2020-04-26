@@ -420,8 +420,8 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
     float fEventStart        = ( float ) _eventStart;
     float fEventEnd          = ( float ) getEventEnd();
     float fMinBufferPosition = ( float ) minBufferPosition;
-    float fMaxBufferPosition = ( float ) maxBufferPosition * _playbackRate;
-    float fLoopOffset        = ( float ) loopOffset * _playbackRate;
+    float fMaxBufferPosition = _playbackRate < 1.F ? maxBufferPosition / _playbackRate : maxBufferPosition * _playbackRate;
+    float fLoopOffset        = _playbackRate < 1.F ? loopOffset / _playbackRate        : loopOffset * _playbackRate;
 
     // iterator that increments by the playback rate
     float fi = 0.f;

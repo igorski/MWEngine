@@ -225,11 +225,11 @@ public final class MWEngineActivity extends Activity {
         // STEP 2 : Sample events to play back a drum beat
 
         createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
         createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
         createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
-        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
         createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
 
         // Real-time synthesis events
 
