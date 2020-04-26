@@ -65,8 +65,8 @@ class AAudio_IO
                                                     int32_t numFrames );
         void errorCallback( AAudioStream *stream, aaudio_result_t  __unused error );
         double getCurrentOutputLatencyMillis();
-        int getEnqueuedInputBuffer( float* destinationBuffer, int amountOfSamples );
-        void enqueueOutputBuffer  ( float* sourceBuffer,      int amountOfSamples );
+        int getEnqueuedInputBuffer( float* destinationBuffer,  int amountOfSamples );
+        void enqueueOutputBuffer  ( const float* sourceBuffer, int amountOfSamples );
         bool render;
 
     private:

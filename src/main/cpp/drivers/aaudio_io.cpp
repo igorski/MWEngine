@@ -471,7 +471,7 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
  * enqueue a buffer (of interleaved samples) for rendering
  * this is invoked by AudioEngine::render() upon request of the dataCallback method
  */
-void AAudio_IO::enqueueOutputBuffer( float* sourceBuffer, int amountOfSamples ) {
+void AAudio_IO::enqueueOutputBuffer( const float* sourceBuffer, int amountOfSamples ) {
     memcpy( _enqueuedOutputBuffer, sourceBuffer, amountOfSamples * sizeof( float ));
 }
 

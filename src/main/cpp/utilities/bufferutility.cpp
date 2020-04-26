@@ -120,7 +120,7 @@ SAMPLE_TYPE* BufferUtility::generateSilentBuffer( int bufferSize )
     return out;
 }
 
-void BufferUtility::bufferToFile( const char* fileName, SAMPLE_TYPE* buffer, int bufferSize )
+void BufferUtility::bufferToFile( const char* fileName, const SAMPLE_TYPE* buffer, int bufferSize )
 {
     std::ofstream myFile;
 
