@@ -105,10 +105,10 @@ bool ChannelGroup::applyEffectsToChannels( AudioBuffer* bufferToMixInto )
     size_t i;
 
     for ( i = 0; i < total; ++i ) {
-        auto audioChannel = _audioChannels.at( i );
+        auto audioChannel = _audioChannels[ i ];
 
         // divide the channels volume by the amount of channels to provide extra headroom
-        SAMPLE_TYPE mixVolume = ( SAMPLE_TYPE ) audioChannel->getVolumeLogarithmic() / ( SAMPLE_TYPE ) total;
+        auto mixVolume = audioChannel->getVolumeLogarithmic() / total;
 
         audioChannel->mixBuffer( _mixBuffer, mixVolume );
 
@@ -120,9 +120,8 @@ bool ChannelGroup::applyEffectsToChannels( AudioBuffer* bufferToMixInto )
     auto processors = _processingChain->getActiveProcessors();
     total = processors.size();
 
-    for ( i = 0; i < total; ++i )
-    {
-        processors.at( i )->process( _mixBuffer, isMono );
+    for ( i = 0; i < total; ++i ) {
+        processors[ i ]->process( _mixBuffer, isMono );
     }
 
     // write the processed mix buffer into the output

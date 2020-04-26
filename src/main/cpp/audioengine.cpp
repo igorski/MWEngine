@@ -181,8 +181,9 @@ namespace MWEngine {
 
         std::vector<BaseInstrument*> instruments = Sequencer::instruments;
 
-        for ( size_t i = 0; i < instruments.size(); ++i )
-            instruments.at( i )->audioChannel->createOutputBuffer();
+        for ( size_t i = 0; i < instruments.size(); ++i ) {
+            instruments[ i ]->audioChannel->createOutputBuffer();
+        }
 
         // start thread and request first render (gets render loop going)
 
@@ -327,7 +328,7 @@ namespace MWEngine {
 
             std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
             for ( k = 0; k < processors.size(); ++k ) {
-                processors.at( k )->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
+                processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
             }
 
             // merge recording into current input buffer for instant monitoring
@@ -382,7 +383,7 @@ namespace MWEngine {
                     // write the audioEvent buffers into the main output buffer
                     for ( k = 0; k < amount; ++k )
                     {
-                        BaseAudioEvent* audioEvent = audioEvents.at( k );
+                        BaseAudioEvent* audioEvent = audioEvents[ k ];
 
                         if ( audioEvent != nullptr && !audioEvent->isLocked()) // make sure we're allowed to query the contents
                         {
@@ -403,7 +404,7 @@ namespace MWEngine {
 
                 for ( k = 0; k < lAmount; ++k )
                 {
-                    BaseAudioEvent* vo = channel->liveEvents.at( k );
+                    BaseAudioEvent* vo = channel->liveEvents[ k ];
                     vo->mixBuffer( channelBuffer );
                 }
             }
@@ -412,9 +413,9 @@ namespace MWEngine {
             ProcessingChain* chain = channel->processingChain;
             std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
 
-            for ( k = 0; k < processors.size(); k++ )
+            for ( k = 0; k < processors.size(); ++k )
             {
-                BaseProcessor* processor = processors.at( k );
+                BaseProcessor* processor = processors[ k ];
                 bool canCacheProcessor   = processor->isCacheable();
 
                 // only apply processor when we're not caching or cannot cache its output
@@ -448,18 +449,16 @@ namespace MWEngine {
 
         // apply group effects onto the mix buffer
 
-        for ( j = 0; j < groupAmount; ++j )
-        {
-            groups.at( j )->applyEffectsToChannels( inBuffer );
+        for ( j = 0; j < groupAmount; ++j ) {
+            groups[ j ]->applyEffectsToChannels( inBuffer );
         }
 
         // apply master bus processors (e.g. high/low pass filters, limiter, etc.) onto the mix buffer
 
         std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
 
-        for ( j = 0; j < processors.size(); ++j )
-        {
-            processors.at( j )->process( inBuffer, isMono );
+        for ( j = 0; j < processors.size(); ++j ) {
+            processors[ j ]->process( inBuffer, isMono );
         }
 
         // write the accumulated buffers into the output buffer
@@ -469,7 +468,7 @@ namespace MWEngine {
             for ( ci = 0; ci < outputChannels; ci++ )
             {
                 // apply the master volume onto the output
-                sample = ( float ) inBuffer->getBufferForChannel( ci )[ i ] * volume;
+                sample = ( float ) inBuffer->getBufferForChannel(( int ) ci )[ i ] * volume;
 
                 // and perform a fail-safe check in case we're exceeding the headroom ceiling
 

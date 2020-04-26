@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -120,7 +120,9 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     SAMPLE_TYPE initialLfoPhase = _lfoPhase;
     SAMPLE_TYPE initialZm1      = _zm1;
 
-    for ( size_t c = 0; c < amountOfChannels; ++c )
+    size_t c, i, j;
+
+    for ( c = 0; c < amountOfChannels; ++c )
     {
         SAMPLE_TYPE* channelBuffer = sampleBuffer->getBufferForChannel( c );
 
@@ -134,7 +136,7 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             _zm1      = initialZm1;
         }
 
-        for ( size_t i = 0; i < bufferSize; ++i )
+        for ( i = 0; i < bufferSize; ++i )
         {
             // calculate and update phaser sweep LFO...
 
@@ -147,8 +149,8 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
             // update the filter coefficients
 
-            for ( size_t j = 0; j < STAGES; ++j ) {
-                delays.at( j )->delay( d );
+            for ( j = 0; j < STAGES; ++j ) {
+                delays[ j ]->delay( d );
             }
 
             // filter the current sample and feed it to all allpass
@@ -156,9 +158,9 @@ void Phaser::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 
             SAMPLE_TYPE y = channelBuffer[ i ] + _zm1 * _fb;
 
-            size_t j = STAGES;
+            j = STAGES;
             while ( --j > 0 ) {
-                y = delays.at( j )->update( y );
+                y = delays[ j ]->update( y );
             }
 
             _zm1 = y;
@@ -187,7 +189,7 @@ void Phaser::init( float aRate, float aFeedback, float aDepth, float aMinFreq, f
     _fb       = aFeedback;
     _depth    = aDepth;
 
-    _alps = new std::vector<std::vector<AllPassDelay*>>( amountOfChannels );
+    _alps = new std::vector<std::vector<AllPassDelay*>>(( unsigned long ) amountOfChannels );
 
     for ( size_t i = 0; i < _amountOfChannels; ++i ) {
         _alps->at( i ) = std::vector<AllPassDelay*>( STAGES );
