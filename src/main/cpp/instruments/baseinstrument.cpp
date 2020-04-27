@@ -258,10 +258,11 @@ void BaseInstrument::removeEventFromMeasureCache( BaseAudioEvent* audioEvent )
 
 void BaseInstrument::clearMeasureCache()
 {
-    for ( auto it = _audioEventsPerMeasure.begin(); it != _audioEventsPerMeasure.end(); ++it ) {
-        auto eventVector = *it;
+    size_t i = _audioEventsPerMeasure.size();
+    while ( i-- > 0 ) {
+        auto eventVector = _audioEventsPerMeasure.at( i );
         eventVector->clear();
-        // delete eventVector; // TODO strange segmentation fault in unit tests
+        delete eventVector;
     }
     _audioEventsPerMeasure.clear();
 }
