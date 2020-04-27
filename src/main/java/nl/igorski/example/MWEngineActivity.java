@@ -16,7 +16,6 @@ import android.widget.Spinner;
 
 import nl.igorski.mwengine.MWEngine;
 import nl.igorski.mwengine.definitions.Pitch;
-import nl.igorski.mwengine.helpers.DevicePropertyCalculator;
 import nl.igorski.mwengine.core.*;
 
 import java.util.Vector;
@@ -109,6 +108,8 @@ public final class MWEngineActivity extends Activity {
 
         Log.d( LOG_TAG, "initing MWEngineActivity" );
 
+        MWEngine.optimizePerformance( this );
+
         // STEP 1 : preparing the native audio engine
 
         _engine = new MWEngine( getApplicationContext(), new StateObserver() );
@@ -119,8 +120,8 @@ public final class MWEngineActivity extends Activity {
         // getting the correct sample rate upfront will omit having audio going past the system
         // resampler reducing overall latency
 
-        BUFFER_SIZE = DevicePropertyCalculator.getRecommendedBufferSize( getApplicationContext() );
-        SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate( getApplicationContext() );
+        BUFFER_SIZE = MWEngine.getRecommendedBufferSize( getApplicationContext() );
+        SAMPLE_RATE = MWEngine.getRecommendedSampleRate( getApplicationContext() );
 
         _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, _audioDriver );
 
@@ -224,11 +225,11 @@ public final class MWEngineActivity extends Activity {
         // STEP 2 : Sample events to play back a drum beat
 
         createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
         createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
         createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
-        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
         createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
 
         // Real-time synthesis events
 

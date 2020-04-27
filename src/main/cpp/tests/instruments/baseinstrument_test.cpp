@@ -1,6 +1,8 @@
 #include "../../instruments/baseinstrument.h"
 #include "../../events/baseaudioevent.h"
+#include "../../utilities/eventutility.h"
 #include "../../sequencer.h"
+#include "../../audioengine.h"
 
 TEST( BaseInstrument, Constructor )
 {
@@ -73,6 +75,7 @@ TEST( BaseInstrument, SequencerRegistration )
 
 TEST( BaseInstrument, Events )
 {
+    AudioEngine::samples_per_bar = 512;
     BaseInstrument* instrument = new BaseInstrument();
 
     ASSERT_FALSE( instrument->hasEvents() )
@@ -221,13 +224,13 @@ TEST( BaseInstrument, UpdateEvents )
     BaseInstrument* instrument = new BaseInstrument();
     BaseAudioEvent* event      = new BaseAudioEvent( instrument );
 
-    int sampleStart  = 1000;
-    int sampleLength = 500;
-    int sampleEnd    = sampleStart + sampleLength;
+    int eventStart  = 1000;
+    int eventLength = 500;
+    int eventEnd    = eventStart + eventLength;
 
-    event->setEventStart ( sampleStart );
-    event->setEventEnd   ( sampleEnd );
-    event->setEventLength( sampleLength );
+    event->setEventStart ( eventStart );
+    event->setEventEnd   ( eventEnd );
+    event->setEventLength( eventLength );
     event->addToSequencer();
 
     // increase tempo by given factor
@@ -240,14 +243,17 @@ TEST( BaseInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ(( int )( sampleStart / factor ), event->getEventStart() )
+    int expectedEventStart = ( int ) ( eventStart / factor );
+    int expectedEventEnd   = expectedEventStart + ( eventLength - 1 );
+
+    EXPECT_EQ( expectedEventStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( int )(( sampleEnd - 1 ) / factor ), event->getEventEnd() )
+    EXPECT_EQ( expectedEventEnd, event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( int )( sampleLength / factor ), event->getEventLength() )
-        << "expected event length to have updated after tempo change and invocation of updateEvents()";
+    EXPECT_EQ( eventLength, event->getEventLength() )
+        << "expected event length not to have updated after tempo change and invocation of updateEvents()";
 
     // decrease tempo again by given factor
 
@@ -256,15 +262,94 @@ TEST( BaseInstrument, UpdateEvents )
 
     instrument->updateEvents();
 
-    EXPECT_EQ( sampleStart, event->getEventStart() )
+    EXPECT_EQ( eventStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ(( sampleEnd - 1 ), event->getEventEnd() )
+    EXPECT_EQ(( eventEnd - 1 ), event->getEventEnd() )
         << "expected event end offset to have updated after tempo change and invocation of updateEvents()";
 
-    EXPECT_EQ( sampleLength, event->getEventLength() )
-        << "expected event length to have updated after tempo change and invocation of updateEvents()";
+    EXPECT_EQ( eventLength, event->getEventLength() )
+        << "expected event length not to have updated after tempo change and invocation of updateEvents()";
 
     delete event;
+    delete instrument;
+}
+
+TEST( BaseInstrument, MeasureCache )
+{
+    BaseInstrument* instrument  = new BaseInstrument();
+    BaseAudioEvent* audioEvent1 = new BaseAudioEvent( instrument );
+    BaseAudioEvent* audioEvent2 = new BaseAudioEvent( instrument );
+    BaseAudioEvent* audioEvent3 = new BaseAudioEvent( instrument );
+
+    ASSERT_TRUE( nullptr == instrument->getEventsForMeasure( 0 )) << "expected no events yet";
+
+    AudioEngine::samples_per_bar = 512;
+
+    // expect event to span from 0 - 511 which spans measure 0
+    audioEvent1->setEventStart(0);
+    audioEvent1->setEventLength(512);
+
+    // expect event to span from 0 - 1023 which spans measures 0 and 1
+    audioEvent2->setEventStart(0);
+    audioEvent2->setEventLength(1024);
+
+    // expect event to span from 512 - 1535 which spans measure 1, 2 and 3
+    audioEvent3->setEventStart(512);
+    audioEvent3->setEventLength(1536);
+
+    // add events to sequencer
+    instrument->addEvent( audioEvent1, false );
+    instrument->addEvent( audioEvent2, false );
+    instrument->addEvent( audioEvent3, false );
+    
+    // assert
+
+    auto measure0events = instrument->getEventsForMeasure( 0 );
+    
+    ASSERT_FALSE( nullptr == measure0events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure0events->size(), 2 ) << "expected two events in vector";
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure0events, audioEvent1 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure0events, audioEvent2 ));
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure0events, audioEvent3 ));
+    
+    auto measure1events = instrument->getEventsForMeasure( 1 );
+    
+    ASSERT_FALSE( nullptr == measure1events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure1events->size(), 2 ) << "expected two events in vector";
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure1events, audioEvent1 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure1events, audioEvent2 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure1events, audioEvent3 ));
+
+    auto measure2events = instrument->getEventsForMeasure( 2 );
+    
+    ASSERT_FALSE( nullptr == measure2events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure2events->size(), 1 ) << "expected one event in vector";
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure2events, audioEvent1 ));
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure2events, audioEvent2 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure2events, audioEvent3 ));
+
+    auto measure3events = instrument->getEventsForMeasure( 3 );
+    
+    ASSERT_FALSE( nullptr == measure3events ) << "expected an event vector to have been instantiated";
+    EXPECT_EQ( measure3events->size(), 1 ) << "expected one event in vector";
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure3events, audioEvent1 ));
+    ASSERT_FALSE( EventUtility::vectorContainsEvent( measure3events, audioEvent2 ));
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( measure3events, audioEvent3 ));
+
+    instrument->removeEvent( audioEvent3, false );
+
+    measure3events = instrument->getEventsForMeasure( 3 );
+    EXPECT_EQ( measure3events->size(), 0 ) << "expected no events left in vector";
+    EXPECT_EQ( measure2events->size(), 0 ) << "expected no events left in vector";
+    EXPECT_EQ( measure1events->size(), 1 ) << "expected one event left in vector";
+    EXPECT_EQ( measure0events->size(), 2 ) << "expected two events left in vector";
+
+    ASSERT_TRUE( nullptr == instrument->getEventsForMeasure( 4 ))
+        << "expected to retrieve a null pointer when requesting an out-of-range measure";
+
+    delete audioEvent1;
+    delete audioEvent2;
+    delete audioEvent3;
     delete instrument;
 }

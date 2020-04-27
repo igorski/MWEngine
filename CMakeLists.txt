@@ -24,10 +24,18 @@ cmake_minimum_required(VERSION 3.4.1)
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
+# architecture-specific compiler flags
+
+if (${ANDROID_ABI} MATCHES "x86_64")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel")
+endif()
+
+# source folders
+
 set(CPP_SRC  ${Project_SOURCE_DIR}/src/main/cpp)
 set(JAVA_SRC ${Project_SOURCE_DIR}/src/main/java)
 
-# Include a location to the header files
+# Include location of the header files
 include_directories(${CPP_SRC}/)
 
 # core engine
@@ -129,7 +137,7 @@ if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D=INCLUDE_AAUDIO_LIBRARY")
 endif()
 
-add_library(mwengine SHARED
+add_library(mwengine STATIC
                      ${MWENGINE_CORE_SOURCES}
                      ${MWENGINE_SYNTH_SOURCES}
                      ${MWENGINE_PROCESSORS}
@@ -138,7 +146,7 @@ add_library(mwengine SHARED
 
 # link all the NDK libraries used by the project
 
-target_link_libraries(mwengine PRIVATE android atomic log OpenSLES)
+target_link_libraries(mwengine android atomic log OpenSLES)
 
 # if AAudio library inclusion is configured in the build, link it here
 # (otherwise AAudio will be resolved by loading libaaudio.so at runtime)
@@ -185,16 +193,17 @@ if (${RUN_TESTS} MATCHES "true")
 
         # Push and execute tests as post-build event
 
-        set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest/${ANDROID_ABI}) # Directory on device to push tests.
+        set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest_${ANDROID_ABI}) # Directory on device to push tests.
 
-    #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
+        #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
 
         add_custom_command(
             TARGET mwengine_unittest POST_BUILD
             COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
             COMMAND adb push $<TARGET_FILE:mwengine> ${TARGET_TEST_DIR}/
             COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
-            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\")
+            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\"
+        )
 
     endif()
 

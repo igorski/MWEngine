@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -63,9 +63,9 @@ void SampleEvent::play()
 
 void SampleEvent::setEventLength( int value )
 {
-    _eventLength = value;
-
     if ( _loopeable ) {
+
+        _eventLength = value;
 
         // loopeable-events differ from non-loopable events in that
         // we allow the events end to exceed the range of its start
@@ -84,18 +84,6 @@ void SampleEvent::setEventLength( int value )
     else {
         BaseAudioEvent::setEventLength( value );
     }
-}
-
-void SampleEvent::setEventStart( int value )
-{
-    _eventStart = value;
-
-    // assume length remains unchanged (e.g. play full sample)
-    _eventEnd = _eventStart + _eventLength;
-
-    // update start and end positions in seconds
-    _startPosition = BufferUtility::bufferToSeconds( _eventStart, AudioEngineProps::SAMPLE_RATE );
-    _endPosition   = BufferUtility::bufferToSeconds( _eventEnd,   AudioEngineProps::SAMPLE_RATE );
 }
 
 void SampleEvent::setEventEnd( int value )
@@ -425,15 +413,15 @@ void SampleEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPosition,
 
     // at custom playback rate we require floating point precision for these properties
     // also we translate the values relative to the playback speed
-    // note that we still rely on maxReadPos for determing the maximum allowed source buffer read
+    // note that we still rely on maxReadPos for determining the maximum allowed source buffer read
     // offset as due to rounding of floating point increments, we rely on integer comparison
     // to ensure we remain in range to prevent overflowing of allocated memory ranges
 
     float fEventStart        = ( float ) _eventStart;
     float fEventEnd          = ( float ) getEventEnd();
     float fMinBufferPosition = ( float ) minBufferPosition;
-    float fMaxBufferPosition = ( float ) maxBufferPosition * _playbackRate;
-    float fLoopOffset        = ( float ) loopOffset * _playbackRate;
+    float fMaxBufferPosition = _playbackRate < 1.F ? maxBufferPosition / _playbackRate : maxBufferPosition * _playbackRate;
+    float fLoopOffset        = _playbackRate < 1.F ? loopOffset / _playbackRate        : loopOffset * _playbackRate;
 
     // iterator that increments by the playback rate
     float fi = 0.f;

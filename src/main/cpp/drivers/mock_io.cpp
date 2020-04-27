@@ -21,8 +21,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "mock_io.h"
-#include "../audioengine.h"
-#include "../sequencer.h"
+#include <audioengine.h>
+#include <sequencer.h>
 #include <utilities/debug.h>
 
 Mock_IO::Mock_IO()
@@ -70,7 +70,7 @@ int Mock_IO::writeOutput( float *buffer, int size )
                 int expectedBufferPosition = currentIteration * AudioEngineProps::BUFFER_SIZE;
 
                 if ( currentIteration == 1 )
-                    MockData::test_successful = true; // will be falsified by assertions below
+                    MockData::test_successful = true; // will be falsified as applicable by the assertions below
 
                 if ( AudioEngine::bufferPosition != expectedBufferPosition )
                     MockData::test_successful = false;
@@ -124,6 +124,10 @@ int Mock_IO::writeOutput( float *buffer, int size )
                             expectedRightSample += event2buffer[ sequencerPos - event2start ];
                     }
 
+                    // apply the clipping prevention when exceeding the ceiling
+                    expectedLeftSample  = preventClip(( float ) expectedLeftSample );
+                    expectedRightSample = preventClip(( float ) expectedRightSample );
+
                     if ( leftSample != expectedLeftSample )
                     {
                         Debug::log( "TEST 2 expected left sample: %f, got %f at buffer readoffset %d at sequencer position %d",
@@ -169,6 +173,8 @@ int Mock_IO::writeOutput( float *buffer, int size )
                     SAMPLE_TYPE expected = ( bufferPosition > 77175 ) ? -0.25f : +0.5f;
                     // divide by amount of channels (as volume is corrected for summing purposes)
                     expected /= 2;
+                    // apply the clipping prevention when exceeding the ceiling
+                    expected  = preventClip(( float ) expected );
 
                     SAMPLE_TYPE sample = buffer[ c ];
 

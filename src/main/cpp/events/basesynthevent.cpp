@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -179,6 +179,18 @@ void BaseSynthEvent::unlock()
     _updateAfterUnlock = false;
 }
 
+void BaseSynthEvent::repositionToTempoChange( float ratio )
+{
+    auto orgStart  = ( float ) _eventStart;
+    auto orgLength = ( float ) _eventLength;
+
+    setEventStart(( int )( orgStart  * ratio ));
+
+    // for synthesized events, we adjust the event duration in relation to the tempo change
+
+    setEventLength(( int )( orgLength * ratio ));
+}
+
 void BaseSynthEvent::calculateBuffers()
 {
     if ( _locked )
@@ -191,7 +203,6 @@ void BaseSynthEvent::calculateBuffers()
     {
         setEventStart( position * AudioEngine::samples_per_step );
         setEventLength(( int )( length * AudioEngine::samples_per_step ));
-        setEventEnd( _eventStart + _eventLength );
     }
     else {
         // quick releases of a noteOn-instruction should ring for at least a 64th note

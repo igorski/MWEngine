@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -52,9 +52,8 @@ inline SAMPLE_TYPE capSample( SAMPLE_TYPE value )
 float scale( float value, float maxValue, float maxCompareValue );
 int roundTo( int value, int multipleOf );
 float randomFloat();
-unsigned long long now_ms();
-char* sliceString( std::vector<char> inputBuffer, char* outputBuffer, int startOffset, int length );
-unsigned long sliceLong( std::vector<char> inputBuffer, int startOffset, bool littleEndian );
+char* sliceString( const std::vector<char>& inputBuffer, char* outputBuffer, int startOffset, int length );
+unsigned long sliceLong( const std::vector<char>& inputBuffer, int startOffset, bool littleEndian );
 
 // numbers to string
 #define SSTR( x ) std::to_string( x )

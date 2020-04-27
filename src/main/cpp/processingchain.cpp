@@ -47,7 +47,7 @@ void ProcessingChain::addProcessor( BaseProcessor* aProcessor )
 
 void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
 {
-    for ( int i = 0; i < _activeProcessors.size(); i++ )
+    for ( size_t i = 0; i < _activeProcessors.size(); i++ )
     {
         if ( _activeProcessors.at( i ) == aProcessor )
         {

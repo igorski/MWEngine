@@ -43,8 +43,7 @@ class AudioEngine
 
     public:
 
-        static void setup( int bufferSize, int sampleRate, int amountOfChannels );
-        static void start(); // will default to OpenSL for widest support across Android versions
+        static void setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int amountOfChannels );
         static void start( Drivers::types audioDriver );
         static void stop();
         static void reset();
@@ -76,7 +75,7 @@ class AudioEngine
 
         /* buffer read/write pointers */
 
-        static int bufferPosition;      // the current sequence position in samples "playback head" offset ;-)
+        static int bufferPosition;      // the current sequence position in samples ("playback head" offset)
         static int stepPosition;        // the current sequence bar subdivided position (e.g. 16th note of a bar)
         static int bounceRangeStart;    // when bouncing, this defines the starting point of the bounce range
         static int bounceRangeEnd;      // when bouncing, this defines the end point of the bounce range
@@ -110,17 +109,29 @@ class AudioEngine
         static int  loopOffset;   // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
         static int  loopAmount;   // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
         static int  outputChannels;
+        static int  thread;
         static bool isMono;
         static std::vector<AudioChannel*>* channels;
         static std::vector<ChannelGroup*> groups;
         static AudioBuffer* inBuffer;
         static float*       outBuffer;
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+
+        /* CPU stabilization related */
+
+        static int64_t _firstRenderStartTime;
+        static int64_t _renderedSamples;
+        static double  _noopsPerTick;
+
+#endif
+
+        /* recording */
+
 #ifdef RECORD_DEVICE_INPUT
         static float* recbufferIn;
         static AudioChannel* inputChannel;
 #endif
-        static int thread;
 
         /* internal render methods */
 

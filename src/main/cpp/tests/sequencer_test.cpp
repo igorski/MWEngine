@@ -384,20 +384,17 @@ TEST( Sequencer, GetEventsFlushChannel )
     ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 1 ) == audioEvent1 )
         << "expected to have retrieved the first AudioEvent by merging new request into non flushed channel";
 
-    // add audioEvent1 to the non flushed channel
+    // verify audioEvent1 will not be re-added to a non flushed channel
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, false );
 
-    EXPECT_EQ( 3, channels->at( 0 )->audioEvents.size() )
-        << "expected to have collected 3 events for AudioChannel 1 (flushing was disabled)";
+    EXPECT_EQ( 2, channels->at( 0 )->audioEvents.size() )
+        << "expected to have collected 2 events for AudioChannel 1 (while flushing was disabled, the Sequencer deduplicates)";
 
     ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 0 ) == audioEvent2 )
         << "expected to have retrieved the second AudioEvent in previous request";
 
     ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 1 ) == audioEvent1 )
         << "expected to have retrieved the first AudioEvent in previous request";
-
-    ASSERT_TRUE( channels->at( 0 )->audioEvents.at( 2 ) == audioEvent1 )
-        << "expected to have retrieved the first AudioEvent by merging new request into non flushed channel";
 
     // free allocated memory
 

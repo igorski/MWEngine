@@ -21,9 +21,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "baseinstrument.h"
-#include "../audioengine.h"
-#include "../sequencer.h"
-#include <drivers/adapter.h>
+#include <audioengine.h>
+#include <sequencer.h>
+#include <utilities/eventutility.h>
 #include <algorithm>
 
 namespace MWEngine {
@@ -39,6 +39,7 @@ BaseInstrument::~BaseInstrument()
 {
     unregisterFromSequencer();
     clearEvents();
+    clearMeasureCache();
 
     delete audioChannel;
     delete _audioEvents;
@@ -47,6 +48,9 @@ BaseInstrument::~BaseInstrument()
     audioChannel     = nullptr;
     _audioEvents     = nullptr;
     _liveAudioEvents = nullptr;
+
+    delete _lock;
+    _lock = nullptr;
 }
 
 /* public methods */
@@ -66,6 +70,11 @@ std::vector<BaseAudioEvent*>* BaseInstrument::getEvents()
     return _audioEvents;
 }
 
+std::vector<BaseAudioEvent*>* BaseInstrument::getEventsForMeasure( int measureNum )
+{
+    return _audioEventsPerMeasure.size() <= measureNum ? nullptr : _audioEventsPerMeasure.at( measureNum );
+}
+
 std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
 {
     return _liveAudioEvents;
@@ -77,31 +86,41 @@ void BaseInstrument::updateEvents()
     // or to update event properties responding to tempo changes
     // override this function in your derived class for custom implementations
 
-    if ( _oldTempo != AudioEngine::tempo ) {
-
-        //std::lock_guard<std::mutex> guard( _lock );
-        toggleReadLock( true );
-
-        // when tempo has updated, we update the offsets of all associated events
-
-        float ratio = _oldTempo / AudioEngine::tempo;
-
-        for ( int i = 0, l = _audioEvents->size(); i < l; ++i )
-        {
-            BaseAudioEvent* event = _audioEvents->at( i );
-
-            auto orgStart  = ( float ) event->getEventStart();
-            auto orgEnd    = ( float ) event->getEventEnd();
-            auto orgLength = ( float ) event->getEventLength();
-
-            event->setEventStart ( orgStart  * ratio );
-            event->setEventLength( orgLength * ratio );
-            event->setEventEnd   (( orgEnd + 1 ) * ratio ); // add 1 to correct for rounding of float
-        }
-        _oldTempo = AudioEngine::tempo;
-
-        toggleReadLock( false );
+    if ( _oldTempo == AudioEngine::tempo ) {
+        return;
     }
+
+    //std::lock_guard<std::mutex> guard( _lock );
+    toggleReadLock( true );
+
+    // when tempo has updated, we update the offsets of all associated events
+    // note the measure cache remains untouched (nothing changes with regards to
+    // measure separation)
+
+    float ratio = _oldTempo / AudioEngine::tempo;
+    _oldTempo   = AudioEngine::tempo;
+
+    // TODO: there is an issue that creeps in with regards to maintaining an accurate measure
+    // cache, get(Start|End)MeasureForEvent relies on AudioEngine::samples_per_bar so the removal is
+    // calculating for the new start/end measure range, therefor possibly missing the old (prior to
+    // tempo change) range values. Additionally, we might risk undefined behaviour on the read locks
+    // for an already locked mutex. We set a flag to prevent event add/remove changes (triggered by their
+    // repositioning) and invoke a manual flush and recache after all sequenced events have been repositioned.
+
+    _freezeEvents = true;
+
+    size_t i = 0, total = _audioEvents->size();
+    for ( ; i < total; ++i ) {
+        _audioEvents->at( i )->repositionToTempoChange( ratio );
+    }
+
+    _freezeEvents = false;
+    clearMeasureCache();
+
+    for ( i = 0; i < total; ++i ) {
+        addEventToMeasureCache( _audioEvents->at( i ));
+    };
+    toggleReadLock( false );
 }
 
 void BaseInstrument::clearEvents()
@@ -123,6 +142,8 @@ void BaseInstrument::clearEvents()
 
 void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
+    if ( _freezeEvents ) return;
+
     //std::lock_guard<std::mutex> guard( _lock );
     toggleReadLock( true );
 
@@ -130,12 +151,15 @@ void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
         _liveAudioEvents->push_back( audioEvent );
     } else {
         _audioEvents->push_back( audioEvent );
+        addEventToMeasureCache( audioEvent );
     }
     toggleReadLock( false );
 }
 
 bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
+    if ( _freezeEvents ) return false;
+
     bool removed = false;
 
     if ( audioEvent == nullptr || _liveAudioEvents == nullptr || _audioEvents == nullptr ) {
@@ -147,33 +171,18 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
     if ( isLiveEvent )
     {
-        auto it = std::find( _liveAudioEvents->begin(), _liveAudioEvents->end(), audioEvent );
-        if ( it != _liveAudioEvents->end() )
-        {
-            _liveAudioEvents->erase( it );
+        removed = EventUtility::removeEventFromVector( _liveAudioEvents, audioEvent );
+        if ( removed ) {
             audioEvent->resetPlayState();
-            removed = true;
         }
     }
     else
     {
-        auto it = std::find( _audioEvents->begin(), _audioEvents->end(), audioEvent );
-        if ( it != _audioEvents->end()) {
-            _audioEvents->erase( it );
+        removed = EventUtility::removeEventFromVector( _audioEvents, audioEvent );
+        if ( removed ) {
+            removeEventFromMeasureCache( audioEvent );
         }
-        removed = true;
     }
-// let's not do the below as management of event allocation isn't the instruments problem.
-//#ifndef USE_JNI
-//    if ( removed ) {
-//
-//        // when using JNI, we let SWIG invoke destructors when Java references are finalized
-//        // otherwise we delete and dispose the events directly from this instrument
-//
-//        delete audioEvent;
-//        audioEvent = nullptr;
-//    }
-//#endif
     toggleReadLock( false );
 
     return removed;
@@ -191,19 +200,14 @@ void BaseInstrument::unregisterFromSequencer()
     index = -1;
 }
 
-void BaseInstrument::toggleReadLock( bool locked )
+void BaseInstrument::toggleReadLock( bool lock )
 {
-    // when unit testing, GoogleTest deadlocks on this attempted locking operation. We don't
-    // need to test for mutex behaviour, but it would be nice not to have to wrap this code
-
-    if ( DriverAdapter::isMocked() ) {
-        return;
-    }
-
-    if ( locked ) {
-        _lock.lock();
-    } else {
-        _lock.unlock();
+    if ( lock && !_locked ) {
+        _lock->lock();
+        _locked = true;
+    } else if ( !lock && _locked ){
+        _lock->unlock();
+        _locked = false;
     }
 }
 
@@ -211,7 +215,8 @@ void BaseInstrument::toggleReadLock( bool locked )
 
 void BaseInstrument::construct()
 {
-    audioChannel = new AudioChannel( 1.0 );
+    audioChannel = new AudioChannel( 1.F );
+    _lock        = new std::mutex();
 
     // events
 
@@ -221,6 +226,44 @@ void BaseInstrument::construct()
     // register instrument inside the sequencer
 
     registerInSequencer();
+}
+
+void BaseInstrument::addEventToMeasureCache( BaseAudioEvent* audioEvent )
+{
+    unsigned long startMeasureForEvent = EventUtility::getStartMeasureForEvent( audioEvent );
+    unsigned long endMeasureForEvent   = EventUtility::getEndMeasureForEvent( audioEvent );
+
+    for ( unsigned long i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
+        while ( _audioEventsPerMeasure.size() <= i ) {
+            _audioEventsPerMeasure.push_back( new std::vector<BaseAudioEvent*>() );
+        }
+        _audioEventsPerMeasure.at( i )->push_back( audioEvent );
+    }
+}
+
+void BaseInstrument::removeEventFromMeasureCache( BaseAudioEvent* audioEvent )
+{
+    unsigned long startMeasureForEvent     = EventUtility::getStartMeasureForEvent( audioEvent );
+    unsigned long endMeasureForEvent       = EventUtility::getEndMeasureForEvent( audioEvent );
+    unsigned long audioEventPerMeasureSize = _audioEventsPerMeasure.size();
+
+    for ( size_t i = startMeasureForEvent; i <= endMeasureForEvent; ++i ) {
+        if ( i >= audioEventPerMeasureSize ) {
+            return;
+        }
+        auto eventVector = _audioEventsPerMeasure.at( i );
+        EventUtility::removeEventFromVector( eventVector, audioEvent );
+    }
+}
+
+void BaseInstrument::clearMeasureCache()
+{
+    for ( auto it = _audioEventsPerMeasure.begin(); it != _audioEventsPerMeasure.end(); ++it ) {
+        auto eventVector = *it;
+        eventVector->clear();
+        // delete eventVector; // TODO strange segmentation fault in unit tests
+    }
+    _audioEventsPerMeasure.clear();
 }
 
 } // E.O namespace MWEngine

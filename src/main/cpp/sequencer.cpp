@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #include "audioengine.h"
 #include <utilities/utils.h>
 #include <vector>
+#include <utilities/eventutility.h>
 
 namespace MWEngine {
 
@@ -32,6 +33,7 @@ namespace MWEngine {
 bool Sequencer::playing           = false;
 BulkCacher* Sequencer::bulkCacher = new BulkCacher( true );
 std::vector<BaseInstrument*> Sequencer::instruments;
+std::vector<BaseAudioEvent*> Sequencer::removes;
 
 /* public methods */
 
@@ -48,7 +50,7 @@ int Sequencer::registerInstrument( BaseInstrument* instrument )
 
     if ( !wasPresent ) {
         instruments.push_back( instrument );
-        index = instruments.size() - 1;
+        index = ( int ) instruments.size() - 1;
     }
     return index; // the index this instrument is registered at
 }
@@ -69,28 +71,46 @@ bool Sequencer::unregisterInstrument( BaseInstrument* instrument )
 bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int bufferPosition,
                                 int bufferSize, bool addLiveInstruments, bool flushChannels )
 {
-    channels->clear();
-
     int bufferEnd    = bufferPosition + ( bufferSize - 1 );          // the highest SampleEnd value we'll query
     bool loopStarted = bufferEnd > AudioEngine::max_buffer_position; // whether this request exceeds the min_buffer_position - max_buffer_position range
 
-    int total = instruments.size();
+    size_t total = instruments.size();
+
+    if ( flushChannels ) {
+        // clears the audio events gathered in a previous iteration
+        channels->clear();
+    }
 
     // note we update the channels mix properties here as they might change during playback
 
-    for ( int i = 0; i < total; ++i )
+    for ( size_t i = 0; i < total; ++i )
     {
-        BaseInstrument* instrument      = instruments.at( i );
+        BaseInstrument* instrument      = instruments[ i ];
         AudioChannel* instrumentChannel = instrument->audioChannel;
 
         // clear previous channel contents when requested
-        if ( flushChannels )
+        if ( flushChannels ) {
             instrumentChannel->reset();
+        }
 
         if ( !instrumentChannel->muted )
         {
             if ( playing )
-                collectSequencedEvents( instrument, bufferPosition, bufferEnd );
+            {
+                int firstMeasure = ( int ) floor(( float ) bufferPosition / ( float ) AudioEngine::samples_per_bar );
+                int lastMeasure  = ( int ) floor(( float ) bufferEnd / ( float ) AudioEngine::samples_per_bar );
+
+                // note we deduplicate eligible events if flushChannels is false
+
+                collectSequencedEvents( instrument, bufferPosition, bufferEnd, firstMeasure, !flushChannels );
+
+                // when the current range spans 2 measures, collect for the second measure as well
+                // here we always deduplicate as events can overlap from first to last measure
+
+                if ( lastMeasure != firstMeasure ) {
+                    collectSequencedEvents( instrument, bufferPosition, bufferEnd, lastMeasure, true );
+                }
+            }
 
             if ( addLiveInstruments && instrument->hasLiveEvents() )
                 collectLiveEvents( instrument );
@@ -103,28 +123,19 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
 
 void Sequencer::updateEvents()
 {
-    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i ) {
+    for ( size_t i = 0, l = instruments.size(); i < l; ++i ) {
         instruments.at( i )->updateEvents();
     }
 }
 
 void Sequencer::clearEvents()
 {
-    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i ) {
+    for ( size_t i = 0, l = instruments.size(); i < l; ++i ) {
         instruments.at( i )->clearEvents();
     }
 }
 
-/**
- * used by the getAudioEvents-method of the sequencer, this validates
- * the present AudioEvents against the requested position
- * and updates and flushes the removal queue
- *
- * @param instrument     {BaseInstrument*} instrument to gather events from
- * @param bufferPosition {int} the current buffers start pointer
- * @param bufferEnd      {int} the current buffers end pointer
- */
-void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd )
+void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPosition, int bufferEnd, int measure, bool checkForDuplicates )
 {
     if ( !instrument->hasEvents() ) {
         return;
@@ -133,14 +144,17 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     AudioChannel* channel = instrument->audioChannel;
 
     instrument->toggleReadLock( true ); // lock the events vector while sequencing
-    std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
 
-    // removal queue
-    std::vector<BaseAudioEvent*> removes;
+    auto audioEvents = instrument->getEventsForMeasure( measure );
+
+    if ( audioEvents == nullptr ) {
+        instrument->toggleReadLock( false ); // release the mutex !
+        return;
+    }
 
     // channel has an internal loop (e.g. drum machine) ? recalculate requested
     // buffer position by subtracting all measures above the first
-    
+
     if ( channel->maxBufferPosition > 0 )
     {
         int samplesPerBar = AudioEngine::samples_per_bar;
@@ -152,8 +166,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
         }
     }
 
-    int i = 0;
-    int total = audioEvents->size();
+    size_t i = 0;
+    size_t total = audioEvents->size();
 
     for ( ; i < total; i++ )
     {
@@ -167,10 +181,17 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
             if (( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
                 ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
             {
-                if ( !audioEvent->isDeletable())
+                if ( !audioEvent->isDeletable()) {
+                    if ( checkForDuplicates && EventUtility::vectorContainsEvent( channel->audioEvents, audioEvent )) {
+                        continue;
+                    }
                     channel->addEvent( audioEvent );
-                else
+                }
+                else {
+                    // NOTE: no need to check for duplicates here as previous removes
+                    // will already have been removed from the event vector
                     removes.push_back( audioEvent );
+                }
             }
         }
     }
@@ -188,6 +209,7 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
             BaseAudioEvent* audioEvent = removes[ i ];
             instrument->removeEvent( audioEvent, false );
         }
+        removes.clear();
     }
 }
 
@@ -198,11 +220,8 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     instrument->toggleReadLock( true ); // lock the events vector while sequencing
     std::vector<BaseAudioEvent*>* liveEvents = instrument->getLiveEvents();
 
-    // removal queue
-    std::vector<BaseAudioEvent*> removes;
-
-    int i = 0;
-    int total = liveEvents->size();
+    size_t i = 0;
+    size_t total = liveEvents->size();
 
     for ( ; i < total; i++ )
     {
@@ -227,26 +246,18 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
             BaseAudioEvent* audioEvent = removes[ i ];
             instrument->removeEvent( audioEvent, true );
         }
+        removes.clear();
     }
 }
 
-/**
- * used by the cacheAudioEventsForMeasure-method, this collects
- * all AudioEvents in the requested measure for entry into the BulkCacher
- *
- * @param bufferPosition {int} the desired measures buffers start pointer
- * @param bufferEnd      {int} the desired measures buffers end pointer
- *
- * @return {std::vector<BaseCacheableAudioEvent*>}
- */
 std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvents( int bufferPosition, int bufferEnd )
 {
     auto* events = new std::vector<BaseCacheableAudioEvent*>();
 
-    for ( int i = 0, l = ( int ) instruments.size(); i < l; ++i )
+    for ( size_t i = 0, l = instruments.size(); i < l; ++i )
     {
-        std::vector<BaseAudioEvent*>* audioEvents = instruments.at( i )->getEvents();
-        for ( int j = 0; j < audioEvents->size(); j++ )
+        std::vector<BaseAudioEvent*>* audioEvents = instruments[ i ]->getEvents();
+        for ( size_t j = 0; j < audioEvents->size(); j++ )
         {
             BaseAudioEvent* audioEvent = audioEvents->at( j );
 

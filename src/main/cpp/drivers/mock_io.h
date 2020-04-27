@@ -23,6 +23,8 @@
 #ifndef __MWENGINE__MOCK_ENGINE_INCLUDED__
 #define __MWENGINE__MOCK_ENGINE_INCLUDED__
 
+#include <global.h>
+
 /**
  * The mock engine is used during unit testing
  * to verify whether audio processing (buffer read / writes)
@@ -30,26 +32,39 @@
  */
 namespace MWEngine {
 
-    class Mock_IO {
-        public:
-            Mock_IO();
-            ~Mock_IO();
+class Mock_IO {
+    public:
+        Mock_IO();
+        ~Mock_IO();
 
-            int writeOutput( float *buffer, int size );
-    };
+        int writeOutput( float *buffer, int size );
 
-    /**
-     * Variables exposed through a static class
-     * this can be read by the audioengine_test to
-     * assert results
-     */
+    private:
 
-    class MockData {
-        public:
-            static bool engine_started;
-            static int test_program;
-            static bool test_successful;
-            static int render_iterations;
-    };
+        // the audio engine applies a threshold beyond which a signal must not peak to prevent
+        // clipping, apply it to incoming sample as applicable
+
+        inline float preventClip( float sample )
+        {
+            if ( sample < 0.F )
+                return std::max( sample, -MAX_OUTPUT );
+
+            return std::min( sample, MAX_OUTPUT );
+        }
+};
+
+/**
+ * Variables exposed through a static class
+ * this can be read by the audioengine_test to
+ * assert results
+ */
+
+class MockData {
+    public:
+        static bool engine_started;
+        static int test_program;
+        static bool test_successful;
+        static int render_iterations;
+};
 }
 #endif

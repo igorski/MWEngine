@@ -42,33 +42,31 @@
 namespace MWEngine {
 namespace DriverAdapter {
 
-    // prototypes for the callback mechanisms
-
-    typedef void( *MWEngine_renderCallback )();
-    typedef void( *MWEngine_writeCallback )( float* outputBuffer, int amountOfSamples );
-    typedef int ( *MWEngine_readCallback ) ( float* recordBuffer, int amountOfSamples );
-
     bool create( Drivers::types driver );
     void destroy();
 
     bool isAAudio(); // TODO: no actor in the engine should care about this.
     bool isMocked(); // TODO: no actor in the engine should care about this.
 
-    // start the render loop
-    extern MWEngine_renderCallback render;
-
     /* internal methods */
 
-    // these are invoked during the render cycle and should not be called directly
+    // these are invoked during the engines render cycle and should not be called directly
 
-    // write the contents of given outputBuffer into the drivers output
+    void render();
+
+    // writes the contents of given outputBuffer into the drivers output
     // so we can hear sound. outputBuffer contains interleaved samples
-    extern MWEngine_writeCallback writeOutput;
 
-    // get the input buffer from the driver (when recording)
-    // and write it into given recordBuffer
+    void writeOutput( float* outputBuffer, int amountOfSamples );
+
+    // gets the input buffer from the driver (when recording)
+    // and writes it into given recordBuffer
     // returns integer value of amount of recorded samples
-    extern MWEngine_readCallback getInput;
+
+    int getInput( float* recordBuffer, int amountOfSamples );
+
+
+    /* internal variables */
 
     extern Drivers::types _driver;
     extern OPENSL_STREAM* driver_openSL;

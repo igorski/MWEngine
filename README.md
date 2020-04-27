@@ -16,9 +16,13 @@ out-of-the-box possibilities are:
  * live recording and processing from your device's inputs (e.g. microphone)
  * bouncing output to WAV files, either live (during a performance) or "offline"
 
-Also note that MWEngine's underlying audio drivers are _the same as Google Oboe uses_, MWEngine and
-Oboe are merely abstraction layers to solve the same problem, only in different ways.
-Additionally, MWEngine provides a complete audio processing environment with built-in effects, heck, you _don't even need to know C(++) to use it_.
+#### How does this relate/compare to Google Oboe ?
+
+Though MWEngine was initially created before Oboe, its underlying audio drivers are _the same as Google Oboe uses_, MWEngine
+and Oboe are merely different abstraction layers to solve the same problem.
+
+Additionally, MWEngine provides a complete audio sequencing and processing environment with built-in effects
+without you _needing to write/know C(++) to use it_.
 
 #### What apps are using MWEngine ?
 

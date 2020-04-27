@@ -123,7 +123,7 @@ class BufferUtility
          * Writes the contents of given buffer onto storage under given fileName.
          * The result is a comma separated list of SAMPLE_TYPE values.
          */
-        static void bufferToFile( const char* filename, SAMPLE_TYPE* buffer, int bufferLength );
+        static void bufferToFile( const char* filename, const SAMPLE_TYPE* buffer, int bufferLength );
 };
 } // E.O namespace MWEngine
 

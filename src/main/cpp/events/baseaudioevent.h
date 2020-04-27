@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -137,6 +137,12 @@ class BaseAudioEvent
         // ( 1, 32, 4 ) positions audioEvent at 4 / 32 = 1/8th note in the second measure
         virtual void positionEvent( int startMeasure, int subdivisions, int offset );
 
+        // when changing the sequencer tempo, this adjust the events
+        // position properties (e.g. start / end offset) relative to the previous tempo
+        // a value above 1.0 implies a decrease in speed, a value below 1.0 an increase
+
+        virtual void repositionToTempoChange( float ratio );
+
         /* internally used properties */
 
         virtual bool isDeletable();   // query whether this event is queued for deletion
@@ -153,20 +159,22 @@ class BaseAudioEvent
 
         // for backwards compatibility we provide these methods
         // use setEventLength(), setEventStart()... getEventEnd() instead.
-        // deprecation keyword is sadly C++14 extension
+        // deprecation keyword is a C++14 extension and sadly not supported by SWIG...
 
-        //[[deprecated("use setEventLength instead")]]
+#ifndef SWIG
+        [[deprecated("use setEventLength instead")]]
         void setSampleLength( int value );
-        //[[deprecated("use setEventStart instead")]]
+        [[deprecated("use setEventStart instead")]]
         void setSampleStart( int value );
-        //[[deprecated("use setEventEnd instead")]]
+        [[deprecated("use setEventEnd instead")]]
         void setSampleEnd( int value );
-        //[[deprecated("use getEventLength instead")]]
+        [[deprecated("use getEventLength instead")]]
         int getSampleLength();
-        //[[deprecated("use getEventStart instead")]]
+        [[deprecated("use getEventStart instead")]]
         int getSampleStart();
-        //[[deprecated("use getEventEnd instead")]]
+        [[deprecated("use getEventEnd instead")]]
         int getSampleEnd();
+#endif
 
         /* E.O. DEPRECATION */
 

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -61,6 +61,8 @@ class JavaUtilities
         // convert it to a WaveTable to be stored under given waveformType identifier inside the TablePool
 
         static bool createTableFromFile( jstring tableId, jstring aWAVFilePath );
+
+        static void setCpuCores( jintArray cpuCores, jint amountOfCores );
 };
 } // E.O namespace MWEngine
 

@@ -29,7 +29,10 @@ using namespace MWEngine;
 
 #include "helpers/helper.cpp"
 
+// NOTE: the audioengine test also sets up the Mocked audio driver
 #include "audioengine_test.cpp"
+
+// Unit tests for individual actors
 #include "audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
 #include "channelgroup_test.cpp"
@@ -40,11 +43,11 @@ using namespace MWEngine;
 #include "wavetable_test.cpp"
 #include "events/baseaudioevent_test.cpp"
 #include "events/basesynthevent_test.cpp"
-#include "events/drumevent_test.cpp"
+//#include "events/drumevent_test.cpp"
 #include "events/sampleevent_test.cpp"
 #include "generators/envelopegenerator_test.cpp"
 #include "instruments/baseinstrument_test.cpp"
-#include "instruments/sampledinstrument_test.cpp"
+#include "instruments/synthinstrument_test.cpp"
 #include "modules/adsr_test.cpp"
 #include "modules/lfo_test.cpp"
 #include "processors/baseprocessor_test.cpp"
@@ -53,6 +56,7 @@ using namespace MWEngine;
 #include "processors/flanger_test.cpp"
 #include "processors/reverb_test.cpp"
 #include "processors/tremolo_test.cpp"
+#include "utilities/eventutility_test.cpp"
 #include "utilities/tablepool_test.cpp"
 #include "utilities/samplemanager_test.cpp"
 #include "utilities/sampleutility_test.cpp"
@@ -60,7 +64,7 @@ using namespace MWEngine;
 #include "utilities/volumeutil_test.cpp"
 #include "deprecation_test.cpp"
 
-// these aren't stability tests, but benchmarks to test certain performance assumptions
+// the following aren't unit tests to spot regressions, but benchmarks to test certain performance assumptions
 //#include "benchmarks/buffer_test.cpp"
 //#include "benchmarks/inline_test.cpp"
 //#include "benchmarks/table_test.cpp"

@@ -201,7 +201,7 @@ TEST( AudioEngine, Output )
     controller->setPlaying( true );
     AudioEngine::start( Drivers::types::MOCKED );
 
-    // evaluate results (assertions are made in mock_opensl_io.cpp)
+    // evaluate results (assertions are made in mock_io.cpp)
 
     ASSERT_TRUE( MockData::test_successful )
         << "expected test to be successful";

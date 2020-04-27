@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -132,11 +132,9 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
 
     int i = 0;
 
-    // get a pointer to the Java array
     jdouble* c_array;
     c_array = JavaBridge::getEnvironment()->GetDoubleArrayElements( aBuffer, 0 );
 
-    // exception checking
     if ( c_array == NULL )
         return;
 
@@ -146,7 +144,6 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
     for ( i = 0; i < aBufferLength; i++ )
         channelBuffer[ i ] = ( SAMPLE_TYPE ) c_array[ i ];
 
-    // release the memory so Java can have it again
     JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aBuffer, c_array, 0 );
 
     // stereo ?
@@ -155,7 +152,6 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
     {
         c_array = JavaBridge::getEnvironment()->GetDoubleArrayElements( aOptRightBuffer, 0 );
 
-        // exception checking
         if ( c_array == NULL )
             return;
 
@@ -165,11 +161,10 @@ void JavaUtilities::createSampleFromBuffer( jstring aKey, jint aBufferLength, ji
         for ( i = 0; i < aBufferLength; i++ )
             channelBuffer[ i ] = ( SAMPLE_TYPE ) c_array[ i ];
 
-        // release the memory so Java can have it again
         JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aOptRightBuffer, c_array, 0 );
     }
     SampleManager::setSample(
-        JavaBridge::getString( aKey ), sampleBuffer, AudioEngineProps::SAMPLE_RATE
+            JavaBridge::getString( aKey ), sampleBuffer, AudioEngineProps::SAMPLE_RATE
     );
 }
 
@@ -190,11 +185,9 @@ void JavaUtilities::cacheTable( jint tableLength, jint waveformType, jstring tab
     WaveTable* table = new WaveTable( tableLength, waveformType );
     SAMPLE_TYPE* buffer  = table->getBuffer();
 
-    // get a pointer to the Java array
     jdouble* c_array;
     c_array = JavaBridge::getEnvironment()->GetDoubleArrayElements( aBuffer, 0 );
 
-    // exception checking
     if ( c_array == NULL )
         return;
 
@@ -203,7 +196,6 @@ void JavaUtilities::cacheTable( jint tableLength, jint waveformType, jstring tab
     for ( int i = 0; i < tableLength; i++ )
         buffer[ i ] = ( SAMPLE_TYPE ) c_array[ i ];
 
-    // release the memory so Java can have it again
     JavaBridge::getEnvironment()->ReleaseDoubleArrayElements( aBuffer, c_array, 0 );
 
     // store the table inside the pool
@@ -224,6 +216,21 @@ bool JavaUtilities::createTableFromFile( jstring tableId, jstring aWAVFilePath )
     TablePool::setTable( table, JavaBridge::getString( tableId ));
 
     return true;
+}
+
+void JavaUtilities::setCpuCores( jintArray cpuCores, jint amountOfCores )
+{
+    jint* c_array;
+    c_array = JavaBridge::getEnvironment()->GetIntArrayElements( cpuCores, 0 );
+
+    if ( c_array == NULL )
+        return;
+
+    for ( int i = 0; i < amountOfCores; i++ ) {
+        AudioEngineProps::CPU_CORES.push_back( c_array[ i ]);
+    }
+
+    JavaBridge::getEnvironment()->ReleaseIntArrayElements( cpuCores, c_array, 0 );
 }
 
 } // E.O namespace MWEngine

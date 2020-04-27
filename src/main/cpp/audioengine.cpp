@@ -30,6 +30,7 @@
 #include <messaging/notifier.h>
 #include <events/baseaudioevent.h>
 #include <utilities/bufferutility.h>
+#include <utilities/perfutility.h>
 #include <utilities/debug.h>
 #include <vector>
 
@@ -64,14 +65,14 @@ namespace MWEngine {
 
     /* tempo / sequencer position related */
 
-    int   AudioEngine::samples_per_beat           = 0;  // strictly speaking sequencer specific, but scoped onto the AudioEngine
-    int   AudioEngine::samples_per_bar            = 0;  // for rendering purposes, see SequencerController on how to read and
-    int   AudioEngine::samples_per_step           = 0;  // adjust these values
+    int   AudioEngine::samples_per_beat           = 4;  // strictly speaking these values are sequencer specific, but scoped onto the
+    int   AudioEngine::samples_per_bar            = 16; // AudioEngine for rendering purposes, see SequencerController on how these
+    int   AudioEngine::samples_per_step           = 1;  // values are calculated relative to the buffer size, time signature and step amount.
+    int   AudioEngine::min_buffer_position        = 0;
+    int   AudioEngine::max_buffer_position        = 16;
 
     int   AudioEngine::amount_of_bars             = 1;
     int   AudioEngine::steps_per_bar              = 16; // default to sixteen step sequencing (see SequencerController)
-    int   AudioEngine::min_buffer_position        = 0;  // initially 0, but can differ when looping specific measures
-    int   AudioEngine::max_buffer_position        = 0;  // calculated when SequencerController is created
     int   AudioEngine::marked_buffer_position     = -1; // -1 means no marker has been set, no notifications will go out
     int   AudioEngine::min_step_position          = 0;
     int   AudioEngine::max_step_position          = ( AudioEngine::amount_of_bars * AudioEngine::steps_per_bar ) - 1; // note steps start at 0 (hence - 1)
@@ -109,18 +110,19 @@ namespace MWEngine {
 
     int AudioEngine::thread = 0;
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+    double  AudioEngine::_noopsPerTick;
+    int64_t AudioEngine::_renderedSamples;
+    int64_t AudioEngine::_firstRenderStartTime;
+#endif
+
     /* public methods */
 
-    void AudioEngine::setup( int bufferSize, int sampleRate, int amountOfChannels )
+    void AudioEngine::setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int amountOfChannels )
     {
         AudioEngineProps::BUFFER_SIZE     = bufferSize;
         AudioEngineProps::SAMPLE_RATE     = sampleRate;
         AudioEngineProps::OUTPUT_CHANNELS = amountOfChannels;
-    }
-
-    void AudioEngine::start()
-    {
-        AudioEngine::start( Drivers::types::OPENSL );
     }
 
     /**
@@ -135,6 +137,9 @@ namespace MWEngine {
 
         Debug::log( "STARTING engine" );
 
+        if ( audioDriver != Drivers::types::MOCKED ) {
+            PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
+        }
         // create the output driver using the adapter. If creation failed
         // prevent thread start and trigger JNI callback for error handler
 
@@ -144,6 +149,11 @@ namespace MWEngine {
             return;
         }
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+        _noopsPerTick         = 1;
+        _renderedSamples      = 0;
+        _firstRenderStartTime = 0;
+#endif
         Debug::log( "STARTED engine" );
 
         // audio hardware available, prepare environment
@@ -171,8 +181,9 @@ namespace MWEngine {
 
         std::vector<BaseInstrument*> instruments = Sequencer::instruments;
 
-        for ( size_t i = 0; i < instruments.size(); ++i )
-            instruments.at( i )->audioChannel->createOutputBuffer();
+        for ( size_t i = 0; i < instruments.size(); ++i ) {
+            instruments[ i ]->audioChannel->createOutputBuffer();
+        }
 
         // start thread and request first render (gets render loop going)
 
@@ -266,10 +277,30 @@ namespace MWEngine {
         size_t i, j, k, c, ci;
         float sample;
 
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+
+        int64_t renderStart = PerfUtility::now(); // for this iteration
+
+        if ( _renderedSamples == 0 ) {
+            _firstRenderStartTime = renderStart; // this is the first render, record its start time
+        }
+        int64_t timeSinceFirstRender = renderStart - _firstRenderStartTime;
+        int64_t expectedRenderStart  = ( _renderedSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
+        int64_t totalExpectedDelta   = timeSinceFirstRender - expectedRenderStart;
+
+        if ( totalExpectedDelta < 0 ) {
+            // This implies the previous render was invoked from a delayed callback
+            _firstRenderStartTime = renderStart;
+            _renderedSamples      = 0;
+        }
+        int64_t amountOfSamplesTime    = ( amountOfSamples * NANOS_PER_SECOND ) / AudioEngineProps::SAMPLE_RATE;
+        int64_t expectedRenderDuration = static_cast<int64_t>(( amountOfSamplesTime * MAX_CPU_PER_RENDER_TIME ) - totalExpectedDelta );
+
+#endif
         // erase previous buffer contents
         inBuffer->silenceBuffers();
 
-        // gather the audio events by the buffer range currently being processed
+        // gather the audio events by the sequencer range currently being processed
         loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
 
         // read pointer exceeds maximum allowed offset (max_buffer_position) ? => sequencer has started its loop
@@ -277,8 +308,10 @@ namespace MWEngine {
         loopOffset = ( max_buffer_position - bufferPosition ) + 1; // buffer iterator index at which the loop will occur
         loopAmount = amountOfSamples - loopOffset;                 // the amount of samples to write after looping starts
 
-        // collect all audio events that are eligible for playback for this iteration
-        Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
+        // collect all audio events at the start of the loop offset that are also eligible for playback in this iteration
+        if ( loopAmount > 0 ) {
+            Sequencer::getAudioEvents( channels, min_buffer_position, loopAmount, false, false );
+        }
 
 #ifdef RECORD_DEVICE_INPUT
         // record audio from Android device ?
@@ -295,7 +328,7 @@ namespace MWEngine {
 
             std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
             for ( k = 0; k < processors.size(); ++k ) {
-                processors.at( k )->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
+                processors[ k ]->process( inputChannel->getOutputBuffer(), AudioEngineProps::INPUT_CHANNELS == 1 );
             }
 
             // merge recording into current input buffer for instant monitoring
@@ -317,7 +350,7 @@ namespace MWEngine {
             int cacheReadPos      = 0;  // the offset we start ready from the channel buffer (when writing to cache)
 
             std::vector<BaseAudioEvent*> audioEvents = channel->audioEvents;
-            int amount = audioEvents.size();
+            unsigned long amount = audioEvents.size();
 
             // divide the channels volume by the amount of channels to provide extra headroom
             SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic() / ( SAMPLE_TYPE ) channelAmount;
@@ -350,7 +383,7 @@ namespace MWEngine {
                     // write the audioEvent buffers into the main output buffer
                     for ( k = 0; k < amount; ++k )
                     {
-                        BaseAudioEvent* audioEvent = audioEvents.at( k );
+                        BaseAudioEvent* audioEvent = audioEvents[ k ];
 
                         if ( audioEvent != nullptr && !audioEvent->isLocked()) // make sure we're allowed to query the contents
                         {
@@ -367,12 +400,12 @@ namespace MWEngine {
             // perform live rendering for this channels instrument
             if ( channel->hasLiveEvents )
             {
-                int lAmount = channel->liveEvents.size();
+                size_t lAmount = channel->liveEvents.size();
 
                 for ( k = 0; k < lAmount; ++k )
                 {
-                    BaseAudioEvent* vo = channel->liveEvents.at( k );
-                    vo->mixBuffer( channelBuffer );
+                    BaseAudioEvent* liveEvent = channel->liveEvents[ k ];
+                    liveEvent->mixBuffer( channelBuffer );
                 }
             }
 
@@ -380,9 +413,9 @@ namespace MWEngine {
             ProcessingChain* chain = channel->processingChain;
             std::vector<BaseProcessor*> processors = chain->getActiveProcessors();
 
-            for ( k = 0; k < processors.size(); k++ )
+            for ( k = 0; k < processors.size(); ++k )
             {
-                BaseProcessor* processor = processors.at( k );
+                BaseProcessor* processor = processors[ k ];
                 bool canCacheProcessor   = processor->isCacheable();
 
                 // only apply processor when we're not caching or cannot cache its output
@@ -416,18 +449,16 @@ namespace MWEngine {
 
         // apply group effects onto the mix buffer
 
-        for ( j = 0; j < groupAmount; ++j )
-        {
-            groups.at( j )->applyEffectsToChannels( inBuffer );
+        for ( j = 0; j < groupAmount; ++j ) {
+            groups[ j ]->applyEffectsToChannels( inBuffer );
         }
 
         // apply master bus processors (e.g. high/low pass filters, limiter, etc.) onto the mix buffer
 
         std::vector<BaseProcessor*> processors = masterBus->getActiveProcessors();
 
-        for ( j = 0; j < processors.size(); ++j )
-        {
-            processors.at( j )->process( inBuffer, isMono );
+        for ( j = 0; j < processors.size(); ++j ) {
+            processors[ j ]->process( inBuffer, isMono );
         }
 
         // write the accumulated buffers into the output buffer
@@ -437,15 +468,15 @@ namespace MWEngine {
             for ( ci = 0; ci < outputChannels; ci++ )
             {
                 // apply the master volume onto the output
-                sample = ( float ) inBuffer->getBufferForChannel( ci )[ i ] * volume;
+                sample = ( float ) inBuffer->getBufferForChannel(( int ) ci )[ i ] * volume;
 
                 // and perform a fail-safe check in case we're exceeding the headroom ceiling
 
-                if ( sample < -1.0 )
-                    sample = -1.0F;
+                if ( sample < -MAX_OUTPUT )
+                    sample = -MAX_OUTPUT;
 
-                else if ( sample > +1.0 )
-                    sample = +1.0F;
+                else if ( sample > +MAX_OUTPUT )
+                    sample = +MAX_OUTPUT;
 
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
@@ -518,7 +549,7 @@ namespace MWEngine {
                 stop();
                 Sequencer::playing = false;
 
-                bouncing           =
+                bouncing           = false;
                 recordOutputToDisk = false;
 
                 return false;
@@ -541,8 +572,20 @@ namespace MWEngine {
         }
 #endif
         // tempo update queued ?
-        if ( queuedTempo != tempo )
+        if ( queuedTempo != tempo ) {
             handleTempoUpdate( queuedTempo, true );
+        }
+
+#ifdef PREVENT_CPU_FREQUENCY_SCALING
+
+        int64_t renderEnd      = PerfUtility::now();
+        int64_t renderDuration = renderEnd - renderStart;
+        int64_t loadDuration   = expectedRenderDuration - renderDuration; // total time to apply stabilizing load
+
+        _noopsPerTick     = PerfUtility::applyCPUStabilizingLoad( renderEnd + loadDuration, _noopsPerTick );
+        _renderedSamples += amountOfSamples;
+
+#endif
 
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
         if ( bouncing && thread == 1 && DriverAdapter::isAAudio() ) {

@@ -34,22 +34,13 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <utilities/debug.h>
+#include <utilities/perfutility.h>
 
 namespace MWEngine {
 
 #ifndef INCLUDE_AAUDIO_LIBRARY
     LibraryLoader* AAudio_IO::libraryLoader = nullptr;
 #endif
-
-int64_t timestamp_to_nanoseconds(timespec ts){
-    return (ts.tv_sec * (int64_t) NANOS_PER_SECOND) + ts.tv_nsec;
-}
-
-int64_t get_time_nanoseconds(clockid_t clockid){
-    timespec ts;
-    clock_gettime(clockid, &ts);
-    return timestamp_to_nanoseconds(ts);
-}
 
 /**
  * Every time the playback stream requires data this method will be called.
@@ -480,7 +471,7 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
  * enqueue a buffer (of interleaved samples) for rendering
  * this is invoked by AudioEngine::render() upon request of the dataCallback method
  */
-void AAudio_IO::enqueueOutputBuffer( float* sourceBuffer, int amountOfSamples ) {
+void AAudio_IO::enqueueOutputBuffer( const float* sourceBuffer, int amountOfSamples ) {
     memcpy( _enqueuedOutputBuffer, sourceBuffer, amountOfSamples * sizeof( float ));
 }
 
@@ -542,15 +533,14 @@ aaudio_result_t AAudio_IO::calculateCurrentOutputLatencyMillis( AAudioStream* st
         int64_t frameIndexDelta = writeIndex - existingFrameIndex;
 
         // Calculate the time which the next frame will be presented
-        int64_t frameTimeDelta = (frameIndexDelta * NANOS_PER_SECOND) / _sampleRate;
+        int64_t frameTimeDelta = ( frameIndexDelta * NANOS_PER_SECOND ) / _sampleRate;
         int64_t nextFramePresentationTime = existingFramePresentationTime + frameTimeDelta;
 
         // Assume that the next frame will be written at the current time
-        int64_t nextFrameWriteTime = get_time_nanoseconds(CLOCK_MONOTONIC);
+        int64_t nextFrameWriteTime = PerfUtility::now( CLOCK_MONOTONIC );
 
         // Calculate the latency
-        *latencyMillis = (double) (nextFramePresentationTime - nextFrameWriteTime)
-                       / NANOS_PER_MILLISECOND;
+        *latencyMillis = ( double )( nextFramePresentationTime - nextFrameWriteTime ) / NANOS_PER_MILLISECOND;
     } else {
         Debug::log( "AAudio_IO::Error calculating latency: %s", AAudio_convertResultToText( result ));
     }

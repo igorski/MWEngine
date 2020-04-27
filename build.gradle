@@ -51,8 +51,8 @@ android {
 
                 arguments "-DRUN_TESTS=" + getRunTests()
 
-                cFlags   "-O3" // -msse4.2 -mpopcnt
-                cppFlags "-std=c++14 -Werror -fexceptions -frtti"
+                cFlags   "-O3"
+                cppFlags "-std=c++14 -Werror -Wno-deprecated-declarations -fexceptions -frtti"
             }
         }
     }

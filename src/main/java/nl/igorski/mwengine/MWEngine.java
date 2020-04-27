@@ -22,11 +22,19 @@
  */
 package nl.igorski.mwengine;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.os.Build;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.os.Process;
 import android.util.Log;
+import android.view.WindowManager;
+
 import nl.igorski.mwengine.core.*;
 
 public final class MWEngine extends Thread
@@ -111,6 +119,63 @@ public final class MWEngine extends Thread
         _observer  = aObserver;
 
         MWEngineCore.init(); // registers the interface between this Java class and the native code
+    }
+
+    public static int[] cpuCores;
+
+    /**
+     * Call from your Activitity.onCreate()
+     */
+    public static boolean optimizePerformance( Activity activity ) {
+        if ( activity.getWindow() == null ) {
+            return false;
+        }
+        activity.getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+
+        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ) {
+            // retrieve exclusive cores to run rendering thread on
+            cpuCores = Process.getExclusiveCores();
+            JavaUtilities.setCpuCores( cpuCores, cpuCores.length );
+
+            // request sustained performance mode when supported
+            if ((( PowerManager ) activity.getSystemService( Context.POWER_SERVICE )).isSustainedPerformanceModeSupported()) {
+                activity.getWindow().setSustainedPerformanceMode( true );
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean supportsLowLatency( Context context ) {
+        return context.getPackageManager().hasSystemFeature( PackageManager.FEATURE_AUDIO_LOW_LATENCY );
+    }
+
+    public static int getRecommendedSampleRate( Context context ) {
+        String SR_CHECK = null;
+
+        // API level 17 available ?  Use the sample rate provided by AudioManager.getProperty(PROPERTY_OUTPUT_SAMPLE_RATE)
+        // to prevent the buffers from taking a detour through the system resampler
+        if ( android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 ) {
+            SR_CHECK = ((AudioManager) context.getSystemService( Context.AUDIO_SERVICE )).getProperty( AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE );
+        }
+        return ( SR_CHECK != null ) ? Integer.parseInt( SR_CHECK ) : 48000;
+    }
+
+    /**
+     * retrieve the recommended buffer size for the device running the application you can increase / decrease the buffer size
+     * for lower latency or higher stability, but note you must use multiples of this recommendation !! Otherwise the
+     * buffer callback will occasionally get two calls per timeslice which can cause glitching.
+     */
+    public static int getRecommendedBufferSize( Context context ) {
+        String BS_CHECK = null;
+
+        // API level 17 available ?
+        if ( android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 ) {
+            BS_CHECK = (( AudioManager ) context.getSystemService( Context.AUDIO_SERVICE )).getProperty( AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER );
+        }
+        return ( BS_CHECK != null ) ? Integer.parseInt( BS_CHECK ) : AudioTrack.getMinBufferSize(
+                getRecommendedSampleRate( context ), AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT
+        );
     }
 
     public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels, Drivers.types driver ) {
@@ -338,7 +403,7 @@ public final class MWEngine extends Thread
     public void run() {
         Log.d( "MWENGINE", "starting MWEngine render thread" );
 
-        android.os.Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
+        Process.setThreadPriority( Process.THREAD_PRIORITY_URGENT_AUDIO );
         handleThreadStartTimeout();
 
         while ( _isRunning ) {

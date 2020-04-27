@@ -204,12 +204,12 @@ void deleteAudioEvent( BaseAudioEvent* audioEvent )
 // create a BaseAudioEvent that is enqueued into the sequencer, you'll
 // likely want to delete both this event and its instrument manually
 
-BaseAudioEvent* enqueuedAudioEvent( BaseInstrument* instrument, int sampleLength, int measureNum,
+BaseAudioEvent* enqueuedAudioEvent( BaseInstrument* instrument, int eventLength, int measureNum,
                                     int subdivision, int offset )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent( instrument );
-    audioEvent->setEventLength( sampleLength );
-    audioEvent->positionEvent  ( measureNum, subdivision, offset );
+    audioEvent->setEventLength( eventLength );
+    audioEvent->positionEvent ( measureNum, subdivision, offset );
     audioEvent->addToSequencer();
 
     return audioEvent;
