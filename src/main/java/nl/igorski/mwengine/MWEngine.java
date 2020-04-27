@@ -485,7 +485,7 @@ public final class MWEngine extends Thread
      * javap -s -private -classpath classes nl.igorski.mwengine.MWEngine
      */
     public static void handleBridgeConnected( int aSomething ) {
-        if ( INSTANCE._observer != null ) INSTANCE._observer.handleNotification( Notifications.ids.STATUS_BRIDGE_CONNECTED.ordinal() );
+        if ( INSTANCE != null && INSTANCE._observer != null ) INSTANCE._observer.handleNotification( Notifications.ids.STATUS_BRIDGE_CONNECTED.ordinal() );
     }
 
     public static void handleNotification( int aNotificationId ) {

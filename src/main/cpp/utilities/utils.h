@@ -55,9 +55,6 @@ float randomFloat();
 char* sliceString( const std::vector<char>& inputBuffer, char* outputBuffer, int startOffset, int length );
 unsigned long sliceLong( const std::vector<char>& inputBuffer, int startOffset, bool littleEndian );
 
-// numbers to string
-#define SSTR( x ) std::to_string( x )
-
 } // E.O namespace MWEngine
 
 #endif

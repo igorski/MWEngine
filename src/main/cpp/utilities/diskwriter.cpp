@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,10 +24,10 @@
 #include "audioengine.h"
 #include "wavewriter.h"
 #include "wavereader.h"
-#include "utils.h"
 #include <stdio.h>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
+#include <utilities/stringutility.h>
 
 namespace MWEngine {
 namespace DiskWriter
@@ -238,7 +238,7 @@ namespace DiskWriter
         // create output file name
         std::string outputFile = std::string(
             tempDirectory.c_str()
-        ).append( "rec_snippet_" + SSTR( savedSnippets ) + ".WAV" );
+        ).append( "rec_snippet_" + TO_STRING( savedSnippets ) + ".WAV" );
 
         int bufferSize        = recordingChunkSize;
         size_t writtenWAVSize = 0;

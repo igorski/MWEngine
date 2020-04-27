@@ -15,7 +15,6 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 
 import nl.igorski.mwengine.MWEngine;
-import nl.igorski.mwengine.definitions.Pitch;
 import nl.igorski.mwengine.core.*;
 
 import java.util.Vector;
@@ -60,6 +59,7 @@ public final class MWEngineActivity extends Activity {
 
     private static int STEPS_PER_MEASURE = 16;  // amount of subdivisions within a single measure
     private static String LOG_TAG = "MWENGINE"; // logcat identifier
+    private static int PERMISSIONS_CODE = 8081981;
 
     /* public methods */
 
@@ -83,10 +83,25 @@ public final class MWEngineActivity extends Activity {
             };
             // Check if we have all the necessary permissions, if not: prompt user
             int permission = checkSelfPermission( Manifest.permission.RECORD_AUDIO );
-            if ( permission != PackageManager.PERMISSION_GRANTED )
-                requestPermissions( PERMISSIONS, 8081981 );
+            if ( permission == PackageManager.PERMISSION_GRANTED )
+                init();
+            else
+                requestPermissions( PERMISSIONS, PERMISSIONS_CODE );
         }
-        init();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if ( requestCode != PERMISSIONS_CODE ) return;
+        for ( int i = 0; i < permissions.length; i++ ) {
+            String permission = permissions[ i ];
+            int grantResult   = grantResults[ i ];
+            if ( permission.equals( Manifest.permission.RECORD_AUDIO ) && grantResult == PackageManager.PERMISSION_GRANTED ) {
+                init();
+            } else {
+                requestPermissions( new String[]{ Manifest.permission.RECORD_AUDIO }, PERMISSIONS_CODE );
+            }
+        }
     }
 
     /**
@@ -108,11 +123,10 @@ public final class MWEngineActivity extends Activity {
 
         Log.d( LOG_TAG, "initing MWEngineActivity" );
 
-        MWEngine.optimizePerformance( this );
-
         // STEP 1 : preparing the native audio engine
 
         _engine = new MWEngine( getApplicationContext(), new StateObserver() );
+        MWEngine.optimizePerformance( this );
 
         // get the recommended buffer size for this device (NOTE : lower buffer sizes may
         // provide lower latency, but make sure all buffer sizes are powers of two of

@@ -89,7 +89,8 @@ set(MWENGINE_MIKROWAVE_SOURCES ${CPP_SRC}/drumpattern.cpp
 
 # synthesis (can be omitted if your use case only concerns sample based playback)
 
-set(MWENGINE_SYNTH_SOURCES ${CPP_SRC}/events/basesynthevent.cpp
+set(MWENGINE_SYNTH_SOURCES ${CPP_SRC}/definitions/pitch.cpp
+                           ${CPP_SRC}/events/basesynthevent.cpp
                            ${CPP_SRC}/events/synthevent.cpp
                            ${CPP_SRC}/modules/adsr.cpp
                            ${CPP_SRC}/modules/arpeggiator.cpp

@@ -1,7 +1,8 @@
-#include "../../modules/lfo.h"
-#include "../../definitions/waveforms.h"
-#include "../../utilities/tablepool.h"
-#include "../../utilities/waveutil.h"
+#include <modules/lfo.h>
+#include <definitions/waveforms.h>
+#include <utilities/tablepool.h>
+#include <utilities/waveutil.h>
+#include <utilities/stringutility.h>
 
 TEST( LFO, Constructor )
 {
@@ -24,7 +25,7 @@ TEST( LFO, UseWaveformFromPool )
     LFO* lfo = new LFO();
 
     int waveform = WaveForms::TRIANGLE;
-    std::string tableId = SSTR( waveform );
+    std::string tableId = TO_STRING( waveform );
 
     // pre-allocate Table for given waveform in TablePool
     TablePool::setTable( new WaveTable( 100, 10.f ), tableId );
@@ -52,7 +53,7 @@ TEST( LFO, GenerateWaveformOnDemand )
     LFO* lfo = new LFO();
 
     int waveform = WaveForms::SINE;
-    std::string tableId = SSTR( waveform );
+    std::string tableId = TO_STRING( waveform );
 
     ASSERT_FALSE( TablePool::hasTable( tableId ))
         << "expected TablePool not to contain a table for this id";
@@ -80,7 +81,7 @@ TEST( LFO, UniPolarConversion )
     table->setBuffer( buffer );
 
     int waveform = WaveForms::SQUARE;
-    std::string tableId = SSTR( waveform );
+    std::string tableId = TO_STRING( waveform );
 
     // pre-allocate Table for given waveform in TablePool
     TablePool::setTable( table, tableId );
