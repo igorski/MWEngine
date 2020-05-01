@@ -1,7 +1,8 @@
-#include "../channelgroup.h"
-#include "../audiochannel.h"
-#include "../global.h"
-#include "../utilities/volumeutil.h"
+#include <channelgroup.h>
+#include <audioengine.h>
+#include <audiochannel.h>
+#include <global.h>
+#include <utilities/volumeutil.h>
 
 TEST( ChannelGroup, Construction )
 {
@@ -18,6 +19,24 @@ TEST( ChannelGroup, Construction )
     EXPECT_EQ( channelGroup->getVolume(), volume ) << "expected volume to be equal to the value specified in the constructor";
 
     delete channelGroup;
+}
+
+TEST( ChannelGroup, Destruction )
+{
+    ChannelGroup* channelGroup = new ChannelGroup();
+
+    auto it = std::find( AudioEngine::groups.begin(), AudioEngine::groups.end(), channelGroup );
+    ASSERT_TRUE( it == AudioEngine::groups.end() ) << "expected channel groups not to be registered at start of test";
+
+    AudioEngine::addChannelGroup( channelGroup );
+
+    it = std::find( AudioEngine::groups.begin(), AudioEngine::groups.end(), channelGroup );
+    ASSERT_FALSE( it == AudioEngine::groups.end() ) << "expected channel groups to be registered in engine";
+
+    delete channelGroup;
+
+    it = std::find( AudioEngine::groups.begin(), AudioEngine::groups.end(), channelGroup );
+    ASSERT_TRUE( it == AudioEngine::groups.end() ) << "expected destructor to have unregistered channel group from engine";
 }
 
 TEST( ChannelGroup, AdditionAndRemovalOfChannels )
