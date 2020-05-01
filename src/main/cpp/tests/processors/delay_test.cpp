@@ -1,4 +1,4 @@
-#include "../../processors/delay.h"
+#include <processors/delay.h>
 
 TEST( Delay, ConstructorArguments )
 {
@@ -76,4 +76,14 @@ TEST( Delay, SetDelayTime )
         << "expected delay setter to have sanitized the delay value (may not exceed defined max time)";
 
     delete delay;
+}
+
+TEST( Delay, getType )
+{
+    Delay* processor = new Delay( 10, 20, 10.F, 10.F, 1 );
+
+    std::string expectedType( "Delay" );
+    ASSERT_TRUE( 0 == expectedType.compare( processor->getType() ));
+
+    delete processor;
 }

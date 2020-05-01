@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,14 +32,22 @@ class Delay : public BaseProcessor
         Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels );
         ~Delay();
 
+        std::string getType() {
+            return std::string( "Delay" );
+        }
+
         int getDelayTime();
         void setDelayTime( int aValue );
         float getMix();
         void setMix( float aValue );
         float getFeedback();
         void setFeedback( float aValue );
-        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         void reset();
+
+#ifndef SWIG
+        // internal to the engine
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+#endif
 
     protected:
         AudioBuffer* _delayBuffer;

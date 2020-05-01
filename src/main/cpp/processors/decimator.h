@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -31,11 +31,19 @@ class Decimator : public BaseProcessor
     public:
         Decimator( int bits, float rate );
 
+        std::string getType() {
+            return std::string( "Decimator" );
+        }
+
         int getBits();
         void setBits( int value );
         float getRate();
         void setRate( float value );
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonosource );
+#endif
 
     private:
         int _bits;

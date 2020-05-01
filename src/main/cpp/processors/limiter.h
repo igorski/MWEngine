@@ -38,6 +38,10 @@ class Limiter : public BaseProcessor
         Limiter( float attackMs, float releaseMs, float thresholdDb );
         ~Limiter();
 
+        std::string getType() {
+            return std::string( "Limiter" );
+        }
+
         float getAttack();
         void setAttack( float attackMs );
         float getRelease();
@@ -45,10 +49,13 @@ class Limiter : public BaseProcessor
         float getThreshold();
         void setThreshold( float thresholdDb );
 
-        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
-
         float getLinearGR();
+
+#ifndef SWIG
+        // internal to the engine
+        void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         bool isCacheable();
+#endif
 
     protected:
         void init( float attackMs, float releaseMs, float thresholdDb );

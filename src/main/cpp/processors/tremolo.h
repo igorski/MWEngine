@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -50,6 +50,10 @@ class Tremolo : public BaseProcessor
 
         ~Tremolo();
 
+        std::string getType() {
+            return std::string( "Tremolo" );
+        }
+
         int getLeftAttack();
         void setLeftAttack ( int aAttack );
         int getRightAttack();
@@ -64,7 +68,11 @@ class Tremolo : public BaseProcessor
         SAMPLE_TYPE* getTableForChannel( int aChannelNum );
 
         bool isStereo();
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+#endif
 
     protected:
 

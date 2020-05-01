@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,8 +23,9 @@
 #ifndef __MWENGINE__BASEPROCESSOR_H_INCLUDED__
 #define __MWENGINE__BASEPROCESSOR_H_INCLUDED__
 
-#include "../global.h"
-#include "../audiobuffer.h"
+#include <global.h>
+#include <audiobuffer.h>
+#include <string>
 
 namespace MWEngine {
 
@@ -34,6 +35,16 @@ class BaseProcessor
     public:
         BaseProcessor();
         virtual ~BaseProcessor();
+
+        /**
+         * Returns the string name of the Processor subclass
+         */
+        virtual std::string getType() {
+            return std::string( "BaseProcessor" ); // override in subclass
+        }
+
+#ifndef SWIG
+        // internal to the engine
 
         /**
          * @param {AudioBuffer*} sampleBuffer the buffer to write into
@@ -58,6 +69,7 @@ class BaseProcessor
          * @param {processingChain*} processingChain
          */
         void setChain( ProcessingChain* processingChain );
+#endif
 
     protected:
         ProcessingChain* chain = nullptr;

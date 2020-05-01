@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,9 +33,17 @@ class LPFHPFilter : public BaseProcessor
         LPFHPFilter( float aLPCutoff, float aHPCutoff, int amountOfChannels );
         ~LPFHPFilter();
 
+        std::string getType() {
+            return std::string( "LPFHPFilter" );
+        }
+
         void setLPF( float aCutOffFrequency, int aSampleRate );
         void setHPF( float aCutOffFrequency, int aSampleRate );
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+#endif
 
     private:
         SAMPLE_TYPE a0;

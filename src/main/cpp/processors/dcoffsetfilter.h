@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * DCOffsetFilter is based on work by Julius O. Smith III (jos@ccrma.stanford.edu)
  *
@@ -34,7 +34,14 @@ class DCOffsetFilter : public BaseProcessor
         DCOffsetFilter( int amountOfChannels );
         ~DCOffsetFilter();
 
+        std::string getType() {
+            return std::string( "DCOffsetFilter" );
+        }
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+#endif
 
     private:
         SAMPLE_TYPE* _lastInSamples;

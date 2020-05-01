@@ -1,5 +1,5 @@
-#include "../../processors/baseprocessor.h"
-#include "../../processingchain.h"
+#include <processors/baseprocessor.h>
+#include <processingchain.h>
 
 TEST( BaseProcessor, ChainRemovalOnDestruction )
 {
@@ -17,4 +17,14 @@ TEST( BaseProcessor, ChainRemovalOnDestruction )
         << "expected processor to have been removed from the chain after destruction";
 
     delete chain;
+}
+
+TEST( BaseProcessor, getType )
+{
+    BaseProcessor* processor = new BaseProcessor();
+
+    std::string expectedType( "BaseProcessor" );
+    ASSERT_TRUE( 0 == expectedType.compare( processor->getType() ));
+
+    delete processor;
 }

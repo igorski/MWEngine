@@ -2,7 +2,7 @@
  * The MIT License (MIT)
  *
  * based on public source code by alex@smartelectronix.com, adapted
- * by Igor Zinken - http://www.igorski.nl
+ * by Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,11 +33,18 @@ class FormantFilter : public BaseProcessor
         FormantFilter( double aVowel );
         ~FormantFilter();
 
+        std::string getType() {
+            return std::string( "FormantFilter" );
+        }
+
         void setVowel( double aVowel );
         double getVowel();
 
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* audioBuffer, bool isMonoSource );
         bool isCacheable();
+#endif
 
         static const int VOWEL_A = 0;
         static const int VOWEL_E = 1;

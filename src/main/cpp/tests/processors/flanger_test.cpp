@@ -1,4 +1,4 @@
-#include "../../processors/flanger.h"
+#include <processors/flanger.h>
 
 TEST( Flanger, ConstructorArguments )
 {
@@ -75,4 +75,14 @@ TEST( Flanger, GettersSetters )
         << "expected rate to have updated after using setter method";
 
     delete flanger;
+}
+
+TEST( Flanger, getType )
+{
+    Flanger* processor = new Flanger();
+
+    std::string expectedType( "Flanger" );
+    ASSERT_TRUE( 0 == expectedType.compare( processor->getType() ));
+
+    delete processor;
 }

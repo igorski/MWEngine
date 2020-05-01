@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -48,6 +48,10 @@ class Phaser : public BaseProcessor
         Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels );
         ~Phaser();
 
+        std::string getType() {
+            return std::string( "Phaser" );
+        }
+
         void setDepth( float depth );
         float getDepth();
         void setFeedback( float fb );
@@ -55,7 +59,11 @@ class Phaser : public BaseProcessor
         void setRate( float aRate );
         float getRate();
         void setRange( float aMin, float aMax );
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+#endif
 
     private:
         int _amountOfChannels;

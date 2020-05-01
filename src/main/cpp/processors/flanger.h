@@ -50,6 +50,10 @@ class Flanger : public BaseProcessor
         Flanger();
         ~Flanger();
 
+        std::string getType() {
+            return std::string( "Flanger" );
+        }
+
         float getRate();
         void setRate( float value );
         float getWidth();
@@ -68,7 +72,10 @@ class Flanger : public BaseProcessor
 
         void setChannelMix( int channel, float wet );
 
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
+#endif
 
     protected:
 

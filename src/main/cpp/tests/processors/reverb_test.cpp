@@ -1,4 +1,4 @@
-#include "../../processors/reverb.h"
+#include <processors/reverb.h>
 
 TEST( Reverb, GetSetSize )
 {
@@ -82,4 +82,14 @@ TEST( Reverb, GetSetOutput )
     EXPECT_EQ( max, reverb->getOutput() ) << "expected output to have been normalized to defined max value";
 
     delete reverb;
+}
+
+TEST( Reverb, getType )
+{
+    Reverb* processor = new Reverb( 0.F, 0.F, 0.F, 0.F );
+
+    std::string expectedType( "Reverb" );
+    ASSERT_TRUE( 0 == expectedType.compare( processor->getType() ));
+
+    delete processor;
 }

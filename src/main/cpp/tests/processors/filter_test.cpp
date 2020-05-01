@@ -1,4 +1,4 @@
-#include "../../processors/filter.h"
+#include <processors/filter.h>
 
 TEST( Filter, ConstructorArguments )
 {
@@ -120,4 +120,14 @@ TEST( Filter, IsCacheable )
 
     delete filter;
     delete lfo;
+}
+
+TEST( Filter, getType )
+{
+    Filter* processor = new Filter();
+
+    std::string expectedType( "Filter" );
+    ASSERT_TRUE( 0 == expectedType.compare( processor->getType() ));
+
+    delete processor;
 }

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,14 +32,22 @@ class BitCrusher : public BaseProcessor
         BitCrusher( float amount, float inputMix, float outputMix );
         ~BitCrusher();
 
+        std::string getType() {
+            return std::string( "BitCrusher" );
+        }
+
         float getAmount();
         void setAmount( float value ); // range between -1 to +1
         float getInputMix();
         void setInputMix( float value );
         float getOutputMix();
         void setOutputMix( float value );
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         bool isCacheable();
+#endif
 
     private:
         int _bits; // we scale the amount to integers in the 1-16 range

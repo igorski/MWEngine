@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,7 +32,15 @@ class FrequencyModulator : public BaseProcessor, public LFO
 {
     public:
         FrequencyModulator( int aWaveForm, float aRate );
+
+        std::string getType() {
+            return std::string( "FrequencyModulator" );
+        }
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonosource );
+#endif
 
         // these are here only for SWIG purposes so we can "multiple inherit" from LFO, bit fugly... but hey
         #ifdef SWIG

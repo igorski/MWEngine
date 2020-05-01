@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
  * Based on:
  *
  * NAME: smbPitchShift.cpp
@@ -62,8 +62,17 @@ class PitchShifter : public BaseProcessor
          */
         PitchShifter( float shiftAmount, long osampAmount );
         ~PitchShifter();
+
+        std::string getType() {
+            return std::string( "PitchShifter" );
+        }
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         bool isCacheable();
+#endif
+
         float pitchShift;
 
     private:

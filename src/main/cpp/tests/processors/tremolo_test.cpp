@@ -1,5 +1,5 @@
-#include "../../processors/tremolo.h"
-#include "../../global.h"
+#include <processors/tremolo.h>
+#include <global.h>
 
 TEST( Tremolo, Construction )
 {
@@ -112,4 +112,14 @@ TEST( Tremolo, IsStereo )
     ASSERT_TRUE( tremolo->isStereo() ) << "expected tremolo to be operating in stereo as type is unequal";
 
     delete tremolo;
+}
+
+TEST( Tremolo, getType )
+{
+    Tremolo* processor = new Tremolo( 0, 0, 0, 0, 0, 0 );
+
+    std::string expectedType( "Tremolo" );
+    ASSERT_TRUE( 0 == expectedType.compare( processor->getType() ));
+
+    delete processor;
 }

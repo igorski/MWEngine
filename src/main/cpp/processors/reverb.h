@@ -33,6 +33,10 @@ class Reverb : public BaseProcessor {
         Reverb( float size, float hfDamp, float mix, float output );
         ~Reverb();
 
+        std::string getType() {
+            return std::string( "Reverb" );
+        }
+
         float getSize();
         void setSize( float value );
         float getHFDamp();
@@ -42,7 +46,10 @@ class Reverb : public BaseProcessor {
         float getOutput();
         void setOutput( float value );
 
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* audioBuffer, bool isMonoSource );
+#endif
 
     protected:
         void recalculate();

@@ -151,6 +151,11 @@ class ReverbSM : public BaseProcessor {
 
     public:
         ReverbSM();
+
+        std::string getType() {
+            return std::string( "ReverbSM" );
+        }
+
         void mute();
         void setRoomSize( float value );
         float getRoomSize();
@@ -164,8 +169,12 @@ class ReverbSM : public BaseProcessor {
         float getWidth();
         void setMode( float value );
         float getMode();
+
+#ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* audioBuffer, bool isMonoSource );
-  
+#endif
+
     private:
         void update();
         float _gain;

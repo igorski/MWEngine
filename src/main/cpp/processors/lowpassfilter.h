@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2016-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2016-2020 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -35,8 +35,15 @@ class LowPassFilter : public BaseProcessor
         LowPassFilter( float cutoff );
         ~LowPassFilter();
 
+        std::string getType() {
+            return std::string( "LowPassFilter" );
+        }
+
         float getCutoff();
         void setCutoff( float value);
+
+#ifndef SWIG
+        // internal to the engine
 
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
 
@@ -60,6 +67,7 @@ class LowPassFilter : public BaseProcessor
 
         void store();
         void restore();
+#endif
 
     protected:
         SAMPLE_TYPE x1, x2, y1, y2;
