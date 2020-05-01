@@ -80,10 +80,13 @@ class SampleEvent : public BaseAudioEvent
         int getOriginalEventLength(); // original, untransformed event length
         int getEventEnd();
 
+#ifndef SWIG
+        // internal to the engine
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos, int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
 
         void mixBuffer( AudioBuffer* outputBuffer );
+#endif
 
         // whether to mix sample data from a specific range instead of the full sampleLength range
 

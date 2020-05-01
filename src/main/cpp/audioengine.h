@@ -50,19 +50,24 @@ class AudioEngine
 
         static AudioChannel* getInputChannel();
 
+        /* engine properties */
+
+        static int samples_per_beat; // the amount of samples necessary for a single beat at the current tempo and sample rate
+        static int samples_per_bar;  // the amount of samples for a full bar at the current tempo and sample rate
+        static int samples_per_step; // the amount of samples within a single status update subdivision
+        static int amount_of_bars;   // the amount of measures in the current sequencer
+        static int steps_per_bar;    // the amount of subdivisions in a single measure the engine broadcast a status update for
+
+        static bool recordDeviceInput; // whether audio from the Android device input should be audible
+
+#ifndef SWIG
+        // internal to the engine
+
         // renders the audio. this should not be called directly (is called
         // by the audio drivers). Use start() instead (triggers driver activity)
 
         static bool render( int amountOfSamples );
 
-        /* engine properties */
-
-        static int samples_per_beat;      // the amount of samples necessary for a single beat at the current tempo and sample rate
-        static int samples_per_bar;       // the amount of samples for a full bar at the current tempo and sample rate
-        static int samples_per_step;       // the amount of samples within a single status update subdivision
-
-        static int amount_of_bars;         // the amount of measures in the current sequencer
-        static int steps_per_bar;          // the amount of subdivisions in a single measure the engine broadcast a status update for
         static int min_buffer_position;    // the lowest sample offset in the current loop range
         static int max_buffer_position;    // the maximum sample offset in the current loop range
         static int marked_buffer_position; // the buffer position that should launch a notification when playback exceeds this position
@@ -71,7 +76,6 @@ class AudioEngine
         static bool recordOutputToDisk;    // whether to record rendered output
         static bool bouncing;              // whether bouncing audio (i.e. rendering in inaudible offline mode without thread lock)
         static bool recordInputToDisk;     // whether to record audio from the Android device input to disk
-        static bool recordDeviceInput;     // whether audio from the Android device input should be audible
 
         /* buffer read/write pointers */
 
@@ -91,15 +95,17 @@ class AudioEngine
 
         /* output related */
 
-        static float volume;                // master volume
+        static float volume; // master volume
+
+        static std::vector<ChannelGroup*> groups;
+
+        static void handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate );
+#endif
+
         static ProcessingChain* masterBus;  // processing chain for the master bus
 
         static void addChannelGroup( ChannelGroup* group );
         static void removeChannelGroup( ChannelGroup* group );
-
-        /* internal methods */
-
-        static void handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate );
 
     private:
 
@@ -112,7 +118,6 @@ class AudioEngine
         static int  thread;
         static bool isMono;
         static std::vector<AudioChannel*>* channels;
-        static std::vector<ChannelGroup*> groups;
         static AudioBuffer* inBuffer;
         static float*       outBuffer;
 

@@ -94,13 +94,17 @@ class BaseSynthEvent : public BaseAudioEvent
         // render related
         void invalidateProperties( int aPosition, float aLength, SynthInstrument* aInstrument );
         void calculateBuffers();
+
+#ifndef SWIG
+        // internal to the engine
         void mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
                         int minBufferPosition, int maxBufferPosition,
                         bool loopStarted, int loopOffset, bool useChannelRange );
 
         void mixBuffer( AudioBuffer* outputBuffer );
-        void unlock();
+#endif
 
+        void unlock();
         void repositionToTempoChange( float ratio );
 
         virtual void setDeletable( bool value );

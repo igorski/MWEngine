@@ -44,6 +44,9 @@ class BaseAudioEvent
         virtual float getVolumeLogarithmic();
         virtual void  setVolume( float value );
 
+#ifndef SWIG
+        // internal to the engine
+
         /**
          * Used by the AudioEngine to mix in parts of this events buffer for a specific range
          * the buffer samples written are equal to the length of given outputBuffers buffer size
@@ -80,6 +83,8 @@ class BaseAudioEvent
         virtual AudioBuffer* getBuffer();
         virtual void setBuffer( AudioBuffer* buffer, bool destroyable );
         virtual bool hasBuffer();
+
+#endif
 
         virtual BaseInstrument* getInstrument(); // retrieve reference to the instrument this event belongs to
         virtual void setInstrument( BaseInstrument* aInstrument ); // set / swap instrument this event belongs to

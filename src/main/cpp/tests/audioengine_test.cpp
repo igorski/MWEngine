@@ -1,11 +1,12 @@
-#include "../audioengine.h"
-#include "../audiobuffer.h"
-#include "../sequencer.h"
-#include "../sequencercontroller.h"
-#include "../definitions/drivers.h"
-#include "../drivers/mock_io.h"
-#include "../events/baseaudioevent.h"
-#include "../instruments/baseinstrument.h"
+#include <audioengine.h>
+#include <audiobuffer.h>
+#include <channelgroup.h>
+#include <sequencer.h>
+#include <sequencercontroller.h>
+#include <definitions/drivers.h>
+#include <drivers/mock_io.h>
+#include <events/baseaudioevent.h>
+#include <instruments/baseinstrument.h>
 
 TEST( AudioEngine, Start )
 {
@@ -314,4 +315,24 @@ TEST( AudioEngine, OutputAtLoopStart )
     delete buffer2;
     delete instrument1;
     delete instrument2;
+}
+
+TEST( AudioEngine, AddRemoveChannelGroups )
+{
+    ChannelGroup* channelGroup = new ChannelGroup();
+
+    auto it = std::find( AudioEngine::groups.begin(), AudioEngine::groups.end(), channelGroup );
+    ASSERT_TRUE( it == AudioEngine::groups.end() ) << "expected channel groups not to be registered at start of test";
+
+    AudioEngine::addChannelGroup( channelGroup );
+
+    it = std::find( AudioEngine::groups.begin(), AudioEngine::groups.end(), channelGroup );
+    ASSERT_FALSE( it == AudioEngine::groups.end() ) << "expected channel group to be registered in engine";
+
+    AudioEngine::removeChannelGroup( channelGroup );
+
+    it = std::find( AudioEngine::groups.begin(), AudioEngine::groups.end(), channelGroup );
+    ASSERT_TRUE( it == AudioEngine::groups.end() ) << "expected channel group to have been unregistered from engine";
+
+    delete channelGroup;
 }
