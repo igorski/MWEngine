@@ -58,9 +58,12 @@ void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
     }
 }
 
-void ProcessingChain::reset()
+BaseProcessor* ProcessingChain::getProcessorAt( int index )
 {
-    _activeProcessors.clear();
+    if ( index >= amountOfProcessors()) {
+        return nullptr;
+    }
+    return _activeProcessors.at( index );
 }
 
 std::vector<BaseProcessor*> ProcessingChain::getActiveProcessors()
@@ -72,5 +75,16 @@ bool ProcessingChain::hasProcessors()
 {
     return !_activeProcessors.empty();
 }
+
+int ProcessingChain::amountOfProcessors()
+{
+    return _activeProcessors.size();
+}
+
+void ProcessingChain::reset()
+{
+    _activeProcessors.clear();
+}
+
 
 } // E.O namespace MWEngine

@@ -126,3 +126,49 @@ TEST( ProcessingChain, hasProcessors )
     delete processor;
     delete chain;
 }
+
+TEST( ProcessingChain, amountOfProcesors )
+{
+    BaseProcessor* processor1 = new BaseProcessor();
+    BaseProcessor* processor2 = new BaseProcessor();
+
+    ProcessingChain* chain = new ProcessingChain();
+    EXPECT_EQ( 0, chain->amountOfProcessors()) << "expected no processors upon construction";
+
+    chain->addProcessor( processor1 );
+    EXPECT_EQ( 1, chain->amountOfProcessors()) << "expected 1 processor after addition";
+
+    chain->addProcessor( processor2 );
+    EXPECT_EQ( 2, chain->amountOfProcessors()) << "expected 2 processors after addition";
+
+    chain->removeProcessor( processor1 );
+    EXPECT_EQ( 1, chain->amountOfProcessors()) << "expected 1 processor after removal";
+
+    chain->reset();
+    EXPECT_EQ( 0, chain->amountOfProcessors()) << "expected no processors after reset";
+
+    delete processor1;
+    delete processor2;
+    delete chain;
+}
+
+TEST( ProcessingChain, getProcessorAt )
+{
+    BaseProcessor* processor1 = new BaseProcessor();
+    BaseProcessor* processor2 = new BaseProcessor();
+
+    ProcessingChain* chain = new ProcessingChain();
+    ASSERT_TRUE( nullptr == chain->getProcessorAt( 0 )) << "expected null pointer when index is out of range";
+
+    chain->addProcessor( processor1 );
+    chain->addProcessor( processor2 );
+
+    ASSERT_TRUE( processor1 = chain->getProcessorAt( 0 ));
+    ASSERT_TRUE( processor2 = chain->getProcessorAt( 1 ));
+
+    chain->reset();
+
+    delete processor1;
+    delete processor2;
+    delete chain;
+}

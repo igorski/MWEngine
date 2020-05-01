@@ -35,15 +35,18 @@ class ProcessingChain
         ProcessingChain();
         ~ProcessingChain();
 
-        std::vector<BaseProcessor*> getActiveProcessors();
-
         void addProcessor   ( BaseProcessor* aProcessor );
         void removeProcessor( BaseProcessor* aProcessor );
-        void reset();
+
+        BaseProcessor* getProcessorAt( int index );
+        std::vector<BaseProcessor*> getActiveProcessors();
 
         bool hasProcessors();
+        int amountOfProcessors();
 
-    private:
+        void reset();
+
+private:
 
         /* cached chains */
        std::vector<BaseProcessor*> _activeProcessors;
