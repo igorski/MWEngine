@@ -51,13 +51,6 @@ namespace PerfUtility
      */
     inline void optimizeThreadPerformance( const std::vector<int>& cpuIds )
     {
-//        nice( -20 );
-//        int policy = 0;
-//        struct sched_param param;
-//        pthread_getschedparam( pthread_self(), &policy, &param );
-//        param.sched_priority = sched_get_priority_max( policy );
-//        pthread_setschedparam( pthread_self(), policy, &param );
-
         cpu_set_t mask;
         pid_t current_thread_id = gettid();
         cpu_set_t cpu_set;

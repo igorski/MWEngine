@@ -29,6 +29,7 @@
 #include "processingchain.h"
 #include "channelgroup.h"
 #include <definitions/drivers.h>
+#include <thread>
 
 namespace MWEngine {
 class AudioEngine
@@ -107,6 +108,8 @@ class AudioEngine
         static void addChannelGroup( ChannelGroup* group );
         static void removeChannelGroup( ChannelGroup* group );
 
+        static std::atomic<bool> threadActive;
+
     private:
 
         /* render properties */
@@ -115,11 +118,12 @@ class AudioEngine
         static int  loopOffset;   // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
         static int  loopAmount;   // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
         static int  outputChannels;
-        static int  thread;
         static bool isMono;
         static std::vector<AudioChannel*>* channels;
         static AudioBuffer* inBuffer;
         static float*       outBuffer;
+
+        static std::thread* thread;
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
@@ -140,6 +144,7 @@ class AudioEngine
 
         /* internal render methods */
 
+        static void _renderTask( Drivers::types audioDriver );
         static void handleSequencerPositionUpdate( int bufferOffset );
         static bool writeChannelCache            ( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos );
 };

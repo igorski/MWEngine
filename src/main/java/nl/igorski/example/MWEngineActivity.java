@@ -473,15 +473,7 @@ public final class MWEngineActivity extends Activity {
             switch ( _notificationEnums[ aNotificationId ]) {
                 case ERROR_HARDWARE_UNAVAILABLE:
                     Log.d( LOG_TAG, "ERROR : received driver error callback from native layer" );
-                    // re-initialize thread
-                    if ( _engine.canRestartEngine() ) {
-                        _engine.dispose();
-                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, _audioDriver );
-                        _engine.start();
-                    }
-                    else {
-                        Log.d( LOG_TAG, "exceeded maximum amount of retries. Cannot continue using audio engine" );
-                    }
+                    _engine.dispose();
                     break;
                 case MARKER_POSITION_REACHED:
                     Log.d( LOG_TAG, "Marker position has been reached" );

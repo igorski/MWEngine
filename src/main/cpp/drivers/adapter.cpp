@@ -116,7 +116,7 @@ namespace DriverAdapter {
 
     /* internal methods */
 
-    void render() {
+    void startRender() {
         switch ( _driver ) {
             default:
                 return;
@@ -124,13 +124,15 @@ namespace DriverAdapter {
 #ifdef MOCK_ENGINE
             case Drivers::MOCKED:
 #endif
-                // OpenSL maintains its own locking mechanism, we can invoke
-                // the render cycle directly from the audio engine thread loop
-                AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
+                // OpenSL maintains its own locking mechanism, as such we create a daemon
+                // in which rendering is requested for as long as the thread is active
+
+                while ( AudioEngine::threadActive.load() ) {
+                    AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
+                }
                 break;
             case Drivers::AAUDIO:
-                // AAudio triggers its callback internally when ready
-                // AAudio driver will request render() on its own
+                // AAudio is callback based and will invoke AudioEngine::render() internally
                 driver_aAudio->render = true;
                 break;
         }
