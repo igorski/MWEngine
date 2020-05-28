@@ -108,8 +108,6 @@ class AudioEngine
         static void addChannelGroup( ChannelGroup* group );
         static void removeChannelGroup( ChannelGroup* group );
 
-        static std::atomic<bool> threadActive;
-
     private:
 
         /* render properties */

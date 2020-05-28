@@ -109,7 +109,6 @@ namespace MWEngine {
     std::vector<AudioChannel*>* AudioEngine::channels = nullptr;
 
     std::thread* AudioEngine::thread = nullptr;
-    std::atomic<bool> AudioEngine::threadActive{ false };
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
     double  AudioEngine::_noopsPerTick;
@@ -188,7 +187,7 @@ namespace MWEngine {
             stop();
             return;
         }
-        threadActive.store( true );
+        AudioEngineProps::threadActive.store( true );
 
         if ( audioDriver != Drivers::types::MOCKED ) {
             PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
@@ -202,7 +201,7 @@ namespace MWEngine {
     {
         Debug::log( "STOPPING engine" );
 
-        threadActive.store( false );
+        AudioEngineProps::threadActive.store( false );
 
         if ( thread != nullptr ) {
             thread->join();
@@ -232,7 +231,7 @@ namespace MWEngine {
     {
         Debug::log( "RESET engine" );
 
-        if ( !threadActive.load() ) stop();
+        if ( !AudioEngineProps::threadActive.load() ) stop();
 
         // nothing much... when used with USE_JNI references are maintained by Java, causing SWIG to
         // destruct referenced Objects when breaking references through Java
@@ -513,7 +512,7 @@ namespace MWEngine {
         // the output into the audio hardware will lock execution until the next buffer
         // is enqueued (additionally, we prevent writing to device storage when recording/bouncing)
 
-        if ( !threadActive.load() )
+        if ( !AudioEngineProps::threadActive.load() )
             return false;
 
         // write the synthesized output into the audio driver (unless we are bouncing as writing the
@@ -591,10 +590,10 @@ namespace MWEngine {
 #endif
 
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
-        if ( bouncing && threadActive.load() && DriverAdapter::isAAudio() ) {
+        if ( bouncing && AudioEngineProps::threadActive.load() && DriverAdapter::isAAudio() ) {
             render( amountOfSamples );
         }
-        return threadActive.load();
+        return AudioEngineProps::threadActive.load();
     }
 
     /* internal methods */

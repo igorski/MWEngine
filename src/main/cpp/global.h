@@ -74,6 +74,7 @@ namespace AudioEngineProps
 #else
     const unsigned int INPUT_CHANNELS = 0;
 #endif
+    extern std::atomic<bool> threadActive;
 }
 
 // E.O. audio engine configuration
