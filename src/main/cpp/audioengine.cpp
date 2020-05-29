@@ -108,7 +108,8 @@ namespace MWEngine {
     AudioBuffer* AudioEngine::inBuffer                = nullptr;
     std::vector<AudioChannel*>* AudioEngine::channels = nullptr;
 
-    std::thread* AudioEngine::thread = nullptr;
+    std::thread* AudioEngine::thread  = nullptr;
+    bool AudioEngine::threadOptimized = false;
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
     double  AudioEngine::_noopsPerTick;
@@ -174,8 +175,15 @@ namespace MWEngine {
         }
 
         // create a thread that will handle all render callbacks
-
-        thread = new std::thread( _renderTask, audioDriver );
+#ifdef MOCK_ENGINE
+        if ( audioDriver != Drivers::types::MOCKED ) {
+#endif
+            thread = new std::thread( _renderTask, audioDriver );
+#ifdef MOCK_ENGINE
+        } else {
+            _renderTask( audioDriver );
+        }
+#endif
     }
 
     void AudioEngine::_renderTask( Drivers::types audioDriver ) {
@@ -188,10 +196,6 @@ namespace MWEngine {
             return;
         }
         AudioEngineProps::threadActive.store( true );
-
-        if ( audioDriver != Drivers::types::MOCKED ) {
-            PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
-        }
         DriverAdapter::startRender();
     }
 
@@ -202,10 +206,13 @@ namespace MWEngine {
         Debug::log( "STOPPING engine" );
 
         AudioEngineProps::threadActive.store( false );
+        threadOptimized = false;
 
-        if ( thread != nullptr ) {
-            thread->join();
-            thread = nullptr;
+        if ( !DriverAdapter::isMocked() ) {
+            if ( thread != nullptr ) {
+                thread->join();
+                thread = nullptr;
+            }
         }
 
         Debug::log( "STOPPED engine" );
@@ -278,6 +285,13 @@ namespace MWEngine {
     {
         size_t i, j, k, c, ci;
         float sample;
+
+        if ( !threadOptimized ) {
+            if ( !DriverAdapter::isMocked() ) {
+                PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
+            }
+            threadOptimized = true;
+        }
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 

@@ -286,7 +286,7 @@ public final class MWEngineActivity extends Activity {
     protected void flushSong() {
         // this ensures that Song resources currently in use by the engine are released
 
-        _engine.pause();
+        _engine.stop();
 
         // calling 'delete()' on a BaseAudioEvent invokes the
         // native layer destructor (and removes it from the sequencer)
@@ -340,14 +340,14 @@ public final class MWEngineActivity extends Activity {
         if ( !hasFocus ) {
             // suspending the app - halt audio rendering in MWEngine Thread to save CPU cycles
             if ( _engine != null )
-                _engine.pause();
+                _engine.stop();
         }
         else {
             // returning to the app
             if ( !_inited )
-                init();            // initialize this example application
+                init();          // initialize this example application
             else
-                _engine.unpause(); // resumes existing audio rendering thread
+                _engine.start(); // resumes audio rendering
         }
     }
 

@@ -133,7 +133,7 @@ namespace DriverAdapter {
                 break;
             case Drivers::AAUDIO:
                 // AAudio is callback based and will invoke AudioEngine::render() internally
-                driver_aAudio->render = true;
+                // for as long as threadActive is set to true
                 break;
         }
     }

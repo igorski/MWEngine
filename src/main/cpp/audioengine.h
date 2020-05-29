@@ -122,6 +122,7 @@ class AudioEngine
         static float*       outBuffer;
 
         static std::thread* thread;
+        static bool threadOptimized;
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 

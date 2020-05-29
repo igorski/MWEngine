@@ -326,8 +326,8 @@ public final class MWEngine
 
         if ( !_isRunning ) return;
 
-        pause();   // toggling paused state of the thread will stop the engine
-        unpause(); // and upon restart, initialize it with the new settings
+        stop();  // toggling paused state of the thread will stop the engine
+        start(); // and upon restart, initialize it with the new settings
     }
 
     /**
@@ -338,7 +338,7 @@ public final class MWEngine
         _disposed  = true;
         _isRunning = false;
 
-        pause();
+        stop();
         reset();
 
         INSTANCE = null;
