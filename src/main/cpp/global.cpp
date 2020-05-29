@@ -33,7 +33,7 @@ namespace AudioEngineProps {
     unsigned int     OUTPUT_CHANNELS = 2;
 
     std::vector<int> CPU_CORES       = {};
-    std::atomic<bool> threadActive{ false };
+    std::atomic<bool> isRendering{ false };
 }
 
 } // E.O namespace MWEngine

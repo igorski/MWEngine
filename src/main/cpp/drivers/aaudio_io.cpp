@@ -399,7 +399,7 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
 
     // AudioEngine's render thread active ? write output
 
-    if ( AudioEngineProps::threadActive.load() ) {
+    if ( AudioEngineProps::isRendering.load() ) {
 
         // if there is an input stream and recording is active, read the stream contents
 

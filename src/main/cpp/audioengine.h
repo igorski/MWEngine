@@ -143,7 +143,7 @@ class AudioEngine
 
         /* internal render methods */
 
-        static void _renderTask( Drivers::types audioDriver );
+        static void initRenderTask( Drivers::types audioDriver );
         static void handleSequencerPositionUpdate( int bufferOffset );
         static bool writeChannelCache            ( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos );
 };

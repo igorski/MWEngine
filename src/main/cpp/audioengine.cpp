@@ -178,43 +178,37 @@ namespace MWEngine {
 #ifdef MOCK_ENGINE
         if ( audioDriver != Drivers::types::MOCKED ) {
 #endif
-            thread = new std::thread( _renderTask, audioDriver );
+            thread = new std::thread( initRenderTask, audioDriver );
 #ifdef MOCK_ENGINE
         } else {
-            _renderTask( audioDriver );
+            initRenderTask( audioDriver );
         }
 #endif
     }
 
-    void AudioEngine::_renderTask( Drivers::types audioDriver ) {
+    void AudioEngine::initRenderTask( Drivers::types audioDriver ) {
         // create the output driver using the adapter. If creation failed
         // prevent thread start and trigger JNI callback for error handler
 
         if ( !DriverAdapter::create( audioDriver )) {
             Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
-            stop();
             return;
         }
-        AudioEngineProps::threadActive.store( true );
+        AudioEngineProps::isRendering.store( true );
         DriverAdapter::startRender();
     }
-
-
 
     void AudioEngine::stop()
     {
         Debug::log( "STOPPING engine" );
 
-        AudioEngineProps::threadActive.store( false );
+        AudioEngineProps::isRendering.store( false );
         threadOptimized = false;
 
-        if ( !DriverAdapter::isMocked() ) {
-            if ( thread != nullptr ) {
-                thread->join();
-                thread = nullptr;
-            }
+        if ( thread != nullptr ) {
+            thread->join();
+            thread = nullptr;
         }
-
         Debug::log( "STOPPED engine" );
 
         DriverAdapter::destroy();
@@ -238,7 +232,9 @@ namespace MWEngine {
     {
         Debug::log( "RESET engine" );
 
-        if ( !AudioEngineProps::threadActive.load() ) stop();
+        if ( !AudioEngineProps::isRendering.load() ) {
+            stop();
+        }
 
         // nothing much... when used with USE_JNI references are maintained by Java, causing SWIG to
         // destruct referenced Objects when breaking references through Java
@@ -526,7 +522,7 @@ namespace MWEngine {
         // the output into the audio hardware will lock execution until the next buffer
         // is enqueued (additionally, we prevent writing to device storage when recording/bouncing)
 
-        if ( !AudioEngineProps::threadActive.load() )
+        if ( !AudioEngineProps::isRendering.load() )
             return false;
 
         // write the synthesized output into the audio driver (unless we are bouncing as writing the
@@ -604,10 +600,10 @@ namespace MWEngine {
 #endif
 
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
-        if ( bouncing && AudioEngineProps::threadActive.load() && DriverAdapter::isAAudio() ) {
+        if ( bouncing && AudioEngineProps::isRendering.load() && DriverAdapter::isAAudio() ) {
             render( amountOfSamples );
         }
-        return AudioEngineProps::threadActive.load();
+        return AudioEngineProps::isRendering.load();
     }
 
     /* internal methods */

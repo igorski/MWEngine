@@ -127,13 +127,13 @@ namespace DriverAdapter {
                 // OpenSL maintains its own locking mechanism, as such we create a daemon
                 // in which rendering is requested for as long as the thread is active
 
-                while ( AudioEngineProps::threadActive.load() ) {
+                while ( AudioEngineProps::isRendering.load() ) {
                     AudioEngine::render( AudioEngineProps::BUFFER_SIZE );
                 }
                 break;
             case Drivers::AAUDIO:
                 // AAudio is callback based and will invoke AudioEngine::render() internally
-                // for as long as threadActive is set to true
+                // for as long as isRendering is set to true
                 break;
         }
     }
