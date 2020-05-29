@@ -1,9 +1,11 @@
 package nl.igorski.example;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -90,6 +92,7 @@ public final class MWEngineActivity extends Activity {
         }
     }
 
+    @TargetApi( Build.VERSION_CODES.M )
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if ( requestCode != PERMISSIONS_CODE ) return;
