@@ -34,7 +34,13 @@ ProcessingChain::ProcessingChain()
 
 ProcessingChain::~ProcessingChain()
 {
-    _activeProcessors.clear();
+    while ( _activeProcessors.size() > 0 ) {
+        auto processor = _activeProcessors.at( 0 );
+        if ( processor != nullptr ) {
+            removeProcessor( processor );
+        }
+        _activeProcessors.erase( _activeProcessors.begin() );
+    }
 }
 
 /* public methods */
