@@ -358,7 +358,9 @@ public final class MWEngine extends Thread
         pause();
         reset();
 
-        INSTANCE = null;
+        _observer = null;
+        _context  = null;
+        INSTANCE  = null;
     }
 
     /* threading */
