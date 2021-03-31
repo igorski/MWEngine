@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -64,7 +64,6 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
     int type                       = oscProps->getWaveform();
     int SAMPLE_RATE                = AudioEngineProps::SAMPLE_RATE;
 
-    if ( !hasParent ) aOutputBuffer->silenceBuffers(); // unset previous buffer contents
     SAMPLE_TYPE amp = 0.0;
     SAMPLE_TYPE tmp, dpw, pmv;
 
