@@ -173,8 +173,8 @@ set(CMAKE_SWIG_OUTDIR ${JAVA_SRC}/nl/igorski/mwengine/core)
 
 # Export a wrapper file to Java, and link with the created C++ library
 
-swig_add_module(mwengine_wrapped java ${CPP_SRC}/mwengine.i)
-swig_link_libraries(mwengine_wrapped ${target})
+swig_add_module(${target}_wrapped java ${CPP_SRC}/mwengine.i)
+swig_link_libraries(${target}_wrapped ${target})
 
 ################
 ## UNIT TESTS ##
@@ -192,21 +192,21 @@ if (${RUN_TESTS} MATCHES "true")
         target_include_directories(gtest PRIVATE ${GTEST_DIR})
         target_include_directories(gtest PUBLIC ${GTEST_DIR}/include)
 
-        add_executable(mwengine_unittest ${CPP_SRC}/tests/main.cpp)
-        target_link_libraries(mwengine_unittest . gtest)
+        add_executable(${target}_unittest ${CPP_SRC}/tests/main.cpp)
+        target_link_libraries(${target}_unittest ${project} gtest)
 
         # Push and execute tests as post-build event
 
-        set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest_${ANDROID_ABI}) # Directory on device to push tests.
+        set(TARGET_TEST_DIR /data/local/tmp/${target}_unittest_${ANDROID_ABI}) # Directory on device to push tests.
 
         #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
 
         add_custom_command(
-            TARGET mwengine_unittest POST_BUILD
+            TARGET ${target}_unittest POST_BUILD
             COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
-            COMMAND adb push $<TARGET_FILE:mwengine> ${TARGET_TEST_DIR}/
-            COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
-            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\"
+            COMMAND adb push $<TARGET_FILE:${target}> ${TARGET_TEST_DIR}/
+            COMMAND adb push $<TARGET_FILE:${target}_unittest> ${TARGET_TEST_DIR}/
+            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/${target}_unittest\"
         )
 
     endif()
