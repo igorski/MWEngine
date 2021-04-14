@@ -1,0 +1,70 @@
+apply plugin: 'com.android.application'
+
+dependencies {
+    // builds library module as Android Archive (.AAR) as a dependency of this example project
+    // alternatively (for your custom projects), load prebuilt mwengine library .AAR by copying to libs folder
+    implementation project(':mwengine')
+}
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.2'
+    }
+}
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        // NOTE: the value of minSdkVersion is used by the native build as the target APP_PLATFORM
+        // meaning the app will not run on devices with an older Android version! The minimum supported SDK
+        // version for MWEngine is 16 (Jelly Bean/4.1). While support of AAudio was only added in version 26 (Oreo/8),
+        // we can still provide AAudio by loading it at runtime when the device supports it. You can
+        // thus set the value of minSdkVersion to whatever fits your use case.
+
+        minSdkVersion 16
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0.0"
+
+        // these values must match the abi's defined in mwengine/build.gradle
+        // to prevent UnsatisfiedLinkError when this app tries to serve an unsupported architecture
+
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+        }
+    }
+    if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
+        signingConfigs {
+            release {
+                storeFile file(RELEASE_STORE_FILE)
+                storePassword RELEASE_STORE_PASSWORD
+                keyAlias RELEASE_KEY_ALIAS
+                keyPassword RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+//        flatDir {
+//            dirs 'libs' // when MWEngine AAR files are included as local file
+//        }
+    }
+}
