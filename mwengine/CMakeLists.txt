@@ -193,7 +193,7 @@ if (${RUN_TESTS} MATCHES "true")
         target_include_directories(gtest PUBLIC ${GTEST_DIR}/include)
 
         add_executable(${target}_unittest ${CPP_SRC}/tests/main.cpp)
-        target_link_libraries(${target}_unittest ${project} gtest)
+        target_link_libraries(${target}_unittest ${target} gtest)
 
         # Push and execute tests as post-build event
 
