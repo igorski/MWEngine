@@ -14,7 +14,6 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 
-import nl.igorski.example.R;
 import nl.igorski.mwengine.MWEngine;
 import nl.igorski.mwengine.core.*;
 
@@ -78,9 +77,9 @@ public final class MWEngineActivity extends Activity {
 
         if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M ) {
             String[] PERMISSIONS = {
-                    Manifest.permission.RECORD_AUDIO, // RECORD_AUDIO must be granted prior to engine.start()
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                Manifest.permission.RECORD_AUDIO, // RECORD_AUDIO must be granted prior to engine.start()
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
             };
             // Check if we have all the necessary permissions, if not: prompt user
             int permission = checkSelfPermission( Manifest.permission.RECORD_AUDIO );
@@ -221,8 +220,8 @@ public final class MWEngineActivity extends Activity {
         maxFilterCutoff = ( float ) SAMPLE_RATE / 8;
 
         _filter = new Filter(
-                maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
-                minFilterCutoff, maxFilterCutoff, OUTPUT_CHANNELS
+            maxFilterCutoff / 2, ( float ) ( Math.sqrt( 1 ) / 2 ),
+            minFilterCutoff, maxFilterCutoff, OUTPUT_CHANNELS
         );
         _synth1.getAudioChannel().getProcessingChain().addProcessor( _filter );
 
@@ -377,7 +376,7 @@ public final class MWEngineActivity extends Activity {
         public void onClick( View v ) {
             _isRecording = !_isRecording;
             _engine.setRecordingState(
-                    _isRecording, Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav"
+                _isRecording, Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav"
             );
             (( Button ) v ).setText( _isRecording ? R.string.rec_btn_off : R.string.rec_btn_on );
         }
@@ -572,7 +571,7 @@ public final class MWEngineActivity extends Activity {
     private void loadWAVAsset( String assetName, String sampleName ) {
         final Context ctx = getApplicationContext();
         JavaUtilities.createSampleFromAsset(
-                sampleName, ctx.getAssets(), ctx.getCacheDir().getAbsolutePath(), assetName
+            sampleName, ctx.getAssets(), ctx.getCacheDir().getAbsolutePath(), assetName
         );
     }
 }

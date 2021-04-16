@@ -20,8 +20,8 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        // NOTE: the value of minSdkVersion is used by the native build as the target APP_PLATFORM
-        // meaning the app will not run on devices with an older Android version! The minimum supported SDK
+        // the sdk version range below matches the one of the library. You can change these as you see fit
+        // (as long as the minSdkVersion is higher than the library one!) The minimum supported SDK
         // version for MWEngine is 16 (Jelly Bean/4.1). While support of AAudio was only added in version 26 (Oreo/8),
         // we can still provide AAudio by loading it at runtime when the device supports it. You can
         // thus set the value of minSdkVersion to whatever fits your use case.
@@ -31,7 +31,7 @@ android {
         versionCode 1
         versionName "1.0.0"
 
-        // these values must match the abi's defined in mwengine/build.gradle
+        // these values must match the ABI's defined in mwengine/build.gradle
         // to prevent UnsatisfiedLinkError when this app tries to serve an unsupported architecture
 
         ndk {

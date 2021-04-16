@@ -4,14 +4,6 @@
 
     <uses-feature android:name="android.hardware.audio.output" />
 
-    <!-- Minimum version is API 16 ( 4.1 ) whereas API 17 ( 4.2 Jellybean ) supplies
-         better low latency audio support and API 26 ( 8.0 Oreo ) supplies AAudio.
-         However, as of November 1st 2018 all applications must be compiled with
-         API 27 or greater as the target in order to actually be released.
-         When using Gradle, configure these in build.gradle -->
-
-    <!--<uses-sdk android:minSdkVersion="16" android:targetSdkVersion="27" />-->
-
     <!-- optional permissions, see global.h when these are appropriate -->
     <!-- these are required when recording audio from the device input -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />

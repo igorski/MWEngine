@@ -1,24 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="nl.igorski.example">
+    package="nl.igorski.mwengine.example">
 
-    <uses-feature android:name="android.hardware.audio.output" />
-
-    <!-- Minimum version is API 16 ( 4.1 ) whereas API 17 ( 4.2 Jellybean ) supplies
-         better low latency audio support and API 26 ( 8.0 Oreo ) supplies AAudio.
-         However, as of November 1st 2018 all applications must be compiled with
-         API 27 or greater as the target in order to actually be released.
-         When using Gradle, configure these in build.gradle -->
-
-    <!--<uses-sdk android:minSdkVersion="16" android:targetSdkVersion="27" />-->
-
-    <!-- optional permissions, see global.h when these are appropriate -->
-    <!-- these are required when recording audio from the device input -->
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <!-- these are required to write recorded audio onto the device storage -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- required audio related permissions are provided by manifest inside MWEngine library -->
 
     <!-- note the orientation configChange (prevents restart of audio rendering thread on rotation) -->
 
