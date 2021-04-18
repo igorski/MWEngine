@@ -119,28 +119,20 @@ In order to do so, you run the following Gradle command:
 
 Which will generate the library in both debug and release configurations, packaged as AAR files in: _./mwengine/build/outputs/aar/_.
 
-You can copy the .aar contents of this folder over into your custom project, dropping them inside the _./libs_ folder and
-having the following entries in your projects Gradle file:
+##### Importing the MWEngine AAIR library inside your custom project
+
+Within Android Studio you can easily do this by importing the generated .aar file by navigating through:
+_File > new module > import .jar/.aar package > select _/path/to/mwengine-release.aar_
+
+Your project root will contain a _settings.gradle_ file with the following line:
+
+```include ':mwengine-release'```
+
+In your projects _build.gradle_ for your application, be sure to add the following entry under dependencies:
 
 ```
-android {
-    defaultConfig {
-        // project specific custom stuff here...
-        ndk {
-            // these values must match the abi's defined in mwengine/build.gradle
-            // to prevent UnsatisfiedLinkError when this app tries to serve an unsupported architecture
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
-        }
-    }
-}
-
-allprojects {
-    repositories {
-        // the usual stuff, e.g. google(), jcenter()...
-        flatDir {
-            dirs "libs" // this will resolve the MWEngine .AAR library
-        }
-    }
+dependencies {
+    implementation project(":mwengine-release")
 }
 ```
 
