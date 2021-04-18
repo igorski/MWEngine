@@ -119,7 +119,7 @@ In order to do so, you run the following Gradle command:
 
 Which will generate the library in both debug and release configurations, packaged as AAR files in: _./mwengine/build/outputs/aar/_.
 
-##### Importing the MWEngine AAIR library inside your custom project
+##### Importing the MWEngine AAR library inside your custom project
 
 Within Android Studio you can easily do this by importing the generated .aar file by navigating through:
 _File > new module > import .jar/.aar package > select _/path/to/mwengine-release.aar_
