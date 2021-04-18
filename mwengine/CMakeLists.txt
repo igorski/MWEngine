@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+# Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,9 @@ cmake_minimum_required(VERSION 3.4.1)
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
+Project(MWEngine)
+set(target mwengine)
+
 # architecture-specific compiler flags
 
 if (${ANDROID_ABI} MATCHES "x86_64")
@@ -32,8 +35,8 @@ endif()
 
 # source folders
 
-set(CPP_SRC  ${Project_SOURCE_DIR}/src/main/cpp)
-set(JAVA_SRC ${Project_SOURCE_DIR}/src/main/java)
+set(CPP_SRC  ${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp)
+set(JAVA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/main/java)
 
 # Include location of the header files
 include_directories(${CPP_SRC}/)
@@ -138,7 +141,7 @@ if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D=INCLUDE_AAUDIO_LIBRARY")
 endif()
 
-add_library(mwengine STATIC
+add_library(${target} STATIC
                      ${MWENGINE_CORE_SOURCES}
                      ${MWENGINE_SYNTH_SOURCES}
                      ${MWENGINE_PROCESSORS}
@@ -147,13 +150,13 @@ add_library(mwengine STATIC
 
 # link all the NDK libraries used by the project
 
-target_link_libraries(mwengine android atomic log OpenSLES)
+target_link_libraries(${target} android atomic log OpenSLES)
 
 # if AAudio library inclusion is configured in the build, link it here
 # (otherwise AAudio will be resolved by loading libaaudio.so at runtime)
 
 if (${INCLUDE_AAUDIO_LIBRARY} MATCHES "true")
-    target_link_libraries(mwengine PRIVATE aaudio)
+    target_link_libraries(${target} PRIVATE aaudio)
 endif()
 
 #####################################
@@ -170,8 +173,8 @@ set(CMAKE_SWIG_OUTDIR ${JAVA_SRC}/nl/igorski/mwengine/core)
 
 # Export a wrapper file to Java, and link with the created C++ library
 
-swig_add_module(mwengine_wrapped java ${CPP_SRC}/mwengine.i)
-swig_link_libraries(mwengine_wrapped mwengine)
+swig_add_module(${target}_wrapped java ${CPP_SRC}/mwengine.i)
+swig_link_libraries(${target}_wrapped ${target})
 
 ################
 ## UNIT TESTS ##
@@ -189,21 +192,21 @@ if (${RUN_TESTS} MATCHES "true")
         target_include_directories(gtest PRIVATE ${GTEST_DIR})
         target_include_directories(gtest PUBLIC ${GTEST_DIR}/include)
 
-        add_executable(mwengine_unittest ${CPP_SRC}/tests/main.cpp)
-        target_link_libraries(mwengine_unittest mwengine gtest)
+        add_executable(${target}_unittest ${CPP_SRC}/tests/main.cpp)
+        target_link_libraries(${target}_unittest ${target} gtest)
 
         # Push and execute tests as post-build event
 
-        set(TARGET_TEST_DIR /data/local/tmp/mwengine_unittest_${ANDROID_ABI}) # Directory on device to push tests.
+        set(TARGET_TEST_DIR /data/local/tmp/${target}_unittest_${ANDROID_ABI}) # Directory on device to push tests.
 
         #    find_program(ADB NAMES adb PATHS ${ANDROID_SDK_ROOT}/platform-tools)
 
         add_custom_command(
-            TARGET mwengine_unittest POST_BUILD
+            TARGET ${target}_unittest POST_BUILD
             COMMAND adb shell mkdir -p ${TARGET_TEST_DIR}
-            COMMAND adb push $<TARGET_FILE:mwengine> ${TARGET_TEST_DIR}/
-            COMMAND adb push $<TARGET_FILE:mwengine_unittest> ${TARGET_TEST_DIR}/
-            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/mwengine_unittest\"
+            COMMAND adb push $<TARGET_FILE:${target}> ${TARGET_TEST_DIR}/
+            COMMAND adb push $<TARGET_FILE:${target}_unittest> ${TARGET_TEST_DIR}/
+            COMMAND adb shell \"export LD_LIBRARY_PATH=${TARGET_TEST_DIR}\; ${TARGET_TEST_DIR}/${target}_unittest\"
         )
 
     endif()

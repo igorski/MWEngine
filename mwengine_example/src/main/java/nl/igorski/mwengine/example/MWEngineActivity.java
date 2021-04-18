@@ -1,4 +1,4 @@
-package nl.igorski.example;
+package nl.igorski.mwengine.example;
 
 import android.Manifest;
 import android.app.Activity;
@@ -70,7 +70,7 @@ public final class MWEngineActivity extends Activity {
     @Override
     public void onCreate( Bundle savedInstanceState ) {
         super.onCreate( savedInstanceState );
-        setContentView( R.layout.main );
+        setContentView( R.layout.activity_main );
 
         // these may not necessarily all be required for your use case (e.g. if you're not recording
         // from device audio inputs or reading/writing files) but are here for self-documentation
@@ -448,9 +448,9 @@ public final class MWEngineActivity extends Activity {
 
     private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-           final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
-           final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
-           final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
+            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
+            final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
+            final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
             _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
