@@ -63,8 +63,5 @@ allprojects {
     repositories {
         google()
         jcenter()
-//        flatDir {
-//            dirs 'libs' // when MWEngine AAR files are included as local file
-//        }
     }
 }
