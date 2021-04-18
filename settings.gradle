@@ -1,0 +1,6 @@
+rootProject.name = 'mwengine'
+
+// MWEngine core library, provides native layer code and Java API
+include 'mwengine'
+// example Activity using the library in a POC Android app
+include 'mwengine_example'
