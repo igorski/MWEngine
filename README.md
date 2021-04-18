@@ -128,11 +128,22 @@ Your project root will contain a _settings.gradle_ file with the following line:
 
 ```include ':mwengine-release'```
 
-In your projects _build.gradle_ for your application, be sure to add the following entry under dependencies:
+In your projects _build.gradle_ for your application, be sure to add the following entries under the defaultConfig and dependencies sections:
 
 ```
+android {
+    defaultConfig {
+        // project specific custom stuff here...
+        ndk {
+            // these values must match the ABI's defined in mwengine/build.gradle
+            // to prevent UnsatisfiedLinkError when this app tries to serve an unsupported architecture
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+        }
+    }
+}
 dependencies {
     implementation project(":mwengine-release")
+    // project specific custom stuff here...
 }
 ```
 
