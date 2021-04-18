@@ -3,7 +3,6 @@
 .idea
 .cxx
 .gradle
-gradle/
 gradlew*
 .externalNativeBuild
 mwengine/src/main/java/nl/igorski/mwengine/core/*
