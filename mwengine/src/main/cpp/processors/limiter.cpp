@@ -62,7 +62,7 @@ float Limiter::getAttack()
 
 void Limiter::setAttack( float attack )
 {
-    _attack = pow(10.0, -2.0 * attack );
+    _attack = pow( 10.0, -2.0 * attack );
 }
 
 float Limiter::getAttackMicroseconds()
@@ -72,18 +72,17 @@ float Limiter::getAttackMicroseconds()
 
 void Limiter::setAttackMicroseconds( float attackInMicroseconds )
 {
-    float rh = 1.f / ( attackInMicroseconds / -301030.1f ) / ( float ) AudioEngineProps::SAMPLE_RATE;
-    _attack = 1.0 - inverseLog(rh, 10 );
+    _attack = 1.0 - inverseLog( 1.f / ( attackInMicroseconds / -301030.1f ) / ( float ) AudioEngineProps::SAMPLE_RATE, 10 );
 }
 
 float Limiter::getRelease()
 {
-    return (inversePow(( float ) _release, 10.f ) + 2.f ) / -3.f;
+    return ( inversePow(( float ) _release, 10.f ) + 2.f ) / -3.f;
 }
 
 void Limiter::setRelease( float release )
 {
-    _release = pow(10.0, -2.0 - (3.0 * release ));
+    _release = pow( 10.0, -2.0 - ( 3.0 * release ));
 }
 
 float Limiter::getReleaseMilliseconds()
@@ -93,8 +92,7 @@ float Limiter::getReleaseMilliseconds()
 
 void Limiter::setReleaseMilliseconds( float releaseInMilliseconds )
 {
-    float rh = 1.f / ( releaseInMilliseconds / -301.0301f ) / ( float ) AudioEngineProps::SAMPLE_RATE;
-    _release = 1.0 - inverseLog(rh, 10 );
+    _release = 1.0 - inverseLog( 1.f / ( releaseInMilliseconds / -301.0301f ) / ( float ) AudioEngineProps::SAMPLE_RATE, 10 );
 }
 
 float Limiter::getThreshold()
@@ -105,7 +103,7 @@ float Limiter::getThreshold()
 void Limiter::setThreshold( float threshold )
 {
     _threshold = ( SAMPLE_TYPE ) threshold;
-    calculateThreshold();
+    cacheValues();
 }
 
 bool Limiter::getSoftKnee()
@@ -116,7 +114,7 @@ bool Limiter::getSoftKnee()
 void Limiter::setSoftKnee( bool softKnee )
 {
     _softKnee = softKnee;
-    calculateThreshold();
+    cacheValues();
 }
 
 float Limiter::getLinearGR()
@@ -148,7 +146,7 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             leftSample  = leftBuffer[ i ];
             rightSample = !isMonoSource ? rightBuffer[ i ] : 0;
 
-            level = ( SAMPLE_TYPE ) ( 1.0 / ( 1.0 + pThreshold * fabs(leftSample + rightSample )));
+            level = ( SAMPLE_TYPE ) ( 1.0 / ( 1.0 + pThreshold * fabs( leftSample + rightSample )));
 
             if ( gain > level ) {
                 gain = gain - _attack * ( gain - level );
@@ -171,7 +169,7 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
             leftSample  = leftBuffer[ i ];
             rightSample = !isMonoSource ? rightBuffer[ i ] : 0;
 
-            level = ( SAMPLE_TYPE ) ( 0.5 * gain * fabs(leftSample + rightSample ));
+            level = ( SAMPLE_TYPE ) ( 0.5 * gain * fabs( leftSample + rightSample ));
 
             if ( level > pThreshold ) {
                 gain = gain - ( _attack * ( level - pThreshold ));
@@ -212,7 +210,7 @@ void Limiter::init( float attack, float release, float threshold, bool softKnee 
     setRelease( release );
 }
 
-void Limiter::calculateThreshold()
+void Limiter::cacheValues()
 {
     if ( _softKnee ) {
         pThreshold = pow( 10.0, 1.0 - ( 2.0 * _threshold ));

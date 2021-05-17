@@ -74,7 +74,7 @@ class Limiter : public BaseProcessor
 
     protected:
         void init( float attack, float release, float threshold, bool softKnee );
-        void calculateThreshold();
+        void cacheValues();
 
         // instance variables
 
