@@ -47,6 +47,21 @@ inline SAMPLE_TYPE capSample( SAMPLE_TYPE value )
     return std::min(( SAMPLE_TYPE ) 1.0, std::max(( SAMPLE_TYPE ) -1.0, value ));
 }
 
+// inverts a pow operation, allowing you to derive the exponent from the known value and base
+
+inline float inversePow( float value, float base )
+{
+    return log( value ) / log( base );
+}
+
+// inverts a log operation, allowing you to derive the original number from the known value and base
+// e.g. reverting log10( 0.5 ) is inverseLog( -0.3010299956639812, 10 ) == 0.5
+
+inline float inverseLog( float value, float base )
+{
+    return pow( base, value );
+}
+
 /* convenience methods */
 
 float scale( float value, float maxValue, float maxCompareValue );

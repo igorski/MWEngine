@@ -35,19 +35,33 @@ class Limiter : public BaseProcessor
 {
     public:
         Limiter();
-        Limiter( float attackMs, float releaseMs, float thresholdDb );
+        Limiter( float attack, float release, float threshold ); // legacy constructor
         ~Limiter();
 
         std::string getType() {
             return std::string( "Limiter" );
         }
 
+        // 0 - 1 range where 1 == 1563.89 microseconds (1.56 milliseconds)
         float getAttack();
-        void setAttack( float attackMs );
+        void setAttack( float attack );
+        // getter/setter using microseconds
+        float getAttackMicroseconds();
+        void setAttackMicroseconds( float attackInMicroseconds );
+
+        // 0 - 1 range where 1 == milliseconds
         float getRelease();
-        void setRelease( float releaseMs );
+        void setRelease( float release );
+        // getter/setter using milliseconds
+        float getReleaseMilliseconds();
+        void setReleaseMilliseconds( float releaseInMilliseconds );
+
+        // 0 - 1 range where 0 == -20 dB and 1 == +20 dB
         float getThreshold();
-        void setThreshold( float thresholdDb );
+        void setThreshold( float threshold );
+
+        bool getSoftKnee();
+        void setSoftKnee( bool softKnee );
 
         float getLinearGR();
 
@@ -58,14 +72,18 @@ class Limiter : public BaseProcessor
 #endif
 
     protected:
-        void init( float attackMs, float releaseMs, float thresholdDb );
+        void init( float attack, float release, float threshold, boolean softKnee );
         void recalculate();
 
-        SAMPLE_TYPE pTresh;   // in dB, -20 - 20
-        SAMPLE_TYPE pTrim;
-        SAMPLE_TYPE pAttack;  // in microseconds
-        SAMPLE_TYPE pRelease; // in ms
-        SAMPLE_TYPE pKnee;
+        // limiter properties
+
+        SAMPLE_TYPE _threshold;
+        SAMPLE_TYPE _trim;
+        SAMPLE_TYPE _attack;
+        SAMPLE_TYPE _release;
+        bool        _softKnee;
+
+        // process variables
 
         SAMPLE_TYPE thresh, gain, att, rel, trim;
 };

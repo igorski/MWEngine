@@ -24,6 +24,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "limiter.h"
+#include <utilities/utils.h>
 #include "../global.h"
 
 namespace MWEngine {
@@ -32,12 +33,12 @@ namespace MWEngine {
 
 Limiter::Limiter()
 {
-    init( 0.15, 0.50, 0.60 );
+    init( 0.8, 1.0, 0.55, true );
 }
 
-Limiter::Limiter( float attackMs, float releaseMs, float thresholdDb )
+Limiter::Limiter( float attack, float release, float threshold )
 {
-    init( attackMs, releaseMs, thresholdDb );
+    init( attack, release, threshold, false );
 }
 
 Limiter::~Limiter()
@@ -49,35 +50,70 @@ Limiter::~Limiter()
 
 float Limiter::getAttack()
 {
-    return ( float ) pAttack;
+    return inversePow(( float ) att, 10f ) / -2.0f; // TODO or return _attack but be sure to calculate _attack from microseconds too !
 }
 
-void Limiter::setAttack( float attackMs )
+void Limiter::setAttack( float attack )
 {
-    pAttack = ( SAMPLE_TYPE ) attackMs;
+    _attack = ( SAMPLE_TYPE ) attack;
     recalculate();
+}
+
+void Limiter::getAttackMicroseconds()
+{
+    return -301030.1 / ( AudioEngineProps::SAMPLE_RATE * log10( 1.0 - att ));
+}
+
+void Limiter::setAttackMicroseconds( float attackInMicroseconds )
+{
+    float rh = 1 / ( attackInMicroseconds / -301030.1 ) / AudioEngineProps::SAMPLE_RATE;
+    inverseLog( rh, 10 ) + 1.0;
+inverseLog( att
+    setAttack();
 }
 
 float Limiter::getRelease()
 {
-    return ( float ) pRelease;
+    return inversePow(( float ) rel, 10f )
+pow( 10.0, -2.0 - ( 3.0 * _release ));
+    return ( float ) _release;
 }
 
-void Limiter::setRelease( float releaseMs )
+void Limiter::setRelease( float release )
 {
-    pRelease = ( SAMPLE_TYPE ) releaseMs;
+    _release = ( SAMPLE_TYPE ) release;
     recalculate();
+}
+
+void Limiter::getReleaseMilliseconds()
+{
+    return -301.0301 / ( AudioEngineProps::SAMPLE_RATE * log10( 1.0 - rel ));
+}
+
+void Limiter::setReleaseMilliseconds( float releaseInMilliseconds )
+{
+    rel = ( pow( 10,
 }
 
 float Limiter::getThreshold()
 {
-    return ( float ) pTresh;
+    return ( float ) _threshold;
 }
 
-void Limiter::setThreshold( float thresholdDb )
+void Limiter::setThreshold( float threshold )
 {
-    pTresh = ( SAMPLE_TYPE ) thresholdDb;
+    _threshold = ( SAMPLE_TYPE ) threshold;
     recalculate();
+}
+
+bool Limiter::getSoftKnee()
+{
+    return _softKnee;
+}
+
+void Limiter::setSoftKnee( boolean softKnee )
+{
+    _softKnee = softKnee;
 }
 
 float Limiter::getLinearGR()
@@ -106,10 +142,8 @@ void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
     SAMPLE_TYPE* leftBuffer  = sampleBuffer->getBufferForChannel( 0 );
     SAMPLE_TYPE* rightBuffer = !isMonoSource ? sampleBuffer->getBufferForChannel( 1 ) : nullptr;
         
-    if ( pKnee > 0.5 )
+    if ( softKnee )
     {
-        // soft knee
-        
         for ( int i = 0; i < bufferSize; ++i ) {
 
             ol  = leftBuffer[ i ];
@@ -163,13 +197,13 @@ bool Limiter::isCacheable()
 
 /* protected methods */
 
-void Limiter::init( float attackMs, float releaseMs, float thresholdDb )
+void Limiter::init( float attackMicroSeconds, float releaseMilliSeconds, float thresholdDb, boolean softKnee )
 {
-    pAttack  = ( SAMPLE_TYPE ) attackMs;
-    pRelease = ( SAMPLE_TYPE ) releaseMs;
-    pTresh   = ( SAMPLE_TYPE ) thresholdDb;
-    pTrim    = ( SAMPLE_TYPE ) 0.60;
-    pKnee    = ( SAMPLE_TYPE ) 0.40;
+    _attack    = ( SAMPLE_TYPE ) attackMicroSeconds;
+    _release   = ( SAMPLE_TYPE ) releaseMilliSeconds;
+    _threshold = ( SAMPLE_TYPE ) thresholdDb;
+    _trim      = ( SAMPLE_TYPE ) 0.60;
+    _softKnee  = softKnee;
 
     gain = 1.0;
 
@@ -178,17 +212,15 @@ void Limiter::init( float attackMs, float releaseMs, float thresholdDb )
 
 void Limiter::recalculate()
 {
-    if ( pKnee > 0.5 ) {
-        // soft knee
-        thresh = ( SAMPLE_TYPE ) pow( 10.0, 1.0 - ( 2.0 * pTresh ));
+    if ( softKnee ) {
+        thresh = ( SAMPLE_TYPE ) pow( 10.0, 1.0 - ( 2.0 * _threshold ));
     }
     else {
-        // hard knee
-        thresh = ( SAMPLE_TYPE ) pow( 10.0, ( 2.0 * pTresh ) - 2.0 );
+        thresh = ( SAMPLE_TYPE ) pow( 10.0, ( 2.0 * _threshold ) - 2.0 );
     }
-    trim = ( SAMPLE_TYPE )( pow( 10.0, ( 2.0 * pTrim) - 1.0 ));
-    att  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 * pAttack );
-    rel  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 - ( 3.0 * pRelease ));
+    trim = ( SAMPLE_TYPE )( pow( 10.0, ( 2.0 * _trim) - 1.0 ));
+    att  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 * _attack );
+    rel  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 - ( 3.0 * _release ));
 }
 
 } // E.O namespace MWEngine
