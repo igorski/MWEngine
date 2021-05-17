@@ -152,7 +152,7 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
         return;
     }
 
-    // channel has an internal loop (e.g. drum machine) ? recalculate requested
+    // channel has an internal loop (e.g. drum machine) ? calculateThreshold requested
     // buffer position by subtracting all measures above the first
 
     if ( channel->maxBufferPosition > 0 )

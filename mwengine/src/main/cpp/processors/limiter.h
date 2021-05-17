@@ -36,20 +36,21 @@ class Limiter : public BaseProcessor
     public:
         Limiter();
         Limiter( float attack, float release, float threshold ); // legacy constructor
+        Limiter( float attackInMicroseconds, float releaseInMilliseconds, float threshold, bool softKnee );
         ~Limiter();
 
         std::string getType() {
             return std::string( "Limiter" );
         }
 
-        // 0 - 1 range where 1 == 1563.89 microseconds (1.56 milliseconds)
+        // getter/setter in 0 - 1 range where 1 == 1563.89 microseconds (1.56 milliseconds)
         float getAttack();
         void setAttack( float attack );
         // getter/setter using microseconds
         float getAttackMicroseconds();
         void setAttackMicroseconds( float attackInMicroseconds );
 
-        // 0 - 1 range where 1 == milliseconds
+        // getter/setter in 0 - 1 range where 1 == 1571.755 milliseconds
         float getRelease();
         void setRelease( float release );
         // getter/setter using milliseconds
@@ -72,21 +73,19 @@ class Limiter : public BaseProcessor
 #endif
 
     protected:
-        void init( float attack, float release, float threshold, boolean softKnee );
-        void recalculate();
+        void init( float attack, float release, float threshold, bool softKnee );
+        void calculateThreshold();
 
-        // limiter properties
+        // instance variables
 
         SAMPLE_TYPE _threshold;
         SAMPLE_TYPE _trim;
         SAMPLE_TYPE _attack;
         SAMPLE_TYPE _release;
+        SAMPLE_TYPE _gain;
         bool        _softKnee;
-
-        // process variables
-
-        SAMPLE_TYPE thresh, gain, att, rel, trim;
-};
+        SAMPLE_TYPE pThreshold; // cached process value of threshold for given knee type
+    };
 } // E.O namespace MWEngine
 
 #endif
