@@ -203,7 +203,7 @@ void Limiter::init( float attack, float release, float threshold, bool softKnee 
     SAMPLE_TYPE trim = 0.60;
 
     _gain = 1.0;
-    _trim = pow(10.0, ( 2.0 * trim ) - 1.0 );
+    _trim = pow( 10.0, ( 2.0 * trim ) - 1.0 );
 
     setSoftKnee( softKnee );
     setAttack( attack );
