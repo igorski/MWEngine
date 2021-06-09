@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,49 +21,36 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "levelutility.h"
-#include <math.h>
+#include <cmath>
 
 namespace MWEngine {
 
 /* public methods */
 
-SAMPLE_TYPE LevelUtility::RMS( AudioChannel* audioChannel, int channelNum )
+SAMPLE_TYPE LevelUtility::max( AudioChannel* audioChannel, int channelNum )
 {
     AudioBuffer* audioBuffer = audioChannel->getOutputBuffer();
-    SAMPLE_TYPE out          = 0.0;
     SAMPLE_TYPE* buffer      = audioBuffer->getBufferForChannel( channelNum );
-    SAMPLE_TYPE sample;
 
-    for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
-    {
-        sample = buffer[ i ];
-        out   += sample * sample;
+    SAMPLE_TYPE max = 0, val;
+
+    for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i ) {
+        val = capSample( abs( buffer[ i ]));
+        if ( val > max ) {
+            max = val;
+        }
     }
-    out = out / ( SAMPLE_TYPE ) audioBuffer->bufferSize;
-    return sqrt( out );
+    return max;
 }
 
-SAMPLE_TYPE LevelUtility::dBSPL( AudioChannel* audioChannel, int channelNum )
+float LevelUtility::RMS( AudioChannel* audioChannel, int channelNum )
 {
-    SAMPLE_TYPE value = pow( linear( audioChannel, channelNum ), 0.5 );
-    value = value / audioChannel->getOutputBuffer()->bufferSize;
-
-    return 20.0 * log10( value );
+    return sqrt( linear( audioChannel, channelNum ) / ( float ) audioChannel->getOutputBuffer()->bufferSize );
 }
 
-SAMPLE_TYPE LevelUtility::linear( AudioChannel* audioChannel, int channelNum )
+float LevelUtility::dBSPL( AudioChannel* audioChannel, int channelNum )
 {
-    AudioBuffer* audioBuffer = audioChannel->getOutputBuffer();
-    SAMPLE_TYPE out          = 0.0;
-    SAMPLE_TYPE* buffer      = audioBuffer->getBufferForChannel( channelNum );
-    SAMPLE_TYPE sample;
-
-    for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i )
-    {
-        sample = buffer[ i ];
-        out   += sample * sample;
-    }
-    return out;
+    return 20.f * log10( RMS( audioChannel, channelNum ) / ( float ) audioChannel->getOutputBuffer()->bufferSize );
 }
 
 } // E.O namespace MWEngine
