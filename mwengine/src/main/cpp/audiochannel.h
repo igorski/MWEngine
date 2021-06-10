@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 
 #include "audiobuffer.h"
 #include "processingchain.h"
+#include "resizable_audiobuffer.h"
 #include <events/baseaudioevent.h>
 #include <vector>
 
@@ -111,7 +112,7 @@ class AudioChannel
          * to match the engines properties
          */
         void createOutputBuffer();
-        AudioBuffer* getOutputBuffer();
+        ResizableAudioBuffer* getOutputBuffer();
 
         /**
          * merges the contents of the AudioChannels output buffer
@@ -147,7 +148,7 @@ class AudioChannel
         float _pan;
         float _volume;
 
-        AudioBuffer* _outputBuffer;
+        ResizableAudioBuffer* _outputBuffer;
         AudioBuffer* _cachedBuffer;
         bool _canCache;
         int _cacheReadPointer;

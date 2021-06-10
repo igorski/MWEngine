@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,9 +25,10 @@
 
 #include "audiobuffer.h"
 #include "audiochannel.h"
+#include "channelgroup.h"
 #include "global.h"
 #include "processingchain.h"
-#include "channelgroup.h"
+#include "resizable_audiobuffer.h"
 #include <definitions/drivers.h>
 #include <thread>
 
@@ -118,8 +119,8 @@ class AudioEngine
         static int  outputChannels;
         static bool isMono;
         static std::vector<AudioChannel*>* channels;
-        static AudioBuffer* inBuffer;
-        static float*       outBuffer;
+        static ResizableAudioBuffer* inBuffer;
+        static float*  outBuffer;
 
         static std::thread* thread;
         static bool threadOptimized;

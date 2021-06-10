@@ -105,7 +105,7 @@ void Synthesizer::render( AudioBuffer* aOutputBuffer, BaseSynthEvent* aEvent )
 
     // Karplus-Strong specific
 
-    RingBuffer* ringBuffer = ( type == WaveForms::KARPLUS_STRONG ) ? getRingBuffer( aEvent, frequency ) : 0;
+    RingBuffer* ringBuffer = ( type == WaveForms::KARPLUS_STRONG ) ? getRingBuffer( aEvent, frequency ) : nullptr;
 
     // WaveTable specific
 

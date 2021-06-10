@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 #include "audiochannel.h"
 #include "processingchain.h"
 #include "sequencer.h"
+#include "resizable_audiobuffer.h"
 #include <drivers/adapter.h>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
@@ -105,7 +106,7 @@ namespace MWEngine {
     int    AudioEngine::outputChannels                = AudioEngineProps::OUTPUT_CHANNELS;
     bool   AudioEngine::isMono                        = ( outputChannels == 1 );
     float* AudioEngine::outBuffer                     = nullptr;
-    AudioBuffer* AudioEngine::inBuffer                = nullptr;
+    ResizableAudioBuffer* AudioEngine::inBuffer       = nullptr;
     std::vector<AudioChannel*>* AudioEngine::channels = nullptr;
 
     std::thread* AudioEngine::thread  = nullptr;
@@ -163,7 +164,7 @@ namespace MWEngine {
 #endif
         // accumulates all channels ("master strip")
 
-        inBuffer = new AudioBuffer( outputChannels, AudioEngineProps::BUFFER_SIZE );
+        inBuffer = new ResizableAudioBuffer( outputChannels, AudioEngineProps::BUFFER_SIZE );
 
         // ensure all AudioChannel buffers have the correct properties (in case engine is
         // restarting after changing buffer size, for instance)
@@ -309,8 +310,8 @@ namespace MWEngine {
         int64_t expectedRenderDuration = static_cast<int64_t>(( amountOfSamplesTime * MAX_CPU_PER_RENDER_TIME ) - totalExpectedDelta );
 
 #endif
-        // erase previous buffer contents
-        inBuffer->silenceBuffers();
+        inBuffer->silenceBuffers();          // erase previous buffer contents
+        inBuffer->resize( amountOfSamples ); // keep output buffer size in sync with driver requested sample size
 
         // gather the audio events by the sequencer range currently being processed
         loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
@@ -368,10 +369,10 @@ namespace MWEngine {
             SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic() / ( SAMPLE_TYPE ) channelAmount;
 
             // get channel output buffer and clear previous contents
-            AudioBuffer* channelBuffer = channel->getOutputBuffer();
-
+            ResizableAudioBuffer* channelBuffer = channel->getOutputBuffer();
             if ( channelBuffer == nullptr ) continue;
 
+            channelBuffer->resize( amountOfSamples ); // keep output buffer size in sync with driver requested sample size
             channelBuffer->silenceBuffers();
 
             bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)

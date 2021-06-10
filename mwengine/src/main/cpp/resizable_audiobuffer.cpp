@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,35 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __MWENGINE__AUDIOBUFFER_H_INCLUDED__
-#define __MWENGINE__AUDIOBUFFER_H_INCLUDED__
-
-#include "global.h"
-#include <vector>
+#include "resizable_audiobuffer.h"
+#include <utilities/bufferutility.h>
 
 namespace MWEngine {
-class AudioBuffer
+
+ResizableAudioBuffer::~ResizableAudioBuffer() {
+
+}
+
+/* public methods */
+
+void ResizableAudioBuffer::resize( int newSize )
 {
-    public:
-        AudioBuffer( int aAmountOfChannels, int aBufferSize );
-        ~AudioBuffer();
+    if ( newSize == bufferSize ) {
+        return; // nothing to do
+    }
+    bool resizeVectors = newSize > _vectorSize;
+    if ( resizeVectors ) {
+        clearVectors();
+        _buffers    = BufferUtility::createSampleBuffers( amountOfChannels, newSize );
+        _vectorSize = newSize;
+    }
+    bufferSize = newSize;
+}
 
-        int amountOfChannels;
-        int bufferSize;
-        bool loopeable;
-
-        SAMPLE_TYPE* getBufferForChannel( int aChannelNum );
-        int mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume );
-        bool isSilent();
-        void silenceBuffers();
-        void adjustBufferVolumes( SAMPLE_TYPE amp );
-        void applyMonoSource();
-        AudioBuffer* clone();
-
-    protected:
-        std::vector<SAMPLE_TYPE*>* _buffers;
-        void clearVectors();
-};
 } // E.O namespace MWEngine
-
-#endif
