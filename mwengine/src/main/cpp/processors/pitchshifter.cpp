@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2017 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  * Based on:
  *
  * NAME: smbPitchShift.cpp
@@ -28,7 +28,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "pitchshifter.h"
-#include "../audioengine.h"
+#include <audioengine.h>
 
 namespace MWEngine {
 
@@ -40,7 +40,7 @@ PitchShifter::PitchShifter( float shiftAmount, long osampAmount )
     pitchShift   = shiftAmount; // 0.5 is octave down, 1 == normal, 2 is octave up
 
     fftFrameSize = MAX_FRAME_LENGTH / 2;
-    osamp        = osampAmount; // at least 4 for moderate scaling, 32 for max. quality
+    osamp        = std::max( 4L, osampAmount ); // at least 4 for moderate scaling, 32 for max. quality
 
     fftFrameSize2 = fftFrameSize / 2;
     stepSize      = fftFrameSize / osamp;
