@@ -210,7 +210,7 @@ public final class MWEngineActivity extends Activity {
         _synth2  = new SynthInstrument();
         _sampler = new SampledInstrument();
 
-        _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
+        _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see waveforms.h for enumerations)
         _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
 
         // a short decay for synth 1 with a 0 sustain level (provides a bubbly effect)
