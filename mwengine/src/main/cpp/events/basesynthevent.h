@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,8 +23,9 @@
 #ifndef __MWENGINE__BASESYNTHEVENT_H_INCLUDED__
 #define __MWENGINE__BASESYNTHEVENT_H_INCLUDED__
 
+#include <global.h>
+#include <resizable_audiobuffer.h>
 #include "baseaudioevent.h"
-#include "../global.h"
 
 namespace MWEngine {
 
@@ -130,6 +131,12 @@ class BaseSynthEvent : public BaseAudioEvent
         // render related
         virtual void updateProperties();
         virtual void triggerRelease();
+
+        // grabs a temporary, empty buffer to render the audio into (this intermediate buffer
+        // is necessary as each event can trigger its own ADSR envelopes over its lifetime,
+        // affecting the amplitude of the existing buffers contents) the resulting synthesized audio
+        // in this buffer can be merged into the actual output buffer provided to the mixBuffer() methods
+        ResizableAudioBuffer* getEmptyTempBuffer( int bufferSize );
 };
 } // E.O namespace MWEngine
 

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -47,12 +47,18 @@ Synthesizer::Synthesizer( SynthInstrument* aInstrument, int aOscillatorNum )
     // starting/stopping a waveform mid cycle can cause nasty pops, this is used for a smoother inaudible fade in
     _fadeInDuration  = BufferUtility::millisecondsToBuffer( 20, AudioEngineProps::SAMPLE_RATE );
     _fadeOutDuration = BufferUtility::millisecondsToBuffer( 30, AudioEngineProps::SAMPLE_RATE );
+
+    // create temporary buffer that can be used for writes by multiple synthEvents (meaning there is no
+    // need to allocate a unique buffer per SynthEvent)
+    _tempBuffer = new ResizableAudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngineProps::BUFFER_SIZE );
 }
 
 Synthesizer::~Synthesizer()
 {
-    for ( int i = 0; i < _oscillators.size(); ++i )
+    for ( int i = 0; i < _oscillators.size(); ++i ) {
         destroyOscillator( i );
+    }
+    delete _tempBuffer;
 }
 
 /* public methods */
@@ -356,6 +362,11 @@ void Synthesizer::initializeEventProperties( BaseSynthEvent* aEvent, bool initia
             initKarplusStrong( ringBuffer );
         }
     }
+}
+
+ResizableAudioBuffer* Synthesizer::getTempBuffer()
+{
+    return _tempBuffer;
 }
 
 /* protected methods */
