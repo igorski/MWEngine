@@ -233,12 +233,12 @@ namespace MWEngine {
     {
         Debug::log( "RESET engine" );
 
-        if ( !AudioEngineProps::isRendering.load() ) {
+        if ( AudioEngineProps::isRendering.load() ) {
             stop();
         }
 
-        // nothing much... when used with USE_JNI references are maintained by Java, causing SWIG to
-        // destruct referenced Objects when breaking references through Java
+        // clearing events only wipes the "action queue" from the sequencer. When used with USE_JNI macro, references
+        // are maintained by Java, thus causing SWIG to only destruct referenced Objects when breaking references through Java.
         // when USE_JNI is not defined, manual cleanup of allocated events must follow
 
         Sequencer::clearEvents();
