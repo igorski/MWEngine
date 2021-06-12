@@ -192,7 +192,7 @@ namespace MWEngine {
         // prevent thread start and trigger JNI callback for error handler
 
         if ( !DriverAdapter::create( audioDriver )) {
-            Debug::log( "Could not instantiate audio driver" );
+            Debug::log( "Could not initialize audio driver" );
             Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
             stop();
             return;
@@ -312,8 +312,8 @@ namespace MWEngine {
         int64_t expectedRenderDuration = static_cast<int64_t>(( amountOfSamplesTime * MAX_CPU_PER_RENDER_TIME ) - totalExpectedDelta );
 
 #endif
-        inBuffer->silenceBuffers();          // erase previous buffer contents
         inBuffer->resize( amountOfSamples ); // keep output buffer size in sync with driver requested sample size
+        inBuffer->silenceBuffers();          // erase previous buffer contents for the current render range
 
         // gather the audio events by the sequencer range currently being processed
         loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
