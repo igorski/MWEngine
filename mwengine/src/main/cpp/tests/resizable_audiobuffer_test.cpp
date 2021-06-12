@@ -15,6 +15,56 @@ TEST( ResizableAudioBuffer, Construction )
     delete audioBuffer;
 }
 
+TEST( ResizableAudioBuffer, ResizeShrink )
+{
+    int orgSize = 10;
+    ResizableAudioBuffer* audioBuffer = new ResizableAudioBuffer( 1, orgSize );
+
+    // fill buffer with audio
+    SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < orgSize; ++i ) {
+        buffer[ i ] = 1.0;
+    }
+
+    audioBuffer->resize( 5 );
+    buffer = audioBuffer->getBufferForChannel( 0 );
+
+    EXPECT_EQ( audioBuffer->bufferSize, 5 )
+        << "expected audio buffer to report its resized value as new bufferSize";
+
+    for ( int i = 0; i < orgSize; ++i ) {
+        EXPECT_EQ( buffer[ i ], 1.0 ) << "expected channel buffer size of shrunk AudioBuffer to remain unchanged";
+    }
+
+    delete audioBuffer;
+}
+
+TEST( ResizableAudioBuffer, ResizeExpand )
+{
+    int orgSize = 10;
+    ResizableAudioBuffer* audioBuffer = new ResizableAudioBuffer( 1, orgSize );
+
+    // fill buffer with audio
+    SAMPLE_TYPE* buffer = audioBuffer->getBufferForChannel( 0 );
+
+    for ( int i = 0; i < orgSize; ++i ) {
+        buffer[ i ] = 1.0;
+    }
+
+    audioBuffer->resize( 20 );
+    buffer = audioBuffer->getBufferForChannel( 0 );
+
+    EXPECT_EQ( audioBuffer->bufferSize, 20 )
+        << "expected audio buffer to report its resized value as new bufferSize";
+
+    for ( int i = 0; i < 20; ++i ) {
+        EXPECT_EQ( buffer[ i ], 0.0 ) << "expected channel buffer size of expanded AudioBuffer to have been reinitialized to new size";
+    }
+
+    delete audioBuffer;
+}
+
 TEST( ResizableAudioBuffer, ResizeReadWriteOffsets )
 {
     // in test we verify whether adjusting the size after construction

@@ -192,7 +192,9 @@ namespace MWEngine {
         // prevent thread start and trigger JNI callback for error handler
 
         if ( !DriverAdapter::create( audioDriver )) {
+            Debug::log( "Could not instantiate audio driver" );
             Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
+            stop();
             return;
         }
         AudioEngineProps::isRendering.store( true );
