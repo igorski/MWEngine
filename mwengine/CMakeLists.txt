@@ -49,6 +49,7 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/audiochannel.cpp
                           ${CPP_SRC}/channelgroup.cpp
                           ${CPP_SRC}/processingchain.cpp
+                          ${CPP_SRC}/resizable_audiobuffer.cpp
                           ${CPP_SRC}/ringbuffer.cpp
                           ${CPP_SRC}/sequencer.cpp
                           ${CPP_SRC}/sequencercontroller.cpp

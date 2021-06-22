@@ -90,8 +90,6 @@ AAudio_IO::AAudio_IO( int amountOfInputChannels, int amountOfOutputChannels ) {
 
     _sampleFormat = AAUDIO_FORMAT_PCM_FLOAT;
 
-    render = false;
-
     createAllStreams();
 }
 
@@ -399,9 +397,9 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
 
     // Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
 
-    // rendering requested by AudioEngine ? (through the driver adapter)
+    // AudioEngine's render thread active ? write output
 
-    if ( render ) {
+    if ( AudioEngineProps::isRendering.load() ) {
 
         // if there is an input stream and recording is active, read the stream contents
 

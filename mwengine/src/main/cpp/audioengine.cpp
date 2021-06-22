@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 #include "audiochannel.h"
 #include "processingchain.h"
 #include "sequencer.h"
+#include "resizable_audiobuffer.h"
 #include <drivers/adapter.h>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
@@ -105,10 +106,11 @@ namespace MWEngine {
     int    AudioEngine::outputChannels                = AudioEngineProps::OUTPUT_CHANNELS;
     bool   AudioEngine::isMono                        = ( outputChannels == 1 );
     float* AudioEngine::outBuffer                     = nullptr;
-    AudioBuffer* AudioEngine::inBuffer                = nullptr;
+    ResizableAudioBuffer* AudioEngine::inBuffer       = nullptr;
     std::vector<AudioChannel*>* AudioEngine::channels = nullptr;
 
-    int AudioEngine::thread = 0;
+    std::thread* AudioEngine::thread  = nullptr;
+    bool AudioEngine::threadOptimized = false;
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
     double  AudioEngine::_noopsPerTick;
@@ -132,22 +134,10 @@ namespace MWEngine {
      */
     void AudioEngine::start( Drivers::types audioDriver )
     {
-        if ( thread == 1 )
+        if ( thread != nullptr )
             return;
 
         Debug::log( "STARTING engine" );
-
-        if ( audioDriver != Drivers::types::MOCKED ) {
-            PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
-        }
-        // create the output driver using the adapter. If creation failed
-        // prevent thread start and trigger JNI callback for error handler
-
-        if ( !DriverAdapter::create( audioDriver ))
-        {
-            Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
-            return;
-        }
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
         _noopsPerTick         = 1;
@@ -174,7 +164,7 @@ namespace MWEngine {
 #endif
         // accumulates all channels ("master strip")
 
-        inBuffer = new AudioBuffer( outputChannels, AudioEngineProps::BUFFER_SIZE );
+        inBuffer = new ResizableAudioBuffer( outputChannels, AudioEngineProps::BUFFER_SIZE );
 
         // ensure all AudioChannel buffers have the correct properties (in case engine is
         // restarting after changing buffer size, for instance)
@@ -185,20 +175,43 @@ namespace MWEngine {
             instruments[ i ]->audioChannel->createOutputBuffer();
         }
 
-        // start thread and request first render (gets render loop going)
-
-        thread = 1;
-
-        while ( thread )
-        {
-            // will only be interrupted if thread is set to 0 (thus halted)
-            // in the DriverAdapter::render() method the audio drivers are responsible
-            // for calling the engine's render() at the appropriate time, depending
-            // on the driver type
-
-            DriverAdapter::render();
+        // create a thread that will handle all render callbacks
+#ifdef MOCK_ENGINE
+        if ( audioDriver != Drivers::types::MOCKED ) {
+#endif
+            thread = new std::thread( initRenderTask, audioDriver );
+#ifdef MOCK_ENGINE
+        } else {
+            initRenderTask( audioDriver );
         }
+#endif
+    }
 
+    void AudioEngine::initRenderTask( Drivers::types audioDriver ) {
+        // create the output driver using the adapter. If creation failed
+        // prevent thread start and trigger JNI callback for error handler
+
+        if ( !DriverAdapter::create( audioDriver )) {
+            Debug::log( "Could not initialize audio driver" );
+            Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
+            stop();
+            return;
+        }
+        AudioEngineProps::isRendering.store( true );
+        DriverAdapter::startRender();
+    }
+
+    void AudioEngine::stop()
+    {
+        Debug::log( "STOPPING engine" );
+
+        AudioEngineProps::isRendering.store( false );
+        threadOptimized = false;
+
+        if ( thread != nullptr ) {
+            thread->join();
+            thread = nullptr;
+        }
         Debug::log( "STOPPED engine" );
 
         DriverAdapter::destroy();
@@ -218,18 +231,16 @@ namespace MWEngine {
 #endif
     }
 
-    void AudioEngine::stop()
-    {
-        Debug::log( "STOPPING engine" );
-        thread = 0;
-    }
-
     void AudioEngine::reset()
     {
         Debug::log( "RESET engine" );
 
-        // nothing much... when used with USE_JNI references are maintained by Java, causing SWIG to
-        // destruct referenced Objects when breaking references through Java
+        if ( AudioEngineProps::isRendering.load() ) {
+            stop();
+        }
+
+        // clearing events only wipes the "action queue" from the sequencer. When used with USE_JNI macro, references
+        // are maintained by Java, thus causing SWIG to only destruct referenced Objects when breaking references through Java.
         // when USE_JNI is not defined, manual cleanup of allocated events must follow
 
         Sequencer::clearEvents();
@@ -271,11 +282,15 @@ namespace MWEngine {
 
     bool AudioEngine::render( int amountOfSamples )
     {
-        if ( thread == 0 )
-            return false;
-
         size_t i, j, k, c, ci;
         float sample;
+
+        if ( !threadOptimized ) {
+            if ( !DriverAdapter::isMocked() ) {
+                PerfUtility::optimizeThreadPerformance( AudioEngineProps::CPU_CORES );
+            }
+            threadOptimized = true;
+        }
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
@@ -297,8 +312,8 @@ namespace MWEngine {
         int64_t expectedRenderDuration = static_cast<int64_t>(( amountOfSamplesTime * MAX_CPU_PER_RENDER_TIME ) - totalExpectedDelta );
 
 #endif
-        // erase previous buffer contents
-        inBuffer->silenceBuffers();
+        inBuffer->resize( amountOfSamples ); // keep output buffer size in sync with driver requested sample size
+        inBuffer->silenceBuffers();          // erase previous buffer contents for the current render range
 
         // gather the audio events by the sequencer range currently being processed
         loopStarted = Sequencer::getAudioEvents( channels, bufferPosition, amountOfSamples, true, true );
@@ -356,10 +371,10 @@ namespace MWEngine {
             SAMPLE_TYPE channelVolume = ( SAMPLE_TYPE ) channel->getVolumeLogarithmic() / ( SAMPLE_TYPE ) channelAmount;
 
             // get channel output buffer and clear previous contents
-            AudioBuffer* channelBuffer = channel->getOutputBuffer();
-
+            ResizableAudioBuffer* channelBuffer = channel->getOutputBuffer();
             if ( channelBuffer == nullptr ) continue;
 
+            channelBuffer->resize( amountOfSamples ); // keep output buffer size in sync with driver requested sample size
             channelBuffer->silenceBuffers();
 
             bool useChannelRange  = channel->maxBufferPosition != 0; // channel has its own buffer range (i.e. drummachine)
@@ -510,7 +525,7 @@ namespace MWEngine {
         // the output into the audio hardware will lock execution until the next buffer
         // is enqueued (additionally, we prevent writing to device storage when recording/bouncing)
 
-        if ( thread == 0 )
+        if ( !AudioEngineProps::isRendering.load() )
             return false;
 
         // write the synthesized output into the audio driver (unless we are bouncing as writing the
@@ -588,10 +603,10 @@ namespace MWEngine {
 #endif
 
         // bit fugly, during bounce on AAudio driver, keep render loop going until bounce completes
-        if ( bouncing && thread == 1 && DriverAdapter::isAAudio() ) {
+        if ( bouncing && AudioEngineProps::isRendering.load() && DriverAdapter::isAAudio() ) {
             render( amountOfSamples );
         }
-        return ( thread == 1 );
+        return AudioEngineProps::isRendering.load();
     }
 
     /* internal methods */

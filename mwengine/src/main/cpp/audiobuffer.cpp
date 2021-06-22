@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,7 +23,7 @@
 #include "audiobuffer.h"
 #include <utilities/bufferutility.h>
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 
 namespace MWEngine {
 
@@ -40,13 +40,7 @@ AudioBuffer::AudioBuffer( int aAmountOfChannels, int aBufferSize )
 
 AudioBuffer::~AudioBuffer()
 {
-    if ( _buffers != nullptr ) {
-        while ( !_buffers->empty()) {
-            delete[] _buffers->back(), _buffers->pop_back();
-        }
-        delete _buffers;
-        _buffers = nullptr;
-    }
+    clearVectors();
 }
 
 /* public methods */
@@ -166,6 +160,19 @@ AudioBuffer* AudioBuffer::clone()
         memcpy( targetBuffer, sourceBuffer, bufferSize * sizeof( SAMPLE_TYPE ));
     }
     return output;
+}
+
+/* protected methods */
+
+void AudioBuffer::clearVectors()
+{
+    if ( _buffers != nullptr ) {
+        while ( !_buffers->empty()) {
+            delete[] _buffers->back(), _buffers->pop_back();
+        }
+        delete _buffers;
+        _buffers = nullptr;
+    }
 }
 
 } // E.O namespace MWEngine
