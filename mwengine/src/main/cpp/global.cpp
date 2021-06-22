@@ -31,7 +31,9 @@ namespace AudioEngineProps {
     unsigned int     SAMPLE_RATE     = 48000;
     unsigned int     BUFFER_SIZE     = 192;
     unsigned int     OUTPUT_CHANNELS = 2;
+
     std::vector<int> CPU_CORES       = {};
+    std::atomic<bool> isRendering{ false };
 }
 
 } // E.O namespace MWEngine

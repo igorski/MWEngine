@@ -34,6 +34,7 @@ using namespace MWEngine;
 
 // Unit tests for individual actors
 #include "audiobuffer_test.cpp"
+#include "resizable_audiobuffer_test.cpp"
 #include "audiochannel_test.cpp"
 #include "channelgroup_test.cpp"
 #include "processingchain_test.cpp"

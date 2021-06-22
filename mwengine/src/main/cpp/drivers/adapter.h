@@ -52,7 +52,7 @@ namespace DriverAdapter {
 
     // these are invoked during the engines render cycle and should not be called directly
 
-    void render();
+    void startRender();
 
     // writes the contents of given outputBuffer into the drivers output
     // so we can hear sound. outputBuffer contains interleaved samples

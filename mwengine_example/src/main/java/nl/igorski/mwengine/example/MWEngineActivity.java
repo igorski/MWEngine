@@ -1,9 +1,11 @@
 package nl.igorski.mwengine.example;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -90,6 +92,7 @@ public final class MWEngineActivity extends Activity {
         }
     }
 
+    @TargetApi( Build.VERSION_CODES.M )
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if ( requestCode != PERMISSIONS_CODE ) return;
@@ -207,7 +210,7 @@ public final class MWEngineActivity extends Activity {
         _synth2  = new SynthInstrument();
         _sampler = new SampledInstrument();
 
-        _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see global.h for enumerations)
+        _synth1.getOscillatorProperties( 0 ).setWaveform( 2 ); // sawtooth (see waveforms.h for enumerations)
         _synth2.getOscillatorProperties( 0 ).setWaveform( 5 ); // pulse width modulation
 
         // a short decay for synth 1 with a 0 sustain level (provides a bubbly effect)
@@ -286,7 +289,7 @@ public final class MWEngineActivity extends Activity {
     protected void flushSong() {
         // this ensures that Song resources currently in use by the engine are released
 
-        _engine.pause();
+        _engine.stop();
 
         // calling 'delete()' on a BaseAudioEvent invokes the
         // native layer destructor (and removes it from the sequencer)
@@ -340,14 +343,14 @@ public final class MWEngineActivity extends Activity {
         if ( !hasFocus ) {
             // suspending the app - halt audio rendering in MWEngine Thread to save CPU cycles
             if ( _engine != null )
-                _engine.pause();
+                _engine.stop();
         }
         else {
             // returning to the app
             if ( !_inited )
-                init();            // initialize this example application
+                init();          // initialize this example application
             else
-                _engine.unpause(); // resumes existing audio rendering thread
+                _engine.start(); // resumes audio rendering
         }
     }
 
@@ -473,15 +476,7 @@ public final class MWEngineActivity extends Activity {
             switch ( _notificationEnums[ aNotificationId ]) {
                 case ERROR_HARDWARE_UNAVAILABLE:
                     Log.d( LOG_TAG, "ERROR : received driver error callback from native layer" );
-                    // re-initialize thread
-                    if ( _engine.canRestartEngine() ) {
-                        _engine.dispose();
-                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, _audioDriver );
-                        _engine.start();
-                    }
-                    else {
-                        Log.d( LOG_TAG, "exceeded maximum amount of retries. Cannot continue using audio engine" );
-                    }
+                    _engine.dispose();
                     break;
                 case MARKER_POSITION_REACHED:
                     Log.d( LOG_TAG, "Marker position has been reached" );

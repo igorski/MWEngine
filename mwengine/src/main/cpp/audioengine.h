@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,10 +25,12 @@
 
 #include "audiobuffer.h"
 #include "audiochannel.h"
+#include "channelgroup.h"
 #include "global.h"
 #include "processingchain.h"
-#include "channelgroup.h"
+#include "resizable_audiobuffer.h"
 #include <definitions/drivers.h>
+#include <thread>
 
 namespace MWEngine {
 class AudioEngine
@@ -115,11 +117,13 @@ class AudioEngine
         static int  loopOffset;   // the offset within the current buffer where we exceed max_buf_pos and start reading from min_buf_pos
         static int  loopAmount;   // amount of samples we must read from the current loop ranges start offset (== min_buffer_position)
         static int  outputChannels;
-        static int  thread;
         static bool isMono;
         static std::vector<AudioChannel*>* channels;
-        static AudioBuffer* inBuffer;
-        static float*       outBuffer;
+        static ResizableAudioBuffer* inBuffer;
+        static float*  outBuffer;
+
+        static std::thread* thread;
+        static bool threadOptimized;
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
@@ -140,6 +144,7 @@ class AudioEngine
 
         /* internal render methods */
 
+        static void initRenderTask( Drivers::types audioDriver );
         static void handleSequencerPositionUpdate( int bufferOffset );
         static bool writeChannelCache            ( AudioChannel* channel, AudioBuffer* channelBuffer, int cacheReadPos );
 };

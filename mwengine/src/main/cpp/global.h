@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -74,6 +74,7 @@ namespace AudioEngineProps
 #else
     const unsigned int INPUT_CHANNELS = 0;
 #endif
+    extern std::atomic<bool> isRendering;
 }
 
 // E.O. audio engine configuration
@@ -85,17 +86,17 @@ namespace AudioEngineProps
 // --------------------------------------
 
 #if PRECISION == 1 // float
-    #define SAMPLE_TYPE float
+    typedef float SAMPLE_TYPE;
     #define undenormalise(sample) ((((*(UINT32 *)&(sample))&0x7f800000)==0)&&((sample)!=0.f))
 #endif
 
 #if PRECISION == 2 // double
-    #define SAMPLE_TYPE double
+    typedef double SAMPLE_TYPE;
     #define undenormalise(sample) ((((((UINT32 *)&(sample))[1])&0x7fe00000)==0)&&((sample)!=0.f))
 #endif
 
 #define CONV16BIT 32768       // multiplier to convert floating point to signed 16-bit value
-#define CONVMYFLT (1./32768.) // multplier to convert signed 16-bit values to floating point
+#define CONVMYFLT (1./32768.) // multiplier to convert signed 16-bit values to floating point
 
 // maximum volume output of the engine (prevents clipping of extremely hot signals)
 #define MAX_OUTPUT 0.98F

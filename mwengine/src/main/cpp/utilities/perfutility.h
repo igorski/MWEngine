@@ -46,18 +46,11 @@ namespace PerfUtility
     }
 
     /**
-     * Optimizes the performance of the calling thread by setting the thread affinity. On
-     * Android N the exclusive CPU cores will be used.
+     * Optimizes the performance of the calling thread by setting the thread affinity.
+     * On Android N the exclusive CPU cores will be used.
      */
     inline void optimizeThreadPerformance( const std::vector<int>& cpuIds )
     {
-//        nice( -20 );
-//        int policy = 0;
-//        struct sched_param param;
-//        pthread_getschedparam( pthread_self(), &policy, &param );
-//        param.sched_priority = sched_get_priority_max( policy );
-//        pthread_setschedparam( pthread_self(), policy, &param );
-
         cpu_set_t mask;
         pid_t current_thread_id = gettid();
         cpu_set_t cpu_set;
@@ -66,13 +59,13 @@ namespace PerfUtility
         // If the callback cpu ids aren't specified then bind to the current cpu
         if ( cpuIds.empty() ) {
             int current_cpu_id = sched_getcpu();
-            Debug::log( "Binding to current CPU ID %d", current_cpu_id );
+            Debug::log( "Binding to current CPU ID %d for thread %d", current_cpu_id, current_thread_id );
             CPU_SET( current_cpu_id, &cpu_set );
         } else {
             Debug::log( "Binding to %d CPU IDs", static_cast<int>( cpuIds.size()) );
             for ( size_t i = 0; i < cpuIds.size(); i++ ) {
                 int cpu_id = cpuIds.at( i );
-                Debug::log( "CPU ID %d added to cores set", cpu_id );
+                Debug::log( "CPU ID %d added to cores set for thread %d", cpu_id, current_thread_id );
                 CPU_SET( cpu_id, &cpu_set );
             }
         }

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2015-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #define __MWENGINE__LEVEL_UTILITY_H_INCLUDED__
 
 #include "global.h"
+#include "utils.h"
 #include "../audiochannel.h"
 
 /**
@@ -34,16 +35,28 @@ namespace MWEngine {
 class LevelUtility
 {
     public:
+        // maximum abs value of the given AudioChannels signal
+        static SAMPLE_TYPE max( AudioChannel* audioChannel, int channelNum );
 
         // root mean square of the given AudioChannels signal
-        // channelNum describes which channel of the given buffer to evaluate
-        static SAMPLE_TYPE RMS( AudioChannel* audioChannel, int channelNum );
+        static float RMS( AudioChannel* audioChannel, int channelNum );
 
         // dBSPL for the given AudioChannels signal
-        static SAMPLE_TYPE dBSPL( AudioChannel* audioChannel, int channelNum );
+        static float dBSPL( AudioChannel* audioChannel, int channelNum );
 
         // linear energy of the given AudioChannels signal
-        static SAMPLE_TYPE linear( AudioChannel* audioChannel, int channelNum );
+        inline static float linear( AudioChannel* audioChannel, int channelNum ) {
+            AudioBuffer* audioBuffer = audioChannel->getOutputBuffer();
+            SAMPLE_TYPE* buffer      = audioBuffer->getBufferForChannel( channelNum );
+            SAMPLE_TYPE sum          = 0.0;
+            SAMPLE_TYPE sample;
+
+            for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i ) {
+                sample = capSample( buffer[ i ]);
+                sum   += ( sample * sample );
+            }
+            return ( float ) sum;
+        }
 };
 } // E.O namespace MWEngine
 

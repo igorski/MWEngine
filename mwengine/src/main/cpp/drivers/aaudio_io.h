@@ -67,7 +67,6 @@ class AAudio_IO
         double getCurrentOutputLatencyMillis();
         int getEnqueuedInputBuffer( float* destinationBuffer,  int amountOfSamples );
         void enqueueOutputBuffer  ( const float* sourceBuffer, int amountOfSamples );
-        bool render;
 
     private:
 

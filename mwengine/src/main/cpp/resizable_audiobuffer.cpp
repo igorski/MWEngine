@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,37 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include "levelutility.h"
-#include <cmath>
+#include "resizable_audiobuffer.h"
+#include <utilities/bufferutility.h>
 
 namespace MWEngine {
 
+ResizableAudioBuffer::~ResizableAudioBuffer() {
+
+}
+
 /* public methods */
 
-SAMPLE_TYPE LevelUtility::max( AudioChannel* audioChannel, int channelNum )
+void ResizableAudioBuffer::resize( int newSize )
 {
-    AudioBuffer* audioBuffer = audioChannel->getOutputBuffer();
-    SAMPLE_TYPE* buffer      = audioBuffer->getBufferForChannel( channelNum );
-
-    SAMPLE_TYPE max = 0, val;
-
-    for ( int i = 0, l = audioBuffer->bufferSize; i < l; ++i ) {
-        val = capSample( abs( buffer[ i ]));
-        if ( val > max ) {
-            max = val;
-        }
+    if ( newSize == bufferSize ) {
+        return; // nothing to do
     }
-    return max;
-}
-
-float LevelUtility::RMS( AudioChannel* audioChannel, int channelNum )
-{
-    return sqrt( linear( audioChannel, channelNum ) / ( float ) audioChannel->getOutputBuffer()->bufferSize );
-}
-
-float LevelUtility::dBSPL( AudioChannel* audioChannel, int channelNum )
-{
-    return 20.f * log10( RMS( audioChannel, channelNum ) / ( float ) audioChannel->getOutputBuffer()->bufferSize );
+    bool resizeVectors = newSize > _vectorSize;
+    if ( resizeVectors ) {
+        clearVectors();
+        _buffers    = BufferUtility::createSampleBuffers( amountOfChannels, newSize );
+        _vectorSize = newSize;
+    }
+    bufferSize = newSize;
 }
 
 } // E.O namespace MWEngine
