@@ -128,7 +128,7 @@ public final class MWEngineActivity extends Activity {
 
         // STEP 1 : preparing the native audio engine
 
-        _engine = new MWEngine( getApplicationContext(), new StateObserver() );
+        _engine = new MWEngine( new StateObserver() );
         MWEngine.optimizePerformance( this );
 
         // get the recommended buffer size for this device (NOTE : lower buffer sizes may

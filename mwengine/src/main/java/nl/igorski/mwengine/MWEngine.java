@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -29,7 +29,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Build;
-import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Process;
 import android.util.Log;
@@ -78,9 +77,8 @@ public final class MWEngine
         void handleNotification( int aNotificationId, int aNotificationValue );
     }
 
-    private static MWEngine INSTANCE;
+    private static MWEngine INSTANCE; // we only allow a single instance to be constructed for resource optimization
     private IObserver       _observer;
-    private Context         _context;
 
     private SequencerController _sequencerController;
 
@@ -96,23 +94,20 @@ public final class MWEngine
     /* engine / thread states */
 
     private boolean _initialCreation     = true;
-    private boolean _disposed            = false;
     private boolean _isRunning           = false;
-    private boolean _paused              = false;
 
     /**
      * The Java-side bridge to manage all native layer components
      * of the MWEngine audio engine
      *
-     * @param aContext {Context} current application context
      * @param aObserver {MWEngine.IObserver} observer that will monitor engine states
      */
-    public MWEngine( Context aContext, IObserver aObserver ) {
-        if ( INSTANCE != null ) throw new Error( "MWEngine already instantiated" );
-
-        INSTANCE   = this;
-        _context   = aContext;
-        _observer  = aObserver;
+    public MWEngine( IObserver aObserver ) {
+        if ( INSTANCE != null ) {
+            throw new Error( "There is already an MWEngine instance registered. dispose() the earlier instance if it is no longer used." );
+        }
+        INSTANCE  = this;
+        _observer = aObserver;
 
         MWEngineCore.init(); // registers the interface between this Java class and the native code
     }
@@ -182,8 +177,6 @@ public final class MWEngine
 
         _sequencerController = new SequencerController();
         _sequencerController.prepare( 120.0f, 4, 4 );
-
-        _disposed = false;
     }
 
     public void setup( int aSampleRate, int aBufferSize, int aOutputChannels ) {
@@ -193,15 +186,11 @@ public final class MWEngine
 
         AudioEngine.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
 
-        if ( !_isRunning ) return;
-
-        // TODO: synchronize native layer class instances that cached above values??
-        pause();   // toggling paused state of the thread will stop the engine
-        unpause(); // and upon restart, initialize it with the new settings
-    }
-
-    public static MWEngine getInstance() {
-        return INSTANCE;
+        if ( !_isRunning ) {
+            return;
+        }
+        stop();  // TODO: instead of stop/start, synchronize native layer class instances that cached above values??
+        start(); // restart engine to initialize it with the new settings
     }
 
     public float getVolume() {
@@ -335,22 +324,21 @@ public final class MWEngine
      * This halts the audio rendering and stops the Thread
      */
     public void dispose() {
-        _disposed  = true;
         _isRunning = false;
 
         stop();
         reset();
 
         _observer = null;
-        _context  = null;
         INSTANCE  = null;
     }
 
     /* threading */
 
     public void start() {
-        if ( _isRunning ) return;
-
+        if ( _isRunning ) {
+            return;
+        }
         Log.d( "MWENGINE", "starting native audio rendering thread @ " + SAMPLE_RATE + " Hz using " + BUFFER_SIZE + " samples per buffer" );
 
         MWEngineCore.init(); // (re-)register JNI interface to match current/updated JNI environment (e.g. after app suspend/focus change)
@@ -360,8 +348,9 @@ public final class MWEngine
     }
 
     public void stop() {
-        if ( !_isRunning ) return;
-
+        if ( !_isRunning ) {
+            return;
+        }
         AudioEngine.stop();
         _isRunning = false;
     }
@@ -371,7 +360,6 @@ public final class MWEngine
      */
     @Deprecated
     public void pause() {
-        _paused = true;
         stop();
     }
 
@@ -380,7 +368,6 @@ public final class MWEngine
      */
     @Deprecated
     public void unpause() {
-        _paused = false;
         start();
     }
 
