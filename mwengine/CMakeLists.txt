@@ -174,7 +174,7 @@ set(CMAKE_SWIG_OUTDIR ${JAVA_SRC}/nl/igorski/mwengine/core)
 
 # Export a wrapper file to Java, and link with the created C++ library
 
-swig_add_module(${target}_wrapped java ${CPP_SRC}/mwengine.i)
+swig_add_library(${target}_wrapped LANGUAGE java SOURCES ${CPP_SRC}/mwengine.i)
 swig_link_libraries(${target}_wrapped ${target})
 
 ################
