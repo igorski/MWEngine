@@ -27,13 +27,9 @@
 #include <limits.h>
 #include <stdint.h>
 #include <vector>
+#include <defs.h>
 
 namespace MWEngine {
-
-// PRECISION defines the floating-point precision used to synthesize the audio samples
-// valid options are 1 (32-bit float) and 2 (64-bit double)
-
-#define PRECISION 2
 
 // if you wish to record audio from the Android device input, uncomment the RECORD_DEVICE_INPUT definition
 // (note this requires both android.permission.RECORD_AUDIO and android.permission.MODIFY_AUDIO_SETTINGS)
@@ -83,16 +79,6 @@ namespace AudioEngineProps
 //
 // these define constants used throughout the engine
 // --------------------------------------
-
-#if PRECISION == 1 // float
-    typedef float SAMPLE_TYPE;
-    #define undenormalise(sample) ((((*(UINT32 *)&(sample))&0x7f800000)==0)&&((sample)!=0.f))
-#endif
-
-#if PRECISION == 2 // double
-    typedef double SAMPLE_TYPE;
-    #define undenormalise(sample) ((((((UINT32 *)&(sample))[1])&0x7fe00000)==0)&&((sample)!=0.f))
-#endif
 
 #define CONV16BIT 32768       // multiplier to convert floating point to signed 16-bit value
 #define CONVMYFLT (1./32768.) // multiplier to convert signed 16-bit values to floating point

@@ -65,10 +65,6 @@ using namespace MWEngine;
 #include "sequencercontroller.h"
 %}
 
-// declare the value for the SAMPLE_TYPE typedef (defined in global.h)
-// omitting this will create a custom SWIG wrapper instead of a float/double primitive
-typedef double SAMPLE_TYPE;
-
 // Enable the JNI class to load the required native library.
 %pragma(java) jniclasscode=%{
   static {
@@ -87,6 +83,7 @@ typedef double SAMPLE_TYPE;
 %include carrays.i                 // enable passing of arrays via JNI
 %array_functions(int, int_array)   // int arrays
 %include "std_string.i"            // enables using Java Strings as std::string
+%include "defs.h" // resolve the defines
 
 %include "jni/javabridge_api.h"
 %include "jni/javautilities.h"
