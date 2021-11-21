@@ -398,16 +398,16 @@ public final class MWEngine
     }
 
     public static void handleNotification( int aNotificationId ) {
-        if ( INSTANCE._observer != null ) INSTANCE._observer.handleNotification( aNotificationId );
+        if ( INSTANCE != null && INSTANCE._observer != null ) INSTANCE._observer.handleNotification( aNotificationId );
     }
 
     public static void handleNotificationWithData( int aNotificationId, int aNotificationData ) {
-        if ( INSTANCE._observer != null ) INSTANCE._observer.handleNotification( aNotificationId, aNotificationData );
+        if ( INSTANCE != null && INSTANCE._observer != null ) INSTANCE._observer.handleNotification( aNotificationId, aNotificationData );
     }
 
     public static void handleTempoUpdated( float aNewTempo ) {
         // weird bug where on initial start the sequencer would not know the step range...
-        if ( INSTANCE._initialCreation ) {
+        if ( INSTANCE != null && INSTANCE._initialCreation ) {
             INSTANCE._initialCreation = false;
             INSTANCE.getSequencerController().setLoopRange( 0, INSTANCE.getSequencerController().getSamplesPerBar() - 1 );
         }
