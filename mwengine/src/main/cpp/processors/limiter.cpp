@@ -24,6 +24,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "limiter.h"
+#include <utilities/utils.h>
 #include "../global.h"
 
 namespace MWEngine {
@@ -32,12 +33,19 @@ namespace MWEngine {
 
 Limiter::Limiter()
 {
-    init( 0.15, 0.50, 0.60 );
+    init( 0.8f, 1.0f, 0.55f, true );
 }
 
-Limiter::Limiter( float attackMs, float releaseMs, float thresholdDb )
+Limiter::Limiter( float attackNormalized, float releaseNormalized, float thresholdNormalized )
 {
-    init( attackMs, releaseMs, thresholdDb );
+    init( attackNormalized, releaseNormalized, thresholdNormalized, false );
+}
+
+Limiter::Limiter( float attackInMicroseconds, float releaseInMilliseconds, float thresholdNormalized, bool softKnee )
+{
+    init( 0.f, 0.f, thresholdNormalized, softKnee );
+    setAttackMicroseconds( attackInMicroseconds );
+    setReleaseMilliseconds( releaseInMilliseconds );
 }
 
 Limiter::~Limiter()
@@ -49,111 +57,136 @@ Limiter::~Limiter()
 
 float Limiter::getAttack()
 {
-    return ( float ) pAttack;
+    return inversePow(( float ) _attack, 10.f ) / -2.0f;
 }
 
-void Limiter::setAttack( float attackMs )
+void Limiter::setAttack( float attackNormalized )
 {
-    pAttack = ( SAMPLE_TYPE ) attackMs;
-    recalculate();
+    _attack = pow( 10.0, -2.0 * attackNormalized );
+}
+
+float Limiter::getAttackMicroseconds()
+{
+    return -301030.1f / (( float ) AudioEngineProps::SAMPLE_RATE * log10( 1.0f - ( float ) _attack ));
+}
+
+void Limiter::setAttackMicroseconds( float attackInMicroseconds )
+{
+    _attack = 1.0 - inverseLog( 1.f / ( attackInMicroseconds / -301030.1f ) / ( float ) AudioEngineProps::SAMPLE_RATE, 10 );
 }
 
 float Limiter::getRelease()
 {
-    return ( float ) pRelease;
+    return ( inversePow(( float ) _release, 10.f ) + 2.f ) / -3.f;
 }
 
-void Limiter::setRelease( float releaseMs )
+void Limiter::setRelease( float releaseNormalized )
 {
-    pRelease = ( SAMPLE_TYPE ) releaseMs;
-    recalculate();
+    _release = pow( 10.0, -2.0 - ( 3.0 * releaseNormalized ));
+}
+
+float Limiter::getReleaseMilliseconds()
+{
+    return -301.0301f / (( float ) AudioEngineProps::SAMPLE_RATE * log10( 1.0f - ( float ) _release ));
+}
+
+void Limiter::setReleaseMilliseconds( float releaseInMilliseconds )
+{
+    _release = 1.0 - inverseLog( 1.f / ( releaseInMilliseconds / -301.0301f ) / ( float ) AudioEngineProps::SAMPLE_RATE, 10 );
 }
 
 float Limiter::getThreshold()
 {
-    return ( float ) pTresh;
+    return ( float ) _threshold;
 }
 
-void Limiter::setThreshold( float thresholdDb )
+void Limiter::setThreshold( float thresholdNormalized )
 {
-    pTresh = ( SAMPLE_TYPE ) thresholdDb;
-    recalculate();
+    _threshold = ( SAMPLE_TYPE ) thresholdNormalized;
+    cacheValues();
+}
+
+bool Limiter::getSoftKnee()
+{
+    return _softKnee;
+}
+
+void Limiter::setSoftKnee( bool softKnee )
+{
+    _softKnee = softKnee;
+    cacheValues();
 }
 
 float Limiter::getLinearGR()
 {
-    return ( gain > 1.0f ) ? 1.0f / ( float ) gain : 1.0f;
+    return ( _gain > 1.0f ) ? 1.0f / ( float ) _gain : 1.0f;
 }
 
 void Limiter::process( AudioBuffer* sampleBuffer, bool isMonoSource )
 {
-    if ( gain > 0.9999f && sampleBuffer->isSilent())
+    if ( _gain > 0.9999f && sampleBuffer->isSilent())
     {
         // don't process if input is silent
         return;
     }
 
-    SAMPLE_TYPE g, at, re, tr, th, lev, ol, or_;
+    SAMPLE_TYPE gain, level, leftSample, rightSample;
 
-    th = thresh;
-    g = gain;
-    at = att;
-    re = rel;
-    tr = trim;
+    gain = _gain;
 
     int bufferSize = sampleBuffer->bufferSize;
 
     SAMPLE_TYPE* leftBuffer  = sampleBuffer->getBufferForChannel( 0 );
     SAMPLE_TYPE* rightBuffer = !isMonoSource ? sampleBuffer->getBufferForChannel( 1 ) : nullptr;
         
-    if ( pKnee > 0.5 )
+    if ( _softKnee )
     {
-        // soft knee
-        
         for ( int i = 0; i < bufferSize; ++i ) {
 
-            ol  = leftBuffer[ i ];
-            or_ = !isMonoSource ? rightBuffer[ i ] : 0;
+            leftSample  = leftBuffer[ i ];
+            rightSample = !isMonoSource ? rightBuffer[ i ] : 0;
 
-            lev = ( SAMPLE_TYPE ) ( 1.0 / ( 1.0 + th * fabs( ol + or_ )));
+            level = ( SAMPLE_TYPE ) ( 1.0 / ( 1.0 + pThreshold * fabs( leftSample + rightSample )));
 
-            if ( g > lev ) {
-                g = g - at * ( g - lev );
+            if ( gain > level ) {
+                gain = gain - _attack * ( gain - level );
             }
             else {
-                g = g + re * ( lev - g );
+                gain = gain + _release * ( level - gain );
             }
 
-            leftBuffer[ i ] = ( ol * tr * g );
+            leftBuffer[ i ] = ( leftSample * _trim * gain );
 
-            if ( !isMonoSource )
-                rightBuffer[ i ] = ( or_ * tr * g );
+            if ( !isMonoSource ) {
+                rightBuffer[ i ] = ( rightSample * _trim * gain );
+            }
         }
     }
     else
     {
         for ( int i = 0; i < bufferSize; ++i ) {
 
-            ol  = leftBuffer[ i ];
-            or_ = !isMonoSource ? rightBuffer[ i ] : 0;
+            leftSample  = leftBuffer[ i ];
+            rightSample = !isMonoSource ? rightBuffer[ i ] : 0;
 
-            lev = ( SAMPLE_TYPE ) ( 0.5 * g * fabs( ol + or_ ));
+            level = ( SAMPLE_TYPE ) ( 0.5 * gain * fabs( leftSample + rightSample ));
 
-            if ( lev > th ) {
-                g = g - ( at * ( lev - th ));
+            if ( level > pThreshold ) {
+                gain = gain - ( _attack * ( level - pThreshold ));
             }
             else {
                 // below threshold
-                g = g + ( SAMPLE_TYPE )( re * ( 1.0 - g ));
+                gain = gain + ( SAMPLE_TYPE )( _release * ( 1.0 - gain ));
             }
 
-            leftBuffer[ i ] = ( ol * tr * g );
+            leftBuffer[ i ] = ( leftSample * _trim * gain );
 
-            if ( !isMonoSource )
-                rightBuffer[ i ] = ( or_ * tr * g );
+            if ( !isMonoSource ) {
+                rightBuffer[ i ] = ( rightSample * _trim * gain );
+            }
         }
     }
-    gain = g;
+    _gain = gain;
 }
 
 bool Limiter::isCacheable()
@@ -163,32 +196,27 @@ bool Limiter::isCacheable()
 
 /* protected methods */
 
-void Limiter::init( float attackMs, float releaseMs, float thresholdDb )
+void Limiter::init( float attackNormalized, float releaseNormalized, float thresholdNormalized, bool softKnee )
 {
-    pAttack  = ( SAMPLE_TYPE ) attackMs;
-    pRelease = ( SAMPLE_TYPE ) releaseMs;
-    pTresh   = ( SAMPLE_TYPE ) thresholdDb;
-    pTrim    = ( SAMPLE_TYPE ) 0.60;
-    pKnee    = ( SAMPLE_TYPE ) 0.40;
+    _threshold = ( SAMPLE_TYPE ) thresholdNormalized;
 
-    gain = 1.0;
+    SAMPLE_TYPE trim = 0.60;
 
-    recalculate();
+    _gain = 1.0;
+    _trim = pow( 10.0, ( 2.0 * trim ) - 1.0 );
+
+    setSoftKnee( softKnee );
+    setAttack( attackNormalized );
+    setRelease( releaseNormalized );
 }
 
-void Limiter::recalculate()
+void Limiter::cacheValues()
 {
-    if ( pKnee > 0.5 ) {
-        // soft knee
-        thresh = ( SAMPLE_TYPE ) pow( 10.0, 1.0 - ( 2.0 * pTresh ));
+    if ( _softKnee ) {
+        pThreshold = pow( 10.0, 1.0 - ( 2.0 * _threshold ));
+    } else {
+        pThreshold = pow( 10.0, ( 2.0 * _threshold ) - 2.0 );
     }
-    else {
-        // hard knee
-        thresh = ( SAMPLE_TYPE ) pow( 10.0, ( 2.0 * pTresh ) - 2.0 );
-    }
-    trim = ( SAMPLE_TYPE )( pow( 10.0, ( 2.0 * pTrim) - 1.0 ));
-    att  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 * pAttack );
-    rel  = ( SAMPLE_TYPE )  pow( 10.0, -2.0 - ( 3.0 * pRelease ));
 }
 
 } // E.O namespace MWEngine

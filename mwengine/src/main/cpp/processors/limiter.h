@@ -35,19 +35,47 @@ class Limiter : public BaseProcessor
 {
     public:
         Limiter();
-        Limiter( float attackMs, float releaseMs, float thresholdDb );
+        /**
+         * Unit specific constructor
+         * @param attackInMicroseconds up to 1563.90 microseconds
+         * @param releaseInMilliseconds up to 1571/755 milliseconds
+         * @param thresholdNormalized 0 - 1 range where 0 == -20 dB and 1 == +20 dB
+         * @param softKnee
+         */
+        Limiter( float attackInMicroseconds, float releaseInMilliseconds, float thresholdNormalized, bool softKnee );
+        /**
+         * legacy constructor using normalized (0 - 1 range) values (TO BE DEPRECATED?)
+         * @param attackNormalized (1 == 1563.89 microseconds)
+         * @param releaseNormalized (1 == 1571.755 milliseconds)
+         * @param thresholdNormalized (0 == -20 dB and 1 == +20 dB)
+         */
+        Limiter( float attackNormalized, float releaseNormalized, float thresholdNormalized );
         ~Limiter();
 
         std::string getType() {
             return std::string( "Limiter" );
         }
 
+        // getter/setter in 0 - 1 range where 1 == 1563.89 microseconds (1.56 milliseconds)
         float getAttack();
-        void setAttack( float attackMs );
+        void setAttack( float attackNormalized );
+        // getter/setter using microseconds
+        float getAttackMicroseconds();
+        void setAttackMicroseconds( float attackInMicroseconds );
+
+        // getter/setter in 0 - 1 range where 1 == 1571.755 milliseconds
         float getRelease();
-        void setRelease( float releaseMs );
+        void setRelease( float releaseNormalized );
+        // getter/setter using milliseconds
+        float getReleaseMilliseconds();
+        void setReleaseMilliseconds( float releaseInMilliseconds );
+
+        // 0 - 1 range where 0 == -20 dB and 1 == +20 dB
         float getThreshold();
-        void setThreshold( float thresholdDb );
+        void setThreshold( float thresholdNormalized );
+
+        bool getSoftKnee();
+        void setSoftKnee( bool softKnee );
 
         float getLinearGR();
 
@@ -58,17 +86,19 @@ class Limiter : public BaseProcessor
 #endif
 
     protected:
-        void init( float attackMs, float releaseMs, float thresholdDb );
-        void recalculate();
+        void init( float attackNormalized, float releaseNormalized, float thresholdNormalized, bool softKnee );
+        void cacheValues();
 
-        SAMPLE_TYPE pTresh;   // in dB, -20 - 20
-        SAMPLE_TYPE pTrim;
-        SAMPLE_TYPE pAttack;  // in microseconds
-        SAMPLE_TYPE pRelease; // in ms
-        SAMPLE_TYPE pKnee;
+        // instance variables
 
-        SAMPLE_TYPE thresh, gain, att, rel, trim;
-};
+        SAMPLE_TYPE _threshold;
+        SAMPLE_TYPE _trim;
+        SAMPLE_TYPE _attack;
+        SAMPLE_TYPE _release;
+        SAMPLE_TYPE _gain;
+        bool        _softKnee;
+        SAMPLE_TYPE pThreshold; // cached process value of threshold for given knee type
+    };
 } // E.O namespace MWEngine
 
 #endif

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,6 +45,21 @@ inline float capParam( float value )
 inline SAMPLE_TYPE capSample( SAMPLE_TYPE value )
 {
     return std::min(( SAMPLE_TYPE ) 1.0, std::max(( SAMPLE_TYPE ) -1.0, value ));
+}
+
+// inverts a pow operation, allowing you to derive the exponent from the known value and base
+
+inline float inversePow( float value, float base )
+{
+    return log( value ) / log( base );
+}
+
+// inverts a log operation, allowing you to derive the original number from the known value and base
+// e.g. reverting log10( 0.5 ) is inverseLog( -0.3010299956639812, 10 ) == 0.5
+
+inline float inverseLog( float value, float base )
+{
+    return pow( base, value );
 }
 
 /* convenience methods */
