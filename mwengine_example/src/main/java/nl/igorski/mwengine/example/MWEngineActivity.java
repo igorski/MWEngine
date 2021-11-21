@@ -199,7 +199,7 @@ public final class MWEngineActivity extends Activity {
         // create a lowpass filter to catch all low rumbling and a limiter to prevent clipping of output :)
 
         _lpfhpf  = new LPFHPFilter(( float )  MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS );
-        _limiter = new Limiter( 10f, 500f, 0.6f );
+        _limiter = new Limiter();
 
         masterBus.addProcessor( _lpfhpf );
         masterBus.addProcessor( _limiter );

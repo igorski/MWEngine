@@ -36,14 +36,14 @@ Limiter::Limiter()
     init( 0.8f, 1.0f, 0.55f, true );
 }
 
-Limiter::Limiter( float attack, float release, float threshold )
+Limiter::Limiter( float attackNormalized, float releaseNormalized, float thresholdNormalized )
 {
-    init( attack, release, threshold, false );
+    init( attackNormalized, releaseNormalized, thresholdNormalized, false );
 }
 
-Limiter::Limiter( float attackInMicroseconds, float releaseInMilliseconds, float threshold, bool softKnee )
+Limiter::Limiter( float attackInMicroseconds, float releaseInMilliseconds, float thresholdNormalized, bool softKnee )
 {
-    init( 0.f, 0.f, threshold, softKnee );
+    init( 0.f, 0.f, thresholdNormalized, softKnee );
     setAttackMicroseconds( attackInMicroseconds );
     setReleaseMilliseconds( releaseInMilliseconds );
 }
@@ -60,9 +60,9 @@ float Limiter::getAttack()
     return inversePow(( float ) _attack, 10.f ) / -2.0f;
 }
 
-void Limiter::setAttack( float attack )
+void Limiter::setAttack( float attackNormalized )
 {
-    _attack = pow( 10.0, -2.0 * attack );
+    _attack = pow( 10.0, -2.0 * attackNormalized );
 }
 
 float Limiter::getAttackMicroseconds()
@@ -80,9 +80,9 @@ float Limiter::getRelease()
     return ( inversePow(( float ) _release, 10.f ) + 2.f ) / -3.f;
 }
 
-void Limiter::setRelease( float release )
+void Limiter::setRelease( float releaseNormalized )
 {
-    _release = pow( 10.0, -2.0 - ( 3.0 * release ));
+    _release = pow( 10.0, -2.0 - ( 3.0 * releaseNormalized ));
 }
 
 float Limiter::getReleaseMilliseconds()
@@ -100,9 +100,9 @@ float Limiter::getThreshold()
     return ( float ) _threshold;
 }
 
-void Limiter::setThreshold( float threshold )
+void Limiter::setThreshold( float thresholdNormalized )
 {
-    _threshold = ( SAMPLE_TYPE ) threshold;
+    _threshold = ( SAMPLE_TYPE ) thresholdNormalized;
     cacheValues();
 }
 
@@ -196,9 +196,9 @@ bool Limiter::isCacheable()
 
 /* protected methods */
 
-void Limiter::init( float attack, float release, float threshold, bool softKnee )
+void Limiter::init( float attackNormalized, float releaseNormalized, float thresholdNormalized, bool softKnee )
 {
-    _threshold = ( SAMPLE_TYPE ) threshold;
+    _threshold = ( SAMPLE_TYPE ) thresholdNormalized;
 
     SAMPLE_TYPE trim = 0.60;
 
@@ -206,8 +206,8 @@ void Limiter::init( float attack, float release, float threshold, bool softKnee 
     _trim = pow( 10.0, ( 2.0 * trim ) - 1.0 );
 
     setSoftKnee( softKnee );
-    setAttack( attack );
-    setRelease( release );
+    setAttack( attackNormalized );
+    setRelease( releaseNormalized );
 }
 
 void Limiter::cacheValues()
