@@ -18,7 +18,7 @@ TEST( Limiter, DefaultConstructor )
     delete processor;
 }
 
-TEST( Limiter, LegacyConstructor )
+TEST( Limiter, NormalizedConstructor )
 {
     float attack    = 0.5f;
     float release   = 0.6f;
@@ -51,42 +51,12 @@ TEST( Limiter, ConstructorWithTimeUnits )
     delete processor;
 }
 
-TEST( Limiter, GetSetAttack )
+TEST( Limiter, GetSetAttackNormalized )
 {
     Limiter* processor = new Limiter();
 
     processor->setAttack( 0.99f );
     ASSERT_FLOAT_EQ( processor->getAttack(), 0.99f );
-
-    delete processor;
-}
-
-TEST( Limiter, GetSetRelease )
-{
-    Limiter* processor = new Limiter();
-
-    processor->setRelease( 0.99f );
-    ASSERT_FLOAT_EQ( processor->getRelease(), 0.99f );
-
-    delete processor;
-}
-
-TEST( Limiter, GetSetThreshold )
-{
-    Limiter* processor = new Limiter();
-
-    processor->setThreshold( 0.99f );
-    ASSERT_FLOAT_EQ( processor->getThreshold(), 0.99f );
-
-    delete processor;
-}
-
-TEST( Limiter, GetSetSoftKnee )
-{
-    Limiter* processor = new Limiter();
-
-    processor->setSoftKnee( false );
-    ASSERT_TRUE( !processor->getSoftKnee() );
 
     delete processor;
 }
@@ -105,6 +75,16 @@ TEST( Limiter, GetSetAttackMicroSeconds )
     delete processor;
 }
 
+TEST( Limiter, GetSetReleaseNormalized )
+{
+    Limiter* processor = new Limiter();
+
+    processor->setRelease( 0.99f );
+    ASSERT_FLOAT_EQ( processor->getRelease(), 0.99f );
+
+    delete processor;
+}
+
 TEST( Limiter, GetSetReleaseMilliSeconds )
 {
     Limiter* processor = new Limiter();
@@ -114,6 +94,26 @@ TEST( Limiter, GetSetReleaseMilliSeconds )
 
     processor->setReleaseMilliseconds( 49.699593f );
     ASSERT_FLOAT_EQ( processor->getRelease(), 0.50001144f );
+
+    delete processor;
+}
+
+TEST( Limiter, GetSetThresholdNormalized )
+{
+    Limiter* processor = new Limiter();
+
+    processor->setThreshold( 0.99f );
+    ASSERT_FLOAT_EQ( processor->getThreshold(), 0.99f );
+
+    delete processor;
+}
+
+TEST( Limiter, GetSetSoftKnee )
+{
+    Limiter* processor = new Limiter();
+
+    processor->setSoftKnee( false );
+    ASSERT_TRUE( !processor->getSoftKnee() );
 
     delete processor;
 }
