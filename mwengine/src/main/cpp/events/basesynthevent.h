@@ -122,7 +122,8 @@ class BaseSynthEvent : public BaseAudioEvent
         int _minLength;
         bool _hasMinLength, _queuedForDeletion;
 
-        SynthInstrument* _synthInstrument;
+        // gets the instrument rendering this event, typecast to its subclass
+        SynthInstrument* getSynthInstrument();
 
         // setup related
 

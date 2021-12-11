@@ -35,12 +35,12 @@ namespace MWEngine {
 
 BaseAudioEvent::BaseAudioEvent()
 {
-    construct();
+    init();
 }
 
 BaseAudioEvent::BaseAudioEvent( BaseInstrument* instrument )
 {
-    construct();
+    init();
     _instrument = instrument;
 }
 
@@ -458,7 +458,7 @@ bool BaseAudioEvent::hasBuffer()
 
 /* protected methods */
 
-void BaseAudioEvent::construct()
+void BaseAudioEvent::init()
 {
     _buffer            = nullptr;
     _enabled           = true;

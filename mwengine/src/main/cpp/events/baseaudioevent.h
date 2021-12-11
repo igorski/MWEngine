@@ -185,7 +185,7 @@ class BaseAudioEvent
 
     protected:
 
-        void construct();   // basic initialization which can be shared across overloaded constructors
+        virtual void init(); // basic initialization which can be shared across derived classes
 
         float _volume;
         int _eventStart;

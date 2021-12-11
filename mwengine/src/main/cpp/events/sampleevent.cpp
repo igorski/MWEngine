@@ -32,13 +32,11 @@ namespace MWEngine {
 
 SampleEvent::SampleEvent()
 {
-    construct();
-    init( 0 );
+    init( nullptr );
 }
 
 SampleEvent::SampleEvent( BaseInstrument* aInstrument )
 {
-    construct();
     init( aInstrument );
 }
 
@@ -722,6 +720,8 @@ bool SampleEvent::getBufferForRange( AudioBuffer* buffer, int readPos )
 
 void SampleEvent::init( BaseInstrument* instrument )
 {
+    BaseAudioEvent::init();
+
     _bufferRangeStart     = 0;
     _bufferRangeEnd       = 0;
     _bufferRangeLength    = 0;

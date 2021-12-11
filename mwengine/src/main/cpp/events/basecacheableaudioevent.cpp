@@ -29,8 +29,8 @@ namespace MWEngine {
 
 BaseCacheableAudioEvent::BaseCacheableAudioEvent( BaseInstrument* instrument )
 {
+    init();
     setInstrument( instrument );
-    construct();
 }
 
 BaseCacheableAudioEvent::~BaseCacheableAudioEvent()

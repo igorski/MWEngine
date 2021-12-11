@@ -35,7 +35,7 @@ unsigned int BaseSynthEvent::INSTANCE_COUNT = 0;
 
 BaseSynthEvent::BaseSynthEvent()
 {
-    _synthInstrument = nullptr;
+    // uses BaseAudioEvent constructor
 }
 
 /**
@@ -49,7 +49,6 @@ BaseSynthEvent::BaseSynthEvent()
 BaseSynthEvent::BaseSynthEvent( float aFrequency, int aPosition, float aLength,
                                 SynthInstrument* aInstrument )
 {
-    construct();
     init( aInstrument, aFrequency, aPosition, aLength, true );
 }
 
@@ -61,7 +60,6 @@ BaseSynthEvent::BaseSynthEvent( float aFrequency, int aPosition, float aLength,
  */
 BaseSynthEvent::BaseSynthEvent( float aFrequency, SynthInstrument* aInstrument )
 {
-    construct();
     init( aInstrument, aFrequency, 0, 1, false );
 }
 
@@ -82,7 +80,7 @@ void BaseSynthEvent::play()
 
     lastWriteIndex             = 0;
     cachedProps.envelopeOffset = 0;
-    cachedProps.envelope       = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : 1.0;
+    cachedProps.envelope       = ( getSynthInstrument()->adsr->getAttackTime() > 0 ) ? 0.0 : 1.0;
 
     BaseAudioEvent::play();
 }
@@ -96,7 +94,7 @@ void BaseSynthEvent::stop()
         // if there is no positive release envelope, apply a short decay
         // so we know events are audible for at least a 64th
         _minLength = std::max(
-            _synthInstrument->adsr->getReleaseDuration(),
+            getSynthInstrument()->adsr->getReleaseDuration(),
             AudioEngine::samples_per_bar / 64
         );
         _hasMinLength = false;
@@ -108,7 +106,7 @@ void BaseSynthEvent::stop()
 int BaseSynthEvent::getEventEnd()
 {
     // SynthEvents might have a longer duration if they have a positive release envelope
-    return BaseAudioEvent::getEventEnd() + _synthInstrument->adsr->getReleaseDuration();
+    return BaseAudioEvent::getEventEnd() + getSynthInstrument()->adsr->getReleaseDuration();
 }
 
 bool BaseSynthEvent::isQueuedForDeletion()
@@ -140,7 +138,7 @@ void BaseSynthEvent::setFrequency( float aFrequency, bool storeAsBaseFrequency )
     if ( storeAsBaseFrequency )
         _baseFrequency = aFrequency;
 
-    _synthInstrument->synthesizer->initializeEventProperties( this, false );
+    getSynthInstrument()->synthesizer->initializeEventProperties( this, false );
 }
 
 SAMPLE_TYPE BaseSynthEvent::getPhaseForOscillator( int aOscillatorNum )
@@ -211,8 +209,8 @@ void BaseSynthEvent::calculateBuffers()
         _hasMinLength = false;                          // keeping track if the min length has been rendered
     }
 
-    if ( isSequenced && _synthInstrument != nullptr ) {
-        _synthInstrument->synthesizer->initializeEventProperties( this, true );
+    if ( isSequenced && _instrument != nullptr ) {
+        getSynthInstrument()->synthesizer->initializeEventProperties( this, true );
     }
 }
 
@@ -261,7 +259,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         }
 
         // render the snippet into the temp buffer
-        _synthInstrument->synthesizer->render( tempBuffer, this );
+        getSynthInstrument()->synthesizer->render( tempBuffer, this );
 
         // merge temp buffer into the output buffer
         // note we merge using 1.0 as mix volume as the events volume was applied during synthesis
@@ -289,7 +287,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
             // TODO: specify total render range in ::render method ? this would avoid unnecessary buffer merging ;)
             // also synthesizer now renders a full output buffer size (wasteful)
 
-            _synthInstrument->synthesizer->render( tempBuffer, this ); // overwrites previous buffer contents
+            getSynthInstrument()->synthesizer->render( tempBuffer, this ); // overwrites previous buffer contents
 
             // note we merge using 1.0 as mix volume (event volume was applied during synthesis)
             outputBuffer->mergeBuffers( tempBuffer, 0, loopOffset, 1.0 );
@@ -312,7 +310,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer )
 
     int bufferSize = outputBuffer->bufferSize;
     ResizableAudioBuffer* tempBuffer = getEmptyTempBuffer( bufferSize );
-    _synthInstrument->synthesizer->render( tempBuffer, this );
+    getSynthInstrument()->synthesizer->render( tempBuffer, this );
 
     // keep track of the rendered samples, in case of a key up event
     // we still want to have the sound ring for the minimum period
@@ -354,6 +352,11 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer )
 
 /* protected methods */
 
+SynthInstrument* BaseSynthEvent::getSynthInstrument()
+{
+    return static_cast<SynthInstrument*>( _instrument ); // NOLINT
+}
+
 /**
  * actual updating of the properties, requested by invalidateProperties
  * this operation might potentially delete objects that could be in
@@ -362,8 +365,8 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer )
 void BaseSynthEvent::updateProperties()
 {
     // sync ADSR envelope values
-    cachedProps.envelope     = ( _synthInstrument->adsr->getAttackTime() > 0 ) ? 0.0 : 1.0;
-    cachedProps.releaseLevel = ( SAMPLE_TYPE ) _synthInstrument->adsr->getSustainLevel();
+    cachedProps.envelope     = ( getSynthInstrument()->adsr->getAttackTime() > 0 ) ? 0.0 : 1.0;
+    cachedProps.releaseLevel = ( SAMPLE_TYPE ) getSynthInstrument()->adsr->getSustainLevel();
 
     calculateBuffers();
 }
@@ -385,12 +388,12 @@ void BaseSynthEvent::triggerRelease()
     // it is possible the ADSR module was going through its attack or decay
     // phases, let the release envelope operate from the current level
     cachedProps.releaseLevel   = cachedProps.envelope;
-    cachedProps.envelopeOffset = _synthInstrument->adsr->getReleaseStartOffset();
+    cachedProps.envelopeOffset = getSynthInstrument()->adsr->getReleaseStartOffset();
 }
 
 ResizableAudioBuffer* BaseSynthEvent::getEmptyTempBuffer( int bufferSize )
 {
-    ResizableAudioBuffer* tempBuffer = _synthInstrument->synthesizer->getTempBuffer();
+    ResizableAudioBuffer* tempBuffer = getSynthInstrument()->synthesizer->getTempBuffer();
     tempBuffer->silenceBuffers();     // unset previous buffer contents
     tempBuffer->resize( bufferSize ); // equalize buffer sizes
     return tempBuffer;
@@ -406,10 +409,11 @@ ResizableAudioBuffer* BaseSynthEvent::getEmptyTempBuffer( int bufferSize )
 void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
                            int aPosition, float aLength, bool isSequenced )
 {
+    BaseAudioEvent::init();
+
     instanceId         = ++INSTANCE_COUNT;
     _destroyableBuffer = true;  // synth event buffer is always unique and managed by this instance !
     _instrument        = aInstrument;
-    _synthInstrument   = aInstrument; // convenience reference (typecast to SynthInstrument)
 
     position           = aPosition;
     length             = aLength;
