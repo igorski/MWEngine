@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -38,8 +38,9 @@ ProcessingChain::~ProcessingChain()
         auto processor = _activeProcessors.at( 0 );
         if ( processor != nullptr ) {
             removeProcessor( processor );
+        } else {
+            _activeProcessors.erase( _activeProcessors.begin() );
         }
-        _activeProcessors.erase( _activeProcessors.begin() );
     }
 }
 
@@ -57,8 +58,8 @@ void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
     {
         if ( _activeProcessors.at( i ) == aProcessor )
         {
-            _activeProcessors.erase( _activeProcessors.begin() + i );
             aProcessor->setChain( nullptr );
+            _activeProcessors.erase( _activeProcessors.begin() + i );
             break;
         }
     }
