@@ -124,11 +124,14 @@ Which will generate the library in both debug and release configurations, packag
 
 Within Android Studio you can easily do this by importing the generated .aar file by navigating through:
 
-```File > new module > import .jar/.aar package > select /path/to/mwengine-release.aar```
+```File > Project structure > Dependencies```
 
-Your projects _settings.gradle_ file will now contain the following line:
+Add a new `Library Dependency` in the `Declared dependencies` tab, select `Jar Dependency`
+In the `Add Jar/Aar Dependency` dialog, enter the path to your built AAR library `/path/to/mwengine-release.aar`
 
-```include ':mwengine-release'```
+Your projects _build.gradle_ file will now contain the following line:
+
+```implementation files('/path/to/mwengine-release.aar')```
 
 In the _build.gradle_ for your application, be sure to add the following entries under the defaultConfig and dependencies sections:
 
