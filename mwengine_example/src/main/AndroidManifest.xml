@@ -4,14 +4,17 @@
 
     <!-- required audio related permissions are provided by manifest inside MWEngine library -->
 
-    <!-- note the orientation configChange (prevents restart of audio rendering thread on rotation) -->
+    <!-- note the configChanges directive (prevents restart of audio rendering thread on rotation/screen resize) -->
+    <!-- this is unnecessary as by default the configChange would trigger the Activity destroy which should be handled separately -->
 
-    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
-        <activity android:name="nl.igorski.mwengine.example.MWEngineActivity"
+    <application android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round">
+        <activity
+            android:name="nl.igorski.mwengine.example.MWEngineActivity"
             android:launchMode="singleTask"
-            android:hardwareAccelerated="true"
-            android:configChanges="orientation|keyboardHidden"
-            android:label="@string/app_name">
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MyApplication"
+        >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

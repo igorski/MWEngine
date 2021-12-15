@@ -1,8 +1,14 @@
 apply plugin: 'com.android.application'
 
 dependencies {
-    // builds library module as Android Archive (.AAR) as a dependency of this example project
-    // alternatively (for your custom projects), load prebuilt mwengine library .AAR by copying to libs folder
+    // standard Android dependencies added by Android Studio on new project creation
+    // you can use/change these per your preference
+    implementation 'androidx.appcompat:appcompat:1.3.0'
+    implementation 'com.google.android.material:material:1.4.0'
+
+    // --- MWEngine specific ---
+    // adds MWEngine Android Archive (.AAR) as a dependency of this example project. Alternatively (for your
+    // custom projects), load the prebuilt mwengine library .AAR to your projects /libs folder (see README)
     implementation project(':mwengine')
 }
 
@@ -17,7 +23,7 @@ buildscript {
 }
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 30
 
     defaultConfig {
         // the sdk version range below matches the one of the library. You can change these as you see fit
@@ -27,7 +33,7 @@ android {
         // thus set the value of minSdkVersion to whatever fits your use case.
 
         minSdkVersion 16
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0.0"
 

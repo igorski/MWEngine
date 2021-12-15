@@ -324,8 +324,6 @@ public final class MWEngine
      * This halts the audio rendering and stops the Thread
      */
     public void dispose() {
-        _isRunning = false;
-
         stop();
         reset();
 

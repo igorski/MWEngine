@@ -2,9 +2,10 @@ package nl.igorski.mwengine.example;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,7 +22,7 @@ import nl.igorski.mwengine.core.*;
 
 import java.util.Vector;
 
-public final class MWEngineActivity extends Activity {
+public final class MWEngineActivity extends AppCompatActivity {
     /**
      * IMPORTANT : when creating native layer objects through JNI it
      * is important to remember that when the Java references go out of scope
@@ -95,6 +96,7 @@ public final class MWEngineActivity extends Activity {
     @TargetApi( Build.VERSION_CODES.M )
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
         if ( requestCode != PERMISSIONS_CODE ) return;
         for ( int i = 0; i < permissions.length; i++ ) {
             String permission = permissions[ i ];
@@ -108,23 +110,34 @@ public final class MWEngineActivity extends Activity {
     }
 
     /**
-     * Called when the activity is destroyed. This also fires
-     * on screen orientation changes, hence the override as we need
-     * to watch the engines memory allocation outside of the Java environment
+     * Called when screen resizes / orientation changes. We handle this manually as we do not want onDestroy()
+     * to fire for this occasion (the audio engine would otherwise be disposed, which is not what we want
+     * for this scenario (see :configChanges directive in AndroidManifest)
+     */
+    @Override
+    public void onConfigurationChanged( Configuration newConfig ) {
+        super.onConfigurationChanged( newConfig );
+        Log.d( LOG_TAG, "MWEngineActivity::onConfigurationChanged, new orientation: " + newConfig.orientation );
+    }
+
+    /**
+     * Called when the activity is destroyed. This should not fire on screen resize/orientation
+     * changes. See AndroidManifest.xml for the appropriate :configChanges directive on the activity.
+     * On actual destroy, we clean up the engine's thread and memory allocated outside of the Java environment.
      */
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d( LOG_TAG, "MWEngineActivity::onDestroy" );
         flushSong();        // free memory allocated by song
         _engine.dispose();  // dispose the engine
-        Log.d( LOG_TAG, "MWEngineActivity destroyed" );
     }
 
     private void init() {
+        Log.d( LOG_TAG, "MWEngineActivity::init, had existing _inited state: " + _inited );
+
         if ( _inited )
             return;
-
-        Log.d( LOG_TAG, "initing MWEngineActivity" );
 
         // STEP 1 : preparing the native audio engine
 
@@ -176,7 +189,6 @@ public final class MWEngineActivity extends Activity {
         } else {
             (( Spinner ) findViewById( R.id.DriverSpinner )).setOnItemSelectedListener( new DriverChangeHandler() );
         }
-
         _inited = true;
     }
 
@@ -289,6 +301,8 @@ public final class MWEngineActivity extends Activity {
     protected void flushSong() {
         // this ensures that Song resources currently in use by the engine are released
 
+        Log.d( LOG_TAG, "MWEngineActivity::flushSong" );
+
         _engine.stop();
 
         // calling 'delete()' on a BaseAudioEvent invokes the
@@ -338,7 +352,7 @@ public final class MWEngineActivity extends Activity {
 
     @Override
     public void onWindowFocusChanged( boolean hasFocus ) {
-        Log.d( LOG_TAG, "window focus changed for MWEngineActivity, has focus > " + hasFocus );
+        Log.d( LOG_TAG, "MWEngineActivity::onWindowFocusChanged, has focus: " + hasFocus );
 
         if ( !hasFocus ) {
             // suspending the app - halt audio rendering in MWEngine Thread to save CPU cycles

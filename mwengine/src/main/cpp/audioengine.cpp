@@ -216,6 +216,8 @@ namespace MWEngine {
 
         DriverAdapter::destroy();
 
+        Debug::log( "Destroyed audio driver" );
+
         // clear heap memory allocated before thread loop
         delete channels;
         delete outBuffer;
