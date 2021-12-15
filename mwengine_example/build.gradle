@@ -7,8 +7,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.4.0'
 
     // --- MWEngine specific ---
-    // adds MWEngine Android Archive (.AAR) as a dependency of this example project. Alternatively (for your
-    // custom projects), load the prebuilt mwengine library .AAR to your projects /libs folder (see README)
+    // adds mwengine native library module as a dependency of this example project. Alternatively (and recommended for your
+    // custom projects), assemble the mwengine library as an .AAR and add it to your projects /libs folder (see README file)
     implementation project(':mwengine')
 }
 
