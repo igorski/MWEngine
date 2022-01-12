@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -42,10 +42,10 @@ int Sequencer::registerInstrument( BaseInstrument* instrument )
     int index       = -1;
     bool wasPresent = false; // prevent double addition
 
-    for ( int i = 0; i < instruments.size(); i++ )
-    {
-        if ( instruments.at( i ) == instrument )
+    for ( auto & i : instruments ) {
+        if ( i == instrument ) {
             wasPresent = true;
+        }
     }
 
     if ( !wasPresent ) {
@@ -123,15 +123,15 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
 
 void Sequencer::updateEvents()
 {
-    for ( size_t i = 0, l = instruments.size(); i < l; ++i ) {
-        instruments.at( i )->updateEvents();
+    for ( auto & instrument : instruments ) {
+        instrument->updateEvents();
     }
 }
 
 void Sequencer::clearEvents()
 {
-    for ( size_t i = 0, l = instruments.size(); i < l; ++i ) {
-        instruments.at( i )->clearEvents();
+    for ( auto & instrument : instruments ) {
+        instrument->clearEvents();
     }
 }
 
@@ -220,30 +220,25 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     instrument->toggleReadLock( true ); // lock the events vector while sequencing
     std::vector<BaseAudioEvent*>* liveEvents = instrument->getLiveEvents();
 
-    size_t i = 0;
-    size_t total = liveEvents->size();
-
-    for ( ; i < total; i++ )
+    // we deliberately query size() during iteration in case BaseAudioEvent.stop()
+    // is called during read. This is an exceptional issue that resolves upon next render iteration
+    for ( size_t i = 0; i < liveEvents->size(); i++ )
     {
         BaseAudioEvent* audioEvent = liveEvents->at( i );
 
-        if ( !audioEvent->isDeletable())
+        if ( !audioEvent->isDeletable()) {
             channel->addLiveEvent( audioEvent );
-        else
+        } else {
             removes.push_back( audioEvent );
+        }
     }
-
     instrument->toggleReadLock( false ); // release mutex
 
     // removal queue filled ? process it so we can safely
     // remove "deleted" AudioEvents without errors occurring
     if ( !removes.empty() )
     {
-        total = removes.size();
-
-        for ( i = 0; i < total; i++ )
-        {
-            BaseAudioEvent* audioEvent = removes[ i ];
+        for ( auto & audioEvent : removes ) {
             instrument->removeEvent( audioEvent, true );
         }
         removes.clear();
@@ -254,13 +249,11 @@ std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvent
 {
     auto* events = new std::vector<BaseCacheableAudioEvent*>();
 
-    for ( size_t i = 0, l = instruments.size(); i < l; ++i )
+    for ( auto & instrument : instruments )
     {
-        std::vector<BaseAudioEvent*>* audioEvents = instruments[ i ]->getEvents();
-        for ( size_t j = 0; j < audioEvents->size(); j++ )
+        std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
+        for ( auto audioEvent : *audioEvents )
         {
-            BaseAudioEvent* audioEvent = audioEvents->at( j );
-
             // if event is an instance of BaseCacheableAudioEvent add it to the list
             if ( dynamic_cast<BaseCacheableAudioEvent*>( audioEvent ) != nullptr )
             {
