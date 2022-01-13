@@ -59,7 +59,7 @@ bool DrumInstrument::hasEvents()
     return false;
 }
 
-void DrumInstrument::updateEvents()
+void DrumInstrument::updateEvents( float tempoRatio )
 {
     for ( int i = 0, l = drumPatterns->size(); i < l; ++i ) {
         drumPatterns->at( i )->cacheEvents( drumTimbre );

@@ -235,15 +235,13 @@ TEST( BaseInstrument, UpdateEvents )
 
     // increase tempo by given factor
 
-    float factor = 2.0f;
-
-    AudioEngine::tempo *= factor;
+    float factor = 0.5F; // previous 120 BPM / desired new 240 BPM
 
     // invoke updateEvents() (would have been executed by the Sequencer when running)
 
-    instrument->updateEvents();
+    instrument->updateEvents( factor );
 
-    int expectedEventStart = ( int ) ( eventStart / factor );
+    int expectedEventStart = ( int ) ( eventStart * factor );
     int expectedEventEnd   = expectedEventStart + ( eventLength - 1 );
 
     EXPECT_EQ( expectedEventStart, event->getEventStart() )
@@ -257,10 +255,9 @@ TEST( BaseInstrument, UpdateEvents )
 
     // decrease tempo again by given factor
 
-    factor = 0.5f;  // restores to original
-    AudioEngine::tempo *= factor;
+    factor = 2.F; // restores to original (previous 240 BPM / desired new 120 BPM)
 
-    instrument->updateEvents();
+    instrument->updateEvents( factor );
 
     EXPECT_EQ( eventStart, event->getEventStart() )
         << "expected event start offset to have updated after tempo change and invocation of updateEvents()";

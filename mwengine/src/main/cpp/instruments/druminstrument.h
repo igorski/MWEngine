@@ -51,7 +51,7 @@ class DrumInstrument : public BaseInstrument
         // base class overrides
 
         bool hasEvents();
-        void updateEvents();
+        void updateEvents( float tempoRatio = 1 );
         void clearEvents();
         bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
         DrumPattern* getDrumPattern( int patternNum );

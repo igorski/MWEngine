@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -36,7 +36,7 @@ class BaseInstrument
 
         virtual bool hasEvents();     // whether the instrument has events to sequence
         virtual bool hasLiveEvents(); // whether the instruments has events to synthesize on the fly
-        virtual void updateEvents();  // updates all associated events after changing instrument properties / tempo change
+        virtual void updateEvents( float tempoRatio = 1 );  // updates all associated events after changing instrument properties or tempo change
 
         virtual std::vector<BaseAudioEvent*>* getEvents();
         virtual std::vector<BaseAudioEvent*>* getEventsForMeasure( int measureNum );
@@ -61,8 +61,6 @@ class BaseInstrument
 
         // a vector that indexes all sequenced events by measure for easy lookup by the sequencer
         std::vector<std::vector<BaseAudioEvent*>*> _audioEventsPerMeasure;
-
-        float _oldTempo; // last known sequencer tempo
 
         // mutex to lock event vector mutations
         std::mutex* _lock;

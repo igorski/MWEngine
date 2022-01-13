@@ -121,13 +121,6 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
     return loopStarted;
 }
 
-void Sequencer::updateEvents()
-{
-    for ( auto & instrument : instruments ) {
-        instrument->updateEvents();
-    }
-}
-
 void Sequencer::clearEvents()
 {
     for ( auto & instrument : instruments ) {

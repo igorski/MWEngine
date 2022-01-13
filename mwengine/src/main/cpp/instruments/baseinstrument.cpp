@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -80,13 +80,13 @@ std::vector<BaseAudioEvent*>* BaseInstrument::getLiveEvents()
     return _liveAudioEvents;
 }
 
-void BaseInstrument::updateEvents()
+void BaseInstrument::updateEvents( float tempoRatio )
 {
-    // when updating to reflect changes in the instruments propertes
+    // when updating to reflect changes in the instruments properties
     // or to update event properties responding to tempo changes
     // override this function in your derived class for custom implementations
 
-    if ( _oldTempo == AudioEngine::tempo ) {
+    if ( tempoRatio == 1 ) {
         return;
     }
 
@@ -97,12 +97,9 @@ void BaseInstrument::updateEvents()
     // note the measure cache remains untouched (nothing changes with regards to
     // measure separation)
 
-    float ratio = _oldTempo / AudioEngine::tempo;
-    _oldTempo   = AudioEngine::tempo;
-
     // TODO: there is an issue that creeps in with regards to maintaining an accurate measure
     // cache, get(Start|End)MeasureForEvent relies on AudioEngine::samples_per_bar so the removal is
-    // calculating for the new start/end measure range, therefor possibly missing the old (prior to
+    // calculating for the new start/end measure range, therefore possibly missing the old (prior to
     // tempo change) range values. Additionally, we might risk undefined behaviour on the read locks
     // for an already locked mutex. We set a flag to prevent event add/remove changes (triggered by their
     // repositioning) and invoke a manual flush and recache after all sequenced events have been repositioned.
@@ -111,7 +108,7 @@ void BaseInstrument::updateEvents()
 
     size_t i = 0, total = _audioEvents->size();
     for ( ; i < total; ++i ) {
-        _audioEvents->at( i )->repositionToTempoChange( ratio );
+        _audioEvents->at( i )->repositionToTempoChange( tempoRatio );
     }
 
     _freezeEvents = false;
@@ -190,8 +187,7 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 
 void BaseInstrument::registerInSequencer()
 {
-    index     = Sequencer::registerInstrument( this );
-    _oldTempo = AudioEngine::tempo;
+    index = Sequencer::registerInstrument( this );
 }
 
 void BaseInstrument::unregisterFromSequencer()

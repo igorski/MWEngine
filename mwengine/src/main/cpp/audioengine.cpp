@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -640,8 +640,11 @@ namespace MWEngine {
             marked_buffer_position = ( int )(( float ) marked_buffer_position * ratio );
         }
 
-        // inform sequencer of the update
-        Sequencer::updateEvents();
+        // inform all instruments of the update
+
+        for ( auto & instrument : Sequencer::instruments ) {
+            instrument->updateEvents( ratio );
+        }
 
         // broadcast update (so the Sequencer can invoke a re-calculation
         // on all existing audio events to match the new tempo / time signature)
