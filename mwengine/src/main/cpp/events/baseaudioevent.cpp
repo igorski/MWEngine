@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -28,6 +28,7 @@
 #include <utilities/eventutility.h>
 #include <utilities/volumeutil.h>
 #include <algorithm>
+#include <sequencer.h>
 
 namespace MWEngine {
 
@@ -99,11 +100,10 @@ void BaseAudioEvent::stop()
         return;
     }
 
-    // remove this event from the live events list of the instrument (keep
-    // the current sequenced event - if it was added - as is)
+    // mark the event as deletable so it can be removed from the instruments event list
+    // as soon as the engine has finished rendering the current iteration
 
-    _instrument->removeEvent( this, true );
-
+    setDeletable( true );
     resetPlayState();
 }
 
@@ -117,6 +117,7 @@ void BaseAudioEvent::addToSequencer()
     if ( isAddedToSequencer() ) {
         return;
     }
+    setDeletable( false );
 
     // adds the event to the sequencer so it can be heard
 
@@ -134,7 +135,11 @@ void BaseAudioEvent::removeFromSequencer()
         return;
 
     if ( isSequenced ) {
-        _instrument->removeEvent( this, false );
+        if ( Sequencer::playing ) {
+            setDeletable( true ); // mark as deletable so the Sequencer can clean it up
+        } else {
+            _instrument->removeEvent(this, false ); // not playing, clean up immediately
+        }
     }
     stop(); // event can be both sequenced as well as playing back live
 }
