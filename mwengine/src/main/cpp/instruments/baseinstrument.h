@@ -25,7 +25,6 @@
 
 #include "../audiochannel.h"
 #include <events/baseaudioevent.h>
-#include <mutex>
 
 namespace MWEngine {
 class BaseInstrument
@@ -43,10 +42,17 @@ class BaseInstrument
         virtual std::vector<BaseAudioEvent*>* getLiveEvents();
 
         virtual void clearEvents();
-        virtual void addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
-        virtual bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
 
-        void toggleReadLock( bool lock );
+        // internal to the engine
+        // addition and removal of events is performed when the Sequencer is collecting audible
+        // content for the engine to render. By managing this through the Sequencer we omit the
+        // need for thread locks or mutexes when changing event lists during rendering
+
+#ifndef SWIG
+        void addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
+        bool removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent );
+#endif
+
         void registerInSequencer();
         void unregisterFromSequencer();
 
@@ -62,9 +68,6 @@ class BaseInstrument
         // a vector that indexes all sequenced events by measure for easy lookup by the sequencer
         std::vector<std::vector<BaseAudioEvent*>*> _audioEventsPerMeasure;
 
-        // mutex to lock event vector mutations
-        std::mutex* _lock;
-        bool _locked       = false;
         bool _freezeEvents = false;
 
         void clearMeasureCache();

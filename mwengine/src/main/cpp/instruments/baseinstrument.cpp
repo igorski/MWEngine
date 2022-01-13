@@ -48,9 +48,6 @@ BaseInstrument::~BaseInstrument()
     audioChannel     = nullptr;
     _audioEvents     = nullptr;
     _liveAudioEvents = nullptr;
-
-    delete _lock;
-    _lock = nullptr;
 }
 
 /* public methods */
@@ -90,9 +87,6 @@ void BaseInstrument::updateEvents( float tempoRatio )
         return;
     }
 
-    //std::lock_guard<std::mutex> guard( _lock );
-    toggleReadLock( true );
-
     // when tempo has updated, we update the offsets of all associated events
     // note the measure cache remains untouched (nothing changes with regards to
     // measure separation)
@@ -117,7 +111,6 @@ void BaseInstrument::updateEvents( float tempoRatio )
     for ( i = 0; i < total; ++i ) {
         addEventToMeasureCache( _audioEvents->at( i ));
     };
-    toggleReadLock( false );
 }
 
 void BaseInstrument::clearEvents()
@@ -139,10 +132,9 @@ void BaseInstrument::clearEvents()
 
 void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
-    if ( _freezeEvents ) return;
-
-    //std::lock_guard<std::mutex> guard( _lock );
-    toggleReadLock( true );
+    if ( _freezeEvents ) {
+        return;
+    }
 
     if ( isLiveEvent ) {
         _liveAudioEvents->push_back( audioEvent );
@@ -150,21 +142,19 @@ void BaseInstrument::addEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
         _audioEvents->push_back( audioEvent );
         addEventToMeasureCache( audioEvent );
     }
-    toggleReadLock( false );
 }
 
 bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
 {
-    if ( _freezeEvents ) return false;
+    if ( _freezeEvents ) {
+        return false;
+    }
 
     bool removed = false;
 
     if ( audioEvent == nullptr || _liveAudioEvents == nullptr || _audioEvents == nullptr ) {
         return removed;
     }
-
-    //std::lock_guard<std::mutex> guard( _lock );
-    toggleReadLock( true );
 
     if ( isLiveEvent )
     {
@@ -180,8 +170,6 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
             removeEventFromMeasureCache( audioEvent );
         }
     }
-    toggleReadLock( false );
-
     return removed;
 }
 
@@ -196,23 +184,11 @@ void BaseInstrument::unregisterFromSequencer()
     index = -1;
 }
 
-void BaseInstrument::toggleReadLock( bool lock )
-{
-    if ( lock && !_locked ) {
-        _lock->lock();
-        _locked = true;
-    } else if ( !lock && _locked ){
-        _lock->unlock();
-        _locked = false;
-    }
-}
-
 /* protected methods */
 
 void BaseInstrument::construct()
 {
     audioChannel = new AudioChannel( 1.F );
-    _lock        = new std::mutex();
 
     // events
 

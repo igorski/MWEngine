@@ -2,6 +2,8 @@
 
 TEST( Limiter, getType )
 {
+    AudioEngineProps::SAMPLE_RATE = 44100;
+
     Limiter* processor = new Limiter();
 
     std::string expectedType( "Limiter" );
