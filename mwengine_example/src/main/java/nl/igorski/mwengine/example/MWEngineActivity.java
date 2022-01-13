@@ -306,7 +306,7 @@ public final class MWEngineActivity extends AppCompatActivity {
         _engine.stop();
 
         // calling 'delete()' on a BaseAudioEvent invokes the
-        // native layer destructor (and removes it from the sequencer)
+        // native layer destructor (also removes it from the Sequencer)
 
         for ( final BaseAudioEvent event : _synth1Events )
             event.delete();

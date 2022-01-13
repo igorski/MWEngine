@@ -53,9 +53,14 @@ TEST( BaseAudioEvent, PlayStop )
     ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected event not to be present in the live event list after construction";
 
+    audioEvent->setDeletable( true );
+
     // 1. activate play-state
 
     audioEvent->play();
+
+    ASSERT_FALSE( audioEvent->isDeletable() )
+        << "expected audio event to be unmarked as deletable after invocation of play()";
 
     // expect event to only be present in live events list
 
@@ -68,6 +73,7 @@ TEST( BaseAudioEvent, PlayStop )
     ASSERT_TRUE( audioEvent->isEnabled() )
         << "expected SampleEvent to be enabled after invocation of play()";
 
+
     // 2. deactivate play-state
 
     audioEvent->stop();
@@ -77,8 +83,11 @@ TEST( BaseAudioEvent, PlayStop )
     ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ) )
         << "expected event not to be present in the sequenced event list after invocation of stop()";
 
-    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ) )
-        << "expected event not to be present in the live event list after invocation of stop()";
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ) )
+        << "expected event to still be present in the live event list after invocation of stop()";
+
+    ASSERT_TRUE( audioEvent->isDeletable() )
+        << "expected event to be marked as deletable so it can be removed by the Sequencer";
 
     delete audioEvent;
     delete instrument;
@@ -188,6 +197,9 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     ASSERT_TRUE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected live event to be present in the live event list after addition";
 
+    ASSERT_FALSE( audioEvent->isDeletable() )
+        << "expected live event to not be deletable after addition";
+
     // 4. remove live event from sequencer
 
     audioEvent->removeFromSequencer();
@@ -197,8 +209,11 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getEvents(), audioEvent ))
         << "expected event not to be present in the sequenced event list after removal";
 
-    ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
-        << "expected event not to be present in the live event list after removal";
+    ASSERT_TRUE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
+        << "expected event to still be present in the live event list after removal";
+
+    ASSERT_TRUE( audioEvent->isDeletable() )
+        << "expected event to be marked for deletion so it can be cleaned up by the Sequencer";
 
     delete audioEvent;
     delete instrument;

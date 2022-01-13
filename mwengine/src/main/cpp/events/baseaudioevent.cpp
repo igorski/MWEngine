@@ -100,8 +100,9 @@ void BaseAudioEvent::stop()
         return;
     }
 
-    // mark the event as deletable so it can be removed from the instruments event list
-    // as soon as the engine has finished rendering the current iteration
+    // as live events will always be rendered (meaning: also when Sequencer isn't playing),
+    // we mark the event as deletable so it can be removed from the instruments event list
+    // as soon as the engine has finished rendering the current iteration to prevent read/write conflicts
 
     setDeletable( true );
     resetPlayState();
@@ -136,9 +137,11 @@ void BaseAudioEvent::removeFromSequencer()
 
     if ( isSequenced ) {
         if ( Sequencer::playing ) {
-            setDeletable( true ); // mark as deletable so the Sequencer can clean it up
+            // mark as deletable so the Sequencer can clean it up after finishing current render iteration
+            setDeletable( true );
         } else {
-            _instrument->removeEvent(this, false ); // not playing, clean up immediately
+            // Sequencer is not playing, we can clean up immediately without conflicts
+            _instrument->removeEvent( this, false );
         }
     }
     stop(); // event can be both sequenced as well as playing back live
