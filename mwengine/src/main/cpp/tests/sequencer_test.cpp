@@ -407,7 +407,7 @@ TEST( Sequencer, GetEventsFlushChannel )
     Sequencer::playing = false;
 }
 
-TEST( Sequencer, RemoveDeletableSequencedEvents )
+TEST( Sequencer, RemoveRemovalEnqueuedSequencedEvents )
 {
     // setup sequencer
 
@@ -436,7 +436,7 @@ TEST( Sequencer, RemoveDeletableSequencedEvents )
     EXPECT_EQ( 1, channels->at( 1 )->audioEvents.size() )
         << "expected to have collected 1 event for AudioChannel 2";
 
-    // test 2 : set event 2 as deletable
+    // test 2 : enqueue event 2 for removal
 
     audioEvent2->enqueueRemoval( true );
 
@@ -454,7 +454,7 @@ TEST( Sequencer, RemoveDeletableSequencedEvents )
     ASSERT_FALSE( instrument2->hasEvents() )
         << "expected instrument 2 to have no events as event has been removed";
 
-    // test 3 : set event 1 as deletable
+    // test 3 : enqueue event 1 for removal
 
     audioEvent1->enqueueRemoval( true );
 
@@ -483,7 +483,7 @@ TEST( Sequencer, RemoveDeletableSequencedEvents )
     Sequencer::playing = false;
 }
 
-TEST( Sequencer, RemoveDeletableLiveEvents )
+TEST( Sequencer, RemoveRemovalEnqueuedLiveEvents )
 {
     // setup sequencer
 
@@ -517,7 +517,7 @@ TEST( Sequencer, RemoveDeletableLiveEvents )
     EXPECT_EQ( 1, channels->at( 1 )->liveEvents.size() )
         << "expected to have collected 1 live event for AudioChannel 2";
 
-    // test 2 : set event 2 as deletable
+    // test 2 : enqueue event 2 for removal
 
     audioEvent2->enqueueRemoval( true );
 
@@ -535,7 +535,7 @@ TEST( Sequencer, RemoveDeletableLiveEvents )
     ASSERT_FALSE( instrument2->hasLiveEvents() )
         << "expected instrument 2 to no longer have live events as event has been removed";
 
-    // test 3 : set event 1 as deletable
+    // test 3 : enqueue event 1 for removal
 
     audioEvent1->enqueueRemoval( true );
 
@@ -551,7 +551,7 @@ TEST( Sequencer, RemoveDeletableLiveEvents )
         << "expected to have collected no live events for AudioChannel 2";
 
     ASSERT_FALSE( instrument1->hasLiveEvents() )
-        << "expected instrument 1 to have no live events as event has been deleted";
+        << "expected instrument 1 to have no live events as event has been removed";
 
     // free allocated memory
     delete channels;
