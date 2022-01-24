@@ -45,6 +45,7 @@ public final class MWEngineActivity extends AppCompatActivity {
     private Vector<SynthEvent>  _synth2Events;
     private Vector<SampleEvent> _drumEvents;
     private SynthEvent          _liveEvent;
+    private SampleEvent         _liveClapEvent;
 
     private boolean _sequencerPlaying = false;
     private boolean _isRecording      = false;
@@ -175,6 +176,7 @@ public final class MWEngineActivity extends AppCompatActivity {
         findViewById( R.id.PlayPauseButton ).setOnClickListener( new PlayClickHandler() );
         findViewById( R.id.RecordButton ).setOnClickListener( new RecordOutputHandler() );
         findViewById( R.id.LiveNoteButton ).setOnTouchListener( new LiveNoteHandler() );
+        findViewById( R.id.LiveSampleButton ).setOnTouchListener( new LiveSampleHandler() );
         findViewById( R.id.RecordInputButton ).setOnTouchListener( new RecordInputHandler() );
 
         (( SeekBar ) findViewById( R.id.FilterCutoffSlider )).setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
@@ -297,7 +299,9 @@ public final class MWEngineActivity extends AppCompatActivity {
 
         // a C note to be synthesized live when holding down the corresponding button
 
-        _liveEvent = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
+        _liveEvent     = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
+        _liveClapEvent = new SampleEvent( _sampler );
+        _liveClapEvent.setSample( SampleManager.getSample( "clap" ));
     }
 
     protected void flushSong() {
@@ -307,8 +311,8 @@ public final class MWEngineActivity extends AppCompatActivity {
 
         _engine.stop();
 
-        // calling 'delete()' on a BaseAudioEvent invokes the native layer destructor
-        // (at the same time, this also removes it from the Sequencer)
+        // calling 'delete()' on a BaseAudioEvent invokes the
+        // native layer destructor (also removes it from the Sequencer)
 
         for ( final BaseAudioEvent event : _synth1Events )
             event.delete();
@@ -409,7 +413,19 @@ public final class MWEngineActivity extends AppCompatActivity {
                     _liveEvent.play();
                     return true;
                 case MotionEvent.ACTION_UP:
-                    _liveEvent.stop();
+                    _liveEvent.stop(); // event will start release phase of the synthesized note
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    private class LiveSampleHandler implements View.OnTouchListener {
+        @Override
+        public boolean onTouch( View v, MotionEvent event ) {
+            switch( event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    _liveClapEvent.play(); // event will .stop() after playing sample in full
                     return true;
             }
             return false;

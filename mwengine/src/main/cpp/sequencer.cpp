@@ -171,7 +171,7 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
             if (( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
                 ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
             {
-                if ( !audioEvent->isDeletable()) {
+                if ( !audioEvent->isEnqueuedForRemoval()) {
                     if ( checkForDuplicates && EventUtility::vectorContainsEvent( channel->audioEvents, audioEvent )) {
                         continue;
                     }
@@ -211,7 +211,7 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     {
         BaseAudioEvent* audioEvent = liveEvents->at( i );
 
-        if ( !audioEvent->isDeletable()) {
+        if ( !audioEvent->isEnqueuedForRemoval()) {
             channel->addLiveEvent( audioEvent );
         } else {
             removes.push_back( audioEvent );
@@ -219,7 +219,7 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     }
 
     // removal queue filled ? process it so we can safely
-    // remove "deleted" AudioEvents without errors occurring
+    // remove enqueued AudioEvents without errors occurring
     if ( !removes.empty() )
     {
         for ( auto & audioEvent : removes ) {
@@ -247,7 +247,7 @@ std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvent
                 if (( eventStart >= bufferPosition && eventStart <= bufferEnd ) ||
                     ( eventStart <  bufferPosition && eventEnd >= bufferPosition ))
                 {
-                    if ( !audioEvent->isDeletable())
+                    if ( !audioEvent->isEnqueuedForRemoval())
                         events->push_back(( BaseCacheableAudioEvent* ) audioEvent );
                 }
             }

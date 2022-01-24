@@ -407,7 +407,7 @@ TEST( Sequencer, GetEventsFlushChannel )
     Sequencer::playing = false;
 }
 
-TEST( Sequencer, RemoveDeletableSequencedEvents )
+TEST( Sequencer, RemoveRemovalEnqueuedSequencedEvents )
 {
     // setup sequencer
 
@@ -436,12 +436,12 @@ TEST( Sequencer, RemoveDeletableSequencedEvents )
     EXPECT_EQ( 1, channels->at( 1 )->audioEvents.size() )
         << "expected to have collected 1 event for AudioChannel 2";
 
-    // test 2 : set event 2 as deletable
+    // test 2 : enqueue event 2 for removal
 
-    audioEvent2->setDeletable( true );
+    audioEvent2->enqueueRemoval( true );
 
     ASSERT_TRUE( instrument2->hasEvents() )
-        << "expected instrument 2 to have events as event is marked as deletable, but hasn't been deleted yet";
+        << "expected instrument 2 to have events as event is enqueued for removal, but hasn't been removed yet";
 
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
 
@@ -452,14 +452,14 @@ TEST( Sequencer, RemoveDeletableSequencedEvents )
         << "expected to have collected no events for AudioChannel 2";
 
     ASSERT_FALSE( instrument2->hasEvents() )
-        << "expected instrument 2 to have no events as event has been deleted";
+        << "expected instrument 2 to have no events as event has been removed";
 
-    // test 3 : set event 1 as deletable
+    // test 3 : enqueue event 1 for removal
 
-    audioEvent1->setDeletable( true );
+    audioEvent1->enqueueRemoval( true );
 
     ASSERT_TRUE( instrument1->hasEvents() )
-        << "expected instrument 1 to have events as event is marked as deletable, but hasn't been deleted yet";
+        << "expected instrument 1 to have events as event is marked as removable, but hasn't been removed yet";
 
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
 
@@ -470,7 +470,88 @@ TEST( Sequencer, RemoveDeletableSequencedEvents )
         << "expected to have collected no events for AudioChannel 2";
 
     ASSERT_FALSE( instrument1->hasEvents() )
-        << "expected instrument 1 to have no events as event has been deleted";
+        << "expected instrument 1 to have no events as event has been removed";
+
+    // free allocated memory
+    delete channels;
+    delete audioEvent1;
+    delete audioEvent2;
+    delete instrument1;
+    delete instrument2;
+
+    // reset Sequencer
+    Sequencer::playing = false;
+}
+
+TEST( Sequencer, RemoveRemovalEnqueuedLiveEvents )
+{
+    // setup sequencer
+
+    std::vector<AudioChannel*>* channels = new std::vector<AudioChannel*>();
+    BaseInstrument* instrument1 = new BaseInstrument();
+    BaseInstrument* instrument2 = new BaseInstrument();
+
+    // setup audio events
+
+    // assume 88200 samples per bar (emulates 44.1 kHz sample rate at 120 BPM 4/4 time)
+    // use a buffer size that is the size of an 8th note (11025 samples)
+    AudioEngine::samples_per_bar = 88200;
+    Sequencer::playing           = true;
+    int bufferSize               = AudioEngine::samples_per_bar / 8;
+
+    BaseAudioEvent* audioEvent1 = enqueuedAudioEvent( instrument1, bufferSize, 0, 16, 0 );
+    BaseAudioEvent* audioEvent2 = enqueuedAudioEvent( instrument2, bufferSize, 0, 16, 0 );
+    audioEvent1->isSequenced = false; // audioEvent1 is now a live event
+    audioEvent2->isSequenced = false; // audioEvent2 is now a live event
+
+    audioEvent1->play();
+    audioEvent2->play();
+
+    // test 1 : collect both events
+
+    Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
+
+    EXPECT_EQ( 1, channels->at( 0 )->liveEvents.size() )
+        << "expected to have collected 1 live event for AudioChannel 1";
+
+    EXPECT_EQ( 1, channels->at( 1 )->liveEvents.size() )
+        << "expected to have collected 1 live event for AudioChannel 2";
+
+    // test 2 : enqueue event 2 for removal
+
+    audioEvent2->enqueueRemoval( true );
+
+    ASSERT_TRUE( instrument2->hasLiveEvents() )
+        << "expected instrument 2 to have live events as event is enqueued for removal, but hasn't been removed yet";
+
+    Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
+
+    EXPECT_EQ( 1, channels->at( 0 )->liveEvents.size() )
+        << "expected to have collected 1 live event for AudioChannel 1";
+
+    EXPECT_EQ( 0, channels->at( 1 )->liveEvents.size() )
+        << "expected to have collected no live events for AudioChannel 2";
+
+    ASSERT_FALSE( instrument2->hasLiveEvents() )
+        << "expected instrument 2 to no longer have live events as event has been removed";
+
+    // test 3 : enqueue event 1 for removal
+
+    audioEvent1->enqueueRemoval( true );
+
+    ASSERT_TRUE( instrument1->hasLiveEvents() )
+        << "expected instrument 1 to have events as event is enqueued for removal, but hasn't been removed yet";
+
+    Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
+
+    EXPECT_EQ( 0, channels->at( 0 )->liveEvents.size() )
+        << "expected to have collected no live events for AudioChannel 1";
+
+    EXPECT_EQ( 0, channels->at( 1 )->liveEvents.size() )
+        << "expected to have collected no live events for AudioChannel 2";
+
+    ASSERT_FALSE( instrument1->hasLiveEvents() )
+        << "expected instrument 1 to have no live events as event has been removed";
 
     // free allocated memory
     delete channels;
@@ -517,12 +598,12 @@ TEST( Sequencer, RemoveDeletableLiveEvents )
     EXPECT_EQ( 1, channels->at( 1 )->liveEvents.size() )
         << "expected to have collected 1 live event for AudioChannel 2";
 
-    // test 2 : set event 2 as deletable
+    // test 2 : enqueue event 2 for removal
 
-    audioEvent2->setDeletable( true );
+    audioEvent2->enqueueRemoval( true );
 
     ASSERT_TRUE( instrument2->hasLiveEvents() )
-        << "expected instrument 2 to have live events as event is marked as deletable, but hasn't been deleted yet";
+        << "expected instrument 2 to have live events as event is enqueued for removal, but hasn't been removed yet";
 
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
 
@@ -533,14 +614,14 @@ TEST( Sequencer, RemoveDeletableLiveEvents )
         << "expected to have collected no live events for AudioChannel 2";
 
     ASSERT_FALSE( instrument2->hasLiveEvents() )
-        << "expected instrument 2 to no longer have live events as event has been deleted";
+        << "expected instrument 2 to no longer have live events as event has been removed";
 
-    // test 3 : set event 1 as deletable
+    // test 3 : enequeue event 1 for removal
 
-    audioEvent1->setDeletable( true );
+    audioEvent1->enqueueRemoval( true );
 
     ASSERT_TRUE( instrument1->hasLiveEvents() )
-        << "expected instrument 1 to have events as event is marked as deletable, but hasn't been deleted yet";
+        << "expected instrument 1 to have events as event is enqueued for removal, but hasn't been removed yet";
 
     Sequencer::getAudioEvents( channels, 0, bufferSize, true, true );
 
@@ -551,7 +632,7 @@ TEST( Sequencer, RemoveDeletableLiveEvents )
         << "expected to have collected no live events for AudioChannel 2";
 
     ASSERT_FALSE( instrument1->hasLiveEvents() )
-        << "expected instrument 1 to have no live events as event has been deleted";
+        << "expected instrument 1 to have no live events as event has been removed";
 
     // free allocated memory
     delete channels;

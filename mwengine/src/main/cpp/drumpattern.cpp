@@ -174,18 +174,18 @@ void DrumPattern::removeDrumEvent( int aPosition, int aType )
 {
     int removed = 0;
 
-    for ( int i = 0; i < audioEvents->size(); i++ )
+    for ( auto & audioEvent : *audioEvents )
     {
-        DrumEvent* vo = (( DrumEvent* ) audioEvents->at( i ));
+        DrumEvent* vo = (( DrumEvent* ) audioEvent );
 
         if ( vo->position == aPosition && vo->getType() == aType )
         {
-            vo->setDeletable( true ); // actual removal is invoked by the sequencer
+            vo->enqueueRemoval( true ); // delegate removal to sequencer
             removed = 1;
             break;
         }
     }
-    eventAmount = audioEvents->size() - removed;
+    eventAmount = ( int )( audioEvents->size() - removed );
 }
 
 bool DrumPattern::hasContent()

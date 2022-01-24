@@ -13,7 +13,8 @@
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>
     <string name="live_btn">C note</string>
-    <string name="rec_input_btn">Record mic input</string>
+    <string name="live_sample_btn">Clap</string>
+    <string name="rec_input_btn">Record mic</string>
     <string name="rec_btn_on">Start recording</string>
     <string name="rec_btn_off">Stop recording</string>
     <string name="slider_cutoff">Bass filter cutoff</string>

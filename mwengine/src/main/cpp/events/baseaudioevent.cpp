@@ -84,7 +84,7 @@ void BaseAudioEvent::play()
     if ( _livePlayback || _instrument == nullptr ) {
         return;
     }
-    setDeletable( false );
+    enqueueRemoval( false );
 
     // add this event to the live events list of the instrument (keep
     // the current sequenced event - if it was added - as is, we should
@@ -101,11 +101,10 @@ void BaseAudioEvent::stop()
     }
 
     // as live events will always be rendered (meaning: also when Sequencer isn't playing),
-    // we mark the event as deletable so it can be removed from the instruments event list
-    // as soon as the engine has finished rendering the current iteration to prevent read/write conflicts
+    // we enqueue the event for removal from the instruments event list as soon as the engine
+    // has finished rendering the current iteration to prevent read/write conflicts
 
-    setDeletable( true );
-    resetPlayState();
+    enqueueRemoval( true );
 }
 
 void BaseAudioEvent::resetPlayState()
@@ -118,7 +117,7 @@ void BaseAudioEvent::addToSequencer()
     if ( isAddedToSequencer() ) {
         return;
     }
-    setDeletable( false );
+    enqueueRemoval( false );
 
     // adds the event to the sequencer so it can be heard
 
@@ -138,7 +137,7 @@ void BaseAudioEvent::removeFromSequencer()
     if ( isSequenced ) {
         if ( Sequencer::playing ) {
             // mark as deletable so the Sequencer can clean it up after finishing current render iteration
-            setDeletable( true );
+            enqueueRemoval( true );
         } else {
             // Sequencer is not playing, we can clean up immediately without conflicts
             _instrument->removeEvent( this, false );
@@ -302,14 +301,14 @@ void BaseAudioEvent::setDuration( float value )
     setEndPosition( _startPosition + value );
 }
 
-bool BaseAudioEvent::isDeletable()
+bool BaseAudioEvent::isEnqueuedForRemoval()
 {
-    return _deleteMe;
+    return _removalEnqueued;
 }
 
-void BaseAudioEvent::setDeletable( bool value )
+void BaseAudioEvent::enqueueRemoval( bool value )
 {
-    _deleteMe = value;
+    _removalEnqueued = value;
 }
 
 bool BaseAudioEvent::isEnabled()
@@ -479,7 +478,7 @@ void BaseAudioEvent::init()
     _startPosition     = 0.F;
     _endPosition       = 0.F;
     _instrument        = nullptr;
-    _deleteMe          = false;
+    _removalEnqueued   = false;
     _livePlayback      = false;
     isSequenced        = true;
 }

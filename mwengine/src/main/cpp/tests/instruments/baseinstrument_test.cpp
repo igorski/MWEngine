@@ -154,8 +154,8 @@ TEST( BaseInstrument, Events )
     ASSERT_TRUE( instrument->hasLiveEvents() )
         << "expected instrument to still contain live events after removal";
 
-    ASSERT_TRUE( liveEvent->isDeletable() )
-        << "expected live event to be marked as deletable so it can be removed by the Sequencer";
+    ASSERT_TRUE( liveEvent->isEnqueuedForRemoval() )
+        << "expected live event to be enqueued for removal by the Sequencer";
 
     wasPresent = false;
     for ( int i = 0; i < instrument->getLiveEvents()->size(); i++ )
