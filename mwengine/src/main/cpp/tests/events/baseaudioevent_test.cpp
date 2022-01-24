@@ -134,7 +134,7 @@ TEST( BaseAudioEvent, LockedState )
     delete audioEvent;
 }
 
-TEST( BaseAudioEvent, DeletableState )
+TEST( BaseAudioEvent, EnqueuedRemovalState )
 {
     BaseAudioEvent* audioEvent = new BaseAudioEvent();
 
@@ -164,14 +164,14 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
     ASSERT_FALSE( EventUtility::vectorContainsEvent( instrument->getLiveEvents(), audioEvent ))
         << "expected event not to be present in the live event list after construction";
 
-    audioEvent->setDeletable( true );
+    audioEvent->enqueueRemoval( true );
 
     // 1. add the event to the sequencer
 
     audioEvent->addToSequencer();
 
-    ASSERT_FALSE( audioEvent->isDeletable() )
-        << "expected event to be unmarked as deletable after (re)addition to sequencer";
+    ASSERT_FALSE( audioEvent->isEnqueuedForRemoval() )
+        << "expected event to be no longer enqueued for removal after (re)addition to sequencer";
 
     // expect AudioEvent to be in the sequenced event list, not the live list
 
@@ -204,7 +204,7 @@ TEST( BaseAudioEvent, AddRemoveSequencer )
         << "expected live event to be present in the live event list after addition";
 
     ASSERT_FALSE( audioEvent->isEnqueuedForRemoval() )
-        << "expected event to be enqueued for removal by the Sequencer after addition";
+        << "expected live event to no longer be enqueued for removal by the Sequencer after addition";
 
     // 4. remove live event from sequencer
 

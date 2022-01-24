@@ -76,7 +76,7 @@ void BaseSynthEvent::play()
 
     enqueueRemoval( false );
     _hasMinLength = false;
-    _queuedForDeletion = false;
+    _shouldEnqueueRemoval = false;
 
     lastWriteIndex             = 0;
     cachedProps.envelopeOffset = 0;
@@ -109,9 +109,9 @@ int BaseSynthEvent::getEventEnd()
     return BaseAudioEvent::getEventEnd() + getSynthInstrument()->adsr->getReleaseDuration();
 }
 
-bool BaseSynthEvent::isQueuedForDeletion()
+bool BaseSynthEvent::shouldEnqueueRemoval()
 {
-    return _queuedForDeletion;
+    return _shouldEnqueueRemoval;
 }
 
 float BaseSynthEvent::getFrequency()
@@ -316,7 +316,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer )
     // we still want to have the sound ring for the minimum period
     // defined in the constructor instead of cut off immediately
 
-    if ( _queuedForDeletion )
+    if ( _shouldEnqueueRemoval )
     {
         _minLength -= bufferSize;
 
@@ -324,24 +324,22 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer )
         {
             _hasMinLength = true;
             // we can now remove this event from the Sequencer
-            enqueueRemoval( _queuedForDeletion );
+            enqueueRemoval( true );
             BaseAudioEvent::stop();
 
-            // this event is about to be deleted, apply a tiny fadeout
-            if ( _queuedForDeletion )
+            // this event is about to be removed, apply a tiny fadeout
+
+            int amt = ( int ) ceil( bufferSize / 4 );
+
+            SAMPLE_TYPE envIncr = 1.0 / amt;
+            SAMPLE_TYPE amp     = 1.0;
+
+            for ( int i = bufferSize - amt; i < bufferSize; ++i )
             {
-                int amt = ( int ) ceil( bufferSize / 4 );
-
-                SAMPLE_TYPE envIncr = 1.0 / amt;
-                SAMPLE_TYPE amp     = 1.0;
-
-                for ( int i = bufferSize - amt; i < bufferSize; ++i )
-                {
-                    for ( int c = 0, nc = tempBuffer->amountOfChannels; c < nc; ++c ) {
-                        tempBuffer->getBufferForChannel( c )[ i ] *= amp;
-                    }
-                    amp -= envIncr;
+                for ( int c = 0, nc = tempBuffer->amountOfChannels; c < nc; ++c ) {
+                    tempBuffer->getBufferForChannel( c )[ i ] *= amp;
                 }
+                amp -= envIncr;
             }
         }
     }
@@ -378,7 +376,7 @@ void BaseSynthEvent::enqueueRemoval( bool value )
     if ( isSequenced || _hasMinLength )
         _removeMe = value;
     else
-        _queuedForDeletion = value;
+        _shouldEnqueueRemoval = value;
 }
 
 void BaseSynthEvent::triggerRelease()
@@ -429,12 +427,12 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     for ( int i = 0; i < maxOscillatorAmount; ++i )
         cachedProps.oscillatorPhases.push_back( 0.0 );
 
-    this->isSequenced  = isSequenced;
-    _queuedForDeletion = false;
-    _removeMe          = false;
-    _hasMinLength      = isSequenced; // a sequenced event has no early cancel
-    _eventLength       = 0;
-    lastWriteIndex     = 0;
+    this->isSequenced     = isSequenced;
+    _shouldEnqueueRemoval = false;
+    _removeMe             = false;
+    _hasMinLength         = isSequenced; // a sequenced event has no early cancel
+    _eventLength          = 0;
+    lastWriteIndex        = 0;
 
     setFrequency( aFrequency );
 

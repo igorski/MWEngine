@@ -73,7 +73,8 @@ class BaseSynthEvent : public BaseAudioEvent
         void stop();
 
         int getEventEnd();
-        bool isQueuedForDeletion();
+        // events with a positive release phase should not directly be removed upon stop() / sequencer removal
+        bool shouldEnqueueRemoval();
 
         // synthesis properties
 
@@ -120,7 +121,8 @@ class BaseSynthEvent : public BaseAudioEvent
         // properties for non-sequenced synthesis
 
         int _minLength;
-        bool _hasMinLength, _queuedForDeletion;
+        bool _hasMinLength;
+        bool _shouldEnqueueRemoval;
 
         // gets the instrument rendering this event, typecast to its subclass
         SynthInstrument* getSynthInstrument();

@@ -224,7 +224,6 @@ void Sequencer::collectLiveEvents( BaseInstrument* instrument )
     {
         for ( auto & audioEvent : removes ) {
             instrument->removeEvent( audioEvent, true );
-            audioEvent->resetPlayState();
         }
         removes.clear();
     }

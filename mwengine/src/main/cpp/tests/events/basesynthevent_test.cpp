@@ -400,7 +400,7 @@ TEST( BaseSynthEvent, Play )
     delete instrument;
 }
 
-TEST( BaseSynthEvent, StopAndDelete )
+TEST( BaseSynthEvent, StopAndRemove )
 {
     float frequency                = randomFloat() * 4000.f;
     SynthInstrument* instrument    = new SynthInstrument();
@@ -411,8 +411,8 @@ TEST( BaseSynthEvent, StopAndDelete )
     BaseSynthEvent* liveEvent      = new BaseSynthEvent( frequency, instrument );
     BaseSynthEvent* sequencedEvent = new BaseSynthEvent( frequency, 0, 512, instrument );
 
-    ASSERT_FALSE( liveEvent->isEnqueuedForRemoval() ) << "expected event not be removable upon construction";
-    ASSERT_FALSE( sequencedEvent->isEnqueuedForRemoval() ) << "expected sequenced event not be removable upon construction";
+    ASSERT_FALSE( liveEvent->isEnqueuedForRemoval() ) << "expected event not be enqueued for removal upon construction";
+    ASSERT_FALSE( sequencedEvent->isEnqueuedForRemoval() ) << "expected sequenced event not be enqueued for removal upon construction";
 
     // start playing events
     liveEvent->play();
@@ -422,12 +422,12 @@ TEST( BaseSynthEvent, StopAndDelete )
     liveEvent->stop();
     sequencedEvent->stop();
 
-    ASSERT_TRUE( liveEvent->isQueuedForDeletion() )
-        << "expected live event to be scheduled for removal upon invocation of stop()";
+    ASSERT_TRUE( liveEvent->shouldEnqueueRemoval() )
+        << "expected live event to be set for queued removal upon invocation of stop()";
     ASSERT_FALSE( liveEvent->isEnqueuedForRemoval() )
-        << "expected live even not to be immediately removable due to positive release phase";
+        << "expected live event not to be immediately queued for removal due to positive release phase";
     ASSERT_FALSE( sequencedEvent->isEnqueuedForRemoval() )
-        << "expected sequenced event not be immediately removable upon invocation of stop()";
+        << "expected sequenced event not be immediately queued for removal upon invocation of stop()";
 
     delete liveEvent;
     delete sequencedEvent;
