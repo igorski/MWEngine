@@ -374,7 +374,7 @@ void BaseSynthEvent::enqueueRemoval( bool value )
     // sequenced event or synthesized event has min length ? schedule for immediate deletion
 
     if ( isSequenced || _hasMinLength )
-        _removeMe = value;
+        _removalEnqueued = value;
     else
         _shouldEnqueueRemoval = value;
 }
@@ -429,7 +429,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
 
     this->isSequenced     = isSequenced;
     _shouldEnqueueRemoval = false;
-    _removeMe             = false;
+    _removalEnqueued      = false;
     _hasMinLength         = isSequenced; // a sequenced event has no early cancel
     _eventLength          = 0;
     lastWriteIndex        = 0;

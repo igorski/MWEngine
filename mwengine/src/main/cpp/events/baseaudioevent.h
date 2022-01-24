@@ -208,7 +208,7 @@ class BaseAudioEvent
         AudioBuffer* _buffer;
         void destroyBuffer();
 
-        bool _removeMe;
+        bool _removalEnqueued;
         bool _locked;
         bool _updateAfterUnlock; // use in update-methods when checking for lock
 

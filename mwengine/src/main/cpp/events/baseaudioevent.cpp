@@ -303,12 +303,12 @@ void BaseAudioEvent::setDuration( float value )
 
 bool BaseAudioEvent::isEnqueuedForRemoval()
 {
-    return _removeMe;
+    return _removalEnqueued;
 }
 
 void BaseAudioEvent::enqueueRemoval( bool value )
 {
-    _removeMe = value;
+    _removalEnqueued = value;
 }
 
 bool BaseAudioEvent::isEnabled()
@@ -478,7 +478,7 @@ void BaseAudioEvent::init()
     _startPosition     = 0.F;
     _endPosition       = 0.F;
     _instrument        = nullptr;
-    _removeMe          = false;
+    _removalEnqueued   = false;
     _livePlayback      = false;
     isSequenced        = true;
 }
