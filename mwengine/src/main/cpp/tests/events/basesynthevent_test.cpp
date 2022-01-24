@@ -375,7 +375,7 @@ TEST( BaseSynthEvent, Play )
         << "expected synth event not be released after construction";
 
     audioEvent->released = true;
-    audioEvent->setDeletable( true );
+    audioEvent->enqueueRemoval( true );
     audioEvent->cachedProps.envelope       = 1.0;
     audioEvent->cachedProps.envelopeOffset = 1000;
 
@@ -384,8 +384,8 @@ TEST( BaseSynthEvent, Play )
     ASSERT_FALSE( audioEvent->released )
         << "expected synth event not be released after invocation of play";
 
-    ASSERT_FALSE( audioEvent->isDeletable() )
-        << "expected synth event to have unset its deletable flag after invocation of play";
+    ASSERT_FALSE( audioEvent->isEnqueuedForRemoval() )
+        << "expected synth event to have unset its removable flag after invocation of play";
 
     EXPECT_EQ( audioEvent->cachedProps.envelopeOffset, 0 )
         << "expected synth events cached envelope offset to have been reset";
@@ -411,8 +411,8 @@ TEST( BaseSynthEvent, StopAndDelete )
     BaseSynthEvent* liveEvent      = new BaseSynthEvent( frequency, instrument );
     BaseSynthEvent* sequencedEvent = new BaseSynthEvent( frequency, 0, 512, instrument );
 
-    ASSERT_FALSE( liveEvent->isDeletable() ) << "expected event not be deletable upon construction";
-    ASSERT_FALSE( sequencedEvent->isDeletable() ) << "expected sequenced event not be deletable upon construction";
+    ASSERT_FALSE( liveEvent->isEnqueuedForRemoval() ) << "expected event not be removable upon construction";
+    ASSERT_FALSE( sequencedEvent->isEnqueuedForRemoval() ) << "expected sequenced event not be removable upon construction";
 
     // start playing events
     liveEvent->play();
@@ -423,11 +423,11 @@ TEST( BaseSynthEvent, StopAndDelete )
     sequencedEvent->stop();
 
     ASSERT_TRUE( liveEvent->isQueuedForDeletion() )
-        << "expected live event to be scheduled for deletion upon invocation of stop()";
-    ASSERT_FALSE( liveEvent->isDeletable() )
-        << "expected live even not to be immediately deletable due to positive release phase";
-    ASSERT_FALSE( sequencedEvent->isDeletable() )
-        << "expected sequenced event not be immediately deletable upon invocation of stop()";
+        << "expected live event to be scheduled for removal upon invocation of stop()";
+    ASSERT_FALSE( liveEvent->isEnqueuedForRemoval() )
+        << "expected live even not to be immediately removable due to positive release phase";
+    ASSERT_FALSE( sequencedEvent->isEnqueuedForRemoval() )
+        << "expected sequenced event not be immediately removable upon invocation of stop()";
 
     delete liveEvent;
     delete sequencedEvent;

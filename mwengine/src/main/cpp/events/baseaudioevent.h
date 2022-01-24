@@ -150,8 +150,8 @@ class BaseAudioEvent
 
         /* internally used properties */
 
-        virtual bool isDeletable();   // query whether this event is queued for deletion
-        virtual void setDeletable( bool value );
+        virtual bool isEnqueuedForRemoval(); // query whether this event is queued for removal by the sequencer
+        virtual void enqueueRemoval( bool value );
 
         virtual bool isEnabled();   // whether this audio event is elligible for playback
         virtual void setEnabled( bool value );
@@ -208,7 +208,7 @@ class BaseAudioEvent
         AudioBuffer* _buffer;
         void destroyBuffer();
 
-        bool _deleteMe;
+        bool _removeMe;
         bool _locked;
         bool _updateAfterUnlock; // use in update-methods when checking for lock
 

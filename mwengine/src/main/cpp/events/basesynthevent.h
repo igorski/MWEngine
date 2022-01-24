@@ -108,7 +108,7 @@ class BaseSynthEvent : public BaseAudioEvent
         void unlock();
         void repositionToTempoChange( float ratio );
 
-        virtual void setDeletable( bool value );
+        virtual void enqueueRemoval( bool value );
 
     protected:
 

@@ -74,7 +74,7 @@ void BaseSynthEvent::play()
 {
     released = false;
 
-    setDeletable( false );
+    enqueueRemoval( false );
     _hasMinLength = false;
     _queuedForDeletion = false;
 
@@ -99,7 +99,7 @@ void BaseSynthEvent::stop()
         );
         _hasMinLength = false;
 
-        setDeletable( true );
+        enqueueRemoval( true );
     }
 }
 
@@ -324,7 +324,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer )
         {
             _hasMinLength = true;
             // we can now remove this event from the Sequencer
-            setDeletable( _queuedForDeletion );
+            enqueueRemoval( _queuedForDeletion );
             BaseAudioEvent::stop();
 
             // this event is about to be deleted, apply a tiny fadeout
@@ -371,12 +371,12 @@ void BaseSynthEvent::updateProperties()
     calculateBuffers();
 }
 
-void BaseSynthEvent::setDeletable( bool value )
+void BaseSynthEvent::enqueueRemoval( bool value )
 {
     // sequenced event or synthesized event has min length ? schedule for immediate deletion
 
     if ( isSequenced || _hasMinLength )
-        _deleteMe = value;
+        _removeMe = value;
     else
         _queuedForDeletion = value;
 }
@@ -431,7 +431,7 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
 
     this->isSequenced  = isSequenced;
     _queuedForDeletion = false;
-    _deleteMe          = false;
+    _removeMe          = false;
     _hasMinLength      = isSequenced; // a sequenced event has no early cancel
     _eventLength       = 0;
     lastWriteIndex     = 0;
