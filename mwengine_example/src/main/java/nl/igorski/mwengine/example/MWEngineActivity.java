@@ -2,6 +2,7 @@ package nl.igorski.mwengine.example;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -50,19 +51,18 @@ public final class MWEngineActivity extends AppCompatActivity {
     private boolean _inited           = false;
 
     // AAudio is only supported from Android 8/Oreo onwards.
-    private boolean _supportsAAudio     = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O;
-    private Drivers.types  _audioDriver = _supportsAAudio ? Drivers.types.AAUDIO : Drivers.types.OPENSL;
+    private final boolean _supportsAAudio = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O;
+    private Drivers.types  _audioDriver   = _supportsAAudio ? Drivers.types.AAUDIO : Drivers.types.OPENSL;
 
     private int SAMPLE_RATE;
     private int BUFFER_SIZE;
-    private int OUTPUT_CHANNELS = 2; // 1 = mono, 2 = stereo
+    private final int OUTPUT_CHANNELS = 2; // 1 = mono, 2 = stereo
 
-    private float minFilterCutoff = 50.0f;
+    private final float minFilterCutoff = 50.0f;
     private float maxFilterCutoff;
 
-    private static int STEPS_PER_MEASURE = 16;  // amount of subdivisions within a single measure
-    private static String LOG_TAG = "MWENGINE"; // logcat identifier
-    private static int PERMISSIONS_CODE = 8081981;
+    private static final String LOG_TAG = "MWENGINE"; // logcat identifier
+    private static final int PERMISSIONS_CODE = 8081981;
 
     /* public methods */
 
@@ -115,7 +115,7 @@ public final class MWEngineActivity extends AppCompatActivity {
      * for this scenario (see :configChanges directive in AndroidManifest)
      */
     @Override
-    public void onConfigurationChanged( Configuration newConfig ) {
+    public void onConfigurationChanged( @NonNull Configuration newConfig ) {
         super.onConfigurationChanged( newConfig );
         Log.d( LOG_TAG, "MWEngineActivity::onConfigurationChanged, new orientation: " + newConfig.orientation );
     }
@@ -197,7 +197,9 @@ public final class MWEngineActivity extends AppCompatActivity {
     protected void setupSong() {
         _sequencerController = _engine.getSequencerController();
         _sequencerController.setTempoNow( 130.0f, 4, 4 ); // 130 BPM in 4/4 time
-        _sequencerController.updateMeasures( 1, STEPS_PER_MEASURE ); // we'll loop just a single measure with given subdivisions
+
+        int STEPS_PER_MEASURE = 16; // amount of subdivisions within a single measure
+        _sequencerController.updateMeasures( 1, STEPS_PER_MEASURE); // we'll loop just a single measure with given subdivisions
 
         // cache some of the engines properties
 
@@ -371,9 +373,9 @@ public final class MWEngineActivity extends AppCompatActivity {
     /* event handlers */
 
     private class DriverChangeHandler implements AdapterView.OnItemSelectedListener {
-        public void onItemSelected(AdapterView<?> parent, View view, int pos,long id) {
-            String selectedValue = parent.getItemAtPosition(pos).toString();
-            _audioDriver = selectedValue.toLowerCase().equals("aaudio") ? Drivers.types.AAUDIO : Drivers.types.OPENSL;
+        public void onItemSelected( AdapterView<?> parent, View view, int pos, long id ) {
+            String selectedValue = parent.getItemAtPosition( pos ).toString();
+            _audioDriver = selectedValue.equalsIgnoreCase( "aaudio" ) ? Drivers.types.AAUDIO : Drivers.types.OPENSL;
             _engine.setAudioDriver( _audioDriver );
         }
         @Override
