@@ -56,6 +56,8 @@ strong references during their lifecycle.
 
 Bug reports, feature requests, questions and discussions are welcome on the GitHub Issue Tracker, please do not send e-mails through the development website. However, please search before posting to avoid duplicates, and limit to one issue per post.
 
+When reporting a bug, please describe the expected behaviour and the actual result. When possible, for crashes attach stack traces and recordings for audio related glitches.
+
 Vote on existing feature requests by using the Thumbs Up/Down reaction on the first post.
 
 ### Development setup
