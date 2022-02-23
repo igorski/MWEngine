@@ -144,7 +144,7 @@ void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume ) {
 
     // if channels panning is set to center, use AudioBuffer mix method
 
-    if ( _pan == 0 ) {
+    if ( _pan == 0.f ) {
         bufferToMixInto->mergeBuffers( _outputBuffer, 0, 0, mixVolume );
     }
     else {
@@ -160,21 +160,24 @@ void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume ) {
         SAMPLE_TYPE* rightTargetBuffer = bufferToMixInto->getBufferForChannel( 1 );
 
         // apply pan to output volume
-        SAMPLE_TYPE leftVolume  = mixVolume * _leftVolume;
-        SAMPLE_TYPE rightVolume = mixVolume * _rightVolume;
-        bool isLeftPanned = ( _pan < 0 );
+        SAMPLE_TYPE leftSourceVolumeLeft   = mixVolume * _leftGainLS;
+        SAMPLE_TYPE leftSourceVolumeRight  = mixVolume * _rightGainLS;
+        SAMPLE_TYPE rightSourceVolumeLeft  = mixVolume * _leftGainRS;
+        SAMPLE_TYPE rightSourceVolumeRight = mixVolume * _rightGainRS;
 
-        // or pro tools style ? (https://stackoverflow.com/questions/67062207/how-to-pan-audio-sample-data-naturally)
+        SAMPLE_TYPE leftSource, rightSource;
+
         for ( int i = 0; i < buffersToWrite; ++i ) {
-            leftTargetBuffer[ i ]  += leftSrcBuffer[ i ]  * leftVolume;
-            rightTargetBuffer[ i ] += rightSrcBuffer[ i ] * rightVolume;
+            leftSource  = leftSrcBuffer[ i ];
+            rightSource = rightSrcBuffer[ i ];
 
-            // pan the channel contents into the opposite channel
+            // left channel contents
+            leftTargetBuffer[ i ]  += ( leftSource * leftSourceVolumeLeft );
+            rightTargetBuffer[ i ] += ( leftSource * leftSourceVolumeRight );
 
-            if ( isLeftPanned )
-                leftTargetBuffer[ i ] += rightSrcBuffer[ i ] * _rightVolume;
-            else
-                rightTargetBuffer[ i ] += leftSrcBuffer[ i ] * _leftVolume;
+            // right channel contents
+            leftTargetBuffer[ i ]  += ( rightSource * rightSourceVolumeLeft );
+            rightTargetBuffer[ i ] += ( rightSource * rightSourceVolumeRight );
         }
     }
 }
@@ -224,12 +227,25 @@ float AudioChannel::getPan()
 
 void AudioChannel::setPan( float value )
 {
+    if ( value < 0.f ) {
+        // panning left
+        // gain values for the left and right channel to blend the left source
+        _leftGainLS  = 1.f;
+        _rightGainLS = 0.f;
+        // gain values for the left and right channel to blend the right source
+        _leftGainRS  = sin( abs( value ) * HALF_PI );
+        _rightGainRS = cos( abs( value ) * HALF_PI );
+
+    } else if ( value > 0.f ) {
+        // panning right
+        // gain values for the left and right channel to blend the left source
+        _leftGainLS  = cos( value * HALF_PI );
+        _rightGainLS = sin( value * HALF_PI );
+        // gain values for the left and right channel to blend the right source
+        _leftGainRS  = 0.f;
+        _rightGainRS = 1.f;
+    }
     _pan = value;
-
-    SAMPLE_TYPE pan_mapped = (( _pan + 1.0 ) / 2.0 ) * ( PI / 2.0 );
-
-    _leftVolume  = sin( pan_mapped );
-    _rightVolume = cos( pan_mapped );
 }
 
 /* protected methods */

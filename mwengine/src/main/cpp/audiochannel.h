@@ -144,9 +144,16 @@ class AudioChannel
         void init();
 
         float _volume;
+
         float _pan;
-        SAMPLE_TYPE _leftVolume;
-        SAMPLE_TYPE _rightVolume;
+
+        // left and right channel gain values for the left channel content
+        SAMPLE_TYPE _leftGainLS;
+        SAMPLE_TYPE _rightGainLS;
+
+        // left and right channel gain values for the right channel content
+        SAMPLE_TYPE _leftGainRS;
+        SAMPLE_TYPE _rightGainRS;
 
         ResizableAudioBuffer* _outputBuffer;
         AudioBuffer* _cachedBuffer;

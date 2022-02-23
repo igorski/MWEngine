@@ -286,7 +286,7 @@ public final class MWEngineActivity extends AppCompatActivity {
         createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
 
         // Off-beat minor seventh chord stabs for synth 2
-/*
+
         createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
         createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
         createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
@@ -298,7 +298,7 @@ public final class MWEngineActivity extends AppCompatActivity {
         createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
         // a C note to be synthesized live when holding down the corresponding button
-*/
+
         _liveEvent     = new SynthEvent(( float ) Pitch.note( "C", 3 ), _synth2 );
         _liveClapEvent = new SampleEvent( _sampler );
         _liveClapEvent.setSample( SampleManager.getSample( "clap" ));
@@ -457,11 +457,8 @@ public final class MWEngineActivity extends AppCompatActivity {
 
     private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            float pan = ( progress / 50.f ) - 1.f;
-            Log.d( LOG_TAG, "Pan set to " + pan);
-            _synth1.getAudioChannel().setPan(pan);
-           // _synth1.getAdsr().setDecayTime( progress / 100f );
-           // _synth1.updateEvents(); // update all synth events to match new ADSR properties
+            _synth1.getAdsr().setDecayTime( progress / 100f );
+            _synth1.updateEvents(); // update all synth events to match new ADSR properties
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}
