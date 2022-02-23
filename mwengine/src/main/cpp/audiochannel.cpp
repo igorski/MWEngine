@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -160,10 +160,11 @@ void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume ) {
         SAMPLE_TYPE* rightTargetBuffer = bufferToMixInto->getBufferForChannel( 1 );
 
         // apply pan to output volume
-        float leftVolume  = mixVolume * _leftVolume;
-        float rightVolume = mixVolume * _rightVolume;
+        SAMPLE_TYPE leftVolume  = mixVolume * _leftVolume;
+        SAMPLE_TYPE rightVolume = mixVolume * _rightVolume;
         bool isLeftPanned = ( _pan < 0 );
 
+        // or pro tools style ? (https://stackoverflow.com/questions/67062207/how-to-pan-audio-sample-data-naturally)
         for ( int i = 0; i < buffersToWrite; ++i ) {
             leftTargetBuffer[ i ]  += leftSrcBuffer[ i ]  * leftVolume;
             rightTargetBuffer[ i ] += rightSrcBuffer[ i ] * rightVolume;
@@ -171,9 +172,9 @@ void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume ) {
             // pan the channel contents into the opposite channel
 
             if ( isLeftPanned )
-                leftTargetBuffer[ i ] += rightSrcBuffer[ i ] * -_pan;
+                leftTargetBuffer[ i ] += rightSrcBuffer[ i ] * _rightVolume;
             else
-                rightTargetBuffer[ i ] += leftSrcBuffer[ i ] * _pan;
+                rightTargetBuffer[ i ] += leftSrcBuffer[ i ] * _leftVolume;
         }
     }
 }
@@ -224,8 +225,11 @@ float AudioChannel::getPan()
 void AudioChannel::setPan( float value )
 {
     _pan = value;
-    _leftVolume  = ( _pan < 0 ) ? 1 : 1 - _pan;
-    _rightVolume = ( _pan > 0 ) ? 1 : _pan + 1;
+
+    SAMPLE_TYPE pan_mapped = (( _pan + 1.0 ) / 2.0 ) * ( PI / 2.0 );
+
+    _leftVolume  = sin( pan_mapped );
+    _rightVolume = cos( pan_mapped );
 }
 
 /* protected methods */

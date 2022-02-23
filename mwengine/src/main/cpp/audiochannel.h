@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -143,10 +143,10 @@ class AudioChannel
 
         void init();
 
-        float _leftVolume;
-        float _rightVolume;
-        float _pan;
         float _volume;
+        float _pan;
+        SAMPLE_TYPE _leftVolume;
+        SAMPLE_TYPE _rightVolume;
 
         ResizableAudioBuffer* _outputBuffer;
         AudioBuffer* _cachedBuffer;
