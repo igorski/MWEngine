@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014-2022 Igor Zinken - http://www.igorski.nl
  *
  * wave table generation adapted from sources by Matt @ hackmeopen.com
  *
@@ -79,21 +79,24 @@ namespace WaveGenerator
                             break;
 
                         case WaveForms::SQUARE:
-                            sample += sin(( SAMPLE_TYPE ) s * TWO_PI * ( SAMPLE_TYPE ) t / numberOfSamples );
-                            tmp     = ( sample >= 0.0 ) ? 1.0 : -1.0;
+                            // regular sine generation
+                            sample += gibbs * sin(( SAMPLE_TYPE ) s * TWO_PI * ( SAMPLE_TYPE ) t / numberOfSamples );
+                            // snap to extremes
+                            tmp = ( sample >= 0.0 ) ? 1.0 : -1.0;
                             break;
                     }
                 }
                 outputBuffer[ t ] = tmp;
 
-                if ( tmp > maxValue )
-                    maxValue = tmp;
+                maxValue = fmax( abs( tmp ), maxValue );
             }
-            SAMPLE_TYPE factor = 1.0 / maxValue;
-
             // normalize values
-            for ( int j = 0; j < numberOfSamples; ++j )
-                outputBuffer[ j ] *= factor;
+            if ( waveformType != WaveForms::SQUARE ) {
+                SAMPLE_TYPE factor = 1.0 / maxValue;
+                for ( int j = 0; j < numberOfSamples; ++j ) {
+                    outputBuffer[ j ] *= factor;
+                }
+            }
         }
     }
 }
