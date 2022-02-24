@@ -49,6 +49,11 @@ namespace WaveGenerator
             partials    = nyquist / frequency;
             maxValue    = 0.0;
 
+            // unique to triangle generation
+
+            SAMPLE_TYPE delta      = 1.0 / (( SAMPLE_TYPE ) numberOfSamples / 2 );
+            SAMPLE_TYPE lastSample = 0.0;
+
             for ( int t = 0; t < numberOfSamples; t++ )
             {
                 sample = 0.0, tmp = 0.0;
@@ -69,8 +74,8 @@ namespace WaveGenerator
                             break;
 
                         case WaveForms::TRIANGLE:
-                            sample += sin(( SAMPLE_TYPE ) s * TWO_PI * ( SAMPLE_TYPE ) t / numberOfSamples );
-                            tmp     = 1.0 - ( SAMPLE_TYPE ) ( std::abs( sample - 0.5 )) * 4.0;
+                            sample += gibbs * sin(( SAMPLE_TYPE ) s * TWO_PI * ( SAMPLE_TYPE ) t / numberOfSamples );
+                            tmp     = lastSample + (( sample >= lastSample ) ? delta : -delta );
                             break;
 
                         case WaveForms::SAWTOOTH:
@@ -85,6 +90,7 @@ namespace WaveGenerator
                             tmp = ( sample >= 0.0 ) ? 1.0 : -1.0;
                             break;
                     }
+                    lastSample = sample;
                 }
                 outputBuffer[ t ] = tmp;
 
