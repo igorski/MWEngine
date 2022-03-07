@@ -295,8 +295,8 @@ TEST( AudioChannel, MixPannedBuffer )
     audioChannel->setPan( 0.3 ); // set pan slightly to the right
     audioChannel->mixBuffer( mixBuffer, 1 );
 
-    ASSERT_TRUE( compareFloat( 0.7, tgtLeft[0])) << "expected left channel signal to be 0.7 for a +0.3 pan";
-    ASSERT_TRUE( compareFloat( 0.3, tgtRight[0])) << "expected right channel signal to be 0.3 for a +0.3 pan";
+    ASSERT_TRUE( compareFloatThreeDecimals( 0.891, tgtLeft[0]));
+    ASSERT_TRUE( compareFloatThreeDecimals( 0.453, tgtRight[0]));
 
     mixBuffer->silenceBuffers(); // clean up mix buffer contents
 
@@ -308,8 +308,8 @@ TEST( AudioChannel, MixPannedBuffer )
     audioChannel->setPan( -0.7 ); // set pan slightly to the left
     audioChannel->mixBuffer( mixBuffer, 1 );
 
-    ASSERT_TRUE( compareFloat( 0.7, tgtLeft[0])) << "expected left channel signal to be 0.7 for a -0.7 pan";;
-    ASSERT_TRUE( compareFloat( 0.3, tgtRight[0])) << "expected right channel signal to be 0.3 for a +0.3 pan";
+    ASSERT_TRUE( compareFloatThreeDecimals( 0.891, tgtLeft[0]));
+    ASSERT_TRUE( compareFloatThreeDecimals( 0.453, tgtRight[0]));
 
     delete audioChannel;
     delete mixBuffer;
