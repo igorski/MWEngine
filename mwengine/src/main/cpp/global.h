@@ -101,10 +101,11 @@ namespace AudioEngineProps
 // maximum volume output of the engine (prevents clipping of extremely hot signals)
 #define MAX_OUTPUT 0.98F
 
-// math
+// math caches
 
-const SAMPLE_TYPE PI     = atan( 1 ) * 4;
-const SAMPLE_TYPE TWO_PI = PI * 2.0;
+const SAMPLE_TYPE PI      = atan( 1 ) * 4;
+const SAMPLE_TYPE TWO_PI  = PI * 2.0;
+const SAMPLE_TYPE HALF_PI = PI / 2.0;
 
 // other
 

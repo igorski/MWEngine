@@ -73,6 +73,13 @@ bool compareFloat( float value1, float value2 )
     return std::fabs( value1 - value2 ) < std::fabs(std::min( value1, value2 )) * std::numeric_limits<double>::epsilon();
 }
 
+// compare to floating point values using up to three decimals in accuracy
+
+bool compareFloatThreeDecimals( float value1, float value2 )
+{
+    return ( static_cast<int>( value1 * 1000.f ) == static_cast<int>( value2 * 1000.f ));
+}
+
 // ----------------------------
 // HELPER AUDIOBUFFER FUNCTIONS
 // ----------------------------
