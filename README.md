@@ -54,7 +54,8 @@ strong references during their lifecycle.
 
 ### The [Issue Tracker](https://github.com/igorski/MWEngine/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) is your point of contact
 
-Bug reports, feature requests, questions and discussions are welcome on the GitHub Issue Tracker, please do not send e-mails through the development website. However, please search before posting to avoid duplicates, and limit to one issue per post.
+Bug reports, feature requests, questions and discussions are welcome on the GitHub Issue Tracker, please _do not send e-mails through the development website_. Please search before posting to avoid duplicates and limit to one issue per post.
+For usage / implementation related questions, first consult [the MWEngine Wiki](https://github.com/igorski/MWEngine/wiki).
 
 When reporting a bug, please describe the expected behaviour and the actual result. When possible, for crashes attach stack traces and recordings for audio related glitches.
 

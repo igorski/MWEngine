@@ -21,6 +21,10 @@
 #
 cmake_minimum_required(VERSION 3.4.1)
 
+# policies for SWIG
+cmake_policy(SET CMP0086 NEW)
+cmake_policy(SET CMP0078 NEW)
+
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 

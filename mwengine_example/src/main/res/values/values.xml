@@ -761,7 +761,7 @@
         <item name="materialCalendarTheme">@style/ThemeOverlay.MaterialComponents.MaterialCalendar</item>
         <item name="materialTimePickerTheme">@style/ThemeOverlay.MaterialComponents.TimePicker</item>
     </style>
-    <style name="Base.V14.Theme.MaterialComponents.Bridge" parent="Platform.MaterialComponents">
+    <style name="Base.V14.Theme.MaterialComponents.Bridge" parent="Platform.MaterialComponents" ns1:ignore="PrivateResource">
         <item name="isMaterialTheme">true</item>
 
         <item name="colorPrimaryVariant">@color/design_dark_default_color_primary_variant</item>
@@ -777,7 +777,6 @@
         <item name="colorOnPrimarySurface">?attr/colorOnSurface</item>
 
         <item name="scrimBackground">@color/mtrl_scrim_color</item>
-        <item name="popupMenuBackground">@drawable/mtrl_popupmenu_background_dark</item>
 
         <item name="minTouchTargetSize">@dimen/mtrl_min_touch_target_size</item>
 
@@ -888,7 +887,7 @@
         <item name="textAppearanceLargePopupMenu">?attr/textAppearanceSubtitle1</item>
         <item name="textAppearanceSmallPopupMenu">?attr/textAppearanceSubtitle1</item>
     </style>
-    <style name="Base.V14.Theme.MaterialComponents.Dialog.Bridge" parent="Platform.MaterialComponents.Dialog">
+    <style name="Base.V14.Theme.MaterialComponents.Dialog.Bridge" parent="Platform.MaterialComponents.Dialog" ns1:ignore="PrivateResource">
         <item name="isMaterialTheme">true</item>
 
         <item name="colorPrimaryVariant">@color/design_dark_default_color_primary_variant</item>
@@ -904,7 +903,6 @@
         <item name="colorOnPrimarySurface">?attr/colorOnSurface</item>
 
         <item name="scrimBackground">@color/mtrl_scrim_color</item>
-        <item name="popupMenuBackground">@drawable/mtrl_popupmenu_background_dark</item>
 
         <item name="minTouchTargetSize">@dimen/mtrl_min_touch_target_size</item>
 
