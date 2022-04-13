@@ -142,7 +142,11 @@ ResizableAudioBuffer* AudioChannel::getOutputBuffer()
     return _outputBuffer;
 }
 
-void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume ) {
+void AudioChannel::mixBuffer( AudioBuffer* bufferToMixInto, SAMPLE_TYPE mixVolume ) {
+
+    if ( mixVolume == SILENCE ) {
+        return;
+    }
 
     // if channels panning is set to center, use AudioBuffer mix method
 

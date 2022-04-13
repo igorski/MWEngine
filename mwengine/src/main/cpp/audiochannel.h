@@ -120,7 +120,7 @@ class AudioChannel
          * this is queried by AudioEngine during render cycle
          * if this AudioChannel has stereo panning, it is applied here
          */
-        void mixBuffer( AudioBuffer* bufferToMixInto, float mixVolume );
+        void mixBuffer( AudioBuffer* bufferToMixInto, SAMPLE_TYPE mixVolume );
 
         /**
          * AudioChannel can also have a large cache buffer that holds pre-rendered

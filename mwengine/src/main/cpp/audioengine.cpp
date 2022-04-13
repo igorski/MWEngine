@@ -350,7 +350,7 @@ namespace MWEngine {
 
             // merge recording into current input buffer for instant monitoring
 
-            if ( inputChannel->getVolume() > 0.F ) {
+            if ( !inputChannel->muted ) {
                 inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
             }
         }
@@ -393,7 +393,7 @@ namespace MWEngine {
             // only render sequenced events when the sequencer isn't in the paused state
             // and the channel volume is actually at an audible level! ( > 0 )
 
-            if ( Sequencer::playing && amount > 0 && channelVolume > 0.0 )
+            if ( Sequencer::playing && amount > 0 && channelVolume > SILENCE )
             {
                 if ( !isCached )
                 {
@@ -454,7 +454,7 @@ namespace MWEngine {
 
             // write the channel buffer into the combined output buffer, apply channel volume
             // (note live events are always audible as their volume is relative to the instrument)
-            if ( channel->hasLiveEvents && channelVolume == 0.0 ) {
+            if ( channel->hasLiveEvents && channelVolume == SILENCE ) {
                 channelVolume = 1.0;
             }
 

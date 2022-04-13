@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2014-2022 Igor Zinken - http://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -196,7 +196,7 @@ void ADSR::apply( AudioBuffer* inputBuffer, BaseSynthEvent* synthEvent, int writ
             else if ( applyRelease && readOffset >= _releaseStart )
                 lastEnvelope = std::max(
                     sustainLevel - ( SAMPLE_TYPE ) ( readOffset - _releaseStart ) * _releaseDecrement,
-                    ( SAMPLE_TYPE ) 0.0
+                    SILENCE
                 );
 
             // apply the calculated amplitude envelope onto the sample

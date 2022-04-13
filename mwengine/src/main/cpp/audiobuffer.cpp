@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -50,9 +50,9 @@ SAMPLE_TYPE* AudioBuffer::getBufferForChannel( int aChannelNum )
     return _buffers->at( aChannelNum );
 }
 
-int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, float aMixVolume )
+int AudioBuffer::mergeBuffers( AudioBuffer* aBuffer, int aReadOffset, int aWriteOffset, SAMPLE_TYPE aMixVolume )
 {
-    if ( aBuffer == nullptr || aWriteOffset >= bufferSize )
+    if ( aBuffer == nullptr || aWriteOffset >= bufferSize || aMixVolume == SILENCE )
         return 0;
 
     int sourceLength     = aBuffer->bufferSize;
@@ -101,7 +101,7 @@ bool AudioBuffer::isSilent()
 
         for ( int j = 0; j < bufferSize; ++j )
         {
-            if ( buffer[ j ] != 0.f )
+            if ( buffer[ j ] != SILENCE )
                 return false;
         }
     }
