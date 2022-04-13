@@ -255,6 +255,23 @@ TEST( AudioChannel, Caching )
     delete audioBuffer;
 }
 
+TEST( AudioChannel, Mono )
+{
+    AudioChannel* audioChannel = new AudioChannel( 1.0f );
+
+    AudioEngineProps::OUTPUT_CHANNELS = 1;
+    audioChannel->createOutputBuffer();
+
+    ASSERT_TRUE( audioChannel->isMono ) << "expected AudioChannel to be a mono channel";
+
+    AudioEngineProps::OUTPUT_CHANNELS = 2;
+    audioChannel->createOutputBuffer();
+
+    ASSERT_FALSE( audioChannel->isMono ) << "expected AudioChannel not to be a mono channel";
+
+    delete audioChannel;
+}
+
 TEST( AudioChannel, Panning )
 {
     AudioChannel* audioChannel = new AudioChannel( 1.0f );

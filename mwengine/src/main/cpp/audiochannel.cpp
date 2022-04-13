@@ -133,6 +133,8 @@ void AudioChannel::createOutputBuffer()
         delete _outputBuffer;
     }
     _outputBuffer = new ResizableAudioBuffer( outputChannels, bufferSize );
+
+    isMono = outputChannels == 1;
 }
 
 ResizableAudioBuffer* AudioChannel::getOutputBuffer()
