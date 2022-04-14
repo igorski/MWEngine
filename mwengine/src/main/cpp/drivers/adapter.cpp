@@ -166,9 +166,9 @@ namespace DriverAdapter {
 #endif
                 return 0;
             case Drivers::OPENSL:
-                return android_AudioIn( driver_openSL, recordBuffer, AudioEngineProps::BUFFER_SIZE );
+                return android_AudioIn( driver_openSL, recordBuffer, amountOfSamples );
             case Drivers::AAUDIO:
-                return driver_aAudio->getEnqueuedInputBuffer( recordBuffer, amountOfSamples );
+                return driver_aAudio->getEnqueuedInputBuffer( recordBuffer );
         }
     }
 }

@@ -332,8 +332,9 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
 
         DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
 
-        if ( DiskWriter::finish())
+        if ( DiskWriter::finish()) {
             Notifier::broadcast( Notifications::RECORDING_COMPLETED );
+        }
     }
 }
 

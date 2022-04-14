@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
 #include "audioengine.h"
 #include "wavewriter.h"
 #include "wavereader.h"
-#include <stdio.h>
+#include <cstdio>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 #include <utilities/stringutility.h>
@@ -72,24 +72,28 @@ namespace DiskWriter
 
     bool finish()
     {
-        if ( !prepared )
+        if ( !prepared ) {
             return false;
+        }
 
         // flush all temporary buffers as recording has finished
         // and snippets have been written onto disk
 
-        for ( int i = 0; i < 2; ++i )
+        for ( int i = 0; i < 2; ++i ) {
             flushOutput( i );
+        }
 
-        if ( outputFiles.size() == 0 )
+        if ( outputFiles.empty() ) {
             return false;
+        }
 
         // calculate total data size of concatenated wave files
 
         size_t totalBufferSize = 0;
 
-        for ( std::size_t i = 0; i < outputFiles.size(); ++i )
-            totalBufferSize += outputFiles.at( i ).size;
+        for ( auto & file : outputFiles ) {
+            totalBufferSize += file.size;
+        }
 
         // create a stream for writing the output file to
 
@@ -100,7 +104,7 @@ namespace DiskWriter
 
         // concatenate the wave files into a single output file
 
-        while ( outputFiles.size() > 0 )
+        while ( ! outputFiles.empty() )
         {
             writtenFile file = outputFiles.at( 0 );
 
@@ -150,10 +154,10 @@ namespace DiskWriter
     {
         flushOutput( bufferIndex ); // free previous contents when existing
 
-        if (( bufferIndex + 1 ) > cachedBuffers.size())
-            cachedBuffers.resize(( unsigned long )( bufferIndex + 1 ));
-
-        AudioBuffer* out = new AudioBuffer( amountOfChannels, recordingChunkSize );
+        if (( bufferIndex + 1 ) > cachedBuffers.size()) {
+            cachedBuffers.resize(( unsigned long ) ( bufferIndex + 1 ));
+        }
+        auto* out = new AudioBuffer( amountOfChannels, recordingChunkSize );
 
         cachedBuffers.at(( unsigned long ) bufferIndex ) = out;
         outputWriterIndex = 0;
@@ -166,18 +170,18 @@ namespace DiskWriter
      */
     void appendBuffer( AudioBuffer* aBuffer )
     {
-        if ( !prepared )
+        if ( !prepared ) {
             return;
-
+        }
         int bufferSize    = aBuffer->bufferSize;
         int channelAmount = aBuffer->amountOfChannels;
 
         AudioBuffer* cachedBuffer = getCachedBuffer( currentBufferIndex );
 
-        if ( cachedBuffer == nullptr )
+        if ( cachedBuffer == nullptr ) {
             cachedBuffer = generateOutputBuffer( currentBufferIndex, channelAmount );
-
-        cachedBuffer->mergeBuffers( aBuffer, 0, outputWriterIndex, 1.0f );
+        }
+        cachedBuffer->mergeBuffers( aBuffer, 0, outputWriterIndex, MAX_VOLUME );
         outputWriterIndex += bufferSize;
     }
 
@@ -185,27 +189,28 @@ namespace DiskWriter
      * append the actual output buffer from the engine
      * into the current snippets output buffer
      */
-    void appendBuffer( float* aBuffer, int aBufferSize, int amountOfChannels )
+    void appendBuffer( const float* aBuffer, int aBufferSize, int amountOfChannels )
     {
-        if ( !prepared )
+        if ( !prepared ) {
             return;
-
+        }
         AudioBuffer* cachedBuffer = getCachedBuffer( currentBufferIndex );
 
-        if ( cachedBuffer == nullptr )
+        if ( cachedBuffer == nullptr ) {
             cachedBuffer = generateOutputBuffer( currentBufferIndex, amountOfChannels );
-
+        }
         int i, c, ci;
 
         // write samples into cache buffers
 
         for ( i = 0, c = 0; i < aBufferSize; ++i, ++outputWriterIndex, c += amountOfChannels )
         {
-            if ( outputWriterIndex == recordingChunkSize )
+            if ( outputWriterIndex == recordingChunkSize ) {
                 return;
-
-            for ( ci = 0; ci < amountOfChannels; ++ci )
+            }
+            for ( ci = 0; ci < amountOfChannels; ++ci ) {
                 cachedBuffer->getBufferForChannel( ci )[ outputWriterIndex ] = aBuffer[ c + ci ];
+            }
         }
     }
 
@@ -225,19 +230,19 @@ namespace DiskWriter
      */
     void writeBufferToFile( int bufferIndex, bool broadcastUpdate )
     {
-        if ( !prepared )
+        if ( !prepared ) {
             return;
-
+        }
         AudioBuffer* cachedBuffer = getCachedBuffer( bufferIndex );
 
-        if ( cachedBuffer == nullptr )
+        if ( cachedBuffer == nullptr ) {
             return;
-
-        int sampleRate = AudioEngineProps::SAMPLE_RATE;
+        }
+        int sampleRate = ( int ) AudioEngineProps::SAMPLE_RATE;
 
         // create output file name
-        std::string outputFile = std::string(
-            tempDirectory.c_str()
+        std::string snippetFileName = std::string(
+            tempDirectory
         ).append( "rec_snippet_" + TO_STRING( savedSnippets ) + ".WAV" );
 
         int bufferSize        = recordingChunkSize;
@@ -250,36 +255,39 @@ namespace DiskWriter
         {
             bufferSize = outputWriterIndex;
 
-            AudioBuffer* tempBuffer = new AudioBuffer( recordingChannelAmount, bufferSize );
+            auto* tempBuffer = new AudioBuffer( recordingChannelAmount, bufferSize );
 
-            for ( int i = 0; i < bufferSize; ++i )
+            for ( int c = 0; c < recordingChannelAmount; ++c ) {
             {
-                for ( int c = 0; c < recordingChannelAmount; ++c )
-                    tempBuffer->getBufferForChannel( c )[ i ] = cachedBuffer->getBufferForChannel( c )[ i ];
+                auto tempChannelBuffer   = tempBuffer->getBufferForChannel( c );
+                auto cachedChannelBuffer = cachedBuffer->getBufferForChannel( c );
+
+                for ( int i = 0; i < bufferSize; ++i )
+                    tempChannelBuffer[ i ] = cachedChannelBuffer[ i ];
+                }
             }
-            writtenWAVSize = WaveWriter::bufferToWAV( outputFile, tempBuffer, sampleRate );
+            writtenWAVSize = WaveWriter::bufferToWAV( snippetFileName, tempBuffer, sampleRate );
 
             // free memory allocated by temporary buffer
 
             delete tempBuffer;
         }
-        else
-        {
-            writtenWAVSize = WaveWriter::bufferToWAV( outputFile, cachedBuffer, sampleRate );
+        else {
+            writtenWAVSize = WaveWriter::bufferToWAV( snippetFileName, cachedBuffer, sampleRate );
         }
 
         flushOutput( bufferIndex ); // free allocated buffer memory
 
         // store output file in vector
         writtenFile file;
-        file.path = outputFile;
+        file.path = snippetFileName;
         file.size = writtenWAVSize;
         outputFiles.push_back( file );
 
         // broadcast update
-        if ( broadcastUpdate )
+        if ( broadcastUpdate ) {
             Notifier::broadcast( Notifications::RECORDED_SNIPPET_SAVED, savedSnippets );
-
+        }
         ++savedSnippets;
     }
 
@@ -294,9 +302,9 @@ namespace DiskWriter
     {
         AudioBuffer* cachedBuffer = getCachedBuffer( bufferIndex );
 
-        if ( cachedBuffer != nullptr )
+        if ( cachedBuffer != nullptr ) {
             delete cachedBuffer;
-
+        }
         cachedBuffers.at(( unsigned long ) bufferIndex ) = nullptr;
     }
 }

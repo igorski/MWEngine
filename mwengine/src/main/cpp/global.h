@@ -88,12 +88,14 @@ namespace AudioEngineProps
 #if PRECISION == 1 // float
     typedef float SAMPLE_TYPE;
     #define SILENCE 0.f
+    #define MAX_VOLUME 1.f
     #define undenormalise(sample) ((((*(UINT32 *)&(sample))&0x7f800000)==0)&&((sample)!=0.f))
 #endif
 
 #if PRECISION == 2 // double
     typedef double SAMPLE_TYPE;
     #define SILENCE 0.0
+    #define MAX_VOLUME 1.0
     #define undenormalise(sample) ((((((UINT32 *)&(sample))[1])&0x7fe00000)==0)&&((sample)!=0.f))
 #endif
 
