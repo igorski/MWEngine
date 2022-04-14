@@ -50,7 +50,7 @@ TEST( AudioBuffer, Silence )
 TEST( AudioBuffer, AdjustVolumes )
 {
     AudioBuffer* audioBuffer = fillAudioBuffer( randomAudioBuffer() );
-    SAMPLE_TYPE multiplier   = randomSample( 0.0, 1.0 );
+    SAMPLE_TYPE multiplier   = randomSample( SILENCE, MAX_VOLUME );
     SAMPLE_TYPE maxValue     = getMaxAmpForBuffer( audioBuffer );
 
     audioBuffer->adjustBufferVolumes( multiplier );

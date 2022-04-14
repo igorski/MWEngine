@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2017-2022 Igor Zinken - https://www.igorski.nl
  *
  * AAudio driver implementation adapted from the Android Open Source Project
  *
@@ -412,14 +412,15 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
                 _flushInputOnCallback = false;
             }
 
-            aaudio_result_t readFrames = static_cast<aaudio_result_t>(AAudioStream_read(
+            _readInputFrames = static_cast<aaudio_result_t>( AAudioStream_read(
                 _inputStream,
                 _sampleFormat == AAUDIO_FORMAT_PCM_I16 ? ( void* ) _recordBufferI : ( void* ) _recordBuffer,
-                std::min( _bufferSizeInFrames, numFrames ), static_cast<int64_t>( 0 )
+                std::min( _bufferSizeInFrames, numFrames ),
+                static_cast<int64_t>( 0 )
             ));
 
-            if ( readFrames < 0 ) {
-                Debug::log( "AAudio_IO::AAudioStream_read() returns read %s frames", AAudio_convertResultToText( readFrames ));
+            if ( _readInputFrames < 0 ) {
+                Debug::log( "AAudio_IO::AAudioStream_read() returns read %s frames", AAudio_convertResultToText( _readInputFrames ));
             }
         }
 
@@ -477,19 +478,19 @@ void AAudio_IO::enqueueOutputBuffer( const float* sourceBuffer, int amountOfSamp
  * retrieve the recorded input buffer populated by the dataCallback method
  * this is invoked by AudioEngine::render()
  */
-int AAudio_IO::getEnqueuedInputBuffer( float* destinationBuffer, int amountOfSamples ) {
+int AAudio_IO::getEnqueuedInputBuffer( float* destinationBuffer ) {
     if ( _sampleFormat == AAUDIO_FORMAT_PCM_I16 ) {
 
         // ideally the hardware supports floating point samples, in case it is running
         // as 16-bit PCM, convert the samples into floating point for use in the engine
 
-        for ( int i = 0; i < amountOfSamples; ++i ) {
+        for ( int i = 0; i < _readInputFrames; ++i ) {
             destinationBuffer[ i ] = ( float ) _recordBufferI[ i ] * ( float ) CONVMYFLT;
         }
     } else {
-        memcpy( destinationBuffer, _recordBuffer, amountOfSamples * sizeof( float ));
+        memcpy( destinationBuffer, _recordBuffer, _readInputFrames * sizeof( float ));
     }
-    return amountOfSamples; // TODO (?) : assumption here that the amount read equals the given recordBuffer size
+    return _readInputFrames;
 }
 
 /**
@@ -550,10 +551,10 @@ void AAudio_IO::errorCallback( AAudioStream* stream, aaudio_result_t error ) {
     assert(stream == _outputStream || stream == _inputStream);
     Debug::log( "AAudio_IO::errorCallback result: %s", AAudio_convertResultToText( error ));
 
-    aaudio_stream_state_t streamState = static_cast<aaudio_stream_state_t>(AAudioStream_getState( _outputStream ));
+    auto streamState = static_cast<aaudio_stream_state_t>( AAudioStream_getState( _outputStream ));
     if ( streamState == AAUDIO_STREAM_STATE_DISCONNECTED ) {
         // Handle stream restart on a separate thread
-        std::function<void(void)> restartStreams = std::bind( &AAudio_IO::restartStreams, this );
+        std::function<void( void )> restartStreams = std::bind( &AAudio_IO::restartStreams, this );
         _streamRestartThread = new std::thread( restartStreams );
     }
 }

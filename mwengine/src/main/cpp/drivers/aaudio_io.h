@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2017-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2017-2022 Igor Zinken - https://www.igorski.nl
  *
  * AAudio driver implementation adapted from the Android Open Source Project
  *
@@ -65,7 +65,7 @@ class AAudio_IO
                                                     int32_t numFrames );
         void errorCallback( AAudioStream *stream, aaudio_result_t  __unused error );
         double getCurrentOutputLatencyMillis();
-        int getEnqueuedInputBuffer( float* destinationBuffer,  int amountOfSamples );
+        int getEnqueuedInputBuffer( float* destinationBuffer );
         void enqueueOutputBuffer  ( const float* sourceBuffer, int amountOfSamples );
 
     private:
@@ -90,6 +90,7 @@ class AAudio_IO
         int32_t _underrunCountOutputStream;
         int32_t _bufferSizeInFrames;
         int32_t _framesPerBurst;
+        int32_t _readInputFrames;
         double currentOutputLatencyMillis_ = 0;
         int32_t _bufferSizeSelection       = BUFFER_SIZE_AUTOMATIC;
 

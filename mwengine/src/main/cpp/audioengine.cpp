@@ -332,9 +332,10 @@ namespace MWEngine {
 
 #ifdef RECORD_DEVICE_INPUT
         // record audio from Android device ?
-        if (( recordDeviceInput || recordInputToDisk ) && AudioEngineProps::INPUT_CHANNELS > 0 )
+        if (( recordDeviceInput || recordInputToDisk ))
         {
-            int recordedSamples           = DriverAdapter::getInput( recbufferIn, amountOfSamples );
+            int recordedSamples = DriverAdapter::getInput( recbufferIn, amountOfSamples );
+            inputChannel->getOutputBuffer()->resize( recordedSamples );
             SAMPLE_TYPE* recBufferChannel = inputChannel->getOutputBuffer()->getBufferForChannel( 0 );
 
             for ( j = 0; j < recordedSamples; ++j ) {
@@ -455,7 +456,7 @@ namespace MWEngine {
             // write the channel buffer into the combined output buffer, apply channel volume
             // (note live events are always audible as their volume is relative to the instrument)
             if ( channel->hasLiveEvents && channelVolume == SILENCE ) {
-                channelVolume = 1.0;
+                channelVolume = MAX_VOLUME;
             }
 
             // note we don't mix the channel if it belongs to a group (group will sum into the output)
