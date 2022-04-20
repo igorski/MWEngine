@@ -268,12 +268,36 @@ public final class MWEngine
         _sequencerController.setRecordingState( false, 0, "" );
     }
 
+    /**
+     * @deprecated use startBouncing|stopBouncing instead
+     */
     public void setBouncing( boolean value, String outputFile ) {
-        setBouncing( value, outputFile, 0, AudioEngine.getAmount_of_bars() * AudioEngine.getSamples_per_bar());
+        if ( value )
+            startBouncing( outputFile );
+        else
+            stopBouncing();
     }
 
+    /**
+     * @deprecated use startBouncing|stopBouncing instead
+     */
     public void setBouncing( boolean value, String outputFile, int rangeStart, int rangeEnd ) {
-        _sequencerController.setBounceState( value, calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
+        if ( value )
+            startBouncing( outputFile, rangeStart, rangeEnd );
+        else
+            stopBouncing();
+    }
+
+    public void startBouncing( String outputFile ) {
+        startBouncing( outputFile, 0, AudioEngine.getAmount_of_bars() * AudioEngine.getSamples_per_bar());
+    }
+
+    public void startBouncing( String outputFile, int rangeStart, int rangeEnd ) {
+        _sequencerController.setBounceState( true, calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
+    }
+
+    public void stopBouncing() {
+        _sequencerController.setBounceState( false, 0, "", 0, 0 );
     }
 
     /**
@@ -281,7 +305,7 @@ public final class MWEngine
      */
     public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds ) {
         if ( recordingActive )
-            startInputRecording( outputFile, maxDurationInMilliSeconds );
+            startInputRecording( outputFile );
         else
             stopInputRecording();
     }
@@ -296,10 +320,9 @@ public final class MWEngine
      * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
      *
      * @param outputFile {string} name of the WAV file to create and write the recording into
-     * @param maxDurationInMilliSeconds {int} the size (in milliseconds) of each individual written buffer
      */
-    public void startInputRecording( String outputFile, int maxDurationInMilliSeconds ) {
-        _sequencerController.setRecordingFromDeviceState( true, BufferUtility.millisecondsToBuffer( maxDurationInMilliSeconds, SAMPLE_RATE ), outputFile );
+    public void startInputRecording( String outputFile ) {
+        _sequencerController.setRecordingFromDeviceState( true, calculateRecordingSnippetBufferSize(), outputFile );
     }
 
     public void stopInputRecording() {
