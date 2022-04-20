@@ -398,9 +398,10 @@ public final class MWEngineActivity extends AppCompatActivity {
         @Override
         public void onClick( View v ) {
             _isRecording = !_isRecording;
-            _engine.setRecordingState(
-                _isRecording, Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav"
-            );
+            if ( _isRecording )
+                _engine.startOutputRecording( Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav" );
+            else
+                _engine.stopOutputRecording();
             (( Button ) v ).setText( _isRecording ? R.string.rec_btn_off : R.string.rec_btn_on );
         }
     }

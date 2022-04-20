@@ -229,6 +229,45 @@ public final class MWEngine
         return AudioEngine.getInputChannel();
     }
 
+    /**
+     * Records the audio coming in from the Android device input, playing it back over
+     * the dedicated input channel (@see getInputChannel());
+     * Requires RECORD_DEVICE_INPUT to be enabled in global.h as well as the
+     * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
+     * NOTE: to record the input to device storage, @see startInputRecording|stopInputRecording
+     */
+    public void recordInput( boolean recordingActive ) {
+        AudioEngine.setRecordDeviceInput( recordingActive );
+    }
+
+    /**
+     * @deprecated use startOutputRecording|stopOutputRecording instead
+     */
+    public void setRecordingState( boolean recordingActive, String outputFile ) {
+        if ( recordingActive )
+            startOutputRecording( outputFile );
+        else
+            stopOutputRecording();
+    }
+
+    /**
+     * Records the audio output of the engine and writes it onto the Android
+     * device's storage as a WAV file. Note this keeps recording until stopRecording() is invoked.
+     * Additionally, the sequencer must be running!
+     *
+     * Requires RECORD_TO_DISK to be enabled in global.h as well as the
+     * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
+     *
+     * @param outputFile {string} name of the WAV file to create and write the recording into
+     */
+    public void startOutputRecording( String outputFile ) {
+        _sequencerController.setRecordingState( true, calculateRecordingSnippetBufferSize(), outputFile );
+    }
+
+    public void stopOutputRecording() {
+        _sequencerController.setRecordingState( false, 0, "" );
+    }
+
     public void setBouncing( boolean value, String outputFile ) {
         setBouncing( value, outputFile, 0, AudioEngine.getAmount_of_bars() * AudioEngine.getSamples_per_bar());
     }
@@ -238,36 +277,13 @@ public final class MWEngine
     }
 
     /**
-     * Records the audio coming in from the Android device input.
-     * Requires RECORD_DEVICE_INPUT to be enabled in global.h as well as the
-     * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
-     *
-     * In order to record the input directly to device storage, @see setRecordFromDeviceInputState()
+     * @deprecated use startInputRecording|stopInputRecording instead
      */
-    public void recordInput( boolean recordingActive ) {
-        AudioEngine.setRecordDeviceInput( recordingActive );
-    }
-
-    /**
-     * Records the audio output of the engine and writes it onto the Android
-     * device's storage as a WAV file. Note this keeps recording until setRecordingState() is
-     * invoked again with value false. Additionally, the sequencer must be running!
-     *
-     * Requires RECORD_TO_DISK to be enabled in global.h as well as the
-     * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
-     *
-     * @param recordingActive {boolean} toggle the recording state on/off
-     * @param outputFile {string} name of the WAV file to create and write the recording into
-     */
-    public void setRecordingState( boolean recordingActive, String outputFile ) {
-        int maxRecordBuffers = 0;
-
-        // create / reset the recorded buffer when
-        // hitting the record button
+    public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds ) {
         if ( recordingActive )
-            maxRecordBuffers = calculateRecordingSnippetBufferSize();
-
-        _sequencerController.setRecordingState( recordingActive, maxRecordBuffers, outputFile );
+            startInputRecording( outputFile, maxDurationInMilliSeconds );
+        else
+            stopInputRecording();
     }
 
     /**
@@ -279,20 +295,15 @@ public final class MWEngine
      * Requires RECORD_DEVICE_INPUT to be enabled in global.h as well as the
      * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
      *
-     * @param recordingActive {boolean} toggle the recording state on/off
      * @param outputFile {string} name of the WAV file to create and write the recording into
      * @param maxDurationInMilliSeconds {int} the size (in milliseconds) of each individual written buffer
      */
-    public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds ) {
-        int maxRecordBuffers = 0;
+    public void startInputRecording( String outputFile, int maxDurationInMilliSeconds ) {
+        _sequencerController.setRecordingFromDeviceState( true, BufferUtility.millisecondsToBuffer( maxDurationInMilliSeconds, SAMPLE_RATE ), outputFile );
+    }
 
-        // create / reset the recorded buffer when
-        // hitting the record button
-
-        if ( recordingActive )
-            maxRecordBuffers = BufferUtility.millisecondsToBuffer( maxDurationInMilliSeconds, SAMPLE_RATE );
-
-        _sequencerController.setRecordingFromDeviceState( recordingActive, maxRecordBuffers, outputFile );
+    public void stopInputRecording() {
+        _sequencerController.setRecordingFromDeviceState( false, 0, "" );
     }
 
     /**
