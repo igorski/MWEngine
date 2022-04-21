@@ -123,18 +123,18 @@ void Reverb::setOutput( float value )
     }
 }
 
-void Reverb::process( AudioBuffer* audioBuffer, bool isMonosource )
+void Reverb::process( AudioBuffer* audioBuffer, bool isMonoSource )
 {
     int sampleFrames = audioBuffer->bufferSize;
 
-    SAMPLE_TYPE* in1  = audioBuffer->getBufferForChannel( 0 );
-    SAMPLE_TYPE* in2  = audioBuffer->getBufferForChannel( 1 );
-    SAMPLE_TYPE* out1 = audioBuffer->getBufferForChannel( 0 );
-    SAMPLE_TYPE* out2 = audioBuffer->getBufferForChannel( 1 );
+    SAMPLE_TYPE* inL  = audioBuffer->getBufferForChannel(0 );
+    SAMPLE_TYPE* outL = audioBuffer->getBufferForChannel(0 );
+    SAMPLE_TYPE* inR  = !isMonoSource ? audioBuffer->getBufferForChannel(1 ) : nullptr;
+    SAMPLE_TYPE* outR = !isMonoSource ? audioBuffer->getBufferForChannel(1 ) : nullptr;
 
     SAMPLE_TYPE a, b, r;
     SAMPLE_TYPE t, f = fil, fb = fbak, dmp = damp, y = dry, w = wet;
-    int  p = pos, d1, d2, d3, d4;
+    int p = pos, d1, d2, d3, d4;
 
     if ( rdy == 0 )
         clearBuffers();
@@ -144,38 +144,41 @@ void Reverb::process( AudioBuffer* audioBuffer, bool isMonosource )
     d3 = ( p + ( int )( 277 * size )) & 1023;
     d4 = ( p + ( int )( 379 * size )) & 1023;
 
-    --in1;
-    --in2;
-    --out1;
-    --out2;
+    --inL;
+    --outL;
+
+    if ( !isMonoSource ) {
+        --inR;
+        --outR;
+    }
 
     while ( --sampleFrames >= 0 )
     {
-        a = *++in1;
-        b = *++in2;
+        a = *++inL;
+        b = !isMonoSource ? ( *++inR ) : SILENCE;
 
         f += dmp * (w * (a + b) - f); // HF damping
         r = f;
 
-        t = *(buf1 + p);
+        t = *( buf1 + p );
         r -= fb * t;
-        *(buf1 + d1) = r; // allpass
+        *( buf1 + d1 ) = r; // allpass
         r += t;
 
-        t = *(buf2 + p);
+        t = *( buf2 + p );
         r -= fb * t;
-        *(buf2 + d2) = r; // allpass
+        *( buf2 + d2 ) = r; // allpass
         r += t;
 
-        t = *(buf3 + p);
+        t = *( buf3 + p );
         r -= fb * t;
-        *(buf3 + d3) = r; // allpass
+        *( buf3 + d3 ) = r; // allpass
         r += t;
         a = y * a + r - f; // left output
 
-        t = *(buf4 + p);
+        t = *( buf4 + p );
         r -= fb * t;
-        *(buf4 + d4) = r; // allpass
+        *( buf4 + d4 ) = r; // allpass
         r += t;
         b = y * b + r - f; // right output
 
@@ -185,8 +188,11 @@ void Reverb::process( AudioBuffer* audioBuffer, bool isMonosource )
         ++d3 &= 1023;
         ++d4 &= 1023;
 
-        *++out1 = a;
-        *++out2 = b;
+        *++outL = a;
+
+        if ( !isMonoSource ) {
+            *++outR = b;
+        }
     }
     pos = p;
 
