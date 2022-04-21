@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+# Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -76,6 +76,7 @@ set(MWENGINE_CORE_SOURCES ${CPP_SRC}/global.cpp
                           ${CPP_SRC}/modules/routeableoscillator.cpp
                           ${CPP_SRC}/processors/baseprocessor.cpp
                           ${CPP_SRC}/services/library_loader.cpp
+                          ${CPP_SRC}/utilities/audiorenderer.cpp
                           ${CPP_SRC}/utilities/bufferutility.cpp
                           ${CPP_SRC}/utilities/levelutility.cpp
                           ${CPP_SRC}/utilities/bulkcacher.cpp

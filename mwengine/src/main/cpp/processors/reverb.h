@@ -17,6 +17,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#include <utilities/bufferutility.h>
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
 
@@ -35,6 +36,10 @@ class Reverb : public BaseProcessor {
 
         std::string getType() {
             return std::string( "Reverb" );
+        }
+
+        int addedDurationInSamples() {
+            return BufferUtility::millisecondsToBuffer(( int ) ( getSize() * 4000.f ), AudioEngineProps::SAMPLE_RATE );
         }
 
         float getSize();

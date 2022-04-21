@@ -26,6 +26,7 @@
 #ifndef __MWENGINE__REVERB_SM_H_INCLUDED__
 #define __MWENGINE__REVERB_SM_H_INCLUDED__
 
+#include <utilities/bufferutility.h>
 #include "baseprocessor.h"
 #include "../audiobuffer.h"
 
@@ -154,6 +155,10 @@ class ReverbSM : public BaseProcessor {
 
         std::string getType() {
             return std::string( "ReverbSM" );
+        }
+
+        int addedDurationInSamples() {
+            return BufferUtility::millisecondsToBuffer(( int )( getRoomSize() * 4000.f ), AudioEngineProps::SAMPLE_RATE );
         }
 
         void mute();

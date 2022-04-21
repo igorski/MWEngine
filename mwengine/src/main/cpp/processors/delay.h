@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,6 +24,7 @@
 #define __MWENGINE__DELAY_H_INCLUDED__
 
 #include "baseprocessor.h"
+#include <utilities/bufferutility.h>
 
 namespace MWEngine {
 class Delay : public BaseProcessor
@@ -34,6 +35,13 @@ class Delay : public BaseProcessor
 
         std::string getType() {
             return std::string( "Delay" );
+        }
+
+        int addedDurationInSamples() {
+            return BufferUtility::millisecondsToBuffer(
+                getDelayTime() * ( int ) ( 10.f * getFeedback() ),
+                AudioEngineProps::SAMPLE_RATE
+            );
         }
 
         int getDelayTime();

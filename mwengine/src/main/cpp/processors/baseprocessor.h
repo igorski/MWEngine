@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -41,6 +41,15 @@ class BaseProcessor
          */
         virtual std::string getType() {
             return std::string( "BaseProcessor" ); // override in subclass
+        }
+
+        /**
+         * In case the processor adds an effect tail (e.g. reverb / delay)
+         * this method can calculate the added duration in samples the
+         * effect adds when processing an input signal
+         */
+        virtual int addedDurationInSamples() {
+            return 0; // override in subclass
         }
 
 #ifndef SWIG

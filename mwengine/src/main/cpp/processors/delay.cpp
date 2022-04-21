@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -39,8 +39,8 @@ namespace MWEngine {
  */
 Delay::Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels )
 {
-    _time        = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aDelayTime );
-    _maxTime     = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aMaxDelayTime );
+    _time        = ( int ) BufferUtility::millisecondsToBuffer( aDelayTime, AudioEngineProps::SAMPLE_RATE );
+    _maxTime     = ( int ) BufferUtility::millisecondsToBuffer( aMaxDelayTime, AudioEngineProps::SAMPLE_RATE );
 
     _delayBuffer  = new AudioBuffer( amountOfChannels, _maxTime );
     _mix          = aMix;
@@ -129,12 +129,12 @@ void Delay::reset()
 
 int Delay::getDelayTime()
 {
-    return _time / ( AudioEngineProps::SAMPLE_RATE / 1000 );
+    return BufferUtility::bufferToMilliseconds( _time, AudioEngineProps::SAMPLE_RATE );
 }
 
 void Delay::setDelayTime( int aValue )
 {
-    _time = ( int ) round(( AudioEngineProps::SAMPLE_RATE / 1000 ) * aValue );
+    _time = ( int ) BufferUtility::millisecondsToBuffer( aValue, AudioEngineProps::SAMPLE_RATE );
 
     if ( _time > _maxTime )
         _time = _maxTime; // keep within defines range
