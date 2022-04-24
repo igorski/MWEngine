@@ -20,8 +20,11 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <events/sampleevent.h>
 #include "audiorenderer.h"
+#include "wavereader.h"
 #include "wavewriter.h"
+#include "samplemanager.h"
 
 namespace MWEngine {
 
@@ -64,6 +67,31 @@ bool AudioRenderer::renderEvent( const std::string& outputFilename, BaseAudioEve
     delete outputBuffer;
 
     return writtenSamples == bufferSize;
+}
+
+bool AudioRenderer::renderFile( const std::string& inputFilename, const std::string& outputFilename, ProcessingChain* processingChain )
+{
+    waveFile WAV = WaveReader::fileToBuffer( inputFilename );
+
+    if ( WAV.buffer == nullptr ) {
+        return false;
+    }
+
+    std::string tempSampleKey = "ar_ts";
+
+    SampleManager::setSample( tempSampleKey, WAV.buffer, WAV.sampleRate );
+
+    auto* event = new SampleEvent();
+    event->setSample( SampleManager::getSample( tempSampleKey ));
+
+    bool renderSuccess = renderEvent( outputFilename, event, processingChain );
+
+    // free allocated memory
+
+    delete event;
+    SampleManager::removeSample( tempSampleKey, true );
+
+    return renderSuccess;
 }
 
 } // E.O namespace MWEngine

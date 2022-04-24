@@ -231,7 +231,7 @@ public final class MWEngine
 
     /**
      * Records the audio coming in from the Android device input, playing it back over
-     * the dedicated input channel (@see getInputChannel());
+     * the dedicated input channel (unless the channel is muted) (@see getInputChannel());
      * Requires RECORD_DEVICE_INPUT to be enabled in global.h as well as the
      * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
      * NOTE: to record the input to device storage, @see startInputRecording|stopInputRecording

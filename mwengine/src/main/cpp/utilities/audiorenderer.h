@@ -37,9 +37,15 @@ class AudioRenderer {
 
         /**
          * Renders the audio provided by given audioEvent when processed by
-         * given ProcessingChain into a WAV file
+         * given ProcessingChain into a WAV file of given outputFilename
          */
         static bool renderEvent( const std::string& outputFilename, BaseAudioEvent* audioEvent, ProcessingChain* processingChain );
+
+        /**
+         * Renders the audio of given inputFilename when processed by
+         * given ProcessingChain into a WAV file of given outputFilename
+         */
+        static bool renderFile( const std::string& inputFilename, const std::string& outputFilename, ProcessingChain* processingChain );
 };
 
 } // E.O namespace MWEngine

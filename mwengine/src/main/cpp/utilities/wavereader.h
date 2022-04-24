@@ -29,7 +29,7 @@ namespace MWEngine {
 typedef struct
 {
    unsigned int sampleRate;
-   AudioBuffer* buffer;
+   AudioBuffer* buffer; // no auto cleanup, use consideration (f.i. use with SampleManager)
 } waveFile;
 
 class WaveReader
