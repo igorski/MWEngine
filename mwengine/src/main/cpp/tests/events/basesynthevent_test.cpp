@@ -19,19 +19,8 @@ TEST( BaseSynthEvent, InstanceId )
     EXPECT_EQ( firstInstanceId + 1, audioEvent2->instanceId )
         << "expected second BaseSynthEvent to have an id 1 higher than the first";
 
-    // 3. delete events (should decrement instance ids)
-
     delete audioEvent;
     delete audioEvent2;
-
-    // 4. create third event
-
-    BaseSynthEvent* audioEvent3 = new BaseSynthEvent( frequency, instrument );
-
-    EXPECT_EQ( firstInstanceId, audioEvent3->instanceId )
-        << "expected old instance id to be equal to the new BaseAudioEvents id as the old events have been disposed";
-
-    delete audioEvent3;
     delete instrument;
 }
 
@@ -127,35 +116,11 @@ TEST( BaseSynthEvent, SequencedEvent )
     EXPECT_EQ( length, audioEvent->length )
         << "expected length to equal the value passed in the constructor";
 
-    delete audioEvent;
-    delete instrument;
-}
+    EXPECT_EQ( position * AudioEngine::samples_per_step, audioEvent->getEventStart() )
+        << "expected event start position in samples to have been calculated from the given position in the constructor";
 
-TEST( BaseSynthEvent, PropertyInvalidation )
-{
-    float frequency             = randomFloat() * 4000.f;
-    SynthInstrument* instrument = new SynthInstrument();
-    int position                = randomInt( 0, 15 );
-    float length                = randomFloat() * 16.f;
-    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, position, length, instrument );
-
-    position = randomInt( 0, 15 );
-    length   = randomFloat() * 16;
-    SynthInstrument* newInstrument = new SynthInstrument();
-
-    audioEvent->invalidateProperties( position, length, newInstrument );
-
-    EXPECT_EQ( position, audioEvent->position )
-        << "expected position to equal the value passed in the invalidation method";
-
-    EXPECT_EQ( length, audioEvent->length )
-        << "expected length to equal the value passed in the invalidation method";
-
-    ASSERT_FALSE( instrument == audioEvent->getInstrument() )
-        << "expected the original instrument to have been replaced by the invalidation method";
-
-    ASSERT_TRUE( newInstrument == audioEvent->getInstrument() )
-       << "expected the newly set instrument to have been returned";
+    EXPECT_EQ( ( int ) ( length * AudioEngine::samples_per_step ), audioEvent->getEventLength() )
+        << "expected event length in samples to have been calculated from the given length in the constructor";
 
     delete audioEvent;
     delete instrument;

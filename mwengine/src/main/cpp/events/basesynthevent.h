@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -94,8 +94,7 @@ class BaseSynthEvent : public BaseAudioEvent
         int lastWriteIndex;
 
         // render related
-        void invalidateProperties( int aPosition, float aLength, SynthInstrument* aInstrument );
-        void calculateBuffers();
+        void invalidateProperties();
 
 #ifndef SWIG
         // internal to the engine

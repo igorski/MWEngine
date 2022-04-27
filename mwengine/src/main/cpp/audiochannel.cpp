@@ -45,7 +45,6 @@ AudioChannel::AudioChannel( float aVolume, int aMaxBufferPosition )
 AudioChannel::~AudioChannel()
 {
     reset();
-    --INSTANCE_COUNT;
 
     delete _outputBuffer;
     delete _cachedBuffer;

@@ -58,19 +58,8 @@ TEST( AudioChannel, InstanceId )
     EXPECT_EQ( firstInstanceId + 1, audioChannel2->instanceId )
         << "expected second AudioChannel to have an id 1 higher than the first";
 
-    // 3. delete events (should decrement instance ids)
-
     delete audioChannel;
     delete audioChannel2;
-
-    // 4. create third channel
-    // TODO: destructor doesn't seem to do anything ??
-//    audioChannel = new AudioChannel( volume );
-//
-//    EXPECT_EQ( firstInstanceId, audioChannel->instanceId )
-//        << "expected old instance id to be equal to the new AudioChannel id as the old events have been disposed";
-//
-//    delete audioChannel;
 }
 
 TEST( AudioChannel, Events )

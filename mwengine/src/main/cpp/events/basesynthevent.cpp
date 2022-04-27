@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -65,7 +65,7 @@ BaseSynthEvent::BaseSynthEvent( float aFrequency, SynthInstrument* aInstrument )
 
 BaseSynthEvent::~BaseSynthEvent()
 {
-    --INSTANCE_COUNT;
+
 }
 
 /* public methods */
@@ -151,29 +151,13 @@ void BaseSynthEvent::setPhaseForOscillator( int aOscillatorNum, SAMPLE_TYPE aPha
     cachedProps.oscillatorPhases.at( aOscillatorNum ) = aPhase;
 }
 
-/**
- * @param aPosition position in the sequencer where this event starts playing
- * @param aLength length (in sequencer steps) of this event
- * @param aInstrument the SynthInstrument whose properties will be used for synthesizing this event
- *                    can be NULL to keep the current SynthInstrument, if not null the current
- *                    SynthInstrument is replaced
- */
-void BaseSynthEvent::invalidateProperties( int aPosition, float aLength, SynthInstrument* aInstrument )
-{
-    setInstrument( aInstrument );
-    position = aPosition;
-    length   = aLength;
-
-    updateProperties(); // instant update as we're not rendering
-}
-
 void BaseSynthEvent::unlock()
 {
     _locked = false;
 
-    if ( _updateAfterUnlock )
-        calculateBuffers();
-
+    if ( _updateAfterUnlock ) {
+        invalidateProperties();
+    }
     _updateAfterUnlock = false;
 }
 
@@ -189,7 +173,7 @@ void BaseSynthEvent::repositionToTempoChange( float ratio )
     setEventLength(( int )( orgLength * ratio ));
 }
 
-void BaseSynthEvent::calculateBuffers()
+void BaseSynthEvent::invalidateProperties()
 {
     if ( _locked )
     {
@@ -197,16 +181,11 @@ void BaseSynthEvent::calculateBuffers()
         return;
     }
 
-    if ( isSequenced )
-    {
-        setEventStart( position * AudioEngine::samples_per_step );
-        setEventLength(( int )( length * AudioEngine::samples_per_step ));
-    }
-    else {
+    if ( !isSequenced ) {
         // quick releases of a noteOn-instruction should ring for at least a 64th note
-        setEventLength( AudioEngine::samples_per_bar );     // important for amplitude swell in
+        setEventLength( AudioEngine::samples_per_bar ); // important for amplitude swell in
         _minLength    = AudioEngine::samples_per_bar / 64;
-        _hasMinLength = false;                          // keeping track if the min length has been rendered
+        _hasMinLength = false; // keeping track if the min length has been rendered
     }
 
     if ( isSequenced && _instrument != nullptr ) {
@@ -226,11 +205,11 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
     // over the max position ? read from the start ( implies that sequence has started loop )
     if ( bufferPos > maxBufferPosition )
     {
-        if ( useChannelRange )
+        if ( useChannelRange ) {
             bufferPos -= maxBufferPosition;
-
-        else if ( !loopStarted )
+        } else if ( !loopStarted ) {
             return;
+        }
     }
 
     int bufferEndPos = bufferPos + outputBuffer->bufferSize;
@@ -253,8 +232,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
             if ( !released ) {
                 triggerRelease();
             }
-        }
-        else {
+        } else {
             released = false;
         }
 
@@ -266,8 +244,9 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
         outputBuffer->mergeBuffers( tempBuffer, 0, writeOffset, 1.0 );
 
         // reset of event properties at end of write
-        if ( lastWriteIndex >= _eventLength )
-            calculateBuffers();
+        if ( lastWriteIndex >= _eventLength ) {
+            invalidateProperties();
+        }
     }
 
     if ( loopStarted )
@@ -281,7 +260,7 @@ void BaseSynthEvent::mixBuffer( AudioBuffer* outputBuffer, int bufferPos,
               minBufferPosition < eventEnd )
         {
             // render the snippet from the start
-            calculateBuffers();
+            invalidateProperties();
             lastWriteIndex = 0;
 
             // TODO: specify total render range in ::render method ? this would avoid unnecessary buffer merging ;)
@@ -366,7 +345,7 @@ void BaseSynthEvent::updateProperties()
     cachedProps.envelope     = ( getSynthInstrument()->adsr->getAttackTime() > 0 ) ? 0.0 : 1.0;
     cachedProps.releaseLevel = ( SAMPLE_TYPE ) getSynthInstrument()->adsr->getSustainLevel();
 
-    calculateBuffers();
+    invalidateProperties();
 }
 
 void BaseSynthEvent::enqueueRemoval( bool value )
@@ -413,9 +392,9 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     _destroyableBuffer = true;  // synth event buffer is always unique and managed by this instance !
     _instrument        = aInstrument;
 
-    position           = aPosition;
-    length             = aLength;
-    released           = false;
+    position = aPosition;
+    length   = aLength;
+    released = false;
 
     cachedProps.envelopeOffset   = 0;
     cachedProps.arpeggioPosition = 0;
@@ -424,22 +403,26 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     int maxOscillatorAmount = 8; // let's assume a max amount of oscillators of 8 here
     cachedProps.oscillatorPhases.reserve( maxOscillatorAmount );
 
-    for ( int i = 0; i < maxOscillatorAmount; ++i )
+    for ( int i = 0; i < maxOscillatorAmount; ++i ) {
         cachedProps.oscillatorPhases.push_back( 0.0 );
+    }
 
     this->isSequenced     = isSequenced;
     _shouldEnqueueRemoval = false;
     _removalEnqueued      = false;
-    _hasMinLength         = isSequenced; // a sequenced event has no early cancel
+    _hasMinLength         = isSequenced; // a sequenced event has no "early cancel"
     _eventLength          = 0;
     lastWriteIndex        = 0;
 
+    setEventStart( position * AudioEngine::samples_per_step );
+    setEventLength(( int )( length * AudioEngine::samples_per_step ));
     setFrequency( aFrequency );
 
     updateProperties();
 
-    if ( isSequenced )
+    if ( isSequenced ) {
         addToSequencer();
+    }
 }
 
 } // E.O namespace MWEngine

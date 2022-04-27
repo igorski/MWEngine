@@ -566,8 +566,6 @@ public final class MWEngineActivity extends AppCompatActivity {
         final int duration = 1;
         final SynthEvent event = new SynthEvent(( float ) frequency, position, duration, synth );
 
-        event.calculateBuffers();
-
         if ( synth == _synth1 )
             _synth1Events.add( event );
         else
