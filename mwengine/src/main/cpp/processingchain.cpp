@@ -46,23 +46,28 @@ ProcessingChain::~ProcessingChain()
 
 /* public methods */
 
-void ProcessingChain::addProcessor( BaseProcessor* aProcessor )
+void ProcessingChain::addProcessor( BaseProcessor* processor )
 {
-    _activeProcessors.push_back( aProcessor );
-    aProcessor->setChain( this );
+    auto it = std::find( _activeProcessors.begin(), _activeProcessors.end(), processor );
+    bool hasProcessor = it != _activeProcessors.end();
+
+    if ( hasProcessor ) {
+        return;
+    }
+    _activeProcessors.push_back( processor );
+    processor->setChain( this );
 }
 
-void ProcessingChain::removeProcessor( BaseProcessor* aProcessor )
+bool ProcessingChain::removeProcessor( BaseProcessor* processor )
 {
-    for ( size_t i = 0; i < _activeProcessors.size(); i++ )
-    {
-        if ( _activeProcessors.at( i ) == aProcessor )
-        {
-            aProcessor->setChain( nullptr );
-            _activeProcessors.erase( _activeProcessors.begin() + i );
-            break;
-        }
+    auto it = std::find( _activeProcessors.begin(), _activeProcessors.end(), processor );
+    if ( it != _activeProcessors.end() ) {
+        processor->setChain( nullptr );
+        _activeProcessors.erase( it );
+
+        return true;
     }
+    return false;
 }
 
 BaseProcessor* ProcessingChain::getProcessorAt( int index )

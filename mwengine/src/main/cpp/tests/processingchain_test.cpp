@@ -23,6 +23,13 @@ TEST( ProcessingChain, ProcessorAddition )
     ASSERT_TRUE( chain->getActiveProcessors().at( 0 ) == processor1 )
         << "expected ProcessingChain to hold the added processor in its chain";
 
+    // ensure no double addition of the same processor is possible
+
+    chain->addProcessor( processor1 );
+
+    EXPECT_EQ( chain->getActiveProcessors().size(), 1 )
+        << "expected ProcessingChain to still contain one active processor upon attempted addition of previously added processor";
+
     // add another processor
 
     chain->addProcessor( processor2 );
@@ -60,7 +67,9 @@ TEST( ProcessingChain, ProcessorRemoval )
 
     // remove first processor
 
-    chain->removeProcessor( processor1 );
+    bool removed = chain->removeProcessor( processor1 );
+
+    ASSERT_TRUE( removed ) << "expected removeProcessor to have returned success upon removal of processor1";
 
     // ensure chain still holds secondary processor
 
@@ -72,12 +81,20 @@ TEST( ProcessingChain, ProcessorRemoval )
 
     // remove secondary processor
 
-    chain->removeProcessor( processor2 );
+    removed = chain->removeProcessor( processor2 );
+
+    ASSERT_TRUE( removed ) << "expected removeProcessor to have returned success upon removal of processor2";
 
     // ensure chain is now empty
 
     EXPECT_EQ( chain->getActiveProcessors().size(), 0 )
         << "expected ProcessingChain to contain no active processors after removal of a all processors";
+
+    // validate success is false when removing a processor that is not/no longer part of the chain
+
+    removed = chain->removeProcessor( processor1 );
+
+    ASSERT_FALSE( removed ) << "expected removeProcessor to have returned false upon removal of not-added processor1";
 
     delete processor1;
     delete processor2;
