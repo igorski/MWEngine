@@ -23,7 +23,7 @@
 #ifndef __MWENGINE__DISKWRITER_H_INCLUDED__
 #define __MWENGINE__DISKWRITER_H_INCLUDED__
 
-#include "audiobuffer.h"
+#include "resizable_audiobuffer.h"
 #include <string>
 #include <vector>
 
@@ -38,72 +38,104 @@
  * When a full snippet has been recorded, a
  */
 namespace MWEngine {
-namespace DiskWriter
+class DiskWriter
 {
-    /* internal properties */
+    public:
+        static int currentBufferIndex; // index of the cachedBuffer currently being written to
+    
+        /**
+         * Prepare for a new recording. The recording can consist
+         * of multiple iterations, each of given chunkSize in buffer size.
+         * When completed (through finish()) the rendered file will be written to the path
+         * described by outputFilename.
+         */
+        static void prepare( std::string outputFilename, int chunkSize, int amountOfChannels );
+    
+        /**
+         * Verifies whether the current snippet is "complete" (e.g. its buffer is full)
+         * If so, this will broadcast RECORDED_SNIPPET_READY message so the current recording can
+         * be written to temporary storage.
+         *
+         * This saving should happen in a separate thread to prevent buffer under runs from occurring
+         * while the engine continues to render audio while recording large fragments. Saving should
+         * however complete before the next snippet has filled its complete buffer to prevent data loss!
+         *
+         * Additionally, this will prepare the next snippet and reset the write indices.
+         *
+         * @param {bool} force whether to force finish writing to the current snippet and swap the
+         *               active snippet buffers (otherwise swap only occurs when current snippet buffer is full)
+         * @param {bool} broadcast whether to broadcast RECORDED_SNIPPET_READY message (can be false
+         *               when halting all recording and executing synchronous writing during completion)
+         */
+        static bool updateSnippetProgress( bool force, bool broadcast );
+    
+        /**
+         * Completes a recording. This will close the current snippet, write it to disk
+         * (synchronously) and subsequently combine all written files into a single WAV file
+         * (path defined by outputFile).
+         *
+         * For best performance while keeping the engine rendering audio, execute
+         * this in a separate thread.
+         */
+        static bool finish();
 
-    //namespace
-    //{
+        /**
+         * appends an AudioBuffer into the current snippets output buffer
+         */
+        static void appendBuffer( AudioBuffer* aBuffer );
+
+        /**
+         * append the actual output buffer from the engine
+         * into the current snippets output buffer
+         */
+        static void appendBuffer( const float* aBuffer, int aBufferSize, int amountOfChannels );
+
+        /**
+         * write the contents of the snippet buffer into an output file, this will only write content
+         * up until the point the buffer was written to in order to cut silence in case the buffer
+         * wasn't filled in its entirety
+         */
+        static void writeBufferToFile( int bufferIndex, bool broadcastUpdate );
+    
+    private:
+
         typedef struct
         {
             std::string path; // path to written WAV file
             size_t size;      // total size of the WAV file's sample buffer
-
+    
         } writtenFile;
+        
+        static std::string               outputFile;         // the file name to write the output to when finished
+        static std::string               tempDirectory;      // output directory to write temporary files to
+        static std::vector<writtenFile>  outputFiles;
+        static std::vector<ResizableAudioBuffer*> cachedBuffers;
 
-        extern std::string               outputFile;         // the file name to write the output to when finished
-        extern std::string               tempDirectory;      // output directory to write temporary files to
-        extern std::vector<writtenFile>  outputFiles;
-        extern std::vector<AudioBuffer*> cachedBuffers;
+        static int recordingChunkSize;
+        static int outputWriterIndex;
+        static int savedSnippets; // amount of snippets within the current recording that have been saved
+        static int recordingChannelAmount;
+        static bool prepared;
 
-        extern int recordingChunkSize;
-        extern int outputWriterIndex;
-        extern int savedSnippets;      // amount of snippets within the current recording that have been saved
-        extern int recordingChannelAmount;
+        /**
+         * Prepares the next snippet to continue recording audio into.
+         * We allow two snippets to exist at a time.
+         */
+        static void prepareSnippet();
 
-        extern bool prepared;
+        static ResizableAudioBuffer* getCachedBuffer( int bufferIndex );
 
-        extern AudioBuffer* getCachedBuffer( int bufferIndex );
-        extern void flushOutput( int bufferIndex );
+        /**
+         * allocates a new buffer (at given index) for writing output into
+         */
+        static ResizableAudioBuffer* generateOutputBuffer( int bufferIndex, int amountOfChannels );
 
-        extern AudioBuffer* generateOutputBuffer( int bufferIndex, int amountOfChannels );
-    //}
-
-    /* public properties / methods */
-
-    extern int currentBufferIndex; // index of the cachedBuffer currently being written to
-
-    /**
-     * Prepare for a new recording. The recording can consist
-     * of multiple iterations, each of given chunkSize in buffer size.
-     */
-    extern void prepare( std::string outputFilename, int chunkSize, int amountOfChannels );
-
-    /**
-     * Invoked by the engine whenever a snippet has filled its buffer. This method will prepare the
-     * next snippet to continue recording audio into. We allow two snippets to exist at a time.
-     * When this is invoked, the engine will at the same time broadcast RECORDED_SNIPPET_READY
-     * which should be used to save the snippet contents onto storage so it can be unloaded from memory.
-     * This saving should happen in a separate thread to prevent buffer under runs from occurring while
-     * the engine continues to render audio while recording large fragments. Saving should however
-     * complete before the next snippet has filled its complete buffer to prevent data loss!
-     */
-    extern void prepareSnippet();
-
-    /**
-     * Complete a recording. This will combine all written files
-     * into a single WAV file defined by outputFile.
-     *
-     * For best performance while keeping the engine rendering audio, execute
-     * this in a separate thread.
-     */
-    extern bool finish();
-
-    extern void appendBuffer( AudioBuffer* aBuffer );
-    extern void appendBuffer( const float* aBuffer, int aBufferSize, int amountOfChannels );
-    extern bool bufferFull();
-    extern void writeBufferToFile( int bufferIndex, bool broadcastUpdate );
-}
+        /**
+         * checks whether the current write buffer is full
+         */
+        static bool isSnippetBufferFull();
+        static void flushOutput( int bufferIndex );
+};
 } // E.O namespace MWEngine
 
 #endif

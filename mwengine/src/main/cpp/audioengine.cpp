@@ -555,7 +555,6 @@ namespace MWEngine {
                 // write current snippet onto disk and finish recording
                 // (this can be done synchronously as rendering will now halt)
 
-                DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
                 DiskWriter::finish();
 
                 // broadcast update via JNI
@@ -572,21 +571,7 @@ namespace MWEngine {
 
                 return false;
             }
-
-            // exceeded maximum recording buffer amount ? > write current recording to temporary storage
-
-            if ( DiskWriter::bufferFull())
-            {
-                // when bouncing do this synchronously (engine is not writing to hardware), otherwise
-                // broadcast that a snippet has recorded in full and can be written onto storage
-
-                if ( bouncing )
-                    DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
-                else
-                    Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, DiskWriter::currentBufferIndex );
-
-                DiskWriter::prepareSnippet();
-            }
+            DiskWriter::updateSnippetProgress( false, true );
         }
 #endif
         // tempo update queued ?

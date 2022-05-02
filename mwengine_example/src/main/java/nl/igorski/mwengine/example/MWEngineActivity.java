@@ -532,13 +532,14 @@ public final class MWEngineActivity extends AppCompatActivity {
                     int sequencerPosition = _sequencerController.getStepPosition();
                     int elapsedSamples    = _sequencerController.getBufferPosition();
 
-                    Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
-                            ", elapsed samples: " + elapsedSamples );
+                    // example snippet to show how to track sequencer position. Using logcat output in a
+                    // frequently firing engine callback is not recommended for performance reasons
+                    // Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue + ", elapsed samples: " + elapsedSamples );
                     break;
                 case RECORDED_SNIPPET_READY:
                     runOnUiThread( new Runnable() {
                         public void run() {
-                            // we run the saving on a different thread to prevent buffer under runs while rendering audio
+                            // we run the saving (I/O operations) on a different thread to prevent buffer under runs while rendering audio
                             _engine.saveRecordedSnippet( aNotificationValue ); // notification value == snippet buffer index
                         }
                     });

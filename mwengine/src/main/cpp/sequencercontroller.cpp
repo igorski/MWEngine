@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2019 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -290,10 +290,9 @@ void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, c
         // we can do this synchronously as this method is called from outside the
         // rendering thread and thus won't lead to buffer under runs
 
-        DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
-
-        if ( DiskWriter::finish())
+        if ( DiskWriter::finish() ) {
             Notifier::broadcast( Notifications::RECORDING_COMPLETED );
+        }
     }
 }
 
@@ -330,9 +329,7 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
         // we can do this synchronously as this method is called from outside the
         // rendering thread and thus won't lead to buffer under runs
 
-        DiskWriter::writeBufferToFile( DiskWriter::currentBufferIndex, false );
-
-        if ( DiskWriter::finish()) {
+        if ( DiskWriter::finish() ) {
             Notifier::broadcast( Notifications::RECORDING_COMPLETED );
         }
     }
@@ -342,6 +339,7 @@ void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMax
  * Save the contents of the snippet at given buffer index
  * onto storage. This should be invoked from a thread separate to the
  * audio rendering thread to prevent buffer under runs from happening
+ * while writing the buffer during the rendering of audio output
  */
 void SequencerController::saveRecordedSnippet( int snippetBufferIndex )
 {
