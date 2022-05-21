@@ -62,7 +62,8 @@ namespace MWEngine {
     AudioChannel* AudioEngine::inputChannel = new AudioChannel( 1.0F );
 #endif
 
-    bool  AudioEngine::recordDeviceInput = false;
+    bool AudioEngine::recordDeviceInput    = false;
+    bool AudioEngine::recordInputWithChain = false;
 
     /* tempo / sequencer position related */
 
@@ -342,6 +343,12 @@ namespace MWEngine {
                 recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
             }
 
+            // in case we want to record the input without the ProcessingChain active, write the input now
+
+            if ( recordInputToDisk && !recordInputWithChain ) {
+                DiskWriter::appendBuffer( inputChannel->getOutputBuffer() );
+            }
+
             // apply processing chain onto the input
 
             std::vector<BaseProcessor*> processors = inputChannel->processingChain->getActiveProcessors();
@@ -542,12 +549,20 @@ namespace MWEngine {
         if (( Sequencer::playing && recordOutputToDisk ) || recordInputToDisk )
         {
 #ifdef RECORD_DEVICE_INPUT
-            if ( recordInputToDisk ) // recording from device input ? > write the record buffer
-                DiskWriter::appendBuffer( inputChannel->getOutputBuffer() );
-            else                    // recording global output ? > write the combined buffer
+            // recording from device input ?
+            if ( recordInputToDisk ) {
+                // if we recording WITH the processing chain, write to disk (otherwise pre-mix
+                // buffer was already written to disk prior to applying the processing chain)
+                if ( recordInputWithChain ) {
+                    DiskWriter::appendBuffer( inputChannel->getOutputBuffer() );
+                }
+            } else {
 #endif
-                DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
-
+                    // recording global output ? > write the combined buffer
+                    DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
+#ifdef RECORD_DEVICE_INPUT
+            }
+#endif
             // are we bouncing the current sequencer range and have we played through the full range?
 
             if ( bouncing && ( loopStarted || bufferPosition == bounceRangeStart || bufferPosition >= bounceRangeEnd ))

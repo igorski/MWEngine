@@ -305,7 +305,7 @@ public final class MWEngine
      */
     public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds ) {
         if ( recordingActive )
-            startInputRecording( outputFile );
+            startInputRecording( outputFile, false );
         else
             stopInputRecording();
     }
@@ -320,13 +320,14 @@ public final class MWEngine
      * appropriate permissions defined in the AndroidManifest and granted by the user at runtime.
      *
      * @param outputFile {string} name of the WAV file to create and write the recording into
+     * @param skipProcessing {boolean} when true, the ProcessingChain of the input channel is omitted.
      */
-    public void startInputRecording( String outputFile ) {
-        _sequencerController.setRecordingFromDeviceState( true, calculateRecordingSnippetBufferSize(), outputFile );
+    public void startInputRecording( String outputFile, boolean skipProcessing ) {
+        _sequencerController.setRecordingFromDeviceState( true, calculateRecordingSnippetBufferSize(), outputFile, skipProcessing );
     }
 
     public void stopInputRecording() {
-        _sequencerController.setRecordingFromDeviceState( false, 0, "" );
+        _sequencerController.setRecordingFromDeviceState( false, 0, "", false );
     }
 
     /**

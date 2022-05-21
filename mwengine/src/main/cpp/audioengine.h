@@ -60,7 +60,8 @@ class AudioEngine
         static int amount_of_bars;   // the amount of measures in the current sequencer
         static int steps_per_bar;    // the amount of subdivisions in a single measure the engine broadcast a status update for
 
-        static bool recordDeviceInput; // whether audio from the Android device input should be audible
+        static bool recordDeviceInput;    // whether audio from the Android device input should be audible
+        static bool recordInputWithChain; // whether device input audio should render the ProcessingChain of the input channel
 
 #ifndef SWIG
         // internal to the engine
