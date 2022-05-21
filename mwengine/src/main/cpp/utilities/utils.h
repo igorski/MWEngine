@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,6 +45,19 @@ inline float capParam( float value )
 inline SAMPLE_TYPE capSample( SAMPLE_TYPE value )
 {
     return std::min(( SAMPLE_TYPE ) 1.0, std::max(( SAMPLE_TYPE ) -1.0, value ));
+}
+
+// convenience method to ensure a sample is within the valid -MAX_OUTPUT to +MAX_OUTPUT
+// range, this prevents audio from distorting when nearing the edges of the max head room
+
+inline SAMPLE_TYPE capSampleSafe( SAMPLE_TYPE value )
+{
+    if ( value < -MAX_OUTPUT ) {
+        value = -MAX_OUTPUT;
+    } else if ( value > MAX_OUTPUT ) {
+        value = MAX_OUTPUT;
+    }
+    return value;
 }
 
 // inverts a pow operation, allowing you to derive the exponent from the known value and base

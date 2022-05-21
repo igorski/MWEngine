@@ -33,6 +33,8 @@
 #include <utilities/bufferutility.h>
 #include <utilities/perfutility.h>
 #include <utilities/debug.h>
+#include <utilities/channelutility.h>
+#include <utilities/utils.h>
 #include <vector>
 
 #ifdef RECORD_TO_DISK
@@ -45,7 +47,6 @@
 
 #include <jni.h>
 #include <jni/javabridge.h>
-#include <utilities/channelutility.h>
 
 #endif
 
@@ -340,7 +341,7 @@ namespace MWEngine {
             SAMPLE_TYPE* recBufferChannel = inputChannel->getOutputBuffer()->getBufferForChannel( 0 );
 
             for ( j = 0; j < recordedSamples; ++j ) {
-                recBufferChannel[ j ] = recbufferIn[ j ];//static_cast<float>( recbufferIn[ j ] );
+                recBufferChannel[ j ] = capSampleSafe( recbufferIn[ j ] ); // static_cast<float>( recbufferIn[ j ] );
             }
 
             // in case we want to record the input without the ProcessingChain active, write the input now
@@ -495,18 +496,10 @@ namespace MWEngine {
                 // apply the master volume onto the output
                 sample = ( float ) inBuffer->getBufferForChannel(( int ) ci )[ i ] * volume;
 
-                // and perform a fail-safe check in case we're exceeding the headroom ceiling
-
-                if ( sample < -MAX_OUTPUT )
-                    sample = -MAX_OUTPUT;
-
-                else if ( sample > +MAX_OUTPUT )
-                    sample = +MAX_OUTPUT;
-
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
 
-                outBuffer[ c + ci ] = sample;
+                outBuffer[ c + ci ] = capSampleSafe( sample );
             }
 
             // update the buffer pointers and sequencer position
