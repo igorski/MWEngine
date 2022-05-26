@@ -94,4 +94,60 @@ bool AudioRenderer::renderFile( const std::string& inputFilename, const std::str
     return renderSuccess;
 }
 
+bool AudioRenderer::mergeFiles( const std::string& inputFile1, const std::string& inputFile2, const std::string& outputFilename, bool attenuate )
+{
+    const int amountOfInputFiles = 2;
+    std::string inputFilenames[] = { inputFile1, inputFile2 };
+
+    waveFile inputWaveFiles[ amountOfInputFiles ];
+    int bufferSize = 0;
+    int amountOfChannels = 1;
+
+    // 1. validate input files and determine maximum channel amount and file size
+
+    for ( size_t i = 0; i < amountOfInputFiles; ++i ) {
+        waveFile WAV = WaveReader::fileToBuffer( inputFilenames[ i ] );
+
+        if ( WAV.buffer == nullptr ) {
+            // invalid buffer, clean up allocated memory and return
+            for ( size_t j = 0; j < i; ++j ) {
+                delete inputWaveFiles[ j ].buffer;
+            }
+            return false;
+        }
+        bufferSize = std::max( bufferSize, WAV.buffer->bufferSize );
+        amountOfChannels = std::max( amountOfChannels, WAV.buffer->amountOfChannels );
+
+        inputWaveFiles[ i ] = WAV;
+    }
+
+    // 2. create output buffer and write the audio from all input files
+
+    auto outputBuffer = new AudioBuffer( amountOfChannels, bufferSize );
+    SAMPLE_TYPE attenuator = attenuate ? MAX_VOLUME / ( SAMPLE_TYPE ) amountOfInputFiles : MAX_VOLUME;
+
+    for ( auto WAV : inputWaveFiles ) {
+        for ( int c = 0; c < amountOfChannels; ++c ) {
+            SAMPLE_TYPE* inputChannel = WAV.buffer->amountOfChannels > c ? WAV.buffer->getBufferForChannel( c ) : WAV.buffer->getBufferForChannel( WAV.buffer->amountOfChannels - 1 );
+            SAMPLE_TYPE* outputChannel = outputBuffer->getBufferForChannel( c );
+
+            for ( size_t i = 0, l = std::min( WAV.buffer->bufferSize, bufferSize ); i < l; ++i ) {
+                outputChannel[ i ] += ( inputChannel[ i ] * attenuator );
+            }
+        }
+        // free up memory allocated to input wave file
+        delete WAV.buffer;
+    }
+
+    // 3. write the output
+
+    int writtenSamples = WaveWriter::bufferToWAV( outputFilename, outputBuffer, ( int ) AudioEngineProps::SAMPLE_RATE );
+
+    // 4. clean up and assert success
+
+    delete outputBuffer;
+
+    return writtenSamples == bufferSize;
+}
+
 } // E.O namespace MWEngine

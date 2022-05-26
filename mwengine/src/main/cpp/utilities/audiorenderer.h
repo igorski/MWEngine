@@ -46,6 +46,12 @@ class AudioRenderer {
          * given ProcessingChain into a WAV file of given outputFilename
          */
         static bool renderFile( const std::string& inputFilename, const std::string& outputFilename, ProcessingChain* processingChain );
+
+        /**
+         * Combines the audio of given inputFilenames into a single WAV file of given outputFilename
+         * optionally attenuating the volume (e.g. applying appropriate mix volume for input file amount)
+         */
+        static bool mergeFiles( const std::string& inputFile1, const std::string& inputFile2, const std::string& outputFilename, bool attenuate );
 };
 
 } // E.O namespace MWEngine
