@@ -125,9 +125,12 @@ public final class MWEngine
 
         if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ) {
             // retrieve exclusive cores to run rendering thread on
-            cpuCores = Process.getExclusiveCores();
-            JavaUtilities.setCpuCores( cpuCores, cpuCores.length );
-
+            try {
+                cpuCores = Process.getExclusiveCores();
+                JavaUtilities.setCpuCores( cpuCores, cpuCores.length );
+            } catch ( RuntimeException e ) {
+                Log.d( "MWENGINE", "getExclusiveCores() unsupported" );
+            }
             // request sustained performance mode when supported
             if ((( PowerManager ) activity.getSystemService( Context.POWER_SERVICE )).isSustainedPerformanceModeSupported()) {
                 activity.getWindow().setSustainedPerformanceMode( true );
