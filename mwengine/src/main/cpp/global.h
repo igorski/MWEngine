@@ -120,6 +120,11 @@ const int WAVE_TABLE_PRECISION = 128; // the amount of samples contained within 
 // noops used to keep the CPU seemingly busy on less intensive render iterations
 // this allows us to maintain a consistent thread performance across render iterations (see PerfUtility)
 
+// __i386__ == Intel 32-bit architecture
+// __x86_64__ == Intel 64-bit architecture
+// __arm__ and __mips__ == both 32-bit architectures
+// __aarch64__ == ARM 64-bit
+
 #if defined(__i386__) || defined(__x86_64__)
 #define noop() asm volatile("rep; nop" ::: "memory");
 #elif defined(__arm__) || defined(__mips__)

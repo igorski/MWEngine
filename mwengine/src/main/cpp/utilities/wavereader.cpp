@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2015-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -101,7 +101,7 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
 
 #ifdef DEBUG
 
-    Debug::log( "About to parse data for WAV file '%s'", inputFile.c_str() );
+    Debug::log( "WaveReader::About to parse data for WAV file '%s'", inputFile.c_str() );
     Debug::log( "File size        : %d", header.fileSize );
     Debug::log( "Audio format     : %d", header.audioFormat );
     Debug::log( "Channel amount   : %d", header.amountOfChannels );

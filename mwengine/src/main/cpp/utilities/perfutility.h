@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2020-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -51,6 +51,8 @@ namespace PerfUtility
      */
     inline void optimizeThreadPerformance( const std::vector<int>& cpuIds )
     {
+        Debug::log( "PerfUtility::optimizing thread performance, %d exclusive cores available", cpuIds.size() );
+
         cpu_set_t mask;
         pid_t current_thread_id = gettid();
         cpu_set_t cpu_set;
@@ -59,20 +61,19 @@ namespace PerfUtility
         // If the callback cpu ids aren't specified then bind to the current cpu
         if ( cpuIds.empty() ) {
             int current_cpu_id = sched_getcpu();
-            Debug::log( "Binding to current CPU ID %d for thread %d", current_cpu_id, current_thread_id );
+            Debug::log( "PerfUtility::Binding to current CPU ID %d for thread %d", current_cpu_id, current_thread_id );
             CPU_SET( current_cpu_id, &cpu_set );
         } else {
-            Debug::log( "Binding to %d CPU IDs", static_cast<int>( cpuIds.size()) );
             for ( size_t i = 0; i < cpuIds.size(); i++ ) {
                 int cpu_id = cpuIds.at( i );
-                Debug::log( "CPU ID %d added to cores set for thread %d", cpu_id, current_thread_id );
+                Debug::log( "PerfUtility::CPU ID %d added to cores set for thread %d", cpu_id, current_thread_id );
                 CPU_SET( cpu_id, &cpu_set );
             }
         }
 
         if ( sched_setaffinity( current_thread_id, sizeof( cpu_set_t ), &cpu_set ) != 0 ) {
             int err = errno;
-            Debug::log( "Error in the syscall setaffinity: mask=%d=0x%x err=%d=0x%x", mask, mask, err, err );
+            Debug::log( "PerfUtility::Error in the syscall setaffinity: mask=%d=0x%x err=%d=0x%x", mask, mask, err, err );
         }
     }
 

@@ -70,6 +70,7 @@ class AudioEngine
         // by the audio drivers). Use start() instead (triggers driver activity)
 
         static bool render( int amountOfSamples );
+        static void createOutputBuffer();
 
         static int min_buffer_position;    // the lowest sample offset in the current loop range
         static int max_buffer_position;    // the maximum sample offset in the current loop range

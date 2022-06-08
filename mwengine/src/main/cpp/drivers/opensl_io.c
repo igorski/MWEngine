@@ -343,7 +343,7 @@ OPENSL_STREAM *android_OpenAudioDevice(int sr, int inchannels, int outchannels, 
     return NULL;
   }
 
-  if(openSLRecOpen(p) != SL_RESULT_SUCCESS) {
+  if(inchannels > 0 && openSLRecOpen(p) != SL_RESULT_SUCCESS) {
     android_CloseAudioDevice(p);
     return NULL;
   } 

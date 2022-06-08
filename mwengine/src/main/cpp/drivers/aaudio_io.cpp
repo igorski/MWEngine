@@ -243,13 +243,16 @@ void AAudio_IO::createOutputStream() {
         _framesPerBurst = AAudioStream_getFramesPerBurst( _outputStream );
 
         AudioEngineProps::SAMPLE_RATE = _sampleRate;
+        AudioEngine::handleTempoUpdate( AudioEngine::tempo, false ); // force sync to sample rate
+
+        Debug::log( "AAudio_IO::Sample rate of AAudio stream is set to %d", _sampleRate );
 
         // Set the buffer size to the burst size - this will give us the minimum possible latency
         // This will also create the temporary read and write buffers
 
         updateBufferSizeInFrames( AAudioStream_setBufferSizeInFrames( _outputStream, _framesPerBurst ));
 
-//          PrintAudioStreamInfo(_outputStream);
+//          PrintAudioStreamInfo( _outputStream );
 
         // Store the underrun count so we can tune the latency in the dataCallback
         _underrunCountOutputStream = AAudioStream_getXRunCount( _outputStream );
@@ -344,8 +347,9 @@ void AAudio_IO::updateBufferSizeInFrames( int bufferSize ) {
 
     _bufferSizeInFrames = bufferSize;
 
-    // sync across engine
+    // sync across engine, be sure to call this when AudioEngine::render() isn't running
     AudioEngineProps::BUFFER_SIZE = _bufferSizeInFrames;
+    AudioEngine::createOutputBuffer();
 
     // update temporary buffers as their size is now known (this operation should always happen
     // before or after a read and write ensuring no data loss / null pointer)
@@ -415,12 +419,13 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
             _readInputFrames = static_cast<aaudio_result_t>( AAudioStream_read(
                 _inputStream,
                 _sampleFormat == AAUDIO_FORMAT_PCM_I16 ? ( void* ) _recordBufferI : ( void* ) _recordBuffer,
-                std::min( _bufferSizeInFrames, numFrames ),
-                static_cast<int64_t>( 0 )
+                numFrames,
+                static_cast<int32_t>( 0 )
             ));
 
-            if ( _readInputFrames < 0 ) {
-                Debug::log( "AAudio_IO::AAudioStream_read() returns read %s frames", AAudio_convertResultToText( _readInputFrames ));
+            if ( _readInputFrames != numFrames ) {
+                Debug::log( "AAudio_IO::AAudioStream_read() returns %d read frames instead of %d", _readInputFrames, numFrames );
+                _readInputFrames = 0;
             }
         }
 
@@ -521,7 +526,7 @@ aaudio_result_t AAudio_IO::calculateCurrentOutputLatencyMillis( AAudioStream* st
         AAudioStream_getTimestamp( stream,
         CLOCK_MONOTONIC,
         &existingFrameIndex,
-        &existingFramePresentationTime)
+        &existingFramePresentationTime )
     );
 
     if ( result == AAUDIO_OK ) {
@@ -548,7 +553,7 @@ aaudio_result_t AAudio_IO::calculateCurrentOutputLatencyMillis( AAudioStream* st
 
 void AAudio_IO::errorCallback( AAudioStream* stream, aaudio_result_t error ) {
 
-    assert(stream == _outputStream || stream == _inputStream);
+    assert( stream == _outputStream || stream == _inputStream );
     Debug::log( "AAudio_IO::errorCallback result: %s", AAudio_convertResultToText( error ));
 
     auto streamState = static_cast<aaudio_stream_state_t>( AAudioStream_getState( _outputStream ));

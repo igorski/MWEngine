@@ -139,21 +139,45 @@ namespace MWEngine {
         if ( thread != nullptr )
             return;
 
-        Debug::log( "STARTING engine" );
+        Debug::log( "AudioEngine::PREPARING engine" );
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
         _noopsPerTick         = 1;
         _renderedSamples      = 0;
         _firstRenderStartTime = 0;
 #endif
-        Debug::log( "STARTED engine" );
+        // create a thread that will handle all render callbacks
+#ifdef MOCK_ENGINE
+        if ( audioDriver != Drivers::types::MOCKED ) {
+#endif
+            thread = new std::thread( initRenderTask, audioDriver );
+#ifdef MOCK_ENGINE
+        } else {
+            initRenderTask( audioDriver );
+        }
+#endif
+    }
+
+    void AudioEngine::initRenderTask( Drivers::types audioDriver ) {
+        // create the output driver using the adapter. If creation failed
+        // prevent thread start and trigger JNI callback for error handler
+
+        if ( !DriverAdapter::create( audioDriver )) {
+            Debug::log( "AudioEngine::Could not initialize audio driver of type %d", audioDriver );
+            Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
+            stop();
+            return;
+        }
+
+        Debug::log( "AudioEngine::STARTED engine" );
 
         // audio hardware available, prepare environment
 
         channels       = new std::vector<AudioChannel*>();
         outputChannels = AudioEngineProps::OUTPUT_CHANNELS;
         isMono         = ( outputChannels == 1 );
-        outBuffer      = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
+
+        createOutputBuffer();
 
 #ifdef RECORD_DEVICE_INPUT
 
@@ -173,39 +197,19 @@ namespace MWEngine {
 
         std::vector<BaseInstrument*> instruments = Sequencer::instruments;
 
-        for ( size_t i = 0; i < instruments.size(); ++i ) {
-            instruments[ i ]->audioChannel->createOutputBuffer();
+        for ( auto & instrument : instruments ) {
+            instrument->audioChannel->createOutputBuffer();
         }
 
-        // create a thread that will handle all render callbacks
-#ifdef MOCK_ENGINE
-        if ( audioDriver != Drivers::types::MOCKED ) {
-#endif
-            thread = new std::thread( initRenderTask, audioDriver );
-#ifdef MOCK_ENGINE
-        } else {
-            initRenderTask( audioDriver );
-        }
-#endif
-    }
+        // all ready. start render cycle
 
-    void AudioEngine::initRenderTask( Drivers::types audioDriver ) {
-        // create the output driver using the adapter. If creation failed
-        // prevent thread start and trigger JNI callback for error handler
-
-        if ( !DriverAdapter::create( audioDriver )) {
-            Debug::log( "Could not initialize audio driver" );
-            Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
-            stop();
-            return;
-        }
         AudioEngineProps::isRendering.store( true );
         DriverAdapter::startRender();
     }
 
     void AudioEngine::stop()
     {
-        Debug::log( "STOPPING engine" );
+        Debug::log( "AudioEngine::STOPPING engine" );
 
         AudioEngineProps::isRendering.store( false );
         threadOptimized = false;
@@ -214,11 +218,11 @@ namespace MWEngine {
             thread->join();
             thread = nullptr;
         }
-        Debug::log( "STOPPED engine" );
+        Debug::log( "AudioEngine::STOPPED engine" );
 
         DriverAdapter::destroy();
 
-        Debug::log( "Destroyed audio driver" );
+        Debug::log( "AudioEngine::Destroyed audio driver" );
 
         // clear heap memory allocated before thread loop
         delete channels;
@@ -237,7 +241,7 @@ namespace MWEngine {
 
     void AudioEngine::reset()
     {
-        Debug::log( "RESET engine" );
+        Debug::log( "AudioEngine::RESET engine" );
 
         if ( AudioEngineProps::isRendering.load() ) {
             stop();
@@ -606,6 +610,13 @@ namespace MWEngine {
     }
 
     /* internal methods */
+
+    void AudioEngine::createOutputBuffer()
+    {
+        if ( thread != nullptr ) {
+            outBuffer = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
+        }
+    }
 
     void AudioEngine::handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate )
     {
