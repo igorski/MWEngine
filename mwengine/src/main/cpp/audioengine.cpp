@@ -614,6 +614,7 @@ namespace MWEngine {
     void AudioEngine::createOutputBuffer()
     {
         if ( thread != nullptr ) {
+            delete outBuffer;
             outBuffer = new float[ AudioEngineProps::BUFFER_SIZE * outputChannels ]();
         }
     }
