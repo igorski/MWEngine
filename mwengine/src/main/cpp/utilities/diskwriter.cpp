@@ -108,7 +108,7 @@ bool DiskWriter::finish()
 
     size_t totalBufferSize = 0;
 
-    for ( auto & file : outputFiles ) {
+    for ( const auto & file : outputFiles ) {
         totalBufferSize += file.size;
     }
 

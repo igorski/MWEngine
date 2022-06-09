@@ -648,7 +648,7 @@ namespace MWEngine {
 
         // inform all instruments of the update
 
-        for ( auto & instrument : Sequencer::instruments ) {
+        for ( auto const & instrument : Sequencer::instruments ) {
             instrument->updateEvents( ratio );
         }
 

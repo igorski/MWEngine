@@ -38,7 +38,7 @@ bool AudioRenderer::renderEvent( const std::string& outputFilename, BaseAudioEve
 
     if ( chain != nullptr ) {
         auto processors = chain->getActiveProcessors();
-        for ( auto &processor : processors ) {
+        for ( auto const &processor : processors ) {
             bufferSize += processor->addedDurationInSamples();
         }
     }
@@ -126,7 +126,7 @@ bool AudioRenderer::mergeFiles( const std::string& inputFile1, const std::string
     auto outputBuffer = new AudioBuffer( amountOfChannels, bufferSize );
     SAMPLE_TYPE attenuator = attenuate ? MAX_VOLUME / ( SAMPLE_TYPE ) amountOfInputFiles : MAX_VOLUME;
 
-    for ( auto WAV : inputWaveFiles ) {
+    for ( auto const WAV : inputWaveFiles ) {
         for ( int c = 0; c < amountOfChannels; ++c ) {
             SAMPLE_TYPE* inputChannel = WAV.buffer->amountOfChannels > c ? WAV.buffer->getBufferForChannel( c ) : WAV.buffer->getBufferForChannel( WAV.buffer->amountOfChannels - 1 );
             SAMPLE_TYPE* outputChannel = outputBuffer->getBufferForChannel( c );

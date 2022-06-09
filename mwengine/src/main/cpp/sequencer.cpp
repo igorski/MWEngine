@@ -42,7 +42,7 @@ int Sequencer::registerInstrument( BaseInstrument* instrument )
     int index       = -1;
     bool wasPresent = false; // prevent double addition
 
-    for ( auto & i : instruments ) {
+    for ( auto const & i : instruments ) {
         if ( i == instrument ) {
             wasPresent = true;
         }
@@ -156,13 +156,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
         }
     }
 
-    size_t i = 0;
-    size_t total = audioEvents->size();
-
-    for ( ; i < total; i++ )
+    for ( auto const audioEvent : *audioEvents )
     {
-        BaseAudioEvent* audioEvent = audioEvents->at( i );
-
         if ( audioEvent->isEnabled() )
         {
             int eventStart = audioEvent->getEventStart();
@@ -190,8 +185,8 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     // remove "deleted" AudioEvents without errors occurring
     if ( !removes.empty() )
     {
-        total = removes.size();
-        for ( i = 0; i < total; i++ )
+        size_t total = removes.size();
+        for ( size_t i = 0; i < total; i++ )
         {
             BaseAudioEvent* audioEvent = removes[ i ];
             instrument->removeEvent( audioEvent, false );
@@ -233,9 +228,10 @@ std::vector<BaseCacheableAudioEvent*>* Sequencer::collectCacheableSequencerEvent
 {
     auto* events = new std::vector<BaseCacheableAudioEvent*>();
 
-    for ( auto & instrument : instruments )
+    for ( auto const & instrument : instruments )
     {
         std::vector<BaseAudioEvent*>* audioEvents = instrument->getEvents();
+
         for ( auto audioEvent : *audioEvents )
         {
             // if event is an instance of BaseCacheableAudioEvent add it to the list
