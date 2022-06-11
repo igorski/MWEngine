@@ -302,7 +302,7 @@ namespace MWEngine {
 
 #ifdef PREVENT_CPU_FREQUENCY_SCALING
 
-        int64_t renderStart = PerfUtility::now(); // for this iteration
+        auto renderStart = PerfUtility::now(); // for this iteration
 
         if ( _renderedSamples == 0 ) {
             _firstRenderStartTime = renderStart; // this is the first render, record its start time
@@ -346,6 +346,15 @@ namespace MWEngine {
 
             for ( j = 0; j < recordedSamples; ++j ) {
                 recBufferChannel[ j ] = capSampleSafe( recbufferIn[ j ] ); // static_cast<float>( recbufferIn[ j ] );
+            }
+
+            // input recording is mono, spread recorded signal across all remaining output channels
+
+            for ( j = 1; j < inputChannel->getOutputBuffer()->amountOfChannels; ++j ) {
+                SAMPLE_TYPE* otherChannel = inputChannel->getOutputBuffer()->getBufferForChannel( j );
+                for ( k = 0; k < recordedSamples; ++k ) {
+                    otherChannel[ k ] = recBufferChannel[ k ];
+                }
             }
 
             // in case we want to record the input without the ProcessingChain active, write the input now
@@ -504,7 +513,7 @@ namespace MWEngine {
                 // write output interleaved (e.g. a sample per output channel
                 // before continuing writing the next sample for the next channel range)
 
-                outBuffer[ c + ci ] = capSampleSafe( sample );
+                outBuffer[ c + ci ] = ( float ) capSampleSafe( sample );
             }
 
             // update the buffer pointers and sequencer position
