@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include "utils.h"
 
 namespace MWEngine {
 
@@ -140,5 +141,20 @@ void BufferUtility::bufferToFile( const char* fileName, const SAMPLE_TYPE* buffe
 
     myFile.close();
 }
+
+void BufferUtility::mixBufferInterleaved( AudioBuffer* sourceBuffer, float* bufferToMixInto, int amountOfSamples, int outputChannels )
+{
+    for ( size_t i = 0, c = 0; i < amountOfSamples; i++, c += outputChannels ) {
+        for ( size_t ci = 0; ci < outputChannels; ci++ ) {
+            auto sample = ( float ) sourceBuffer->getBufferForChannel(( int ) ci )[ i ];
+
+            // write output interleaved (e.g. a sample per output channel
+            // before continuing writing the next sample for the next channel range)
+
+            bufferToMixInto[ c + ci ] = capSampleSafe( bufferToMixInto[ c + ci ] + sample );
+        }
+    }
+}
+
 
 } // E.O namespace MWEngine

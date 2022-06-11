@@ -400,8 +400,9 @@ namespace MWEngine {
 
             // ...in case the AudioChannels maxBufferPosition differs from the sequencer loop range
             // note that these buffer positions are always a full measure in length (as we loop by measures)
-            while ( bufferPos > maxBufferPosition )
+            while ( bufferPos > maxBufferPosition ) {
                 bufferPos -= samples_per_bar;
+            }
 
             // only render sequenced events when the sequencer isn't in the paused state
             // and the channel volume is actually at an audible level! ( > 0 )
@@ -518,28 +519,31 @@ namespace MWEngine {
                     //if ( std::fmod(( float ) bufferPosition, samples_per_step ) == 0 )
                         handleSequencerPositionUpdate(( int ) i );
                 }
-                if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position )
+                if ( marked_buffer_position > 0 && bufferPosition == marked_buffer_position ) {
                      Notifier::broadcast( Notifications::MARKER_POSITION_REACHED );
-
+                }
                 bufferPosition++;
 
-                if ( bufferPosition > max_buffer_position )
+                if ( bufferPosition > max_buffer_position ) {
                     bufferPosition = min_buffer_position;
+                }
             }
         }
 
         // thread has been stopped during operations above ? exit as writing the
-        // the output into the audio hardware will lock execution until the next buffer
+        // output into the audio hardware will lock execution until the next buffer
         // is enqueued (additionally, we prevent writing to device storage when recording/bouncing)
 
-        if ( !AudioEngineProps::isRendering.load() )
+        if ( !AudioEngineProps::isRendering.load() ) {
             return false;
+        }
 
         // write the synthesized output into the audio driver (unless we are bouncing as writing the
         // output to the hardware makes it both unnecessarily audible and stalls execution)
 
-        if ( !bouncing )
+        if ( !bouncing ) {
             DriverAdapter::writeOutput( outBuffer, amountOfSamples * outputChannels );
+        }
 
 #ifdef RECORD_TO_DISK
         // write the output to disk if a recording state is active
@@ -555,7 +559,16 @@ namespace MWEngine {
                 }
             } else {
 #endif
-                    // recording global output ? > write the combined buffer
+                    // recording global output ? > write the combined output buffer
+
+                    if ( recordDeviceInput && inputChannel->muted )
+                    {
+                        // IF we were also recording device input with a muted input channel be sure to
+                        // write the input (not audible in the written driver output) into the output buffer
+
+                        inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
+                        BufferUtility::mixBufferInterleaved( inBuffer, outBuffer, amountOfSamples, outputChannels );
+                    }
                     DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
 #ifdef RECORD_DEVICE_INPUT
             }

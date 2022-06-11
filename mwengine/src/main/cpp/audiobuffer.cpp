@@ -114,9 +114,10 @@ bool AudioBuffer::isSilent()
  */
 void AudioBuffer::silenceBuffers()
 {
-    // use memset to quickly erase existing buffer contents, zero bits should equal 0.0f
-    for ( int i = 0; i < amountOfChannels; ++i )
-        memset( getBufferForChannel( i ), 0, bufferSize * sizeof( SAMPLE_TYPE ));
+    // use memset to quickly erase existing buffer contents
+    for ( int i = 0; i < amountOfChannels; ++i ) {
+        memset( getBufferForChannel( i ), SILENCE, bufferSize * sizeof( SAMPLE_TYPE ));
+    }
 }
 
 void AudioBuffer::adjustBufferVolumes( SAMPLE_TYPE amp )
@@ -150,7 +151,7 @@ void AudioBuffer::applyMonoSource()
 
 AudioBuffer* AudioBuffer::clone()
 {
-    AudioBuffer* output = new AudioBuffer( amountOfChannels, bufferSize );
+    auto output = new AudioBuffer( amountOfChannels, bufferSize );
 
     for ( int i = 0; i < amountOfChannels; ++i )
     {

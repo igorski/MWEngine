@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2018 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,6 +25,7 @@
 
 #include "global.h"
 #include <vector>
+#include <audiobuffer.h>
 
 namespace MWEngine {
 class BufferUtility
@@ -124,6 +125,12 @@ class BufferUtility
          * The result is a comma separated list of SAMPLE_TYPE values.
          */
         static void bufferToFile( const char* filename, const SAMPLE_TYPE* buffer, int bufferLength );
+
+        /**
+         * Writes the contents of given sourceBuffer into a one dimensional float array
+         * representing interleaved sample format
+         */
+        static void mixBufferInterleaved( AudioBuffer* sourceBuffer, float* bufferToMixInto, int amountOfSamples, int outputChannels );
 };
 } // E.O namespace MWEngine
 
