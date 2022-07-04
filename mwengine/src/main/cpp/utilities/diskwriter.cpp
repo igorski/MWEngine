@@ -73,13 +73,31 @@ bool DiskWriter::updateSnippetProgress( bool force, bool broadcast )
     // when bouncing, this is done synchronously (as engine is not writing output to hardware), otherwise
     // broadcast that a snippet has recorded in full and can be written onto storage
 
-    if ( AudioEngine::bouncing ) {
+    AudioBuffer* tempBuffer;
+
+    if ( AudioEngine::recordingSettings.bouncing ) {
         writeBufferToFile( currentBufferIndex, false );
-    } else if ( broadcast ) {
-        Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, currentBufferIndex );
+    } else {
+        // when recording input and output in sync, we need to prepare the buffer to make up
+        // for the correction at the size of the latency
+        if ( AudioEngine::recordingSettings.correctLatency ) {
+            tempBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngine::recordingSettings.latency );
+            auto cachedBuffer = DiskWriter::getCachedBuffer( DiskWriter::currentBufferIndex );
+            outputWriterIndex = cachedBuffer->bufferSize - AudioEngine::recordingSettings.latency; // resizes on prepareSnippet()
+            tempBuffer->mergeBuffers( cachedBuffer, outputWriterIndex, 0, MAX_VOLUME );
+        }
+        if ( broadcast ) {
+            Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, currentBufferIndex );
+        }
     }
     prepareSnippet();
 
+    if ( AudioEngine::recordingSettings.correctLatency ) {
+        // here we do final append before switch
+        // and then we switch
+        DiskWriter::appendBuffer( tempBuffer );
+        delete tempBuffer;
+    }
     return true;
 }
 

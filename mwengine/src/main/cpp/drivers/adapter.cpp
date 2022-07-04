@@ -181,6 +181,22 @@ namespace DriverAdapter {
                 return driver_aAudio->getEnqueuedInputBuffer( recordBuffer );
         }
     }
+
+    int getLatency()
+    {
+        switch ( _driver ) {
+            default:
+                break;
+#ifdef MOCK_ENGINE
+                case Drivers::MOCKED:
+#endif
+                return 0;
+            case Drivers::OPENSL:
+                return 0; // TODO (if we care...) how to get latency for OpenSL driver
+            case Drivers::AAUDIO:
+                return driver_aAudio->getOutputLatency();
+        }
+    }
 }
 
 } // E.O namespace MWEngine

@@ -96,7 +96,9 @@ class DiskWriter
          * wasn't filled in its entirety
          */
         static void writeBufferToFile( int bufferIndex, bool broadcastUpdate );
-    
+
+        static ResizableAudioBuffer* getCachedBuffer( int bufferIndex );
+
     private:
 
         typedef struct
@@ -122,8 +124,6 @@ class DiskWriter
          * We allow two snippets to exist at a time.
          */
         static void prepareSnippet();
-
-        static ResizableAudioBuffer* getCachedBuffer( int bufferIndex );
 
         /**
          * allocates a new buffer (at given index) for writing output into

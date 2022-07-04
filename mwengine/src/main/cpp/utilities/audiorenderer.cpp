@@ -96,6 +96,11 @@ bool AudioRenderer::renderFile( const std::string& inputFilename, const std::str
 
 bool AudioRenderer::mergeFiles( const std::string& inputFile1, const std::string& inputFile2, const std::string& outputFilename, bool attenuate )
 {
+    return mergeFiles( inputFile1, inputFile2, outputFilename, attenuate, 0 );
+}
+
+bool AudioRenderer::mergeFiles( const std::string& inputFile1, const std::string& inputFile2, const std::string& outputFilename, bool attenuate, int offset )
+{
     const int amountOfInputFiles = 2;
     std::string inputFilenames[] = { inputFile1, inputFile2 };
 
@@ -132,7 +137,9 @@ bool AudioRenderer::mergeFiles( const std::string& inputFile1, const std::string
             SAMPLE_TYPE* outputChannel = outputBuffer->getBufferForChannel( c );
 
             for ( size_t i = 0, l = std::min( WAV.buffer->bufferSize, bufferSize ); i < l; ++i ) {
-                outputChannel[ i ] += ( inputChannel[ i ] * attenuator );
+                size_t inputOffset = offset == 0 ? i : i - offset;
+                if ( inputOffset < 0 ) continue;
+                outputChannel[ i ] += ( inputChannel[ inputOffset ] * attenuator );
             }
         }
         // free up memory allocated to input wave file

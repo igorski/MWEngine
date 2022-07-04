@@ -407,7 +407,7 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
 
         // if there is an input stream and recording is active, read the stream contents
 
-        if ( _inputStream != nullptr && ( AudioEngine::recordDeviceInput || AudioEngine::recordInputToDisk )) {
+        if ( _inputStream != nullptr && ( AudioEngine::recordDeviceInput || AudioEngine::recordingMode == AudioEngine::RecordingMode::INPUT_TO_DISK )) {
 
             // drain existing buffer contents on first write to make sure no lingering data is present
 
@@ -608,8 +608,8 @@ void AAudio_IO::restartStreams() {
     }
 }
 
-double AAudio_IO::getCurrentOutputLatencyMillis() {
-    return currentOutputLatencyMillis_;
+int AAudio_IO::getOutputLatency() {
+    return ( int ) ( currentOutputLatencyMillis_ * (( double ) AudioEngineProps::SAMPLE_RATE / 1000 ));
 }
 
 void AAudio_IO::setBufferSizeInBursts( int32_t numBursts ) {
