@@ -58,6 +58,8 @@ class AudioEngine
           */
         static void setBounceState( bool isBouncing, int maxBuffers, char* outputFile, int rangeStart, int rangeEnd );
 
+        static void recordDeviceInput( bool record );
+
         /**
          * Record the output of the sequencer onto storage
          *
@@ -107,7 +109,7 @@ class AudioEngine
             int bounceRangeEnd;         // when bouncing, this defines the end point of the bounce range
             int latency;                // input latency on recording start
         };
-        static RecordingSettings recordingSettings;
+        static RecordingSettings recordingState;
 
         static int samples_per_beat; // the amount of samples necessary for a single beat at the current tempo and sample rate
         static int samples_per_bar;  // the amount of samples for a full bar at the current tempo and sample rate
@@ -132,8 +134,8 @@ class AudioEngine
 
         /* buffer read/write pointers */
 
-        static int bufferPosition;      // the current sequence position in samples ("playback head" offset)
-        static int stepPosition;        // the current sequence bar subdivided position (e.g. 16th note of a bar)
+        static int bufferPosition; // the current sequence position in samples ("playback head" offset)
+        static int stepPosition;   // the current sequence bar subdivided position (e.g. 16th note of a bar)
 
         /* tempo related */
 

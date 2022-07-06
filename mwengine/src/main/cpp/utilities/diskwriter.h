@@ -91,13 +91,18 @@ class DiskWriter
         static void appendBuffer( const float* aBuffer, int aBufferSize, int amountOfChannels );
 
         /**
+         * mix the contents of given buffer into the current snippets output buffer at
+         * given writeOffset (which can be negative to correct for input latency when
+         * mixing input and internal channels)
+         */
+        static void mixBuffer( AudioBuffer* buffer, int bufferSize, int amountOfChannels, int writeOffset );
+
+        /**
          * write the contents of the snippet buffer into an output file, this will only write content
          * up until the point the buffer was written to in order to cut silence in case the buffer
          * wasn't filled in its entirety
          */
         static void writeBufferToFile( int bufferIndex, bool broadcastUpdate );
-
-        static ResizableAudioBuffer* getCachedBuffer( int bufferIndex );
 
     private:
 
@@ -124,6 +129,8 @@ class DiskWriter
          * We allow two snippets to exist at a time.
          */
         static void prepareSnippet();
+
+        static ResizableAudioBuffer* getCachedBuffer( int bufferIndex );
 
         /**
          * allocates a new buffer (at given index) for writing output into

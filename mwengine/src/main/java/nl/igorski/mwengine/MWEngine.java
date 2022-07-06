@@ -240,7 +240,7 @@ public final class MWEngine
      * NOTE: to record the input to device storage, @see startInputRecording|stopInputRecording
      */
     public void recordInput( boolean recordingActive ) {
-        AudioEngine.setRecordDeviceInput( recordingActive );
+        AudioEngine.recordDeviceInput( recordingActive );
     }
 
     /**
@@ -296,11 +296,11 @@ public final class MWEngine
     }
 
     public void startBouncing( String outputFile, int rangeStart, int rangeEnd ) {
-        _sequencerController.setBounceState( true, calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
+        AudioEngine.setBounceState( true, calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
     }
 
     public void stopBouncing() {
-        _sequencerController.setBounceState( false, 0, "", 0, 0 );
+        AudioEngine.setBounceState( false, 0, "", 0, 0 );
     }
 
     /**
@@ -326,11 +326,11 @@ public final class MWEngine
      * @param skipProcessing {boolean} when true, the ProcessingChain of the input channel is omitted.
      */
     public void startInputRecording( String outputFile, boolean skipProcessing ) {
-        _sequencerController.setRecordingFromDeviceState( true, calculateRecordingSnippetBufferSize(), outputFile, skipProcessing );
+        AudioEngine.setRecordingFromDeviceState( true, calculateRecordingSnippetBufferSize(), outputFile, skipProcessing );
     }
 
     public void stopInputRecording() {
-        _sequencerController.setRecordingFromDeviceState( false, 0, "", false );
+        AudioEngine.setRecordingFromDeviceState( false, 0, "", false );
     }
 
     /**
@@ -339,7 +339,7 @@ public final class MWEngine
      * invoke from a different thread than the audio rendering thread to prevent buffer under runs.
      */
     public void saveRecordedSnippet( int snippetBufferIndex ) {
-        _sequencerController.saveRecordedSnippet( snippetBufferIndex );
+        AudioEngine.saveRecordedSnippet( snippetBufferIndex );
     }
 
     public void reset() {

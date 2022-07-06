@@ -19,7 +19,7 @@ TEST( SampleEvent, GettersSetters )
     SampleEvent* sampleEvent = new SampleEvent( instrument );
 
     int rangeStart = randomInt( 0, 512 );
-    int rangeEnd   = randomInt( 512, 2014 );
+    int rangeEnd   = randomInt( 513, 2014 );
 
     sampleEvent->setBufferRangeStart( rangeStart );
     sampleEvent->setBufferRangeEnd  ( rangeEnd );

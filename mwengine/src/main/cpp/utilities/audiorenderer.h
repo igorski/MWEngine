@@ -52,13 +52,6 @@ class AudioRenderer {
          * optionally attenuating the volume (e.g. applying appropriate mix volume for input file amount)
          */
         static bool mergeFiles( const std::string& inputFile1, const std::string& inputFile2, const std::string& outputFilename, bool attenuate );
-
-        /**
-         * Same as above though the audio of inputFile1 is corrected by the given offset
-         * For instance to align latency when combining a live recorded audio input over
-         * a fixed backing track.
-         */
-        static bool mergeFiles( const std::string& inputFile1, const std::string& inputFile2, const std::string& outputFilename, bool attenuate, int offset );
 };
 
 } // E.O namespace MWEngine

@@ -407,7 +407,7 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
 
         // if there is an input stream and recording is active, read the stream contents
 
-        if ( _inputStream != nullptr && ( AudioEngine::recordDeviceInput || AudioEngine::recordingMode == AudioEngine::RecordingMode::INPUT_TO_DISK )) {
+        if ( _inputStream != nullptr && ( AudioEngine::recordingState.recordDeviceInput || AudioEngine::recordingState.inputToDisk )) {
 
             // drain existing buffer contents on first write to make sure no lingering data is present
 
