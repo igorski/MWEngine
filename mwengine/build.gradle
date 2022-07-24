@@ -49,7 +49,7 @@ android {
                 arguments "-DRUN_TESTS=" + getRunTests()
 
                 cFlags   "-O3"
-                cppFlags "-std=c++14 -Werror -Wno-deprecated-declarations -fexceptions -frtti"
+                cppFlags "-std=c++17 -Werror -Wno-deprecated-declarations -fexceptions -frtti"
             }
         }
     }
