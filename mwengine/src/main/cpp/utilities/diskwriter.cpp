@@ -224,15 +224,15 @@ void DiskWriter::appendBuffer( const float* aBuffer, int aBufferSize, int amount
     }
 }
 
-void DiskWriter::mixBuffer( AudioBuffer* buffer, int bufferSize, int amountOfChannels, int writeOffset )
+void DiskWriter::mixInputBuffer( AudioBuffer* inputBuffer, int bufferSize, int amountOfChannels, int writeOffset )
 {
     auto cachedBuffer  = getCachedBuffer( currentBufferIndex );
     int maxWriteOffset = cachedBuffer->bufferSize - 1;
-    // mix in at last written position plus given writeOffset
+    // mix in at last written position (minus buffer size as output is already written) plus given writeOffset
     int wo = ( outputWriterIndex - bufferSize ) + writeOffset;
 
     for ( int c = 0; c < amountOfChannels; ++c ) {
-        auto sourceBuffer = buffer->getBufferForChannel( c );
+        auto sourceBuffer = inputBuffer->getBufferForChannel( c );
         auto targetBuffer = cachedBuffer->getBufferForChannel( c );
         for ( int i = 0; i < bufferSize; ++i ) {
             int destOffset = wo + i;

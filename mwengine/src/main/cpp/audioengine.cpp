@@ -460,7 +460,7 @@ namespace MWEngine {
 
             // in case we want to record the input without the ProcessingChain active, write the input now
 
-            if (recordingState.inputToFile && !recordingState.recordInputWithChain ) {
+            if ( recordingState.inputToFile && !recordingState.recordInputWithChain ) {
                 DiskWriter::appendBuffer( inputChannel->getOutputBuffer() );
             }
 
@@ -678,7 +678,7 @@ namespace MWEngine {
                         // IF we were also recording device input with a muted input channel be sure to
                         // write the input (not audible in the written driver output) into the output buffer
                         inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
-                        DiskWriter::mixBuffer( inBuffer, amountOfSamples, outputChannels, recordingState.correctLatency ? -recordingState.latency : 0 );
+                        DiskWriter::mixInputBuffer( inBuffer, amountOfSamples, outputChannels, recordingState.correctLatency ? -recordingState.latency : 0);
                     }
 
 #ifdef RECORD_DEVICE_INPUT
