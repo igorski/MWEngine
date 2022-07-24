@@ -439,6 +439,7 @@ public final class MWEngineActivity extends AppCompatActivity {
             switch( event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     _engine.recordInput( true );
+                    _engine.getInputChannel().setMuted( true );
                     return true;
                 case MotionEvent.ACTION_UP:
                     _engine.recordInput( false );

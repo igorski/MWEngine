@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -243,6 +243,16 @@ public final class MWEngine
         AudioEngine.recordDeviceInput( recordingActive );
     }
 
+    /*
+    public void startSyncedInOutRecording( String outputFile ) {
+        AudioEngine.recordOutputWithInputSync( true, calculateRecordingSnippetBufferSize(), outputFile );
+    }
+
+    public void stopSyncedInOutRecording() {
+        AudioEngine.recordOutputWithInputSync( false, 0, "" );
+    }
+    */
+
     /**
      * @deprecated use startOutputRecording|stopOutputRecording instead
      */
@@ -264,11 +274,11 @@ public final class MWEngine
      * @param outputFile {string} name of the WAV file to create and write the recording into
      */
     public void startOutputRecording( String outputFile ) {
-        _sequencerController.setRecordingState( true, calculateRecordingSnippetBufferSize(), outputFile );
+        AudioEngine.setRecordOutputToFileState( calculateRecordingSnippetBufferSize(), outputFile );
     }
 
     public void stopOutputRecording() {
-        _sequencerController.setRecordingState( false, 0, "" );
+        AudioEngine.unsetRecordOutputToFileState();
     }
 
     /**
@@ -296,11 +306,11 @@ public final class MWEngine
     }
 
     public void startBouncing( String outputFile, int rangeStart, int rangeEnd ) {
-        AudioEngine.setBounceState( true, calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
+        AudioEngine.setBounceOutputToFileState( calculateRecordingSnippetBufferSize(), outputFile, rangeStart, rangeEnd );
     }
 
     public void stopBouncing() {
-        AudioEngine.setBounceState( false, 0, "", 0, 0 );
+        AudioEngine.unsetBounceOutputToFileState();
     }
 
     /**
@@ -326,11 +336,11 @@ public final class MWEngine
      * @param skipProcessing {boolean} when true, the ProcessingChain of the input channel is omitted.
      */
     public void startInputRecording( String outputFile, boolean skipProcessing ) {
-        AudioEngine.setRecordingFromDeviceState( true, calculateRecordingSnippetBufferSize(), outputFile, skipProcessing );
+        AudioEngine.setRecordInputToFileState( calculateRecordingSnippetBufferSize(), outputFile, skipProcessing );
     }
 
     public void stopInputRecording() {
-        AudioEngine.setRecordingFromDeviceState( false, 0, "", false );
+        AudioEngine.unsetRecordInputToFileState();
     }
 
     /**

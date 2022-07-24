@@ -230,6 +230,7 @@ void DiskWriter::mixBuffer( AudioBuffer* buffer, int bufferSize, int amountOfCha
     int maxWriteOffset = cachedBuffer->bufferSize - 1;
     // mix in at last written position plus given writeOffset
     int wo = ( outputWriterIndex - bufferSize ) + writeOffset;
+
     for ( int c = 0; c < amountOfChannels; ++c ) {
         auto sourceBuffer = buffer->getBufferForChannel( c );
         auto targetBuffer = cachedBuffer->getBufferForChannel( c );
