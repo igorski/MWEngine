@@ -26,7 +26,6 @@
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
 #include <utilities/utils.h>
-#include <utilities/diskwriter.h>
 #include <utilities/volumeutil.h>
 
 namespace MWEngine {
@@ -225,88 +224,6 @@ void SequencerController::cacheAudioEventsForMeasure( int aMeasure )
 BulkCacher* SequencerController::getBulkCacher()
 {
     return Sequencer::bulkCacher;
-}
-
-void SequencerController::setBounceState( bool aIsBouncing, int aMaxBuffers, char* aOutputFile, int rangeStart, int rangeEnd )
-{
-    AudioEngine::bouncing = aIsBouncing;
-
-    if ( AudioEngine::bouncing )
-    {
-        AudioEngine::bounceRangeStart = rangeStart;
-        AudioEngine::bounceRangeEnd   = rangeEnd;
-        AudioEngine::bufferPosition   = rangeStart;
-        AudioEngine::stepPosition     = 0;
-    }
-    setRecordingState( aIsBouncing, aMaxBuffers, aOutputFile );
-
-    // triggering bounce state should instantly toggle the playback state of the engine
-
-    setPlaying( aIsBouncing );
-}
-
-void SequencerController::setRecordingState( bool aRecording, int aMaxBuffers, char* aOutputFile )
-{
-    // in case Sequencer was recording input from the Android device, halt recording of input
-    if ( AudioEngine::recordInputToDisk )
-        setRecordingFromDeviceState( false, 0, ( char* ) "\0", false );
-
-    bool wasRecording               = AudioEngine::recordOutputToDisk;
-    AudioEngine::recordOutputToDisk = aRecording;
-
-    if ( AudioEngine::recordOutputToDisk )
-    {
-        DiskWriter::prepare(
-            std::string( aOutputFile ), roundTo( aMaxBuffers, AudioEngineProps::BUFFER_SIZE ),
-            AudioEngineProps::OUTPUT_CHANNELS
-        );
-    }
-    else if ( wasRecording )
-    {
-        // recording halted, write currently recording snippet into file
-        // and concatenate all recorded snippets into the requested output file name
-        // we can do this synchronously as this method is called from outside the
-        // rendering thread and thus won't lead to buffer under runs
-
-        if ( DiskWriter::finish() ) {
-            Notifier::broadcast( Notifications::RECORDING_COMPLETED );
-        }
-    }
-}
-
-void SequencerController::setRecordingFromDeviceState( bool aRecording, int aMaxBuffers, char* aOutputFile, bool skipProcessing )
-{
-    // in case Sequencer was recording its output, halt recording of output
-    if ( AudioEngine::recordOutputToDisk )
-        setRecordingState( false, 0, ( char* ) "\0" );
-
-    bool wasRecording                 = AudioEngine::recordInputToDisk;
-    AudioEngine::recordInputToDisk    = aRecording;
-    AudioEngine::recordInputWithChain = !skipProcessing;
-
-    if ( AudioEngine::recordInputToDisk )
-    {
-        DiskWriter::prepare(
-            std::string( aOutputFile ), roundTo( aMaxBuffers, AudioEngineProps::BUFFER_SIZE ),
-            AudioEngineProps::INPUT_CHANNELS
-        );
-    }
-    else if ( wasRecording )
-    {
-        // recording halted, write currently recording snippet into file
-        // and concatenate all recorded snippets into the requested output file name
-        // we can do this synchronously as this method is called from outside the
-        // rendering thread and thus won't lead to buffer under runs
-
-        if ( DiskWriter::finish() ) {
-            Notifier::broadcast( Notifications::RECORDING_COMPLETED );
-        }
-    }
-}
-
-void SequencerController::saveRecordedSnippet( int snippetBufferIndex )
-{
-    DiskWriter::writeBufferToFile( snippetBufferIndex, true );
 }
 
 } // E.O namespace MWEngine

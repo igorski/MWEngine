@@ -45,7 +45,11 @@ class ResizableAudioBuffer : public AudioBuffer
         };
         ~ResizableAudioBuffer();
 
-        // expands/shrinks the current AudioBuffers sample vectors
+        /**
+         * expands/shrinks the current AudioBuffers sample vectors
+         * NOTE: shrinking will keep existing content, expanding will
+         * clear the existing contents.
+         */
         void resize( int newSize );
 
     protected:

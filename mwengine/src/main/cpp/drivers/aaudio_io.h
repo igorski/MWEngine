@@ -64,7 +64,7 @@ class AAudio_IO
                                                     void *audioData,
                                                     int32_t numFrames );
         void errorCallback( AAudioStream *stream, aaudio_result_t  __unused error );
-        double getCurrentOutputLatencyMillis();
+        int getOutputLatency();
         int getEnqueuedInputBuffer( float* destinationBuffer );
         void enqueueOutputBuffer  ( const float* sourceBuffer, int amountOfSamples );
 
@@ -94,6 +94,12 @@ class AAudio_IO
         double currentOutputLatencyMillis_ = 0;
         int32_t _bufferSizeSelection       = BUFFER_SIZE_AUTOMATIC;
 
+        bool _stabilizedStreams   = false;
+        int32_t _inputBurstsToPad = 0; // 0 for latency measurements or 1 for glitch tests
+        int32_t _amountOfInputCallbacksToFlush;
+        int32_t _amountOfInputBurstsToPad;
+        int32_t _amountOfInputCallbacksToIgnore;
+
         std::thread* _streamRestartThread;
         std::mutex   _restartingLock;
 
@@ -106,6 +112,8 @@ class AAudio_IO
         void closeAllStreams();
         void flushInputStream( void *audioData, int32_t numFrames );
         void restartStreams();
+        bool stabilizeStreams( int32_t numFrames );
+        void resetStreamStabilization();
 
         AAudioStreamBuilder* createStreamBuilder();
         void setupOutputStream( AAudioStreamBuilder* builder );

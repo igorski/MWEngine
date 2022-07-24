@@ -3,18 +3,17 @@
 
 TEST( BaseSynthEvent, InstanceId )
 {
-    float frequency             = randomFloat() * 4000.f;
     SynthInstrument* instrument = new SynthInstrument();
 
     // 1. create first event
 
-    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, instrument );
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( 440.f, instrument );
 
     int firstInstanceId = audioEvent->instanceId;
 
     // 2. create second event
 
-    BaseSynthEvent* audioEvent2 = new BaseSynthEvent( frequency, instrument );
+    BaseSynthEvent* audioEvent2 = new BaseSynthEvent( 330.f, instrument );
 
     EXPECT_EQ( firstInstanceId + 1, audioEvent2->instanceId )
         << "expected second BaseSynthEvent to have an id 1 higher than the first";

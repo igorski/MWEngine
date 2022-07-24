@@ -4,6 +4,7 @@
  * Copyright (c) 2017-2022 Igor Zinken - https://www.igorski.nl
  *
  * AAudio driver implementation adapted from the Android Open Source Project
+ * Input and output synchronisation (full duplex streams) adapted from the Oboe project
  *
  * Licensed under the Apache License, Version 2.0 (the "License" );
  * you may not use this file except in compliance with the License.
@@ -70,14 +71,14 @@ aaudio_data_callback_result_t dataCallback( AAudioStream* stream, void* userData
  * AAudio_convertResultToText(error);
  */
 void errorCallback( AAudioStream* stream, void *userData, aaudio_result_t error ) {
-    assert(userData);
+    assert( userData );
     AAudio_IO* instance = reinterpret_cast<AAudio_IO*>( userData );
     instance->errorCallback( stream, error );
 }
 
 AAudio_IO::AAudio_IO( int amountOfInputChannels, int amountOfOutputChannels ) {
 
-    assert(isSupported());
+    assert( isSupported());
 
     _inputChannelCount  = ( int16_t ) amountOfInputChannels;
     _outputChannelCount = ( int16_t ) amountOfOutputChannels;
@@ -176,6 +177,7 @@ void AAudio_IO::createAllStreams() {
     // recording stream. By matching the properties we should get the lowest latency path
 
     if ( _inputChannelCount > 0 ) {
+        resetStreamStabilization();
         createInputStream();
     }
 
@@ -399,33 +401,56 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
         shouldChangeBufferSize = true;
     }
 
-    // Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize);
+    // Debug::log( "AAudio_IO::numFrames %d, Underruns %d, buffer size %d", numFrames, underrunCount, bufferSize );
+
+    if ( shouldChangeBufferSize ) {
+        bufferSize = AAudioStream_setBufferSizeInFrames( stream, bufferSize );
+        if ( bufferSize > 0 ) {
+            updateBufferSizeInFrames( bufferSize );
+            if ( _inputStream != nullptr ) {
+                AAudioStream_setBufferSizeInFrames( _inputStream, bufferSize );
+            }
+        } else {
+            Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText( bufferSize ));
+        }
+    }
 
     // AudioEngine's render thread active ? write output
 
     if ( AudioEngineProps::isRendering.load() ) {
 
-        // if there is an input stream and recording is active, read the stream contents
+        // is there an input stream ?
 
-        if ( _inputStream != nullptr && ( AudioEngine::recordDeviceInput || AudioEngine::recordInputToDisk )) {
+        if ( _inputStream != nullptr ) {
 
-            // drain existing buffer contents on first write to make sure no lingering data is present
+            // 1. stabilize input and output streams (only once)
 
-            if ( _flushInputOnCallback ) {
-                flushInputStream( audioData, numFrames );
-                _flushInputOnCallback = false;
+            if ( !_stabilizedStreams && !stabilizeStreams( numFrames )) {
+                return AAUDIO_CALLBACK_RESULT_CONTINUE;
             }
 
-            _readInputFrames = static_cast<aaudio_result_t>( AAudioStream_read(
-                _inputStream,
-                _sampleFormat == AAUDIO_FORMAT_PCM_I16 ? ( void* ) _recordBufferI : ( void* ) _recordBuffer,
-                numFrames,
-                static_cast<int32_t>( 0 )
-            ));
+            // 2. when recording is active, read the stream contents
 
-            if ( _readInputFrames != numFrames ) {
-                Debug::log( "AAudio_IO::AAudioStream_read() returns %d read frames instead of %d", _readInputFrames, numFrames );
-                _readInputFrames = 0;
+            if ( AudioEngine::recordingState.recordDeviceInput || AudioEngine::recordingState.inputToFile ) {
+
+                // drain existing buffer contents on first write to make sure no lingering data is present
+
+                if ( _flushInputOnCallback ) {
+                    flushInputStream( audioData, numFrames );
+                    _flushInputOnCallback = false;
+                }
+
+                _readInputFrames = static_cast<aaudio_result_t>( AAudioStream_read(
+                    _inputStream,
+                    _sampleFormat == AAUDIO_FORMAT_PCM_I16 ? ( void* ) _recordBufferI : ( void* ) _recordBuffer,
+                    numFrames,
+                    static_cast<int32_t>( 0 )
+                ));
+
+                if ( _readInputFrames != numFrames ) {
+                    Debug::log( "AAudio_IO::AAudioStream_read() returns %d read frames instead of %d", _readInputFrames, numFrames );
+                    _readInputFrames = 0;
+                }
             }
         }
 
@@ -458,15 +483,6 @@ aaudio_data_callback_result_t AAudio_IO::dataCallback( AAudioStream* stream, voi
     }
 
     calculateCurrentOutputLatencyMillis( stream, &currentOutputLatencyMillis_ );
-
-    if ( shouldChangeBufferSize ) {
-        bufferSize = AAudioStream_setBufferSizeInFrames( stream, bufferSize );
-        if ( bufferSize > 0 ) {
-            updateBufferSizeInFrames( bufferSize );
-        } else {
-            Debug::log( "AAudio_IO::Error setting buffer size: %s", AAudio_convertResultToText( bufferSize ));
-        }
-    }
 
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
@@ -531,7 +547,7 @@ aaudio_result_t AAudio_IO::calculateCurrentOutputLatencyMillis( AAudioStream* st
 
     if ( result == AAUDIO_OK ) {
         // Get the write index for the next audio frame
-        int64_t writeIndex = AAudioStream_getFramesWritten(stream);
+        int64_t writeIndex = AAudioStream_getFramesWritten( stream );
 
         // Calculate the number of frames between our known frame and the write index
         int64_t frameIndexDelta = writeIndex - existingFrameIndex;
@@ -572,13 +588,14 @@ void AAudio_IO::closeAllStreams() {
     if ( _inputStream != nullptr ) {
         closeStream( _inputStream );
         _inputStream = nullptr;
+        resetStreamStabilization();
     }
 }
 
 /**
  * Drain the recording stream of any existing data by reading from it until it's empty. This is
  * usually run to clear out any stale data before performing an actual read operation, thereby
- * obtaining the most recently recorded data and the best possbile recording latency.
+ * obtaining the most recently recorded data and the best possible recording latency.
  *
  * @param audioData A buffer which the existing data can be read into
  * @param numFrames The number of frames to read in a single read operation, this is typically the
@@ -608,8 +625,82 @@ void AAudio_IO::restartStreams() {
     }
 }
 
-double AAudio_IO::getCurrentOutputLatencyMillis() {
-    return currentOutputLatencyMillis_;
+/**
+ * Adapted from Oboe's FullDuplexStream to synchronize input and output streams.
+ *
+ * "Input and output have different startup times. The input side may have to charge up the microphone circuit.
+ * Also the initial timing for the output callback may be bursty as it fills the buffer up.
+ * So when the output stream makes its first callback, the input buffer may be overflowing or empty or partially full.
+ *
+ * In order to get into sync we go through a few phases.
+ *
+ * In Phase 1 we always drain the input buffer as much as possible, more than the output callback asks for.
+ * When we have done this for a while, we move to phase 2.
+ * In Phase 2 we optionally skip reading the input once to allow it to fill up with one burst.
+ * This makes it less likely to underflow on future reads.
+ * In Phase 3 we should be in a stable situation where the output is nearly full and the input is nearly empty.
+ * You should be able to run for hours like this with no glitches."
+ */
+bool AAudio_IO::stabilizeStreams( int32_t numFrames ) {
+    int32_t actualFramesRead = 0;
+
+    if ( _amountOfInputCallbacksToFlush > 0 ) {
+        // Debug::log("AAudio_IO::Flushing %d input callbacks", _amountOfInputCallbacksToFlush );
+
+        int32_t totalFramesRead = 0;
+        do {
+            int32_t result = static_cast<aaudio_result_t>( AAudioStream_read(
+                _inputStream,
+                _sampleFormat == AAUDIO_FORMAT_PCM_I16 ? ( void* ) _recordBufferI : ( void* ) _recordBuffer,
+                numFrames,
+                static_cast<int32_t>( 0 )
+            ));
+            if ( !result ) {
+                break; // input stream may not yet be started
+            }
+            actualFramesRead = result;
+            totalFramesRead += actualFramesRead;
+        } while ( actualFramesRead > 0 );
+
+        // when we got actual data, treat one callback as flushed
+        if ( totalFramesRead > 0 ) {
+            --_amountOfInputCallbacksToFlush;
+        }
+
+    } else if ( _amountOfInputBurstsToPad > 0 ) {
+        // Debug::log( "AAudio_IO::input bursts to pad: %d", _amountOfInputBurstsToPad );
+        --_amountOfInputBurstsToPad;
+
+    } else if ( _amountOfInputCallbacksToIgnore > 0 ) {
+        // Debug::log("AAudio_IO::callbacks to ignore %d", _amountOfInputCallbacksToIgnore );
+
+        int32_t result = static_cast<aaudio_result_t>( AAudioStream_read(
+            _inputStream,
+            _sampleFormat == AAUDIO_FORMAT_PCM_I16 ? ( void* ) _recordBufferI : ( void* ) _recordBuffer,
+            numFrames,
+            static_cast<int32_t>( 0 )
+        ));
+        if ( !result ) {
+            // closeAllStreams();
+            return false;
+        }
+        if ( --_amountOfInputCallbacksToIgnore == 0 ) {
+            Debug::log( "AAudio_IO::Stabilized input and output streams" );
+            _stabilizedStreams = true;
+        }
+    }
+    return _stabilizedStreams;
+}
+
+void AAudio_IO::resetStreamStabilization() {
+    _stabilizedStreams              = false;
+    _amountOfInputCallbacksToFlush  = 20;
+    _amountOfInputCallbacksToIgnore = 30;
+    _amountOfInputBurstsToPad       = _inputBurstsToPad;
+}
+
+int AAudio_IO::getOutputLatency() {
+    return ( int ) ( currentOutputLatencyMillis_ * (( double ) AudioEngineProps::SAMPLE_RATE / 1000 ));
 }
 
 void AAudio_IO::setBufferSizeInBursts( int32_t numBursts ) {

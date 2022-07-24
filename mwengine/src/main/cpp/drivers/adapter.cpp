@@ -44,6 +44,7 @@ namespace DriverAdapter {
         }
 
         _driver = driver;
+        int bursts;
 
         switch ( _driver ) {
 
@@ -75,7 +76,7 @@ namespace DriverAdapter {
                 // driver_aAudio->setDeviceId();
                 // driver_aAudio->setRecordingDeviceId();
 
-                int bursts = 0; // Google provides {0, 1, 2, 4, 8} as values
+                bursts = 0; // Google provides {0, 1, 2, 4, 8} as values
 
 #if defined(__arm__)
     // Cortex-A53-derivatives (SC9863A|Cortex-A55) are NOT running 64-bit (__aarch64__) and struggle severely
@@ -92,7 +93,7 @@ namespace DriverAdapter {
 
             case Drivers::MOCKED:
 
-                Debug::log( "DriverAdapter::initializing mocked driver");
+                Debug::log( "DriverAdapter::initializing mocked driver" );
                 driver_mocked = new Mock_IO();
 
                 return true;
@@ -179,6 +180,21 @@ namespace DriverAdapter {
                 return android_AudioIn( driver_openSL, recordBuffer, amountOfSamples );
             case Drivers::AAUDIO:
                 return driver_aAudio->getEnqueuedInputBuffer( recordBuffer );
+        }
+    }
+
+    int getLatency()
+    {
+        switch ( _driver ) {
+            default:
+#ifdef MOCK_ENGINE
+            case Drivers::MOCKED:
+#endif
+                return 0;
+            case Drivers::OPENSL:
+                return 0; // TODO (if we care...) how to calculate latency using OpenSL driver
+            case Drivers::AAUDIO:
+                return driver_aAudio->getOutputLatency();
         }
     }
 }

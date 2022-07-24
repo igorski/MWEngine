@@ -91,12 +91,22 @@ class DiskWriter
         static void appendBuffer( const float* aBuffer, int aBufferSize, int amountOfChannels );
 
         /**
+         * mix the contents of given buffer into the current snippets output buffer at
+         * given writeOffset (which can be negative to correct for input latency when
+         * mixing device input and internal output streams)
+         *
+         * NOTE: this should be called AFTER appendBuffer() for the output stream (as this
+         * corrects for the updated outputWriterIndex handled by appendBuffer())
+         */
+        static void mixInputBuffer( AudioBuffer* inputBuffer, int bufferSize, int amountOfChannels, int writeOffset );
+
+        /**
          * write the contents of the snippet buffer into an output file, this will only write content
          * up until the point the buffer was written to in order to cut silence in case the buffer
          * wasn't filled in its entirety
          */
         static void writeBufferToFile( int bufferIndex, bool broadcastUpdate );
-    
+
     private:
 
         typedef struct

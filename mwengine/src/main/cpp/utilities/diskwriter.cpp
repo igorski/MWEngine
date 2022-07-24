@@ -24,6 +24,7 @@
 #include "audioengine.h"
 #include "wavewriter.h"
 #include "wavereader.h"
+#include "utils.h"
 #include <cstdio>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
@@ -73,13 +74,29 @@ bool DiskWriter::updateSnippetProgress( bool force, bool broadcast )
     // when bouncing, this is done synchronously (as engine is not writing output to hardware), otherwise
     // broadcast that a snippet has recorded in full and can be written onto storage
 
-    if ( AudioEngine::bouncing ) {
+    AudioBuffer* tempBuffer;
+
+    if ( AudioEngine::recordingState.bouncing ) {
         writeBufferToFile( currentBufferIndex, false );
-    } else if ( broadcast ) {
-        Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, currentBufferIndex );
+    } else {
+        // when recording input and output in sync, we need to prepare the buffer to make up
+        // for the correction at the size of the latency
+        if ( AudioEngine::recordingState.correctLatency ) {
+            tempBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, AudioEngine::recordingState.latency );
+            auto cachedBuffer = getCachedBuffer( currentBufferIndex );
+            outputWriterIndex = cachedBuffer->bufferSize - AudioEngine::recordingState.latency; // resizes on prepareSnippet()
+            tempBuffer->mergeBuffers( cachedBuffer, outputWriterIndex, 0, MAX_VOLUME );
+        }
+        if ( broadcast ) {
+            Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, currentBufferIndex );
+        }
     }
     prepareSnippet();
 
+    if ( AudioEngine::recordingState.correctLatency ) {
+        appendBuffer( tempBuffer ); // write final chunk of last output into the newly prepare snippet
+        delete tempBuffer;
+    }
     return true;
 }
 
@@ -203,6 +220,29 @@ void DiskWriter::appendBuffer( const float* aBuffer, int aBufferSize, int amount
         }
         for ( ci = 0; ci < amountOfChannels; ++ci ) {
             cachedBuffer->getBufferForChannel( ci )[ outputWriterIndex ] = aBuffer[ c + ci ];
+        }
+    }
+}
+
+void DiskWriter::mixInputBuffer( AudioBuffer* inputBuffer, int bufferSize, int amountOfChannels, int writeOffset )
+{
+    auto cachedBuffer  = getCachedBuffer( currentBufferIndex );
+    int maxWriteOffset = cachedBuffer->bufferSize - 1;
+    // mix in at last written position (minus buffer size as output is already written) plus given writeOffset
+    int wo = ( outputWriterIndex - bufferSize ) + writeOffset;
+
+    for ( int c = 0; c < amountOfChannels; ++c ) {
+        auto sourceBuffer = inputBuffer->getBufferForChannel( c );
+        auto targetBuffer = cachedBuffer->getBufferForChannel( c );
+        for ( int i = 0; i < bufferSize; ++i ) {
+            int destOffset = wo + i;
+            if ( destOffset < 0 ) {
+                continue;
+            }
+            if ( destOffset > maxWriteOffset ) {
+                break;
+            }
+            targetBuffer[ destOffset ] = capSampleSafe( targetBuffer[ destOffset ] + sourceBuffer[ i ] );
         }
     }
 }
