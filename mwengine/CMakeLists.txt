@@ -117,6 +117,7 @@ set(MWENGINE_PROCESSORS ${CPP_SRC}/processors/bitcrusher.cpp
                         ${CPP_SRC}/processors/flanger.cpp
                         ${CPP_SRC}/processors/fm.cpp
                         ${CPP_SRC}/processors/formantfilter.cpp
+                        ${CPP_SRC}/processors/gain.cpp
                         ${CPP_SRC}/processors/glitcher.cpp
                         ${CPP_SRC}/processors/limiter.cpp
                         ${CPP_SRC}/processors/lowpassfilter.cpp

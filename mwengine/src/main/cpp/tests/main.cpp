@@ -60,6 +60,7 @@ using namespace MWEngine;
 #include "processors/flanger_test.cpp"
 #include "processors/fm_test.cpp"
 #include "processors/formantfilter_test.cpp"
+#include "processors/gain_test.cpp"
 #include "processors/glitcher_test.cpp"
 #include "processors/limiter_test.cpp"
 #include "processors/lowpassfilter_test.cpp"
