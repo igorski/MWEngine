@@ -185,10 +185,7 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     // remove "deleted" AudioEvents without errors occurring
     if ( !removes.empty() )
     {
-        size_t total = removes.size();
-        for ( size_t i = 0; i < total; i++ )
-        {
-            BaseAudioEvent* audioEvent = removes[ i ];
+        for ( auto const audioEvent : removes ) {
             instrument->removeEvent( audioEvent, false );
         }
         removes.clear();
