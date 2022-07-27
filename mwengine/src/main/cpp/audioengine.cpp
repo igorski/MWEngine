@@ -35,11 +35,8 @@
 #include <utilities/debug.h>
 #include <utilities/channelutility.h>
 #include <utilities/utils.h>
-#include <vector>
-
-#ifdef RECORD_TO_DISK
 #include <utilities/diskwriter.h>
-#endif
+#include <vector>
 
 // whether to include JNI classes to add the Java bridge
 
