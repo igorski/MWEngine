@@ -25,6 +25,8 @@
 #include "wavewriter.h"
 #include "wavereader.h"
 #include "utils.h"
+#include "bufferutility.h"
+#include "debug.h"
 #include <cstdio>
 #include <definitions/notifications.h>
 #include <messaging/notifier.h>
@@ -37,10 +39,12 @@ std::string DiskWriter::tempDirectory;
 std::vector<DiskWriter::writtenFile> DiskWriter::outputFiles;
 std::vector<ResizableAudioBuffer*> DiskWriter::cachedBuffers{ nullptr, nullptr };
 
-int DiskWriter::currentBufferIndex = 0;
-int DiskWriter::recordingChunkSize = 0;
-int DiskWriter::outputWriterIndex  = 0;
-int DiskWriter::savedSnippets      = 0;
+int DiskWriter::currentBufferIndex      = 0;
+int DiskWriter::currentInputBufferIndex = 0;
+int DiskWriter::recordingChunkSize      = 0;
+int DiskWriter::outputWriterIndex       = 0;
+int DiskWriter::inputWriterIndex        = 0;
+int DiskWriter::savedSnippets           = 0;
 
 int DiskWriter::recordingChannelAmount = AudioEngineProps::OUTPUT_CHANNELS;
 bool DiskWriter::prepared = false;
@@ -58,9 +62,13 @@ void DiskWriter::prepare( std::string outputFilename, int chunkSize, int amountO
     recordingChunkSize     = chunkSize;
     recordingChannelAmount = amountOfChannels;
     savedSnippets          = 0;
+    outputWriterIndex      = 0;
+    inputWriterIndex       = 0;
 
     outputFiles.clear();
     prepareSnippet();
+
+    currentInputBufferIndex = currentBufferIndex;
 
     prepared = true;
 }
@@ -91,7 +99,7 @@ bool DiskWriter::updateSnippetProgress( bool force, bool broadcast )
             Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, currentBufferIndex );
         }
     }
-    prepareSnippet();
+    prepareSnippet(); // updates currentBufferIndex
 
     if ( AudioEngine::recordingState.correctLatency ) {
         appendBuffer( tempBuffer ); // write final chunk of last output into the newly prepare snippet
@@ -107,7 +115,11 @@ bool DiskWriter::finish()
     }
 
     int bufferIndex = currentBufferIndex;
-    updateSnippetProgress( true, false );    // finish current snippet
+
+    if ( AudioEngine::recordingState.correctLatency ) {
+        getCachedBuffer( bufferIndex )->resize( outputWriterIndex ); // remove unwritten content
+    }
+    updateSnippetProgress( true, false ); // finish current snippet
     writeBufferToFile( bufferIndex, false ); // render current snippet to temp file
 
     // flush all temporary buffers now recording has finished
@@ -198,7 +210,7 @@ void DiskWriter::appendBuffer( AudioBuffer* aBuffer )
     outputWriterIndex += bufferSize;
 }
 
-void DiskWriter::appendBuffer( const float* aBuffer, int aBufferSize, int amountOfChannels )
+void DiskWriter::appendBuffer( const float* outputBuffer, int bufferSize, int amountOfChannels )
 {
     if ( !prepared ) {
         return;
@@ -212,38 +224,89 @@ void DiskWriter::appendBuffer( const float* aBuffer, int aBufferSize, int amount
 
     // write samples into cache buffers
 
-    for ( i = 0, c = 0; i < aBufferSize; ++i, ++outputWriterIndex, c += amountOfChannels )
+    for ( i = 0, c = 0; i < bufferSize; ++i, ++outputWriterIndex, c += amountOfChannels )
     {
         if ( outputWriterIndex == recordingChunkSize ) {
             updateSnippetProgress( true, true );
             cachedBuffer = getCachedBuffer( currentBufferIndex );
         }
         for ( ci = 0; ci < amountOfChannels; ++ci ) {
-            cachedBuffer->getBufferForChannel( ci )[ outputWriterIndex ] = aBuffer[ c + ci ];
+            cachedBuffer->getBufferForChannel( ci )[ outputWriterIndex ] = outputBuffer[ c + ci ];
         }
     }
 }
 
-void DiskWriter::mixInputBuffer( AudioBuffer* inputBuffer, int bufferSize, int amountOfChannels, int writeOffset )
+void DiskWriter::appendAndMixInputBuffer( const float* outputBuffer, AudioBuffer* inputBuffer, int outputBufferSize, int amountOfChannels, int latencyInSamples )
 {
-    auto cachedBuffer  = getCachedBuffer( currentBufferIndex );
-    int maxWriteOffset = cachedBuffer->bufferSize - 1;
-    // mix in at last written position (minus buffer size as output is already written) plus given writeOffset
-    int wo = ( outputWriterIndex - bufferSize ) + writeOffset;
+    if ( !prepared ) {
+        return;
+    }
+    if ( outputBufferSize != inputBuffer->bufferSize ) {
+        Debug::log( "cannot appendAndMixInputBuffer when input- and outputBuffer are of unequal size!" );
+        return;
+    }
 
-    for ( int c = 0; c < amountOfChannels; ++c ) {
-        auto sourceBuffer = inputBuffer->getBufferForChannel( c );
-        auto targetBuffer = cachedBuffer->getBufferForChannel( c );
-        for ( int i = 0; i < bufferSize; ++i ) {
-            int destOffset = wo + i;
-            if ( destOffset < 0 ) {
+    // here there is a slight duplication with regular appendBuffer() method
+
+    auto cachedBuffer = getCachedBuffer( currentBufferIndex );
+
+    if ( cachedBuffer == nullptr ) {
+        cachedBuffer = generateOutputBuffer( currentBufferIndex, amountOfChannels );
+    }
+    int maxWriteOffset = cachedBuffer->bufferSize - 1;
+    int i, c, ci;
+
+    bool broadcast = false;
+
+    // write samples into cache buffers
+
+    for ( i = 0, c = 0; i < outputBufferSize; ++i, ++outputWriterIndex, ++inputWriterIndex, c += amountOfChannels ) {
+
+        if ( outputWriterIndex == recordingChunkSize ) {
+            updateSnippetProgress( true, false );
+            cachedBuffer = getCachedBuffer( currentBufferIndex );
+            maxWriteOffset = cachedBuffer->bufferSize - 1;
+            broadcast = true; // write snippet after input has been written
+        }
+
+        if ( inputWriterIndex == recordingChunkSize ) {
+            currentInputBufferIndex = currentInputBufferIndex == 0 ? 1 : 0;
+            inputWriterIndex = latencyInSamples;
+        }
+
+        // here we calculate the actual write offset used to written the outputBuffer contents
+        // at an alternate position (relative to the inputBuffer) to correct for latency mismatches
+        // between the internal and input streams
+
+        int writeOffset = inputWriterIndex - latencyInSamples;
+
+        for ( ci = 0; ci < amountOfChannels; ++ci ) {
+            // write the output targetInputBuffer at the current write index
+            cachedBuffer->getBufferForChannel( ci )[ outputWriterIndex ] = outputBuffer[ c + ci ];
+
+            // write input channel targetInputBuffer at current index minus the offset for latency correction
+
+            if ( writeOffset < 0 ) {
                 continue;
             }
-            if ( destOffset > maxWriteOffset ) {
-                break;
+
+            if ( writeOffset > maxWriteOffset ) {
+                break; // beyond writable range ? break loop
             }
-            targetBuffer[ destOffset ] = capSampleSafe( targetBuffer[ destOffset ] + sourceBuffer[ i ] );
+
+            auto targetInputBuffer = getCachedBuffer( currentInputBufferIndex );
+
+            if ( targetInputBuffer != nullptr ) {
+                auto sourceInputBufferChannel = inputBuffer->getBufferForChannel( ci );
+
+                auto sample = targetInputBuffer->getBufferForChannel( ci )[ writeOffset ];
+                targetInputBuffer->getBufferForChannel( ci )[ writeOffset ] = capSampleSafe( sample + sourceInputBufferChannel[ i ]);
+            }
         }
+    }
+
+    if ( broadcast ) {
+        Notifier::broadcast( Notifications::RECORDED_SNIPPET_READY, currentBufferIndex == 0 ? 1 : 0 );
     }
 }
 
@@ -261,7 +324,7 @@ void DiskWriter::writeBufferToFile( int bufferIndex, bool broadcastUpdate )
 
     // create output file name
     std::string snippetFileName = std::string(
-            tempDirectory
+        tempDirectory
     ).append( "rec_snippet_" + TO_STRING( savedSnippets ) + ".WAV" );
 
     size_t writtenWAVSize = WaveWriter::bufferToWAV( snippetFileName, cachedBuffer, sampleRate );

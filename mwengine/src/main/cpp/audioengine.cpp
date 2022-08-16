@@ -366,26 +366,31 @@ namespace MWEngine {
         }
     }
 
-    /*
-    void AudioEngine::recordOutputWithInputSync( bool isRecording, int maxBuffers, char* outputFile )
+    void AudioEngine::setRecordFullDuplexState( float roundtripLatencyInMs, int maxBuffers, char* outputFile )
     {
-        setRecordingState( isRecording, maxBuffers, outputFile );
-        recordingState.correctLatency = isRecording;
-        recordingState.recordDeviceInput = isRecording;
-        getInputChannel()->muted = isRecording;
+        setRecordOutputToFileState( maxBuffers, outputFile );
+        recordDeviceInput( true );
+        getInputChannel()->muted = true;
+        recordingState.correctLatency = true;
 
-        if ( isRecording ) {
-            // we append pure silence for the length of the measured latency
-            // when rendering, the input channel will be written for the latency in size minus the current offset
-            recordingState.latency = DriverAdapter::getLatency();
-            auto tempBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, recordingState.latency );
-            DiskWriter::appendBuffer( tempBuffer );
-            delete tempBuffer;
+        // we append pure silence for the length of the provided round trip latency
+        // when rendering, the input channel will be written for the latency in size minus the current offset
+        recordingState.latency = BufferUtility::millisecondsToBuffer(( int ) roundtripLatencyInMs, AudioEngineProps::SAMPLE_RATE );
+        auto tempBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, recordingState.latency );
+        DiskWriter::appendBuffer( tempBuffer );
+        delete tempBuffer;
 
-            Debug::log( "recording started with latency calculated at %d samples", recordingState.latency );
-        }
+        Debug::log( "recording started with latency calculated at %d samples", recordingState.latency );
     }
-    */
+
+    void AudioEngine::unsetRecordFullDuplexState()
+    {
+        unsetRecordOutputToFileState();
+        recordDeviceInput( false );
+        getInputChannel()->muted = false;
+        recordingState.correctLatency = false;
+    }
+
     void AudioEngine::saveRecordedSnippet( int snippetBufferIndex )
     {
         DiskWriter::writeBufferToFile( snippetBufferIndex, true );
@@ -669,13 +674,25 @@ namespace MWEngine {
 
                     // recording global output ? > write the combined output buffer
 
-                    DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
+                    bool isFullDuplexRecording = recordingState.correctLatency;
 
                     if ( recordingState.recordDeviceInput && inputChannel->muted ) {
                         // IF we were also recording device input with a muted input channel be sure to
                         // write the input (not audible in the written driver output) into the output buffer
                         inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
-                        DiskWriter::mixInputBuffer( inBuffer, amountOfSamples, outputChannels, recordingState.correctLatency ? -recordingState.latency : 0);
+                        if ( isFullDuplexRecording ) {
+                            // use alternative DiskWriter method to append and instantly mix the input when correcting latency
+                            DiskWriter::appendAndMixInputBuffer( outBuffer, inBuffer,
+                                                                 amountOfSamples, outputChannels, recordingState.latency );
+                        } else {
+                            // if no latency correction is applied, mix the input with the output
+                            BufferUtility::mixBufferInterleaved( inBuffer, outBuffer, amountOfSamples, outputChannels );
+                        }
+                    }
+
+                    if ( !isFullDuplexRecording ) {
+                        // actual writing of audio into the DiskWriter buffer
+                        DiskWriter::appendBuffer( outBuffer, amountOfSamples, outputChannels );
                     }
 
 #ifdef RECORD_DEVICE_INPUT

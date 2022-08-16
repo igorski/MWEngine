@@ -399,9 +399,9 @@ public final class MWEngineActivity extends AppCompatActivity {
         public void onClick( View v ) {
             _isRecording = !_isRecording;
             if ( _isRecording )
-                _engine.startOutputRecording( Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav" );
+                _engine.startFullDuplexRecording(latency, Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav" );
             else
-                _engine.stopOutputRecording();
+                _engine.stopFullDuplexRecording();
             (( Button ) v ).setText( _isRecording ? R.string.rec_btn_off : R.string.rec_btn_on );
         }
     }
@@ -448,9 +448,10 @@ public final class MWEngineActivity extends AppCompatActivity {
         }
     }
 
+    float latency = 0;
     private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _filter.setCutoff(( progress / 100f ) * ( maxFilterCutoff - minFilterCutoff ) + minFilterCutoff );
+            latency = ( progress / 100f ) * 2000;
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}

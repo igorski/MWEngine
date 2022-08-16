@@ -92,8 +92,9 @@ class AudioEngine
         static void setRecordInputToFileState( int maxBuffers, char* outputFile, bool skipProcessing );
         static void unsetRecordInputToFileState();
 
-        // Attempts to create full duplex recording with latency correction, not very successful though
-        // static void recordOutputWithInputSync( bool isRecording, int maxBuffers, char* outputFile );
+        // Create full duplex recording with latency correction
+        static void setRecordFullDuplexState( float roundtripLatencyInMs, int maxBuffers, char* outputFile );
+        static void unsetRecordFullDuplexState();
 
         /**
          * Save the contents of the snippet at given buffer index
@@ -110,11 +111,11 @@ class AudioEngine
             bool recordInputWithChain;  // whether device input audio should apply the ProcessingChain of the input channel
             bool inputToFile;           // record audio coming from the Android device input to a file
             bool outputToFile;          // record all audio output to a file
-            bool correctLatency;        // sync the device input with the internal audio output (correct latency)
+            bool correctLatency;        // sync the device input with the internal audio output (corrects for latency), used only during full duplex recording
             bool bouncing;              // bounce audio (i.e. render in inaudible offline mode without thread lock) to a file
             int bounceRangeStart;       // when bouncing, this defines the starting point of the bounce range
             int bounceRangeEnd;         // when bouncing, this defines the end point of the bounce range
-            int latency;                // input latency on recording start
+            int latency;                // round trip latency (in samples) used to correct full duplex recording
         };
         static RecordingSettings recordingState;
 
