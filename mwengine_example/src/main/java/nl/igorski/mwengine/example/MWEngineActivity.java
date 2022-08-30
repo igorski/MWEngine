@@ -179,13 +179,8 @@ public final class MWEngineActivity extends AppCompatActivity {
         findViewById( R.id.LiveSampleButton ).setOnTouchListener( new LiveSampleHandler() );
         findViewById( R.id.RecordInputButton ).setOnTouchListener( new RecordInputHandler() );
 
-        (( SeekBar ) findViewById( R.id.FilterCutoffSlider )).setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
-        (( SeekBar ) findViewById( R.id.SynthDecaySlider )).setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
-        (( SeekBar ) findViewById( R.id.MixSlider )).setOnSeekBarChangeListener( new DelayMixChangeHandler() );
-        (( SeekBar ) findViewById( R.id.PitchSlider )).setOnSeekBarChangeListener( new PitchChangeHandler() );
-        (( SeekBar ) findViewById( R.id.TempoSlider )).setOnSeekBarChangeListener( new TempoChangeHandler() );
-        (( SeekBar ) findViewById( R.id.VolumeSlider )).setOnSeekBarChangeListener( new VolumeChangeHandler() );
-
+        (( SeekBar ) findViewById( R.id.LatencyCorrection )).setOnSeekBarChangeListener( new LatencyCorrectionHandler() );
+      
         if ( !_supportsAAudio ) {
             findViewById( R.id.DriverSelection ).setVisibility( View.GONE );
         } else {
@@ -449,54 +444,9 @@ public final class MWEngineActivity extends AppCompatActivity {
     }
 
     float latency = 0;
-    private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener {
+    private class LatencyCorrectionHandler implements SeekBar.OnSeekBarChangeListener {
         public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
             latency = ( progress / 100f ) * 2000;
-        }
-        public void onStartTrackingTouch( SeekBar seekBar ) {}
-        public void onStopTrackingTouch ( SeekBar seekBar ) {}
-    }
-
-    private class SynthDecayChangeHandler implements SeekBar.OnSeekBarChangeListener {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _synth1.getAdsr().setDecayTime( progress / 100f );
-            _synth1.updateEvents(); // update all synth events to match new ADSR properties
-        }
-        public void onStartTrackingTouch( SeekBar seekBar ) {}
-        public void onStopTrackingTouch ( SeekBar seekBar ) {}
-    }
-
-    private class DelayMixChangeHandler implements SeekBar.OnSeekBarChangeListener {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _delay.setFeedback( progress / 100f );
-        }
-        public void onStartTrackingTouch( SeekBar seekBar ) {}
-        public void onStopTrackingTouch ( SeekBar seekBar ) {}
-    }
-
-    private class PitchChangeHandler implements SeekBar.OnSeekBarChangeListener {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            for ( final SampleEvent drumEvent : _drumEvents )
-                drumEvent.setPlaybackRate(( progress / 50f ));
-        }
-        public void onStartTrackingTouch( SeekBar seekBar ) {}
-        public void onStopTrackingTouch ( SeekBar seekBar ) {}
-    }
-
-    private class TempoChangeHandler implements SeekBar.OnSeekBarChangeListener {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            final float minTempo = 40f;     // minimum allowed tempo is 40 BPM
-            final float maxTempo = 260f;    // maximum allowed tempo is 260 BPM
-            final float newTempo = ( progress / 100f ) * ( maxTempo - minTempo ) + minTempo;
-            _engine.getSequencerController().setTempo( newTempo, 4, 4 ); // update to match new tempo in 4/4 time
-        }
-        public void onStartTrackingTouch( SeekBar seekBar ) {}
-        public void onStopTrackingTouch ( SeekBar seekBar ) {}
-    }
-
-    private class VolumeChangeHandler implements SeekBar.OnSeekBarChangeListener {
-        public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser ) {
-            _engine.setVolume( progress / 100f );
         }
         public void onStartTrackingTouch( SeekBar seekBar ) {}
         public void onStopTrackingTouch ( SeekBar seekBar ) {}

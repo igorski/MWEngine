@@ -73,7 +73,7 @@ namespace Notifier
 
         jmethodID native_method_id = JavaBridge::getJavaMethod( JavaAPIs::HANDLE_NOTIFICATION );
 
-        if ( native_method_id != 0 )
+        if ( native_method_id != nullptr )
         {
             JNIEnv* env = JavaBridge::getEnvironment();
 
@@ -107,7 +107,7 @@ namespace Notifier
 
         jmethodID native_method_id = JavaBridge::getJavaMethod( JavaAPIs::HANDLE_NOTIFICATION_DATA );
 
-        if ( native_method_id != 0 )
+        if ( native_method_id != nullptr )
         {
             JNIEnv* env = JavaBridge::getEnvironment();
 

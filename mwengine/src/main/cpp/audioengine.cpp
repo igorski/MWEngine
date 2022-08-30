@@ -368,17 +368,12 @@ namespace MWEngine {
 
     void AudioEngine::setRecordFullDuplexState( float roundtripLatencyInMs, int maxBuffers, char* outputFile )
     {
+        recordingState.correctLatency = true;
+        recordingState.latency = BufferUtility::millisecondsToBuffer(( int ) roundtripLatencyInMs, AudioEngineProps::SAMPLE_RATE );
+
         setRecordOutputToFileState( maxBuffers, outputFile );
         recordDeviceInput( true );
         getInputChannel()->muted = true;
-        recordingState.correctLatency = true;
-
-        // we append pure silence for the length of the provided round trip latency
-        // when rendering, the input channel will be written for the latency in size minus the current offset
-        recordingState.latency = BufferUtility::millisecondsToBuffer(( int ) roundtripLatencyInMs, AudioEngineProps::SAMPLE_RATE );
-        auto tempBuffer = new AudioBuffer( AudioEngineProps::OUTPUT_CHANNELS, recordingState.latency );
-        DiskWriter::appendBuffer( tempBuffer );
-        delete tempBuffer;
 
         Debug::log( "recording started with latency calculated at %d samples", recordingState.latency );
     }

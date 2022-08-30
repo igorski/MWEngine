@@ -23,9 +23,10 @@
 #ifndef __MWENGINE__DISKWRITER_H_INCLUDED__
 #define __MWENGINE__DISKWRITER_H_INCLUDED__
 
-#include "resizable_audiobuffer.h"
 #include <string>
 #include <vector>
+#include <resizable_buffergroup.h>
+#include <audioengine.h>
 
 /**
  * DiskWriter is a utility that records audio for a given buffer length
@@ -42,8 +43,7 @@ class DiskWriter
 {
     public:
         static int currentBufferIndex; // index of the cachedBuffer the output is currently being written to
-        static int currentInputBufferIndex; // index of the cachedBuffer the input is currently being written to
-    
+
         /**
          * Prepare for a new recording. The recording can consist
          * of multiple iterations, each of given chunkSize in buffer size.
@@ -79,6 +79,8 @@ class DiskWriter
          * this in a separate thread.
          */
         static bool finish();
+
+        // TODO rename appendBuffer and appendAndMixInputBuffer to imply non full duplex recording ?
 
         /**
          * appends an AudioBuffer into the current snippets output buffer
@@ -117,33 +119,41 @@ class DiskWriter
         static std::string               outputFile;         // the file name to write the output to when finished
         static std::string               tempDirectory;      // output directory to write temporary files to
         static std::vector<writtenFile>  outputFiles;
-        static std::vector<ResizableAudioBuffer*> cachedBuffers;
+        static std::vector<ResizableBufferGroup*> cachedBuffers;
 
         static int recordingChunkSize;
         static int outputWriterIndex;
-        static int inputWriterIndex;
         static int savedSnippets; // amount of snippets within the current recording that have been saved
         static int recordingChannelAmount;
         static bool prepared;
 
         /**
          * Prepares the next snippet to continue recording audio into.
-         * We allow two snippets to exist at a time.
+         * We allow two snippets to exist at a time for either output- or input buffer types
          */
         static void prepareSnippet();
 
-        static ResizableAudioBuffer* getCachedBuffer( int bufferIndex );
+        static ResizableBufferGroup* getCachedOutputBuffer( int bufferIndex );
 
         /**
-         * allocates a new buffer (at given index) for writing output into
+         * allocates a new buffer (at given index) for writing output or input into
          */
-        static ResizableAudioBuffer* generateOutputBuffer( int bufferIndex, int amountOfChannels );
+        static ResizableBufferGroup* generateOutputBuffer( int bufferIndex, int amountOfChannels );
 
         /**
          * checks whether the current write buffer is full
          */
         static bool isSnippetBufferFull();
         static void flushOutput( int bufferIndex );
+
+        /**
+         * when the correctLatency flag is set, we know we are dealing with a full duplex recording
+         * as such, we write into separate engine output and device input buffers (so we can correct
+         * for the roundtrip latency on finish())
+         */
+        static bool isFullDuplex() {
+            return AudioEngine::recordingState.correctLatency;
+        }
 };
 } // E.O namespace MWEngine
 

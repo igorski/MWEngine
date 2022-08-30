@@ -92,7 +92,10 @@ class AudioEngine
         static void setRecordInputToFileState( int maxBuffers, char* outputFile, bool skipProcessing );
         static void unsetRecordInputToFileState();
 
-        // Create full duplex recording with latency correction
+        /**
+         * Create full duplex recording with latency correction
+         * maxBuffers should be a multiple of the sample defined by roundtripLatencyInMs (!)
+         */
         static void setRecordFullDuplexState( float roundtripLatencyInMs, int maxBuffers, char* outputFile );
         static void unsetRecordFullDuplexState();
 

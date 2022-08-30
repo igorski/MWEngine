@@ -345,7 +345,8 @@ public final class MWEngine
 
     /**
      * Records both the internally synthesized audio and audio recorded from the device input.
-     * The device input channel is muted (to prevent feedback when not using headphones).
+     * The device input channel is muted (to prevent feedback when not using headphones and also not
+     * to sound delayed when user is "singing to a backing track").
      * Given roundtripLatencyInMs will be used to correct the latency between hearing
      * the device output, recording sound into the input, and hearing the sound overlaid onto
      * the output again. Requires same permissions as startInputRecording()
