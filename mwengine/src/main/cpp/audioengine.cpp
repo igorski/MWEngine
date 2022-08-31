@@ -672,15 +672,16 @@ namespace MWEngine {
                     bool isFullDuplexRecording = recordingState.correctLatency;
 
                     if ( recordingState.recordDeviceInput && inputChannel->muted ) {
-                        // IF we were also recording device input with a muted input channel be sure to
-                        // write the input (not audible in the written driver output) into the output buffer
                         if ( isFullDuplexRecording ) {
                             // use alternative DiskWriter method to append and instantly mix the input when correcting latency
                             DiskWriter::appendAndMixInputBuffer( outBuffer, inputChannel->getOutputBuffer(),
                                                                  amountOfSamples, outputChannels, recordingState.latency );
                         } else {
                             // if no latency correction is applied, mix the input with the output
-                            BufferUtility::mixBufferInterleaved( inputChannel->getOutputBuffer(), outBuffer, amountOfSamples, outputChannels );
+                            // since we were also recording device input with a muted input channelm we first
+                            // mix the input (not audible in the written driver output) into the output buffer
+                            inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
+                            BufferUtility::mixBufferInterleaved( inBuffer, outBuffer, amountOfSamples, outputChannels );
                         }
                     }
 
