@@ -211,14 +211,13 @@ bool DiskWriter::finish()
             // TODO: can we just extract the existing PCM data without this
             // back-and-forth conversion?
             INT16* outputBuffer = WaveWriter::bufferToPCM( tempBuffer );
-            int streamSize = tempBuffer->bufferSize * tempBuffer->amountOfChannels;
 
             delete tempBuffer; // free memory allocated to read WAV file
             tempBuffer = nullptr;
 
             // write PCM buffer into the output stream
 
-            WaveWriter::appendBufferToStream( waveStream, outputBuffer, streamSize );
+            WaveWriter::appendBufferToStream( waveStream, outputBuffer, file.size );
 
             delete[] outputBuffer; // free memory allocated to the temporary PCM buffer
         }
@@ -329,14 +328,16 @@ void DiskWriter::writeBufferToFile( int bufferIndex, bool broadcastUpdate )
     ).append( "rec_snippet_" + TO_STRING( savedSnippets ) + ".WAV" );
 
     size_t writtenWAVsize;
+    int groupSize = cachedBuffer->getGroupSize();
 
-    if ( cachedBuffer->getGroupSize() == 1 ) {
+    if ( groupSize == 1 ) {
         writtenWAVsize = WaveWriter::bufferToWAV( snippetFileName, cachedBuffer->getBufferAtIndex( 0 ), sampleRate );
         flushOutput( bufferIndex ); // free allocated buffer memory
     } else {
         auto buffer = cachedBuffer->getContentSerialized();
         flushOutput( bufferIndex ); // free allocated buffer memory
-        writtenWAVsize = ceil( WaveWriter::bufferToWAV( snippetFileName, buffer, sampleRate ) / cachedBuffer->getGroupSize());
+        // we're cheating here, the written size will eventually be the size of a single mixed buffer
+        writtenWAVsize = ceil( WaveWriter::bufferToWAV( snippetFileName, buffer, sampleRate ) / groupSize );
         delete buffer; // free allocated serialized buffer
     }
 
