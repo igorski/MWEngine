@@ -94,7 +94,7 @@ class AudioEngine
 
         /**
          * Create full duplex recording with latency correction
-         * maxBuffers should be a multiple of the sample defined by roundtripLatencyInMs (!)
+         * maxBuffers should be a multiple of the samples defined by roundtripLatencyInMs
          */
         static void setRecordFullDuplexState( float roundtripLatencyInMs, int maxBuffers, char* outputFile );
         static void unsetRecordFullDuplexState();
@@ -118,7 +118,7 @@ class AudioEngine
             bool bouncing;              // bounce audio (i.e. render in inaudible offline mode without thread lock) to a file
             int bounceRangeStart;       // when bouncing, this defines the starting point of the bounce range
             int bounceRangeEnd;         // when bouncing, this defines the end point of the bounce range
-            int latency;                // round trip latency (in samples) used to correct full duplex recording
+            int latency;                // round trip latency (in samples) used to align full duplex recordings
         };
         static RecordingSettings recordingState;
 

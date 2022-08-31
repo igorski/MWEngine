@@ -371,11 +371,11 @@ namespace MWEngine {
         recordingState.correctLatency = true;
         recordingState.latency = BufferUtility::millisecondsToBuffer(( int ) roundtripLatencyInMs, AudioEngineProps::SAMPLE_RATE );
 
-        setRecordOutputToFileState( maxBuffers, outputFile );
+        setRecordOutputToFileState( std::max( recordingState.latency * 2, maxBuffers ), outputFile );
         recordDeviceInput( true );
         getInputChannel()->muted = true;
 
-        Debug::log( "recording started with latency calculated at %d samples", recordingState.latency );
+        Debug::log( "full duplex recording started with latency calculated at %d samples", recordingState.latency );
     }
 
     void AudioEngine::unsetRecordFullDuplexState()
@@ -674,8 +674,10 @@ namespace MWEngine {
                     if ( recordingState.recordDeviceInput && inputChannel->muted ) {
                         if ( isFullDuplexRecording ) {
                             // use alternative DiskWriter method to append and instantly mix the input when correcting latency
-                            DiskWriter::appendAndMixInputBuffer( outBuffer, inputChannel->getOutputBuffer(),
-                                                                 amountOfSamples, outputChannels, recordingState.latency );
+                            DiskWriter::appendDuplexBuffers( outBuffer,
+                                                             inputChannel->getOutputBuffer(),
+                                                             amountOfSamples, outputChannels,
+                                                             recordingState.latency );
                         } else {
                             // if no latency correction is applied, mix the input with the output
                             // since we were also recording device input with a muted input channelm we first

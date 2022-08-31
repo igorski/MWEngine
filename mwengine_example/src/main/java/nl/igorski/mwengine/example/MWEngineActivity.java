@@ -177,7 +177,6 @@ public final class MWEngineActivity extends AppCompatActivity {
         findViewById( R.id.RecordButton ).setOnClickListener( new RecordOutputHandler() );
         findViewById( R.id.LiveNoteButton ).setOnTouchListener( new LiveNoteHandler() );
         findViewById( R.id.LiveSampleButton ).setOnTouchListener( new LiveSampleHandler() );
-        findViewById( R.id.RecordInputButton ).setOnTouchListener( new RecordInputHandler() );
 
         (( SeekBar ) findViewById( R.id.LatencyCorrection )).setOnSeekBarChangeListener( new LatencyCorrectionHandler() );
       
@@ -422,21 +421,6 @@ public final class MWEngineActivity extends AppCompatActivity {
             switch( event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     _liveClapEvent.play(); // event will .stop() after playing sample in full
-                    return true;
-            }
-            return false;
-        }
-    }
-
-    private class RecordInputHandler implements View.OnTouchListener {
-        @Override
-        public boolean onTouch( View v, MotionEvent event ) {
-            switch( event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    _engine.recordInput( true );
-                    return true;
-                case MotionEvent.ACTION_UP:
-                    _engine.recordInput( false );
                     return true;
             }
             return false;

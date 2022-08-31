@@ -40,9 +40,9 @@ class ResizableBufferGroup
 
         /**
          * Retrieves the content of all buffers in the group within a (new!) AudioBuffer instance
-         * containing a single buffer where every buffer within this ResizableBufferGroup has serialized its content
-         * one after the other. The size of this buffer is equal to the size of a single buffer multiplied
-         * by the amount of buffers.
+         * where every buffer within this ResizableBufferGroup has serialized its content one after
+         * the other. The size of this new buffer is equal to the size of a single buffer multiplied
+         * by the amount of buffers in this group.
          */
         AudioBuffer* getContentSerialized();
 

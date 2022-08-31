@@ -80,7 +80,7 @@ class DiskWriter
          */
         static bool finish();
 
-        // TODO rename appendBuffer and appendAndMixInputBuffer to imply non full duplex recording ?
+        // TODO rename appendBuffer and appendDuplexBuffers to imply non full duplex recording ?
 
         /**
          * appends an AudioBuffer into the current snippets output buffer
@@ -98,7 +98,7 @@ class DiskWriter
          * into the current snippets output buffer correcting for the given latencyInSamples
          * to address a mismatch when mixing device input and internal output streams)
          */
-        static void appendAndMixInputBuffer( const float* outputBuffer, AudioBuffer* inputBuffer, int outputBufferSize, int amountOfChannels, int latencyInSamples );
+        static void appendDuplexBuffers( const float* outputBuffer, AudioBuffer* inputBuffer, int outputBufferSize, int amountOfChannels, int latencyInSamples );
 
         /**
          * write the contents of the snippet buffer into an output file, this will only write content

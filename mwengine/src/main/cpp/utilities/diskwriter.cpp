@@ -276,13 +276,13 @@ void DiskWriter::appendBuffer( const float* outputBuffer, int bufferSize, int am
     }
 }
 
-void DiskWriter::appendAndMixInputBuffer( const float* outputBuffer, AudioBuffer* inputBuffer, int outputBufferSize, int amountOfChannels, int latencyInSamples )
+void DiskWriter::appendDuplexBuffers( const float* outputBuffer, AudioBuffer* inputBuffer, int outputBufferSize, int amountOfChannels, int latencyInSamples )
 {
     if ( !prepared ) {
         return;
     }
     if ( outputBufferSize != inputBuffer->bufferSize ) {
-        Debug::log( "cannot appendAndMixInputBuffer when input- and outputBuffer are of unequal size!" );
+        Debug::log( "cannot appendDuplexBuffers when input- and outputBuffer are of unequal size!" );
         return;
     }
 
