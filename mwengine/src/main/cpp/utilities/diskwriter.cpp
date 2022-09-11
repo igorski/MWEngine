@@ -156,14 +156,14 @@ bool DiskWriter::finish()
                 AudioBuffer* nextSerializedBuffer = nullptr;
                 if ( outputFiles.size() > 1 ) {
                     nextSerializedBuffer = WaveReader::fileToBuffer( outputFiles.at( 1 ).path ).buffer;
-                    nextSerializedChunkSize = ceil( nextSerializedBuffer->bufferSize / 2 );
+                    nextSerializedChunkSize = nextSerializedBuffer != nullptr ? ceil( nextSerializedBuffer->bufferSize / 2 ) : 0;
                 }
                 int nextInputReadOffset = serializedChunkSize - AudioEngine::recordingState.latency;
 
                 for ( int c = 0, cl = serializedBuffer->amountOfChannels; c < cl; ++c ) {
                     auto outputBuffer = tempBuffer->getBufferForChannel( c );
                     auto sampleBuffer = serializedBuffer->getBufferForChannel( c );
-                    auto nextSampleBuffer = nextSerializedBuffer != nullptr ? nextSerializedBuffer->getBufferForChannel( c ) : nullptr;
+                    auto nextSampleBuffer = nextSerializedChunkSize != 0 ? nextSerializedBuffer->getBufferForChannel( c ) : nullptr;
 
                     int inputOffset; // offset at which we can get the appropriate input sample, corrected for the latency
 

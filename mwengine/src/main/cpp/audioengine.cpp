@@ -680,7 +680,7 @@ namespace MWEngine {
                                                              recordingState.latency );
                         } else {
                             // if no latency correction is applied, mix the input with the output
-                            // since we were also recording device input with a muted input channelm we first
+                            // since we were also recording device input with a muted input channel, we first
                             // mix the input (not audible in the written driver output) into the output buffer
                             inputChannel->mixBuffer( inBuffer, inputChannel->getVolume() );
                             BufferUtility::mixBufferInterleaved( inBuffer, outBuffer, amountOfSamples, outputChannels );

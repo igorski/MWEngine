@@ -80,8 +80,6 @@ class DiskWriter
          */
         static bool finish();
 
-        // TODO rename appendBuffer and appendDuplexBuffers to imply non full duplex recording ?
-
         /**
          * appends an AudioBuffer into the current snippets output buffer
          */
@@ -95,8 +93,9 @@ class DiskWriter
 
         /**
          * same as appendBuffer() except that the contents of given inputBuffer are also mixed
-         * into the current snippets output buffer correcting for the given latencyInSamples
-         * to address a mismatch when mixing device input and internal output streams)
+         * into the current snippets output buffer to allow simultaneous bi-directional recording.
+         * upon completion of recording, we will also be correcting for the given latencyInSamples
+         * to address a timing mismatch when mixing device input and output streams)
          */
         static void appendDuplexBuffers( const float* outputBuffer, AudioBuffer* inputBuffer, int outputBufferSize, int amountOfChannels, int latencyInSamples );
 
@@ -129,14 +128,14 @@ class DiskWriter
 
         /**
          * Prepares the next snippet to continue recording audio into.
-         * We allow two snippets to exist at a time for either output- or input buffer types
+         * We allow two snippets to exist at a time.
          */
         static void prepareSnippet();
 
         static ResizableBufferGroup* getCachedOutputBuffer( int bufferIndex );
 
         /**
-         * allocates a new buffer (at given index) for writing output or input into
+         * allocates a new buffer (at given index) for writing output into
          */
         static ResizableBufferGroup* generateOutputBuffer( int bufferIndex, int amountOfChannels );
 
