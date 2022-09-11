@@ -184,7 +184,7 @@ waveFile WaveReader::fileToBuffer( std::string inputFile )
         case 24:
             unsigned char input[ 3 ];
             long output;
-            for ( int i = 0; i < bufferSize; ++i )
+            for ( i = 0; i < bufferSize; ++i )
             {
                 for ( int c = 0; c < header.amountOfChannels; ++c ) {
                     fread( &input, sizeof( char ), 3, fp );
