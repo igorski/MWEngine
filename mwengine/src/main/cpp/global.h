@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2021 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -104,6 +104,10 @@ namespace AudioEngineProps
 
 // maximum volume output of the engine (prevents clipping of extremely hot signals)
 #define MAX_OUTPUT 0.98F
+
+// can be used to prevent denormals
+// init envelopes to DC_OFFSET prior to processing, add to input before envelope proces
+const float DC_OFFSET = 1.0E-25;
 
 // math caches
 
