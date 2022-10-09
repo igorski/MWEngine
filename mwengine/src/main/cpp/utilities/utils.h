@@ -26,6 +26,7 @@
 #include <math.h>
 #include <vector>
 #include <algorithm>
+#include <audiobuffer.h>
 #include "global.h"
 
 namespace MWEngine {
@@ -58,6 +59,19 @@ inline SAMPLE_TYPE capSampleSafe( SAMPLE_TYPE value )
         value = MAX_OUTPUT;
     }
     return value;
+}
+
+// same as above, but applied to all content within an AudioBuffer
+
+inline void capBufferSamplesSafe( AudioBuffer* outputBuffer )
+{
+    int bufferSize = outputBuffer->bufferSize;
+    for ( int c = 0; c < outputBuffer->amountOfChannels; ++c ) {
+        SAMPLE_TYPE* channelBuffer = outputBuffer->getBufferForChannel( c );
+        for ( size_t i = 0; i < bufferSize; ++i ) {
+            channelBuffer[ i ] = capSampleSafe( channelBuffer[ i ] );
+        }
+    }
 }
 
 // inverts a pow operation, allowing you to derive the exponent from the known value and base

@@ -25,6 +25,7 @@
 #include "wavereader.h"
 #include "wavewriter.h"
 #include "samplemanager.h"
+#include "utils.h"
 
 namespace MWEngine {
 
@@ -53,16 +54,21 @@ bool AudioRenderer::renderEvent( const std::string& outputFilename, BaseAudioEve
 
     if ( chain != nullptr ) {
         auto processors = chain->getActiveProcessors();
+        bool isMono = outputBuffer->amountOfChannels == 1;
         for ( auto &processor : processors ) {
-            processor->process( outputBuffer, outputBuffer->amountOfChannels == 1 );
+            processor->process( outputBuffer, isMono );
         }
     }
 
-    // 4. write the output
+    // 4. cap the max amplitude
 
-    int writtenSamples = WaveWriter::bufferToWAV( outputFilename, outputBuffer, ( int ) AudioEngineProps::SAMPLE_RATE );
+    capBufferSamplesSafe( outputBuffer );
 
-    // 5. clean up and assert success
+    // 5. write the output
+
+    size_t writtenSamples = WaveWriter::bufferToWAV( outputFilename, outputBuffer, ( int ) AudioEngineProps::SAMPLE_RATE );
+
+    // 6. clean up and assert success
 
     delete outputBuffer;
 
