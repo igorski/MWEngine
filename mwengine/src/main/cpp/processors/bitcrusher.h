@@ -32,7 +32,7 @@ class BitCrusher : public BaseProcessor
         BitCrusher( float amount, float inputMix, float outputMix );
         ~BitCrusher();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "BitCrusher" );
         }
 

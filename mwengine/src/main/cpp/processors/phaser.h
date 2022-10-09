@@ -48,7 +48,7 @@ class Phaser : public BaseProcessor
         Phaser( float aRate, float aFeedback, float aDepth, float aMinFreq, float aMaxFreq, int amountOfChannels );
         ~Phaser();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Phaser" );
         }
 

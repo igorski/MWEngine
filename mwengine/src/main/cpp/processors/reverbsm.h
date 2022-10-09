@@ -153,7 +153,7 @@ class ReverbSM : public BaseProcessor {
     public:
         ReverbSM();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "ReverbSM" );
         }
 

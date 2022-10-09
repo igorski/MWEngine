@@ -31,6 +31,7 @@ namespace AudioEngineProps {
     unsigned int     SAMPLE_RATE     = 48000;
     unsigned int     BUFFER_SIZE     = 192;
     unsigned int     OUTPUT_CHANNELS = 2;
+    unsigned int     INPUT_CHANNELS  = 0;
 
     std::vector<int> CPU_CORES       = {};
     std::atomic<bool> isRendering{ false };

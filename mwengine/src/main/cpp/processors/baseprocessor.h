@@ -39,7 +39,7 @@ class BaseProcessor
         /**
          * Returns the string name of the Processor subclass
          */
-        virtual std::string getType() {
+        virtual std::string getType() const {
             return std::string( "BaseProcessor" ); // override in subclass
         }
 

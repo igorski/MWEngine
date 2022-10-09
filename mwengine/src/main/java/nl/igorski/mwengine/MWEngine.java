@@ -45,7 +45,7 @@ public final class MWEngine
     public interface IObserver
     {
         /**
-         * invoked whenever the engine broadcasts a notification
+         * invoked whenever the native layer of the engine broadcasts a notification
          * @param aNotificationId {int} unique identifier for the notification
          *
          * supported notification identifiers (see notifications.h):
@@ -59,7 +59,7 @@ public final class MWEngine
         void handleNotification( int aNotificationId );
 
         /**
-         * invoked whenever the engine broadcasts a notification
+         * invoked whenever the native layer of the engine broadcasts a notification
          *
          * @param aNotificationId {int} unique identifier for the notification
          * @param aNotificationValue {int} payload for the notification
@@ -78,7 +78,7 @@ public final class MWEngine
     }
 
     private static MWEngine INSTANCE; // we only allow a single instance to be constructed for resource optimization
-    private IObserver       _observer;
+    private IObserver _observer;
 
     private SequencerController _sequencerController;
 
@@ -87,6 +87,7 @@ public final class MWEngine
     public static int SAMPLE_RATE             = 44100;
     public static int BUFFER_SIZE             = 2048;
     public static int OUTPUT_CHANNELS         = 2;
+    public static int INPUT_CHANNELS          = 0;
     private static Drivers.types AUDIO_DRIVER = Drivers.types.OPENSL;
 
     private static float _volume = 1.0f;
@@ -168,12 +169,12 @@ public final class MWEngine
             BS_CHECK = (( AudioManager ) context.getSystemService( Context.AUDIO_SERVICE )).getProperty( AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER );
         }
         return ( BS_CHECK != null ) ? Integer.parseInt( BS_CHECK ) : AudioTrack.getMinBufferSize(
-                getRecommendedSampleRate( context ), AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT
+            getRecommendedSampleRate( context ), AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT
         );
     }
 
-    public void createOutput( int aSampleRate, int aBufferSize, int aOutputChannels, Drivers.types driver ) {
-        setup( aSampleRate, aBufferSize, aOutputChannels );
+    public void createOutput( int sampleRate, int bufferSize, int outputChannels, int inputChannels, Drivers.types driver ) {
+        setup( sampleRate, bufferSize, outputChannels, inputChannels );
         setAudioDriver( driver );
 
         // start w/ default of 120 BPM in 4/4 time
@@ -182,18 +183,28 @@ public final class MWEngine
         _sequencerController.prepare( 120.0f, 4, 4 );
     }
 
-    public void setup( int aSampleRate, int aBufferSize, int aOutputChannels ) {
-        SAMPLE_RATE     = Build.FINGERPRINT.startsWith( "generic" ) ? 8000 : aSampleRate; // older emulators only work at 8 kHz
-        BUFFER_SIZE     = aBufferSize;
-        OUTPUT_CHANNELS = aOutputChannels;
+    @Deprecated
+    public void createOutput( int sampleRate, int bufferSize, int outputChannels, Drivers.types driver ) {
+        createOutput( sampleRate, bufferSize, outputChannels, 0, driver );
+    }
 
-        AudioEngine.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS );
+    public void setup( int sampleRate, int bufferSize, int outputChannels, int inputChannels ) {
+        SAMPLE_RATE     = Build.FINGERPRINT.startsWith( "generic" ) ? 8000 : sampleRate; // older emulators only work at 8 kHz
+        BUFFER_SIZE     = bufferSize;
+        OUTPUT_CHANNELS = outputChannels;
+        INPUT_CHANNELS  = inputChannels;
+
+        AudioEngine.setup( BUFFER_SIZE, SAMPLE_RATE, OUTPUT_CHANNELS, INPUT_CHANNELS );
 
         if ( !_isRunning ) {
             return;
         }
         stop();  // TODO: instead of stop/start, synchronize native layer class instances that cached above values??
         start(); // restart engine to initialize it with the new settings
+    }
+
+    public boolean isRunning() {
+        return _isRunning;
     }
 
     public float getVolume() {
@@ -243,19 +254,10 @@ public final class MWEngine
         AudioEngine.recordDeviceInput( recordingActive );
     }
 
-    /*
-    public void startSyncedInOutRecording( String outputFile ) {
-        AudioEngine.recordOutputWithInputSync( true, calculateRecordingSnippetBufferSize(), outputFile );
-    }
-
-    public void stopSyncedInOutRecording() {
-        AudioEngine.recordOutputWithInputSync( false, 0, "" );
-    }
-    */
-
     /**
      * @deprecated use startOutputRecording|stopOutputRecording instead
      */
+    @Deprecated
     public void setRecordingState( boolean recordingActive, String outputFile ) {
         if ( recordingActive )
             startOutputRecording( outputFile );
@@ -284,6 +286,7 @@ public final class MWEngine
     /**
      * @deprecated use startBouncing|stopBouncing instead
      */
+    @Deprecated
     public void setBouncing( boolean value, String outputFile ) {
         if ( value )
             startBouncing( outputFile );
@@ -294,6 +297,7 @@ public final class MWEngine
     /**
      * @deprecated use startBouncing|stopBouncing instead
      */
+    @Deprecated
     public void setBouncing( boolean value, String outputFile, int rangeStart, int rangeEnd ) {
         if ( value )
             startBouncing( outputFile, rangeStart, rangeEnd );
@@ -316,6 +320,7 @@ public final class MWEngine
     /**
      * @deprecated use startInputRecording|stopInputRecording instead
      */
+    @Deprecated
     public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds ) {
         if ( recordingActive )
             startInputRecording( outputFile, false );

@@ -33,7 +33,7 @@ class FrequencyModulator : public BaseProcessor, public LFO
     public:
         FrequencyModulator( int aWaveForm, float aRate );
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "FrequencyModulator" );
         }
 
@@ -43,12 +43,12 @@ class FrequencyModulator : public BaseProcessor, public LFO
 #endif
 
         // these are here only for SWIG purposes so we can "multiple inherit" from LFO, bit fugly... but hey
-        #ifdef SWIG
+#ifdef SWIG
         float getRate();
         void setRate( float value );
         int getWave();
         void setWave( int value );
-        #endif
+#endif
 
     private:
         SAMPLE_TYPE modulator;

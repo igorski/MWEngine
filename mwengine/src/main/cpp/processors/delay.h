@@ -33,7 +33,7 @@ class Delay : public BaseProcessor
         Delay( int aDelayTime, int aMaxDelayTime, float aMix, float aFeedback, int amountOfChannels );
         ~Delay();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Delay" );
         }
 

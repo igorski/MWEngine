@@ -110,7 +110,9 @@ set(MWENGINE_SYNTH_SOURCES ${CPP_SRC}/definitions/pitch.cpp
 
 # effects processors (can be omitted if your use case only concerns raw audio)
 
-set(MWENGINE_PROCESSORS ${CPP_SRC}/processors/bitcrusher.cpp
+set(MWENGINE_PROCESSORS ${CPP_SRC}/processors/basedynamicsprocessor.cpp
+                        ${CPP_SRC}/processors/bitcrusher.cpp
+                        ${CPP_SRC}/processors/compressor.cpp
                         ${CPP_SRC}/processors/dcoffsetfilter.cpp
                         ${CPP_SRC}/processors/decimator.cpp
                         ${CPP_SRC}/processors/delay.cpp
@@ -119,6 +121,7 @@ set(MWENGINE_PROCESSORS ${CPP_SRC}/processors/bitcrusher.cpp
                         ${CPP_SRC}/processors/fm.cpp
                         ${CPP_SRC}/processors/formantfilter.cpp
                         ${CPP_SRC}/processors/gain.cpp
+                        ${CPP_SRC}/processors/gate.cpp
                         ${CPP_SRC}/processors/glitcher.cpp
                         ${CPP_SRC}/processors/limiter.cpp
                         ${CPP_SRC}/processors/lowpassfilter.cpp
