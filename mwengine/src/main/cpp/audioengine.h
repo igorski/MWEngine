@@ -45,7 +45,7 @@ class AudioEngine
 
     public:
 
-        static void setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int amountOfChannels );
+        static void setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int outputChannelAmount, unsigned int inputChannelAmount );
         static void start( Drivers::types audioDriver );
         static void stop();
         static void reset();

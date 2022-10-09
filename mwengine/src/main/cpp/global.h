@@ -64,16 +64,12 @@ namespace AudioEngineProps
 {
     const bool CHANNEL_CACHING = false;      // whether to cache AudioChannels and their FX module output in their ProcessingChain
 
-    extern unsigned int     SAMPLE_RATE;     // initialized on engine start == device specific
-    extern unsigned int     BUFFER_SIZE;     // initialized on engine start == device specific
-    extern unsigned int     OUTPUT_CHANNELS; // initialized on engine start, valid options are 1 (mono) and 2 (stereo)
-    extern std::vector<int> CPU_CORES;       // on Android N this can be retrieved from the Activity, see JavaUtilities
+    extern unsigned int SAMPLE_RATE;     // initialized on engine start == device specific
+    extern unsigned int BUFFER_SIZE;     // initialized on engine start == device specific
+    extern unsigned int OUTPUT_CHANNELS; // initialized on engine start, valid options are 1 (mono) and 2 (stereo)
+    extern unsigned int INPUT_CHANNELS;  // initialized on engine start, common value is 1 (microphone), requires permission
+    extern std::vector<int> CPU_CORES;   // on Android N this can be retrieved from the Activity, see JavaUtilities
 
-#ifdef RECORD_DEVICE_INPUT
-    const unsigned int INPUT_CHANNELS = 1;
-#else
-    const unsigned int INPUT_CHANNELS = 0;
-#endif
     extern std::atomic<bool> isRendering;
 }
 

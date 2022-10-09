@@ -154,7 +154,7 @@ public final class MWEngineActivity extends AppCompatActivity {
         BUFFER_SIZE = MWEngine.getRecommendedBufferSize( getApplicationContext() );
         SAMPLE_RATE = MWEngine.getRecommendedSampleRate( getApplicationContext() );
 
-        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, _audioDriver );
+        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS, 1, _audioDriver );
 
         // STEP 2 : let's create some music !
 

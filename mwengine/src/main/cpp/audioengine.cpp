@@ -112,11 +112,14 @@ namespace MWEngine {
 
     /* public methods */
 
-    void AudioEngine::setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int amountOfChannels )
+    void AudioEngine::setup( unsigned int bufferSize, unsigned int sampleRate, unsigned int outputChannelAmount, unsigned int inputChannelAmount )
     {
         AudioEngineProps::BUFFER_SIZE     = bufferSize;
         AudioEngineProps::SAMPLE_RATE     = sampleRate;
-        AudioEngineProps::OUTPUT_CHANNELS = amountOfChannels;
+        AudioEngineProps::OUTPUT_CHANNELS = outputChannelAmount;
+#ifdef RECORD_DEVICE_INPUT
+        AudioEngineProps::INPUT_CHANNELS  = inputChannelAmount;
+#endif
     }
 
     /**
@@ -153,7 +156,7 @@ namespace MWEngine {
         // prevent thread start and trigger JNI callback for error handler
 
         if ( !DriverAdapter::create( audioDriver )) {
-            Debug::log( "AudioEngine::Could not initialize audio driver of type %d", audioDriver );
+            Debug::log( "AudioEngine::Could not initialize audio driver of type %d, verify granted permissions and/or device configuration", audioDriver );
             Notifier::broadcast( Notifications::ERROR_HARDWARE_UNAVAILABLE );
             stop();
             return;

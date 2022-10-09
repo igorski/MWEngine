@@ -27,11 +27,10 @@
 #ifndef __MWENGINE_GATE_H__
 #define __MWENGINE_GATE_H__
 
-#include "baseprocessor.h"
 #include "basedynamicsprocessor.h"
 
 namespace MWEngine {
-class Gate : public BaseProcessor, public BaseDynamicsProcessor
+class Gate : public BaseDynamicsProcessor
 {
     public:
         Gate();

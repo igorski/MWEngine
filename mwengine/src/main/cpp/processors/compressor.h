@@ -27,12 +27,11 @@
 #ifndef __MWENGINE_COMPRESSOR_H__
 #define __MWENGINE_COMPRESSOR_H__
 
-#include "baseprocessor.h"
 #include "basedynamicsprocessor.h"
 #include <utilities/utils.h>
 
 namespace MWEngine {
-class Compressor : public BaseProcessor, public BaseDynamicsProcessor
+class Compressor : public BaseDynamicsProcessor
 {
     public:
         Compressor();

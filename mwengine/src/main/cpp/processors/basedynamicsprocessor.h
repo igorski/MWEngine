@@ -27,6 +27,7 @@
 #ifndef __MWENGINE_BASE_DYNAMICSPROCESSOR_H__
 #define __MWENGINE_BASE_DYNAMICSPROCESSOR_H__
 
+#include "baseprocessor.h"
 #include <algorithm>
 #include <cmath>
 
@@ -59,7 +60,7 @@ class EnvelopeDetector
         void cacheCoefficient();
 };
 
-class BaseDynamicsProcessor
+class BaseDynamicsProcessor : public BaseProcessor
 {
     public:
         BaseDynamicsProcessor( float attackInMs = 10.0, float releaseInMs = 100.0, int sampleRate = 44100 );
