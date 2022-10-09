@@ -50,7 +50,7 @@ class Flanger : public BaseProcessor
         Flanger();
         ~Flanger();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Flanger" );
         }
 

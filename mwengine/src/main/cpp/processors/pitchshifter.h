@@ -63,7 +63,7 @@ class PitchShifter : public BaseProcessor
         PitchShifter( float shiftAmount, long osampAmount );
         ~PitchShifter();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "PitchShifter" );
         }
 

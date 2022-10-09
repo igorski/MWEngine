@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2015-2022 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -53,6 +53,7 @@ using namespace MWEngine;
 #include "modules/lfo_test.cpp"
 #include "processors/baseprocessor_test.cpp"
 #include "processors/bitcrusher_test.cpp"
+#include "processors/compressor_test.cpp"
 #include "processors/dcoffsetfilter_test.cpp"
 #include "processors/decimator_test.cpp"
 #include "processors/delay_test.cpp"
@@ -61,6 +62,7 @@ using namespace MWEngine;
 #include "processors/fm_test.cpp"
 #include "processors/formantfilter_test.cpp"
 #include "processors/gain_test.cpp"
+#include "processors/gate_test.cpp"
 #include "processors/glitcher_test.cpp"
 #include "processors/limiter_test.cpp"
 #include "processors/lowpassfilter_test.cpp"

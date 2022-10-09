@@ -34,7 +34,7 @@ class Filter : public BaseProcessor
         Filter();
         ~Filter();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Filter" );
         }
 

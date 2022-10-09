@@ -34,7 +34,7 @@ class Glitcher : public BaseProcessor
         Glitcher( int amountOfChannels, int fragmentLengthInMilliseconds );
         ~Glitcher();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Glitcher" );
         }
 

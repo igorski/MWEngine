@@ -19,7 +19,7 @@ TEST( AudioEngine, Start )
     controller->prepare( 240, 4, 4 );
 
     // mono output with 48 kHz sample rate and buffer size of 240 samples
-    AudioEngine::setup( 240, 48000, 1 );
+    AudioEngine::setup( 240, 48000, 1, 0 );
 
     MockData::engine_started = false;
 
@@ -50,7 +50,7 @@ TEST( AudioEngine, TempoUpdate )
     controller->prepare( 240, 4, 4 );
 
     // mono output with 48 kHz sample rate and buffer size of 240 samples
-    AudioEngine::setup( 240, 48000, 1 );
+    AudioEngine::setup( 240, 48000, 1, 0 );
     // define a custom loop range (rather than full 0 - end)
     AudioEngine::min_buffer_position = randomInt( 24, 5512 );
     AudioEngine::max_buffer_position = randomInt( 11025, 22050 );
@@ -137,7 +137,7 @@ TEST( AudioEngine, Output )
     controller->prepare( 1340, 4, 4 );
 
     // stereo output at 48 kHz sample rate and buffer size of 16 samples
-    AudioEngine::setup( 16, 48000, 2 );
+    AudioEngine::setup( 16, 48000, 2, 0 );
 
     controller->setTempoNow( 130.0f, 4, 4 );
     controller->rewind();
@@ -244,7 +244,7 @@ TEST( AudioEngine, OutputAtLoopStart )
     controller->prepare( 120, 4, 4 );
 
     // mono output with 44.1 kHz sample rate and buffer size of 11025 samples
-    AudioEngine::setup( 11025, 44100, 1 );
+    AudioEngine::setup( 11025, 44100, 1, 0 );
 
     controller->setTempoNow( 120.0f, 4, 4 );
     controller->rewind();

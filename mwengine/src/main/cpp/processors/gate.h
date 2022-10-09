@@ -36,7 +36,7 @@ class Gate : public BaseDynamicsProcessor
         Gate();
         ~Gate();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Gate" );
         }
 
@@ -58,13 +58,13 @@ class Gate : public BaseDynamicsProcessor
         float _thresholdLinear;
         float _overThreshEnvLinear;
 
-        inline void processInternal( SAMPLE_TYPE &in1, SAMPLE_TYPE &in2 )
+        inline void processInternal( SAMPLE_TYPE &left, SAMPLE_TYPE &right )
         {
             // create sidechain
-            SAMPLE_TYPE rect1 = fabs( in1 );
-            SAMPLE_TYPE rect2 = fabs( in2 );
+            SAMPLE_TYPE rectLeft  = fabs( left );
+            SAMPLE_TYPE rectRight = fabs( right );
 
-            SAMPLE_TYPE keyLinked = fabs( std::max( rect1, rect2 )); // link channels with greater of 2, and rectify
+            SAMPLE_TYPE keyLinked = fabs( std::max( rectLeft, rectRight )); // link channels with greater of 2, and rectify
 
             SAMPLE_TYPE keyOverThresh = SAMPLE_TYPE( keyLinked > _thresholdLinear );
 
@@ -73,8 +73,8 @@ class Gate : public BaseDynamicsProcessor
             keyOverThresh = _overThreshEnvLinear - DC_OFFSET;
 
             // apply gain reduction
-            in1 *= keyOverThresh;
-            in2 *= keyOverThresh;
+            left  *= keyOverThresh;
+            right *= keyOverThresh;
         }
 };
 } // E.O. namespace MWEngine

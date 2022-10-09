@@ -31,7 +31,7 @@ class WaveShaper : public BaseProcessor
     public:
         WaveShaper( float amount, float level );
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "WaveShaper" );
         }
 

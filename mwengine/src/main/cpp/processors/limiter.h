@@ -52,7 +52,7 @@ class Limiter : public BaseProcessor
         Limiter( float attackNormalized, float releaseNormalized, float thresholdNormalized );
         ~Limiter();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Limiter" );
         }
 

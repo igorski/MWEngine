@@ -33,7 +33,7 @@ class LPFHPFilter : public BaseProcessor
         LPFHPFilter( float aLPCutoff, float aHPCutoff, int amountOfChannels );
         ~LPFHPFilter();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "LPFHPFilter" );
         }
 

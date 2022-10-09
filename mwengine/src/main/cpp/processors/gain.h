@@ -37,7 +37,7 @@ class Gain : public BaseProcessor
         Gain( float amount );
         ~Gain();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Gain" );
         }
 

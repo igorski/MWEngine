@@ -34,7 +34,7 @@ class DCOffsetFilter : public BaseProcessor
         DCOffsetFilter( int amountOfChannels );
         ~DCOffsetFilter();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "DCOffsetFilter" );
         }
 

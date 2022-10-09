@@ -45,7 +45,7 @@ public final class MWEngine
     public interface IObserver
     {
         /**
-         * invoked whenever the engine broadcasts a notification
+         * invoked whenever the native layer of the engine broadcasts a notification
          * @param aNotificationId {int} unique identifier for the notification
          *
          * supported notification identifiers (see notifications.h):
@@ -59,7 +59,7 @@ public final class MWEngine
         void handleNotification( int aNotificationId );
 
         /**
-         * invoked whenever the engine broadcasts a notification
+         * invoked whenever the native layer of the engine broadcasts a notification
          *
          * @param aNotificationId {int} unique identifier for the notification
          * @param aNotificationValue {int} payload for the notification
@@ -78,7 +78,7 @@ public final class MWEngine
     }
 
     private static MWEngine INSTANCE; // we only allow a single instance to be constructed for resource optimization
-    private IObserver       _observer;
+    private IObserver _observer;
 
     private SequencerController _sequencerController;
 
@@ -169,7 +169,7 @@ public final class MWEngine
             BS_CHECK = (( AudioManager ) context.getSystemService( Context.AUDIO_SERVICE )).getProperty( AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER );
         }
         return ( BS_CHECK != null ) ? Integer.parseInt( BS_CHECK ) : AudioTrack.getMinBufferSize(
-                getRecommendedSampleRate( context ), AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT
+            getRecommendedSampleRate( context ), AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT
         );
     }
 

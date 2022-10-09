@@ -34,7 +34,7 @@ class Reverb : public BaseProcessor {
         Reverb( float size, float hfDamp, float mix, float output );
         ~Reverb();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Reverb" );
         }
 

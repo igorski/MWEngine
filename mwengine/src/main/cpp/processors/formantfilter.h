@@ -33,7 +33,7 @@ class FormantFilter : public BaseProcessor
         FormantFilter( double aVowel );
         ~FormantFilter();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "FormantFilter" );
         }
 

@@ -48,9 +48,12 @@ class EnvelopeDetector
             return _sampleRate;
         }
 
+#ifndef SWIG
+        // internal to the engine
         inline void run( float in, float &state ) {
             state = in + _coefficient * ( state - in );
         }
+#endif
 
     protected:
         float _sampleRate;
@@ -81,6 +84,8 @@ class BaseDynamicsProcessor : public BaseProcessor
         }
         virtual void setSampleRate( int sampleRate );
 
+#ifndef SWIG
+        // internal to the engine
         inline void run( float in, float &state ) {
             if ( in > state ) {
                 _attackEnvelope.run( in, state ); // attack phase
@@ -88,6 +93,7 @@ class BaseDynamicsProcessor : public BaseProcessor
                 _releaseEnvelope.run( in, state ); // release phase
             }
         }
+#endif
 
     private:
         EnvelopeDetector _attackEnvelope;

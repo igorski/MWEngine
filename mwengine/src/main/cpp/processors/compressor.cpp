@@ -47,12 +47,12 @@ Compressor::~Compressor()
 
 void Compressor::setThreshold( float dB )
 {
-    _thresholdDb = dB;
+    _thresholdDb = std::max( MIN_THRESHOLD_VALUE, std::min( MAX_THRESHOLD_VALUE, dB ));
 }
 
 void Compressor::setRatio( float ratio )
 {
-    _ratio = ratio;
+    _ratio = std::max( 0.f, ratio );
 }
 
 /* public methods */

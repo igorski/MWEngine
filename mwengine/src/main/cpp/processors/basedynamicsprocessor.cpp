@@ -31,13 +31,12 @@ namespace MWEngine {
 EnvelopeDetector::EnvelopeDetector( float ms, float sampleRate )
 {
     _sampleRate = sampleRate;
-    _timeConstant = ms;
-    cacheCoefficient();
+    setTimeConstant( ms );
 }
 
 void EnvelopeDetector::setTimeConstant( float ms )
 {
-    _timeConstant = ms;
+    _timeConstant = std::max( 0.f, ms );
     cacheCoefficient();
 }
 
@@ -49,7 +48,7 @@ void EnvelopeDetector::setSampleRate( float sampleRate )
 
 void EnvelopeDetector::cacheCoefficient()
 {
-    _coefficient = exp( -1000.0 / ( _timeConstant * _sampleRate ) );
+    _coefficient = exp( -1000.f / ( _timeConstant * _sampleRate ) );
 }
 
 BaseDynamicsProcessor::BaseDynamicsProcessor( float attackInMs, float releaseInMs, int sampleRate )

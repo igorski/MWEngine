@@ -34,16 +34,23 @@ namespace MWEngine {
 class Compressor : public BaseDynamicsProcessor
 {
     public:
+        static constexpr float MIN_THRESHOLD_VALUE = -40.f;
+        static constexpr float MAX_THRESHOLD_VALUE = 20.f;
+
         Compressor();
         ~Compressor();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Compressor" );
         }
 
-        float getThresh() const {
+        float getThreshold() const {
             return _thresholdDb;
         }
+        /**
+         * In THRESHOLD_MAX_NEGATIVE_VALUE to THRESHOLD_MAX_POSITIVE_VALUE range
+         * When smaller than 1, signal is compressed. When larger than 1, signal is expanded.
+         */
         void setThreshold( float dB );
 
         float getRatio() const {
@@ -54,6 +61,7 @@ class Compressor : public BaseDynamicsProcessor
         void init();
 
 #ifndef SWIG
+        // internal to the engine
         void process( AudioBuffer* sampleBuffer, bool isMonoSource );
         bool isCacheable();
 #endif
@@ -61,15 +69,15 @@ class Compressor : public BaseDynamicsProcessor
     private:
         float _thresholdDb;
         float _overThreshEnvDb;
-        float _ratio; // ratio (compression: < 1 ; expansion: > 1)
+        float _ratio;
 
-        inline void processInternal( SAMPLE_TYPE &in1, SAMPLE_TYPE &in2 )
+        inline void processInternal( SAMPLE_TYPE &left, SAMPLE_TYPE &right )
         {
             // create sidechain
-            SAMPLE_TYPE rect1 = fabs( in1 );
-            SAMPLE_TYPE rect2 = fabs( in2 );
+            SAMPLE_TYPE rectLeft  = fabs( left );
+            SAMPLE_TYPE rectRight = fabs( right );
 
-            SAMPLE_TYPE keyLinked = fabs( std::max( rect1, rect2 ));
+            SAMPLE_TYPE keyLinked = fabs( std::max( rectLeft, rectRight ));
 
             // key to dB
             keyLinked += DC_OFFSET;
@@ -90,8 +98,8 @@ class Compressor : public BaseDynamicsProcessor
             gain = dB2lin( gain );
 
             // output gain
-            in1 *= gain;
-            in2 *= gain;
+            left  *= gain;
+            right *= gain;
         }
 };
 } // E.O. namespace MWEngine

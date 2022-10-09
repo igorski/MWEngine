@@ -31,7 +31,7 @@ class Decimator : public BaseProcessor
     public:
         Decimator( int bits, float rate );
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Decimator" );
         }
 

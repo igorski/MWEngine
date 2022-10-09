@@ -50,7 +50,7 @@ class Tremolo : public BaseProcessor
 
         ~Tremolo();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "Tremolo" );
         }
 

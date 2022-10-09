@@ -35,7 +35,7 @@ class LowPassFilter : public BaseProcessor
         LowPassFilter( float cutoff );
         ~LowPassFilter();
 
-        std::string getType() {
+        std::string getType() const {
             return std::string( "LowPassFilter" );
         }
 
