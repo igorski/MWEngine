@@ -39,12 +39,12 @@ class EnvelopeDetector
         ~EnvelopeDetector() {}
 
         void setTimeConstant( float ms );
-        float getTimeConstant( void ) const {
+        float getTimeConstant() const {
             return _timeConstant;
         }
 
         void setSampleRate( float sampleRate );
-        float getSampleRate( void ) const {
+        float getSampleRate() const {
             return _sampleRate;
         }
 
