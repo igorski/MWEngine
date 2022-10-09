@@ -70,6 +70,27 @@ BaseSynthEvent::~BaseSynthEvent()
 
 /* public methods */
 
+void BaseSynthEvent::setSequencePosition( int positionInSequencerSteps )
+{
+    _position = positionInSequencerSteps;
+    setEventStart( positionInSequencerSteps * AudioEngine::samples_per_step );
+}
+
+int BaseSynthEvent::getSequencePosition()
+{
+    return _position;
+}
+void BaseSynthEvent::setSequenceDuration( float durationInSequencerSteps )
+{
+    _duration = durationInSequencerSteps;
+    setEventLength(( int )( durationInSequencerSteps * AudioEngine::samples_per_step ));
+}
+
+float BaseSynthEvent::getSequenceDuration()
+{
+    return _duration;
+}
+
 void BaseSynthEvent::play()
 {
     released = false;
@@ -380,11 +401,11 @@ ResizableAudioBuffer* BaseSynthEvent::getEmptyTempBuffer( int bufferSize )
  * @param aInstrument pointer to the SynthInstrument containing the rendering properties for the BaseSynthEvent
  * @param aFrequency  frequency in Hz for the note to be rendered
  * @param aPosition   offset in the sequencer where this event starts playing / becomes audible
- * @param aLength     length of the event (in sequencer steps)
+ * @param aDuration   duration of the event (in sequencer steps)
  * @param isSequenced whether this event is sequenced and only audible in a specific sequence range
  */
 void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
-                           int aPosition, float aLength, bool isSequenced )
+                           int aPosition, float aDuration, bool isSequenced )
 {
     BaseAudioEvent::init();
 
@@ -392,8 +413,6 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     _destroyableBuffer = true;  // synth event buffer is always unique and managed by this instance !
     _instrument        = aInstrument;
 
-    position = aPosition;
-    length   = aLength;
     released = false;
 
     cachedProps.envelopeOffset   = 0;
@@ -410,12 +429,12 @@ void BaseSynthEvent::init( SynthInstrument* aInstrument, float aFrequency,
     this->isSequenced     = isSequenced;
     _shouldEnqueueRemoval = false;
     _removalEnqueued      = false;
-    _hasMinLength         = isSequenced; // a sequenced event has no "early cancel"
+    _hasMinLength         = isSequenced; // a sequenced synth event has no "early cancel"
     _eventLength          = 0;
     lastWriteIndex        = 0;
 
-    setEventStart( position * AudioEngine::samples_per_step );
-    setEventLength(( int )( length * AudioEngine::samples_per_step ));
+    setSequencePosition( aPosition );
+    setSequenceDuration( aDuration );
     setFrequency( aFrequency );
 
     updateProperties();

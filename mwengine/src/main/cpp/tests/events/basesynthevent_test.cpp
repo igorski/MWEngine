@@ -23,9 +23,9 @@ TEST( BaseSynthEvent, InstanceId )
     delete instrument;
 }
 
-TEST( BaseSynthEvent, GettersSetters )
+TEST( BaseSynthEvent, GettersSettersFrequency )
 {
-    float frequency             = randomFloat() * 4000.f;
+    float frequency             = 440.f;
     SynthInstrument* instrument = new SynthInstrument();
     BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, instrument );
 
@@ -34,7 +34,7 @@ TEST( BaseSynthEvent, GettersSetters )
     EXPECT_EQ( frequency, audioEvent->getFrequency() )
         << "expected frequency to be equal to the value passed in the setter method";
 
-    frequency = randomFloat() * 4000.f;
+    frequency = 660.f;
 
     audioEvent->setFrequency( frequency, true );
 
@@ -103,23 +103,55 @@ TEST( BaseSynthEvent, SequencedEvent )
     float frequency             = randomFloat() * 4000.f;
     SynthInstrument* instrument = new SynthInstrument();
     int position                = randomInt( 0, 15 );
-    float length                = randomFloat() * 16.f;
-    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, position, length, instrument );
+    float duration              = randomFloat() * 16.f;
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( frequency, position, duration, instrument );
 
     ASSERT_TRUE( audioEvent->isSequenced )
         << "expected BaseSynthEvent to be sequenced for this constructor";
 
-    EXPECT_EQ( position, audioEvent->position )
+    EXPECT_EQ( position, audioEvent->getSequencePosition() )
         << "expected position to equal the value passed in the constructor";
 
-    EXPECT_EQ( length, audioEvent->length )
+    EXPECT_EQ( duration, audioEvent->getSequenceDuration() )
         << "expected length to equal the value passed in the constructor";
 
-    EXPECT_EQ( position * AudioEngine::samples_per_step, audioEvent->getEventStart() )
-        << "expected event start position in samples to have been calculated from the given position in the constructor";
+    delete audioEvent;
+    delete instrument;
+}
 
-    EXPECT_EQ( ( int ) ( length * AudioEngine::samples_per_step ), audioEvent->getEventLength() )
-        << "expected event length in samples to have been calculated from the given length in the constructor";
+TEST( BaseSynthEvent, SetSequencePosition )
+{
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( randomFloat(), 0, 1.0f, instrument );
+
+    int position = randomInt( 1, 32 );
+
+    audioEvent->setSequencePosition( position );
+
+    EXPECT_EQ( position, audioEvent->getSequencePosition() )
+        << "expected position to equal the value passed in the setter";
+
+    EXPECT_EQ( position * AudioEngine::samples_per_step, audioEvent->getEventStart() )
+        << "expected event start position in samples to have been calculated from the given position in the setter";
+
+    delete audioEvent;
+    delete instrument;
+}
+
+TEST( BaseSynthEvent, SetSequenceDuration )
+{
+    SynthInstrument* instrument = new SynthInstrument();
+    BaseSynthEvent* audioEvent  = new BaseSynthEvent( randomFloat(), 0, 1.0f, instrument );
+
+    float duration = randomFloat() * 32;
+
+    audioEvent->setSequenceDuration( duration );
+
+    EXPECT_EQ( duration, audioEvent->getSequenceDuration() )
+        << "expected duration to equal the value passed in the setter";
+
+    EXPECT_EQ( ( int ) ( duration * AudioEngine::samples_per_step ), audioEvent->getEventLength() )
+        << "expected event length in samples to have been calculated from the given length in the setter";
 
     delete audioEvent;
     delete instrument;

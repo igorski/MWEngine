@@ -48,9 +48,8 @@ typedef struct
 } CachedProperties;
 
 /**
- * a SynthEvent describes an AudioEvent that can render
- * its audio when needed, it should basically combine rendering logic
- * into the basic AudioEvent interface
+ * a SynthEvent describes an AudioEvent that renders its audio at runtime, by
+ * hooking into the associated (Synth)Instruments Synthesizer
  */
 class BaseSynthEvent : public BaseAudioEvent
 {
@@ -65,10 +64,15 @@ class BaseSynthEvent : public BaseAudioEvent
         unsigned int instanceId;
 
         // sequencer related properties
-        int position;
-        float length;
-        bool released;
+        void setSequencePosition( int positionInSequencerSteps );
+        int getSequencePosition();
+        void setSequenceDuration( float durationInSequencerSteps );
+        float getSequenceDuration();
 
+#ifndef SWIG
+        // internal to the engine
+        bool released;
+#endif
         void play();
         void stop();
 
@@ -122,6 +126,11 @@ class BaseSynthEvent : public BaseAudioEvent
         int _minLength;
         bool _hasMinLength;
         bool _shouldEnqueueRemoval;
+
+        // properties for sequenced synthesis
+
+        int _position;
+        float _duration;
 
         // gets the instrument rendering this event, typecast to its subclass
         SynthInstrument* getSynthInstrument();
