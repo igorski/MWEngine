@@ -257,6 +257,7 @@ public final class MWEngine
     /**
      * @deprecated use startOutputRecording|stopOutputRecording instead
      */
+    @Deprecated
     public void setRecordingState( boolean recordingActive, String outputFile ) {
         if ( recordingActive )
             startOutputRecording( outputFile );
@@ -285,6 +286,7 @@ public final class MWEngine
     /**
      * @deprecated use startBouncing|stopBouncing instead
      */
+    @Deprecated
     public void setBouncing( boolean value, String outputFile ) {
         if ( value )
             startBouncing( outputFile );
@@ -295,6 +297,7 @@ public final class MWEngine
     /**
      * @deprecated use startBouncing|stopBouncing instead
      */
+    @Deprecated
     public void setBouncing( boolean value, String outputFile, int rangeStart, int rangeEnd ) {
         if ( value )
             startBouncing( outputFile, rangeStart, rangeEnd );
@@ -317,6 +320,7 @@ public final class MWEngine
     /**
      * @deprecated use startInputRecording|stopInputRecording instead
      */
+    @Deprecated
     public void setRecordFromDeviceInputState( boolean recordingActive, String outputFile, int maxDurationInMilliSeconds ) {
         if ( recordingActive )
             startInputRecording( outputFile, false );
