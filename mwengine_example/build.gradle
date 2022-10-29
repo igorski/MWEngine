@@ -42,7 +42,7 @@ android {
         // to prevent UnsatisfiedLinkError when this app tries to serve an unsupported architecture
 
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
     }
     if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
