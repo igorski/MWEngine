@@ -37,9 +37,7 @@ BaseInstrument::BaseInstrument()
 
 BaseInstrument::~BaseInstrument()
 {
-    unregisterFromSequencer();
-    clearEvents();
-    clearMeasureCache();
+    dispose();
 
     delete audioChannel;
     delete _audioEvents;
@@ -51,6 +49,13 @@ BaseInstrument::~BaseInstrument()
 }
 
 /* public methods */
+
+void BaseInstrument::dispose()
+{
+    unregisterFromSequencer();
+    clearEvents();
+    clearMeasureCache();
+}
 
 bool BaseInstrument::hasEvents()
 {

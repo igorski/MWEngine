@@ -9,11 +9,13 @@
     <string name="app_live_input_help">You can add new audio on the fly too: hold down the first button to play a C
         note or hold down the second button to record audio from your Android device input (tip: use headphones to prevent
         feedback occurring when using the microphone on your phone at louder volume settings)</string>
+    <string name="switch_pattern_help">You can switch up the bass pattern by clicking the button below. One plays the "official" MWEngine loop and the other E1M1 by Bobby Prince, or whoever inspired him.</string>
     <string name="driver">Audio driver</string>
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>
     <string name="live_btn">C note</string>
     <string name="live_sample_btn">Clap</string>
+    <string name="switch_pattern">Pattern switch</string>
     <string name="rec_input_btn">Record mic</string>
     <string name="rec_btn_on">Start recording</string>
     <string name="rec_btn_off">Stop recording</string>

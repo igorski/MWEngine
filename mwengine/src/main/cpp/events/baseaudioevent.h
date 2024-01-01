@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -34,6 +34,8 @@ class BaseAudioEvent
         BaseAudioEvent( BaseInstrument* instrument );
         BaseAudioEvent();
         virtual ~BaseAudioEvent();
+
+        void dispose(); // invoke when removing the Event from the engine
 
         /**
          * event volume is in a percentile (0 - 1) range

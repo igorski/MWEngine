@@ -207,10 +207,11 @@ namespace MWEngine {
         AudioEngineProps::isRendering.store( false );
         threadOptimized = false;
 
-        if ( thread != nullptr ) {
+        if ( thread != nullptr && thread->joinable() ) {
             thread->join();
-            thread = nullptr;
         }
+        thread = nullptr;
+
         Debug::log( "AudioEngine::STOPPED engine" );
 
         DriverAdapter::destroy();

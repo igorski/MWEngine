@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,6 +32,8 @@ class BaseInstrument
     public:
         BaseInstrument();
         virtual ~BaseInstrument();
+
+        void dispose(); // invoke when removing the Instrument from the engine
 
         virtual bool hasEvents();     // whether the instrument has events to sequence
         virtual bool hasLiveEvents(); // whether the instruments has events to synthesize on the fly

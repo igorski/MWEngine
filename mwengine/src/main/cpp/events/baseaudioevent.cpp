@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -47,11 +47,16 @@ BaseAudioEvent::BaseAudioEvent( BaseInstrument* instrument )
 
 BaseAudioEvent::~BaseAudioEvent()
 {
-    removeFromSequencer();
-    destroyBuffer();
+    dispose();
 }
 
 /* public methods */
+
+void BaseAudioEvent::dispose()
+{
+    removeFromSequencer();
+    destroyBuffer();
+}
 
 BaseInstrument* BaseAudioEvent::getInstrument()
 {

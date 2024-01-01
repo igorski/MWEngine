@@ -20,7 +20,6 @@ import android.widget.Spinner;
 
 import nl.igorski.mwengine.MWEngine;
 import nl.igorski.mwengine.core.*;
-
 import java.util.Vector;
 
 public final class MWEngineActivity extends AppCompatActivity {
@@ -64,6 +63,24 @@ public final class MWEngineActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "MWENGINE"; // logcat identifier
     private static final int PERMISSIONS_CODE = 8081981;
+
+    // we manage two different bass patterns to demonstrate changing sequenced events at runtime
+
+    private int _patternIndex = 0;
+
+    private final double[] _pattern1 = new double[]{
+        Pitch.note( "C", 2 ), Pitch.note( "C", 2 ), Pitch.note( "C", 3 ), Pitch.note( "C", 2 ),
+        Pitch.note( "A#", 1 ), Pitch.note( "C", 2 ), Pitch.note( "C", 3 ), Pitch.note( "C", 2 ),
+        Pitch.note( "C", 2 ), Pitch.note( "C", 2 ), Pitch.note( "D#", 3 ), Pitch.note( "C", 2 ),
+        Pitch.note( "A#", 1 ), Pitch.note( "A#", 2 ), Pitch.note( "C", 2 ), Pitch.note( "C", 2 )
+    };
+
+    private final double[] _pattern2 = new double[]{
+        Pitch.note( "C", 2 ), Pitch.note( "C", 2 ), Pitch.note( "C", 3 ), Pitch.note( "C", 2 ),
+        Pitch.note( "C", 2 ), Pitch.note( "A#", 2 ), Pitch.note( "C", 2 ), Pitch.note( "C", 2 ),
+        Pitch.note( "G#", 2 ), Pitch.note( "C", 2 ), Pitch.note( "C", 2 ), Pitch.note( "G", 2 ),
+        Pitch.note( "C", 2 ), Pitch.note( "C", 2 ), Pitch.note( "F#", 2 ), Pitch.note( "G", 2 )
+    };
 
     /* public methods */
 
@@ -173,11 +190,52 @@ public final class MWEngineActivity extends AppCompatActivity {
 
         // STEP 4 : attach event handlers to the UI elements (see main.xml layout)
 
-        findViewById( R.id.PlayPauseButton ).setOnClickListener( new PlayClickHandler() );
-        findViewById( R.id.RecordButton ).setOnClickListener( new RecordOutputHandler() );
-        findViewById( R.id.LiveNoteButton ).setOnTouchListener( new LiveNoteHandler() );
-        findViewById( R.id.LiveSampleButton ).setOnTouchListener( new LiveSampleHandler() );
-        findViewById( R.id.RecordInputButton ).setOnTouchListener( new RecordInputHandler() );
+        findViewById( R.id.PlayPauseButton ).setOnClickListener(( View v ) -> {
+            _sequencerPlaying = !_sequencerPlaying;
+            _engine.getSequencerController().setPlaying( _sequencerPlaying );
+            (( Button ) v ).setText( _sequencerPlaying ? R.string.pause_btn : R.string.play_btn );
+        });
+        findViewById( R.id.RecordButton ).setOnClickListener(( View v ) -> {
+            _isRecording = !_isRecording;
+            if ( _isRecording )
+                _engine.startOutputRecording( Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav" );
+            else
+                _engine.stopOutputRecording();
+            (( Button ) v ).setText( _isRecording ? R.string.rec_btn_off : R.string.rec_btn_on );
+        });
+        findViewById( R.id.LiveNoteButton ).setOnTouchListener(( View v, MotionEvent event ) -> {
+            switch( event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    _liveEvent.play();
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    _liveEvent.stop(); // event will start release phase of the synthesized note
+                    return true;
+            }
+            return false;
+        });
+        findViewById( R.id.LiveSampleButton ).setOnTouchListener(( View v, MotionEvent event ) -> {
+            if ( event.getAction() == MotionEvent.ACTION_DOWN ) {
+                _liveClapEvent.play(); // event will .stop() after playing sample in full
+                return true;
+            }
+            return false;
+        });
+        findViewById( R.id.PatternSwitchButton ).setOnClickListener(( View v ) -> {
+            _patternIndex = _patternIndex == 0 ? 1 : 0;
+            createBassPattern();
+        });
+        findViewById( R.id.RecordInputButton ).setOnTouchListener(( View v, MotionEvent event ) -> {
+            switch( event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    _engine.recordInput( true );
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    _engine.recordInput( false );
+                    return true;
+            }
+            return false;
+        });
 
         (( SeekBar ) findViewById( R.id.FilterCutoffSlider )).setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
         (( SeekBar ) findViewById( R.id.SynthDecaySlider )).setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
@@ -267,23 +325,7 @@ public final class MWEngineActivity extends AppCompatActivity {
         // Real-time synthesis events
 
         // bubbly sixteenth note bass line for synth 1
-
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
-        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
+        createBassPattern();
 
         // Off-beat minor seventh chord stabs for synth 2
 
@@ -311,17 +353,16 @@ public final class MWEngineActivity extends AppCompatActivity {
 
         _engine.stop();
 
-        // calling 'delete()' on a BaseAudioEvent invokes the
-        // native layer destructor (also removes it from the Sequencer)
+        // remove events from Sequencer
 
         for ( final BaseAudioEvent event : _synth1Events )
-            event.delete();
+            event.dispose();
         for ( final BaseAudioEvent event : _synth2Events )
-            event.delete();
+            event.dispose();
         for ( final BaseAudioEvent event : _drumEvents )
-            event.delete();
+            event.dispose();
 
-        // clear Vectors so all references to the events are broken
+        // clear Vectors so all references to the events are broken (and can be garbage collected)
 
         _synth1Events.clear();
         _synth2Events.clear();
@@ -331,14 +372,14 @@ public final class MWEngineActivity extends AppCompatActivity {
 
         _engine.getMasterBusProcessors().reset();
 
-        // calling 'delete()' on all instruments invokes the native layer destructor
-        // (and frees memory allocated to their resources, e.g. AudioChannels, Processors)
+        // unregister the instruments from the song
 
-        _synth1.delete();
-        _synth2.delete();
-        _sampler.delete();
+        _synth1.dispose();
+        _synth2.dispose();
+        _sampler.dispose();
 
-        // allow these to be garbage collected
+        // allow these to be garbage collected (will call the native layer destructor to free
+        // memory allocated to their resources (e.g. AudioChannels, Processors)
 
         _synth1  = null;
         _synth2  = null;
@@ -384,68 +425,6 @@ public final class MWEngineActivity extends AppCompatActivity {
         }
         @Override
         public void onNothingSelected(AdapterView<?> arg0) {}
-    }
-
-    private class PlayClickHandler implements View.OnClickListener {
-        public void onClick( View v ) {
-            _sequencerPlaying = !_sequencerPlaying;
-            _engine.getSequencerController().setPlaying( _sequencerPlaying );
-            (( Button ) v ).setText( _sequencerPlaying ? R.string.pause_btn : R.string.play_btn );
-        }
-    }
-
-    private class RecordOutputHandler implements View.OnClickListener {
-        @Override
-        public void onClick( View v ) {
-            _isRecording = !_isRecording;
-            if ( _isRecording )
-                _engine.startOutputRecording( Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/mwengine_output.wav" );
-            else
-                _engine.stopOutputRecording();
-            (( Button ) v ).setText( _isRecording ? R.string.rec_btn_off : R.string.rec_btn_on );
-        }
-    }
-
-    private class LiveNoteHandler implements View.OnTouchListener {
-        @Override
-        public boolean onTouch( View v, MotionEvent event ) {
-            switch( event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    _liveEvent.play();
-                    return true;
-                case MotionEvent.ACTION_UP:
-                    _liveEvent.stop(); // event will start release phase of the synthesized note
-                    return true;
-            }
-            return false;
-        }
-    }
-
-    private class LiveSampleHandler implements View.OnTouchListener {
-        @Override
-        public boolean onTouch( View v, MotionEvent event ) {
-            switch( event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    _liveClapEvent.play(); // event will .stop() after playing sample in full
-                    return true;
-            }
-            return false;
-        }
-    }
-
-    private class RecordInputHandler implements View.OnTouchListener {
-        @Override
-        public boolean onTouch( View v, MotionEvent event ) {
-            switch( event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    _engine.recordInput( true );
-                    return true;
-                case MotionEvent.ACTION_UP:
-                    _engine.recordInput( false );
-                    return true;
-            }
-            return false;
-        }
     }
 
     private class FilterCutOffChangeHandler implements SeekBar.OnSeekBarChangeListener {
@@ -537,11 +516,9 @@ public final class MWEngineActivity extends AppCompatActivity {
                     // Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue + ", elapsed samples: " + elapsedSamples );
                     break;
                 case RECORDED_SNIPPET_READY:
-                    runOnUiThread( new Runnable() {
-                        public void run() {
-                            // we run the saving (I/O operations) on a different thread to prevent buffer under runs while rendering audio
-                            _engine.saveRecordedSnippet( aNotificationValue ); // notification value == snippet buffer index
-                        }
+                    runOnUiThread(() -> {
+                        // we run the saving (I/O operations) on a different thread to prevent buffer under runs while rendering audio
+                        _engine.saveRecordedSnippet( aNotificationValue ); // notification value == snippet buffer index
                     });
                     break;
                 case RECORDED_SNIPPET_SAVED:
@@ -571,6 +548,19 @@ public final class MWEngineActivity extends AppCompatActivity {
             _synth1Events.add( event );
         else
             _synth2Events.add( event );
+    }
+
+    private void createBassPattern() {
+        // clear any existing patterns (when switching)
+        for ( final SynthEvent event : _synth1Events ) {
+            event.dispose();
+        }
+        _synth1Events.clear(); // clear the old events so they can be garbage collected
+        // create notes for the active pattern
+        double[] notes = _patternIndex == 0 ? _pattern1 : _pattern2;
+        for ( int i = 0; i < notes.length; ++i ) {
+            createSynthEvent( _synth1, notes[ i ], i );
+        }
     }
 
     /**
