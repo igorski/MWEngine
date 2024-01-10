@@ -175,6 +175,9 @@ bool BaseInstrument::removeEvent( BaseAudioEvent* audioEvent, bool isLiveEvent )
             removeEventFromMeasureCache( audioEvent );
         }
     }
+    if ( removed ) {
+        audioEvent->onRemove();
+    }
     return removed;
 }
 

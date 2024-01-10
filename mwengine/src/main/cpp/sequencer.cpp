@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -45,6 +45,7 @@ int Sequencer::registerInstrument( BaseInstrument* instrument )
     for ( auto const & i : instruments ) {
         if ( i == instrument ) {
             wasPresent = true;
+            break;
         }
     }
 
@@ -112,9 +113,9 @@ bool Sequencer::getAudioEvents( std::vector<AudioChannel*>* channels, int buffer
                 }
             }
 
-            if ( addLiveInstruments && instrument->hasLiveEvents() )
+            if ( addLiveInstruments && instrument->hasLiveEvents() ) {
                 collectLiveEvents( instrument );
-
+            }
             channels->push_back( instrumentChannel );
         }
     }
@@ -133,7 +134,6 @@ void Sequencer::collectSequencedEvents( BaseInstrument* instrument, int bufferPo
     if ( !instrument->hasEvents() ) {
         return;
     }
-
     AudioChannel* channel = instrument->audioChannel;
 
     auto audioEvents = instrument->getEventsForMeasure( measure );

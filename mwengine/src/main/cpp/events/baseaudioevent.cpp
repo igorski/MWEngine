@@ -54,8 +54,15 @@ BaseAudioEvent::~BaseAudioEvent()
 
 void BaseAudioEvent::dispose()
 {
+    _disposed = true;
     removeFromSequencer();
-    destroyBuffer();
+}
+
+void BaseAudioEvent::onRemove()
+{
+    if ( _disposed ) {
+        destroyBuffer();
+    }
 }
 
 BaseInstrument* BaseAudioEvent::getInstrument()
