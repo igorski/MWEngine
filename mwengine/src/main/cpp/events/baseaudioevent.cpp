@@ -54,14 +54,15 @@ BaseAudioEvent::~BaseAudioEvent()
 
 void BaseAudioEvent::dispose()
 {
-    _disposed = true;
+    _disposed = true; // set the disposed flag as removal can be async when sequencer is running
+
     removeFromSequencer();
 }
 
 void BaseAudioEvent::onRemove()
 {
     if ( _disposed ) {
-        destroyBuffer();
+        destroyBuffer(); // if event was removed as part of disposal routine, clean the buffer now
     }
 }
 
