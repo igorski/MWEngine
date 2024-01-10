@@ -7,12 +7,13 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.3'
+        classpath 'com.android.tools.build:gradle:8.2.1'
     }
 }
 
 android {
-    compileSdkVersion 32
+    namespace 'nl.igorski.mwengine'
+    compileSdk 33
 
     defaultConfig {
         // NOTE: the value of minSdkVersion is used by the native build as the target APP_PLATFORM
@@ -22,7 +23,7 @@ android {
         // thus set the value of minSdkVersion to whatever fits your use case.
 
         minSdkVersion 16
-        targetSdkVersion 32
+        targetSdkVersion 33
 
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"

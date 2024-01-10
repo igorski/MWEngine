@@ -551,9 +551,10 @@ public final class MWEngineActivity extends AppCompatActivity {
         for ( final SampleEvent event : _drumEvents ) {
             event.dispose();
         }
+        _drumEvents.clear(); // clear the old events so they can be garbage collected
+        // depending on the pattern hi-hats occur on the off beats or every 16th note
         int start = _patternIndex == 0 ? 2 : 0;
         int incr  = _patternIndex == 0 ? 4 : 1;
-        // depending on the pattern hi-hats occur on the off beats or every 16th note
         for ( int i = start; i < 16; i += incr ) {
             createDrumEvent( "hat",  i );
         }
