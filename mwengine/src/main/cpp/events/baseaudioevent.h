@@ -35,7 +35,7 @@ class BaseAudioEvent
         BaseAudioEvent();
         virtual ~BaseAudioEvent();
 
-        void dispose();  // invoke when removing the Event from the engine
+        void dispose();  // invoke when removing the Event from the engine, should be done when ENGINE_IDLE is broadcast!
         void onRemove(); // invoked by the Instrument once the event has safely been removed
 
         /**

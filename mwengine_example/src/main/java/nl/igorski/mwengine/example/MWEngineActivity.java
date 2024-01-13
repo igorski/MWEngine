@@ -223,8 +223,12 @@ public final class MWEngineActivity extends AppCompatActivity {
         });
         findViewById( R.id.PatternSwitchButton ).setOnClickListener(( View v ) -> {
             _patternIndex = _patternIndex == 0 ? 1 : 0;
-            createDrumPattern();
-            createBassPattern();
+            // we allow to dispose events while the Sequencer is running, so we delay execution
+            // until the engine has notified that it is safe to do so (between render cycles)
+            _engine.executeWhenIdle(() -> {
+                createDrumPattern();
+                createBassPattern();
+            });
         });
         findViewById( R.id.RecordInputButton ).setOnTouchListener(( View v, MotionEvent event ) -> {
             switch( event.getAction()) {

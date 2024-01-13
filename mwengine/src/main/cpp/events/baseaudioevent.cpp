@@ -55,8 +55,13 @@ BaseAudioEvent::~BaseAudioEvent()
 void BaseAudioEvent::dispose()
 {
     _disposed = true; // set the disposed flag as removal can be async when sequencer is running
+    _enabled  = false;
 
-    removeFromSequencer();
+    if ( _instrument != nullptr && isSequenced ) {
+        _instrument->removeEvent( this, false );
+    } else {
+        stop();
+    }
 }
 
 void BaseAudioEvent::onRemove()
