@@ -223,8 +223,9 @@ public final class MWEngineActivity extends AppCompatActivity {
         });
         findViewById( R.id.PatternSwitchButton ).setOnClickListener(( View v ) -> {
             _patternIndex = _patternIndex == 0 ? 1 : 0;
-            // we allow to dispose events while the Sequencer is running, so we delay execution
-            // until the engine has notified that it is safe to do so (between render cycles)
+            // we allow users to dispose events while the Sequencer is running, as such we delay execution
+            // until the engine has notified that it has entered its idle phase between renders (meaning:
+            // it is safe to perform operations that potentially deallocate buffer memory)
             _engine.executeWhenIdle(() -> {
                 createDrumPattern();
                 createBassPattern();

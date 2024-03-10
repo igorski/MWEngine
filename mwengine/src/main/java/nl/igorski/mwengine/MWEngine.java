@@ -490,12 +490,11 @@ public final class MWEngine
 
     public static void handleNotification( int aNotificationId ) {
         if ( INSTANCE != null ) {
-            if ( ENGINE_IDLE_NOTIFICATION == aNotificationId && !INSTANCE._idleCallbacks.isEmpty() ) {
+            if ( ENGINE_IDLE_NOTIFICATION == aNotificationId ) {
                 for ( VoidInterface callback : INSTANCE._idleCallbacks ) {
                     callback.operation();
                 }
                 INSTANCE._idleCallbacks.clear();
-                return;
             }
             if ( INSTANCE._observer != null ) {
                 INSTANCE._observer.handleNotification( aNotificationId );
