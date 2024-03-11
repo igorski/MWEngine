@@ -223,7 +223,13 @@ public final class MWEngineActivity extends AppCompatActivity {
         });
         findViewById( R.id.PatternSwitchButton ).setOnClickListener(( View v ) -> {
             _patternIndex = _patternIndex == 0 ? 1 : 0;
-            createBassPattern();
+            // we allow users to dispose events while the Sequencer is running, as such we delay execution
+            // until the engine has notified that it has entered its idle phase between renders (meaning:
+            // it is safe to perform operations that potentially deallocate buffer memory)
+            _engine.executeWhenIdle(() -> {
+                createDrumPattern();
+                createBassPattern();
+            });
         });
         findViewById( R.id.RecordInputButton ).setOnTouchListener(( View v, MotionEvent event ) -> {
             switch( event.getAction()) {
@@ -315,12 +321,7 @@ public final class MWEngineActivity extends AppCompatActivity {
 
         // STEP 2 : Sample events to play back a drum beat
 
-        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
-        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
-        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
-        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
-        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumPattern();
 
         // Real-time synthesis events
 
@@ -548,6 +549,22 @@ public final class MWEngineActivity extends AppCompatActivity {
             _synth1Events.add( event );
         else
             _synth2Events.add( event );
+    }
+
+    private void createDrumPattern() {
+        // clear any existing patterns (when switching)
+        for ( final SampleEvent event : _drumEvents ) {
+            event.dispose();
+        }
+        _drumEvents.clear(); // clear the old events so they can be garbage collected
+        // depending on the pattern hi-hats occur on the off beats or every 16th note
+        int start = _patternIndex == 0 ? 2 : 0;
+        int incr  = _patternIndex == 0 ? 4 : 1;
+        for ( int i = start; i < 16; i += incr ) {
+            createDrumEvent( "hat",  i );
+        }
+        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
+        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
     }
 
     private void createBassPattern() {

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -49,6 +49,7 @@ class AudioEngine
         static void start( Drivers::types audioDriver );
         static void stop();
         static void reset();
+        static void notifyWhenIdle(); // request to be notified when engine reaches idle state after render (fires once per request)
 
         static AudioChannel* getInputChannel();
 
@@ -142,6 +143,8 @@ class AudioEngine
         static int marked_buffer_position; // the buffer position that should launch a notification when playback exceeds this position
         static int min_step_position;      // the lowest step in the current sequence
         static int max_step_position;      // the maximum step in the current sequence (e.g. 15 for single measure using a 16 step sequencer - step starts at 0.)
+
+        static bool broadcast_idle; // whether to broadcast a notification when the engine is entering idle phase after render
 
         /* buffer read/write pointers */
 

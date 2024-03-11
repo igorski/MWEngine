@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="nl.igorski.mwengine.example">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- required audio related permissions are provided by manifest inside MWEngine library -->
 

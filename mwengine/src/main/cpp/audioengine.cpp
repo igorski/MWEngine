@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -77,6 +77,7 @@ namespace MWEngine {
     int   AudioEngine::time_sig_beat_unit         = 4;
     int   AudioEngine::queuedTime_sig_beat_amount = time_sig_beat_amount;
     int   AudioEngine::queuedTime_sig_beat_unit   = time_sig_beat_unit;
+    bool  AudioEngine::broadcast_idle = false;
 
     /* buffer read/write pointers */
 
@@ -745,6 +746,12 @@ namespace MWEngine {
         if ( recordingState.bouncing && AudioEngineProps::isRendering.load() && DriverAdapter::isAAudio() ) {
             render( amountOfSamples );
         }
+
+        if ( broadcast_idle ) {
+            broadcast_idle = false;
+            Notifier::broadcast( Notifications::ENGINE_IDLE );
+        }
+
         return AudioEngineProps::isRendering.load();
     }
 
@@ -760,6 +767,11 @@ namespace MWEngine {
 #ifndef MOCK_ENGINE
         }
 #endif
+    }
+
+    void AudioEngine::notifyWhenIdle()
+    {
+        broadcast_idle = true;
     }
 
     void AudioEngine::handleTempoUpdate( float aQueuedTempo, bool broadcastUpdate )

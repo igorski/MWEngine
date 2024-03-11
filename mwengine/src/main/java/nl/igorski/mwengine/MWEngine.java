@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -33,6 +33,10 @@ import android.os.PowerManager;
 import android.os.Process;
 import android.util.Log;
 import android.view.WindowManager;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import nl.igorski.mwengine.core.*;
 
@@ -77,6 +81,10 @@ public final class MWEngine
         void handleNotification( int aNotificationId, int aNotificationValue );
     }
 
+    public interface VoidInterface {
+        public void operation();
+    }
+
     private static MWEngine INSTANCE; // we only allow a single instance to be constructed for resource optimization
     private IObserver _observer;
 
@@ -96,6 +104,8 @@ public final class MWEngine
 
     private boolean _initialCreation     = true;
     private boolean _isRunning           = false;
+    private List<VoidInterface> _idleCallbacks  = new ArrayList( Collections.emptyList());
+    private static int ENGINE_IDLE_NOTIFICATION = Notifications.ids.ENGINE_IDLE.ordinal();
 
     /**
      * The Java-side bridge to manage all native layer components
@@ -373,6 +383,20 @@ public final class MWEngine
         AudioEngine.saveRecordedSnippet( snippetBufferIndex );
     }
 
+    /**
+     * Delay execution of provided callback until the engine is idle, e.g.
+     * between render cycles. This can be used to safely dispose() of sequenced AudioEvents
+     * and deallocate referenced resources while the Sequencer is running.
+     */
+    public void executeWhenIdle( VoidInterface callback ) {
+        if ( _sequencerController.getPlaying()) {
+            _idleCallbacks.add( callback );
+            AudioEngine.notifyWhenIdle();
+        } else {
+            callback.operation();
+        }
+    }
+
     public void reset() {
         AudioEngine.reset();
     }
@@ -465,7 +489,17 @@ public final class MWEngine
     }
 
     public static void handleNotification( int aNotificationId ) {
-        if ( INSTANCE != null && INSTANCE._observer != null ) INSTANCE._observer.handleNotification( aNotificationId );
+        if ( INSTANCE != null ) {
+            if ( ENGINE_IDLE_NOTIFICATION == aNotificationId ) {
+                for ( VoidInterface callback : INSTANCE._idleCallbacks ) {
+                    callback.operation();
+                }
+                INSTANCE._idleCallbacks.clear();
+            }
+            if ( INSTANCE._observer != null ) {
+                INSTANCE._observer.handleNotification( aNotificationId );
+            }
+        }
     }
 
     public static void handleNotificationWithData( int aNotificationId, int aNotificationData ) {

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - http://www.igorski.nl
+ * Copyright (c) 2013-2024 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -44,6 +44,7 @@ class SequencerController
         void setTempo   ( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
         void setTempoNow( float aTempo, int aTimeSigBeatAmount, int aTimeSigBeatUnit );
         void setVolume  ( float aVolume );
+        bool getPlaying ();
         void setPlaying ( bool aPlaying );
 
         /**

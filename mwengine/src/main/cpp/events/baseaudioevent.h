@@ -35,7 +35,8 @@ class BaseAudioEvent
         BaseAudioEvent();
         virtual ~BaseAudioEvent();
 
-        void dispose(); // invoke when removing the Event from the engine
+        void dispose();  // invoke when removing the Event from the engine, should be done when ENGINE_IDLE is broadcast!
+        void onRemove(); // invoked by the Instrument once the event has safely been removed
 
         /**
          * event volume is in a percentile (0 - 1) range
@@ -213,6 +214,7 @@ class BaseAudioEvent
         bool _removalEnqueued;
         bool _locked;
         bool _updateAfterUnlock; // use in update-methods when checking for lock
+        bool _disposed = false;
 
         // _destroyableBuffer indicates we can delete the buffer on destruction (true by default and
         // implies that this AudioEvent holds the only reference to its buffers

@@ -34,7 +34,7 @@ set(target mwengine)
 # architecture-specific compiler flags
 
 if (${ANDROID_ABI} MATCHES "x86_64")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=x86-64 -msse4.2 -mpopcnt -m64")
 endif()
 
 # source folders
