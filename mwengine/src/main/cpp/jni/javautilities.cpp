@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2020 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2025 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -84,13 +84,13 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
     int nb_read = 0;
 
     while ( remaining != 0 ) {
-        //set proper size for our next chunk
+        // set proper size for our next chunk
         if ( remaining >= Mb )
             currChunk = Mb;
         else
             currChunk = remaining;
 
-        char chunk[ currChunk ];
+        char* chunk = new char[ currChunk ];
 
         // read next chunk and append to temporary buffer
 
@@ -103,6 +103,7 @@ bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, j
 
             remaining = AAsset_getRemainingLength64( asset );
         }
+        delete[] chunk;
     }
     AAsset_close( asset );
     waveFile WAV;

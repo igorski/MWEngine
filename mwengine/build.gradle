@@ -12,6 +12,7 @@ buildscript {
 }
 
 android {
+    namespace "nl.igorski.mwengine"
     compileSdkVersion 33
 
     defaultConfig {
@@ -25,7 +26,7 @@ android {
         targetSdkVersion 33
 
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86_64" // ,"x86" is uncommon, x86_64 is mostly for emulation
         }
 
         externalNativeBuild {
@@ -34,7 +35,8 @@ android {
 
             cmake {
                 arguments "-DANDROID_TOOLCHAIN=clang",
-                          "-DANDROID_STL=c++_static"
+                          "-DANDROID_STL=c++_static",
+                          "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON" // provide 16KB alignment on NDK <28
 
                 // AAudio support requires minSdkVersion 26 onwards. We can load libaaudio.so
                 // at runtime on devices that support it. If minSdkVersion is equal to or above

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2022 Igor Zinken - https://www.igorski.nl
+ * Copyright (c) 2013-2025 Igor Zinken - https://www.igorski.nl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -155,7 +155,7 @@ const int WAVE_TABLE_PRECISION = 128; // the amount of samples contained within 
     #define UINT16 unsigned int
     #define UINT32 unsigned long
     #define UINT64 unsigned long long
-#elseif INT_MAX == INT64_MAX
+#elif INT_MAX == INT64_MAX
     // not the case for ARMv8/ARM64 but let's be safe
     #define INT16 short
     #define INT32 float

@@ -24,6 +24,7 @@ buildscript {
 }
 
 android {
+    namespace "nl.igorski.mwengine.example"
     compileSdkVersion 33
 
     defaultConfig {
@@ -33,7 +34,7 @@ android {
         // we can still provide AAudio by loading it at runtime when the device supports it. You can
         // thus set the value of minSdkVersion to whatever fits your use case.
 
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
         versionName "1.0.0"
@@ -42,7 +43,7 @@ android {
         // to prevent UnsatisfiedLinkError when this app tries to serve an unsupported architecture
 
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86_64" // ,"x86" is uncommon, x86_64 is mostly for emulation
         }
     }
     if ( project.hasProperty( "RELEASE_STORE_FILE" )) {
