@@ -24,7 +24,7 @@ buildscript {
 }
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         // the sdk version range below matches the one of the library. You can change these as you see fit
@@ -34,7 +34,7 @@ android {
         // thus set the value of minSdkVersion to whatever fits your use case.
 
         minSdkVersion 16
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0.0"
 
