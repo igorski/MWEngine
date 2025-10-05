@@ -24,15 +24,6 @@ and Oboe are merely different abstraction layers to solve the same problem.
 Additionally, MWEngine provides a complete audio sequencing and processing environment with built-in effects
 without you _needing to write/know C(++) to use it_.
 
-#### What apps are using MWEngine ?
-
-The engine has been written for both [MikroWave](https://play.google.com/store/apps/details?id=nl.igorski.mikrowave.free&hl=en) and
-[Kosm](https://play.google.com/store/apps/details?id=nl.igorski.kosm&hl=en) to provide fast live audio synthesis.
-
-While development on aforementioned apps has (practically) been discontinued, the engine itself has over the years been continuously updated
-to be of use to third party app developers, such as [TIZE - Beat Maker, Music Maker](https://play.google.com/store/apps/details?id=com.tizemusic.tize)
-and [Another Flamenco Compás App](https://play.google.com/store/apps/details?id=com.harthorst.compas).
-
 ### C++ ??? What about Java / Kotlin ?
 
 Though the library is written in C++ (and can be used solely within this context), the library can be built using JNI
@@ -43,7 +34,7 @@ ease of development is ensured by delegating application logic / UI to the realm
 Whether you intend to use MWEngine for its sample based playback or to leverage its built-in synthesizer and
 audio processing, you are not required to write any additional C++ code. If you however intend to create your own
 DSP or synthesis routines (which is fun to do!) you must [write them in C++](https://github.com/igorski/MWEngine/wiki/Adding-new-components),
-but can rely on SWIG for making them usable in Java.
+but can rely on SWIG for making them usable in Java / Kotlin.
 
 ##### A note on garbage collection and SWIG
 
