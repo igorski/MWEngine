@@ -62,11 +62,11 @@ namespace Debug
 #ifdef DEBUG
         FILE* file = fopen( aFileName, "a" );
 
-        aMessage = ( std::string( aMessage ) + std::string( "\n" )).c_str();
+        auto formattedMessage = std::string( aMessage ) + std::string( "\n" );
 
         va_list args;
-        va_start( args, aMessage );
-        vfprintf( file, aMessage, args );
+        va_start( args, formattedMessage.c_str() );
+        vfprintf( file, formattedMessage.c_str(), args );
         va_end( args );
 
         fclose( file );
